@@ -40,7 +40,7 @@ export const GameOverScreen: React.FC = () => {
                 DEFEAT
             </h1>
 
-            <BlockButton text="BACK TO MAIN MENU" onClick={handleBack} width="400px" />
+            <BlockButton text="BACK TO MAIN MENU" onClick={handleBackToMenu} width="400px" />
         </div>
     );
 };

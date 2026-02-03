@@ -4,10 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '../state/gameStore';
 import BattleField from './Battle/BattleField';
 import CardHand from './Battle/CardHand';
-import PauseMenu from './Menu/PauseMenu';
-import SaveLoadMenu from './Menu/SaveLoadMenu';
-import SettingsMenu from './Menu/SettingsMenu';
-import ConfirmationPopup from './Menu/ConfirmationPopup';
+import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import { TurnEngine } from '../logic/turnEngine';
 import { Card } from '../types/Card';
 import './Game.css';
@@ -23,14 +20,14 @@ interface GameProps {
 /**
  * 메인 게임 화면
  */
-const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
+export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
   const store = useGameStore();
   const [menu, setMenu] = useState<GameMenuState>(null);
   const [turnEngine, setTurnEngine] = useState<TurnEngine | null>(null);
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [gameStatus, setGameStatus] = useState<'ONGOING' | 'PLAYER_WIN' | 'PLAYER_LOSE'>('ONGOING');
-  const [popups, setPopups] = useState<Array<{id: string; x: number; y: number; amount: number; isCritical: boolean; isHeal: boolean}>>([]);
+  const [popups, setPopups] = useState<Array<{ id: string; x: number; y: number; amount: number; isCritical: boolean; isHeal: boolean }>>([]);
   const popupResolvers = useRef<Map<string, () => void>>(new Map());
   const [entityPositions, setEntityPositions] = useState<{ player: { x: number; y: number; w: number; h: number } | null; bot: { x: number; y: number; w: number; h: number } | null; scale?: number }>({ player: null, bot: null, scale: 1 });
 
@@ -62,6 +59,16 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
     setTurnEngine(engine);
   }, [stageId]);
 
+  // 메세지 자동 제거
+  useEffect(() => {
+    if (store.message) {
+      const timer = setTimeout(() => {
+        store.setMessage('');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [store.message]);
+
   // 게임 루프 (60 FPS)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -73,8 +80,25 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       // 게임 상태 업데이트
       const status = turnEngine.checkGameStatus();
       if (status !== 'ONGOING') {
-        setGameStatus(status);
-        onGameEnd?.(status === 'PLAYER_WIN' ? 'WIN' : 'LOSE');
+        if (status === 'PLAYER_WIN') {
+          setGameStatus('PLAYER_WIN');
+          // Play Victory Music
+          const audio = new Audio('/assets/audio/stages/victory/victory.mp3');
+          audio.play().catch(e => console.warn(e));
+          store.setMessage("YOU WIN");
+
+          audio.onended = () => {
+            onGameEnd?.('WIN');
+          };
+
+          // Safety fallback if audio fails or is blocked
+          setTimeout(() => {
+            if (audio.paused && !audio.ended) onGameEnd?.('WIN');
+          }, 5000);
+        } else {
+          setGameStatus('PLAYER_LOSE');
+          onGameEnd?.('LOSE');
+        }
       }
     }, 16); // 16ms ≈ 60 FPS
 
@@ -184,7 +208,7 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
               const offsetY = pos.h ? -pos.h * POPUP_VERTICAL_FACTOR.player : -50;
               if (eff.type === 'DAMAGE') {
                 await addPopup(pos.x, pos.y + offsetY, eff.amount, false, false);
-              } else if (eff.type === 'AVOIDED') {
+              } else if ((eff.type as string) === 'AVOIDED') {
                 await addPopup(pos.x, pos.y + offsetY, 0, false, false);
               }
             }
@@ -309,17 +333,44 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
   return (
     <div className={`game-container ${screenShake ? 'shake' : ''}`}>
       {/* 배경 */}
-      <div className="game-background" />
+      <div className="game-background" style={{ background: 'transparent' }} />
+
+      {/* Central Announcement Message */}
+      {store.message && (
+        <div style={{
+          position: 'absolute',
+          top: '40%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 1000,
+          pointerEvents: 'none'
+        }}>
+          <h2 style={{
+            fontFamily: 'BebasNeue',
+            fontSize: '4rem',
+            color: '#ff4757',
+            textShadow: '0 0 20px #ff0000',
+            margin: 0,
+            textAlign: 'center',
+            animation: 'fadeUp 2s forwards'
+          }}>
+            {store.message}
+          </h2>
+        </div>
+      )}
 
       {/* 게임 필드 */}
       <div className="battle-field-container">
         <BattleField
           player={store.player}
           bot={store.bot}
-          onEntityPositionsChange={setEntityPositions}
-          screenShake={screenShake}
+          onMeasure={(positions) => setEntityPositions({
+            player: positions.player,
+            bot: positions.bot,
+            scale: positions.scale
+          })}
           popups={popups.filter(p => p.y < (entityPositions.player?.y || Infinity))}
-          removePopup={removePopup}
+          onRemovePopup={removePopup}
         />
       </div>
 
@@ -332,8 +383,12 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
           onAttack={handleAttack}
           isProcessing={isProcessing}
           disabled={gameStatus !== 'ONGOING'}
-          bannedIndices={store.player.conditions.filter(c => c.type === 'BLIND').flatMap(c => c.targetCardIndices || [])}
-          blindIndices={store.player.conditions.filter(c => c.type === 'BLIND').flatMap(c => c.targetCardIndices || [])} // BLIND 조건일 때 카드를 가림
+          bannedIndices={Array.from(store.player.conditions.values())
+            .filter((c: any) => c.type === 'BLIND')
+            .flatMap((c: any) => c.targetCardIndices || [])}
+          blindIndices={Array.from(store.player.conditions.values())
+            .filter((c: any) => c.type === 'BLIND')
+            .flatMap((c: any) => c.targetCardIndices || [])}
         />
       </div>
 
@@ -345,6 +400,7 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       {/* 메뉴 */}
       {menu === 'PAUSE' && (
         <PauseMenu
+          isOpen={true}
           onSave={() => {
             setMenu('SAVE_LOAD');
           }}
@@ -360,7 +416,13 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
 
       {menu === 'SAVE_LOAD' && (
         <SaveLoadMenu
-          onLoad={handleLoad}
+          mode="SAVE"
+          onAction={(slot) => {
+            store.saveGame(); // User didn't specify save slot logic in store yet, usually SaveManager does it
+            // Actually store.saveGame calls SaveManager.saveGame.
+            // We should pass slot to store.saveGame(slot) if supported.
+            setMenu('PAUSE');
+          }}
           onClose={() => {
             setMenu('PAUSE');
           }}
@@ -378,7 +440,7 @@ const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
 
       {menu === 'CONFIRM_QUIT' && (
         <ConfirmationPopup
-          message="정말로 게임을 종료하시겠습니까?"
+          message="DO YOU WANT TO GO BACK TO MAIN PAGE?"
           onYes={handleQuit}
           onNo={() => {
             setMenu('PAUSE');

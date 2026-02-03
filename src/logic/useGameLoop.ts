@@ -197,7 +197,7 @@ export const useGameLoop = () => {
     };
 
     const executeCardSwap = (selectedIndices: number[]) => {
-        if (player.drawsRemaining > 0) {
+        if ((player.drawsRemaining ?? 0) > 0) {
             swapCards(selectedIndices);
             AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
             setMessage("SWAPPED!");

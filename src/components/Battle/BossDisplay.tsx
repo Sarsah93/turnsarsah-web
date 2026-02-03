@@ -1,5 +1,5 @@
-import React from 'react';
 import { useGameStore } from '../../state/gameStore';
+import { HPBar } from '../Common/HPBar';
 
 export const BossDisplay: React.FC = () => {
     const { bot, stageNum } = useGameStore();
@@ -31,70 +31,40 @@ export const BossDisplay: React.FC = () => {
             top: 0, left: 0, width: '100%', height: '100%',
             pointerEvents: 'none' // Let clicks pass through to background if needed
         }}>
-            {/* Top Right HP Bar (Custom Image Background) */}
+            {/* Top Right HP Bar */}
             <div style={{
                 position: 'absolute',
-                top: '20px',
-                right: '40px',
-                width: '500px', // Wider
-                height: '120px', // Taller (3x approx)
+                top: '0px',
+                right: '0px',
+                width: '400px',
+                height: '100px',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                zIndex: 100
             }}>
-                {/* Background Image Container */}
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                    backgroundImage: `url('/assets/etc images/HP BAR_RED_IMAGE.png')`,
-                    backgroundSize: '100% 100%',
-                    zIndex: 1
-                }} />
-
-                {/* HP Fill - Removed duplicate background bar if any, aligning with red bar image */}
-                <div style={{
-                    position: 'absolute',
-                    top: '32px', left: '85px', // Adjusted for larger bar image
-                    width: '385px', height: '45px',
-                    background: 'transparent',
-                    zIndex: 0,
-                    overflow: 'hidden'
-                }}>
-                    <div style={{
-                        width: `${hpPercent}%`,
-                        height: '100%',
-                        backgroundColor: '#c0392b',
-                        transition: 'width 0.3s ease-out'
-                    }} />
-                </div>
-
-                {/* Text Overlay */}
-                <div style={{ zIndex: 2, fontSize: '1.8rem', fontWeight: 'bold', color: '#fff', textShadow: '2px 2px 4px #000', marginTop: '-5px', fontFamily: 'BebasNeue' }}>
-                    HP: {bot.hp}/{bot.maxHp}
-                </div>
+                <HPBar
+                    hp={bot.hp}
+                    maxHp={bot.maxHp}
+                    label="BOSS"
+                    color="red"
+                    align="right"
+                />
             </div>
 
             {/* Stage Info (Top Left) */}
             <div style={{
-                position: 'absolute', top: '30px', left: '40px',
-                fontSize: '2.5rem', fontFamily: 'BebasNeue', color: '#000'
+                position: 'absolute', top: '10px', left: '10px',
+                fontSize: '2.5rem', fontFamily: "'Bebas Neue', sans-serif", color: '#fff',
+                textShadow: '2px 2px 4px #000'
             }}>
                 STAGE {stageNum}
             </div>
 
-            {/* Boss Name - Centered slightly ABOVE boss */}
+            {/* Boss Image (Center) */}
             <div style={{
                 position: 'absolute',
-                top: '12%', left: '50%', transform: 'translateX(-50%)',
-                fontSize: '3rem', fontFamily: 'BebasNeue', color: '#000',
-                textShadow: '1px 1px 1px rgba(255,255,255,0.5)'
-            }}>
-                {bot.name.toUpperCase()}
-            </div>
-
-            {/* Boss Image (Center - Moved Up) */}
-            <div style={{
-                position: 'absolute',
-                top: '18%', left: '50%', transform: 'translateX(-50%)',
+                top: '15%', left: '50%', transform: 'translateX(-50%)',
                 width: '450px', height: '450px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
@@ -105,22 +75,33 @@ export const BossDisplay: React.FC = () => {
                 />
             </div>
 
+            {/* Boss Name - BELOW boss image */}
+            <div style={{
+                position: 'absolute',
+                top: '65%', left: '50%', transform: 'translateX(-50%)',
+                fontSize: '4rem', fontFamily: "'Bebas Neue', sans-serif", color: '#f1c40f', // Use gold name
+                textShadow: '2px 2px 4px #000, 0 0 10px rgba(241, 196, 15, 0.5)'
+            }}>
+                {bot.name.toUpperCase()}
+            </div>
+
             {/* Right Side Stats/Rules */}
             <div style={{
-                position: 'absolute', top: '150px', right: '50px',
+                position: 'absolute', top: '100px', right: '30px',
                 textAlign: 'right', color: '#fff', fontSize: '1.8rem', fontFamily: 'BebasNeue',
                 textShadow: '2px 2px 2px #000'
             }}>
                 <div>ATK: {bot.atk}</div>
-                <div style={{ color: '#f1c40f' }}>RULE: {stageNum === 2 ? 'BLIND 2 CARDS' : 'NONE'}</div>
+                <div style={{ color: '#f1c40f' }}>RULE: {bot.activeRules && bot.activeRules.length > 0 ? bot.activeRules[0][0] : 'NONE'}</div>
             </div>
 
             {/* BOSS Conditions Icons (Below HP Bar - Top Right area) */}
             <div style={{
                 position: 'absolute',
-                top: '145px', right: '50px',
+                top: '110px', right: '10px',
                 display: 'flex', gap: '8px', justifyContent: 'flex-end',
-                minHeight: '50px'
+                minHeight: '50px',
+                zIndex: 100
             }}>
                 {Array.from(bot.conditions.keys()).map(cond => {
                     let filename = `${cond}.png`;

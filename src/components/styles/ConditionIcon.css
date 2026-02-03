@@ -1,22 +1,19 @@
 /* styles/ConditionIcon.css */
 
 .condition-icon {
-  width: 24px;
-  height: 24px;
-  border: 1px solid #ffd700;
-  border-radius: 4px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 215, 0, 0.1);
-  color: #ffd700;
-  font-weight: bold;
-  font-size: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
   cursor: help;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .condition-icon:hover {
-  background-color: rgba(255, 215, 0, 0.2);
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+  transform: scale(1.1);
+  border-color: #ffd700;
 }

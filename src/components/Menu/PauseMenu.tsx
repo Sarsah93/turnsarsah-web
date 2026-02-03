@@ -6,6 +6,7 @@ import Modal from '../Common/Modal';
 import '../styles/PauseMenu.css';
 
 interface PauseMenuProps {
+  isOpen: boolean;
   onClose?: () => void;
   onSave?: () => void;
   onSettings?: () => void;
@@ -13,7 +14,8 @@ interface PauseMenuProps {
   onQuit?: () => void;
 }
 
-const PauseMenu: React.FC<PauseMenuProps> = ({
+export const PauseMenu: React.FC<PauseMenuProps> = ({
+  isOpen,
   onClose,
   onSave,
   onSettings,
@@ -22,17 +24,17 @@ const PauseMenu: React.FC<PauseMenuProps> = ({
 }) => {
   return (
     <Modal
-      title="일시정지"
+      title="PAUSE"
+      isOpen={isOpen}
       onClose={onResume || onClose}
+      showCloseButton={false}
     >
       <div className="pause-menu-buttons">
-        <Button label="저장" onClick={onSave} size="lg" variant="primary" />
-        <Button label="설정" onClick={onSettings} size="lg" variant="primary" />
-        <Button label="게임 종료" onClick={onQuit} size="lg" variant="danger" />
-        <Button label="계속하기" onClick={onResume || onClose} size="lg" variant="primary" />
+        <Button label="SAVE GAME" onClick={onSave} size="lg" variant="primary" />
+        <Button label="SETTINGS" onClick={onSettings} size="lg" variant="primary" />
+        <Button label="QUIT GAME" onClick={onQuit} size="lg" variant="danger" />
+        <Button label="BACK TO GAME" onClick={onResume || onClose} size="lg" variant="primary" />
       </div>
     </Modal>
   );
 };
-
-export default PauseMenu;

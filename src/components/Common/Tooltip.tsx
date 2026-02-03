@@ -15,25 +15,13 @@ export const Tooltip: React.FC<TooltipProps> = ({ name, condition, children }) =
   const { duration, elapsed, desc, data } = condition;
   const turnsLeft = Math.max(0, duration - elapsed);
 
-  let titleText = '';
-  if (duration >= 999) {
-    if (name === 'Regenerating') {
-      titleText = `${name}: Until Stage Clear`;
-    } else if (name === 'Avoiding') {
-      titleText = `${name}: Passive`;
-    } else if (name === 'Damage Reducing') {
-      titleText = `${name}: Stage Passive`;
-    } else {
-      titleText = `${name}: Permanent`;
-    }
-  } else {
-    titleText = `${name}: ${turnsLeft} turns left`;
-  }
-
   let displayDesc = desc;
   if (name === 'Damage Reducing' && data) {
     displayDesc = `Reduces damage by ${data}%.`;
   }
+
+  // Stage name mapping for title consistency
+  const displayTitle = name.toUpperCase();
 
   return (
     <div
@@ -43,9 +31,27 @@ export const Tooltip: React.FC<TooltipProps> = ({ name, condition, children }) =
     >
       {children}
       {visible && (
-        <div className="tooltip-content">
-          <div className="tooltip-title">{titleText}</div>
-          <div className="tooltip-desc">{displayDesc}</div>
+        <div className="tooltip-content" style={{
+          fontFamily: "'Bebas Neue', sans-serif",
+          backgroundColor: 'rgba(0,0,0,0.95)',
+          border: '2px solid #f1c40f',
+          padding: '12px 18px',
+          borderRadius: '2px',
+          boxShadow: '0 0 15px rgba(0,0,0,0.8)',
+          minWidth: '240px',
+          zIndex: 2000,
+          color: '#fff',
+          textAlign: 'left',
+          position: 'absolute',
+          bottom: '130%',
+          left: '0',
+          transform: 'translateX(0)',
+          pointerEvents: 'none'
+        }}>
+          <div style={{ color: '#f1c40f', fontSize: '1.8rem', marginBottom: '8px', borderBottom: '1px solid #444', paddingBottom: '4px' }}>
+            {displayTitle}: {turnsLeft} TURNS LEFT
+          </div>
+          <div style={{ fontSize: '1.2rem', color: '#fff', textTransform: 'uppercase' }}>{displayDesc}</div>
         </div>
       )}
     </div>

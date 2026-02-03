@@ -50,10 +50,15 @@ interface GameStoreState {
   deck: Deck;
   setPlayerHand: (hand: Card[]) => void;
   removePlayerCards: (indices: number[]) => void;
+  drawCards: (count: number) => void;
+  swapCards: (indices: number[]) => void;
+  setDeck: (deck: Deck) => void;
 
   // UI
   isPaused: boolean;
   setPaused: (paused: boolean) => void;
+  message: string;
+  setMessage: (message: string) => void;
 
   // Game initialization
   initGame: (stageId: number) => void;
@@ -189,10 +194,25 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     set((state) => ({
       playerHand: state.playerHand.filter((_, i) => !indices.includes(i)),
     })),
+  drawCards: (count) => set((state) => {
+    const newCards = state.deck.draw(count);
+    return { playerHand: [...state.playerHand, ...newCards] };
+  }),
+  swapCards: (indices) => set((state) => {
+    const newHand = [...state.playerHand];
+    const newCards = state.deck.draw(indices.length);
+    indices.forEach((idx, i) => {
+      newHand[idx] = newCards[i];
+    });
+    return { playerHand: newHand };
+  }),
+  setDeck: (deck) => set({ deck }),
 
   // UI
   isPaused: false,
   setPaused: (isPaused) => set({ isPaused }),
+  message: '',
+  setMessage: (message) => set({ message }),
 
   // Initialization
   initGame: (stageId: number) =>

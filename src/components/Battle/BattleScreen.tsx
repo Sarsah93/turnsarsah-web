@@ -9,8 +9,8 @@ import { BlockButton } from '../BlockButton';
 import { useGameStore } from '../../state/gameStore';
 
 export const BattleScreen: React.FC = () => {
-    const { message, damageTexts, screenEffect, onDamageTextComplete } = useGameLoop();
-    const { player } = useGameStore();
+    const { message, damageTexts, screenEffect, onDamageTextComplete, executePlayerAttack } = useGameLoop();
+    const { player, playerHand } = useGameStore();
 
     // Pause State
     const [isPaused, setIsPaused] = useState(false);
@@ -157,7 +157,16 @@ export const BattleScreen: React.FC = () => {
                     </div>
                 )}
 
-                <CardHand />
+                <CardHand
+                    cards={playerHand}
+                    selectedCards={[]} // This is handled internally anyway, but passing empty as default
+                    onSelectCard={() => { }}
+                    onAttack={() => { }}
+                    isProcessing={false}
+                    disabled={false}
+                    bannedIndices={[]}
+                    blindIndices={[]}
+                />
             </div>
 
             {/* Pause Menu Overlay */}

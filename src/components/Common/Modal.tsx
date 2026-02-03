@@ -4,7 +4,7 @@ import React from 'react';
 import '../styles/Modal.css';
 
 interface ModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   title: string;
   onClose?: () => void;
   children?: React.ReactNode;
@@ -14,7 +14,7 @@ interface ModalProps {
 }
 
 export const Modal: React.FC<ModalProps> = ({
-  isOpen,
+  isOpen = true,
   title,
   onClose,
   children,

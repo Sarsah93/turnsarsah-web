@@ -4,22 +4,27 @@ import { AudioManager } from '../utils/AudioManager';
 interface BlockButtonProps {
     text: string;
     onClick: () => void;
-    width?: string; // Optional width override
+    width?: string;
     style?: React.CSSProperties;
-    fontSize?: string; // Font size, defaults to 50% of height if not handled by CSS
+    fontSize?: string;
     disabled?: boolean;
+    variant?: 'primary' | 'danger';
 }
 
-export const BlockButton: React.FC<BlockButtonProps> = ({ text, onClick, width = '300px', style, fontSize, disabled = false }) => {
+export const BlockButton: React.FC<BlockButtonProps> = ({
+    text,
+    onClick,
+    width = '200px',
+    style,
+    fontSize = '1.2rem',
+    disabled = false,
+    variant = 'primary'
+}) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const bgImage = disabled
         ? '/assets/etc images/inactivated block_image.png'
         : (isHovered ? '/assets/etc images/activated block_image.png' : '/assets/etc images/inactivated block_image.png');
-
-    // Logic: Font size should be ~1/2 of button height. 
-    // We'll rely on padding or fixed aspect ratio.
-    // The images are likely rectangular. Let's assume a standard padding.
 
     return (
         <div
@@ -27,14 +32,12 @@ export const BlockButton: React.FC<BlockButtonProps> = ({ text, onClick, width =
             onMouseEnter={() => {
                 if (!disabled) {
                     setIsHovered(true);
-                    // AudioManager.playSFX('/assets/audio/gui/hover.mp3'); // If hover sound exists
                 }
             }}
             onMouseLeave={() => setIsHovered(false)}
             onClick={() => {
                 if (!disabled) {
                     onClick();
-                    // Click sound removed per user request (will be handled by specific actions if needed)
                 }
             }}
             style={{
@@ -46,7 +49,7 @@ export const BlockButton: React.FC<BlockButtonProps> = ({ text, onClick, width =
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '20px 40px', // Creates height based on content or fixed
+                padding: '10px 20px',
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 opacity: disabled ? 0.6 : 1,
                 transition: 'all 0.1s ease',
@@ -55,12 +58,12 @@ export const BlockButton: React.FC<BlockButtonProps> = ({ text, onClick, width =
             }}
         >
             <span style={{
-                fontSize: fontSize || '2rem', // Defualt large size
-                color: '#fff',
+                fontSize: fontSize,
+                color: variant === 'danger' ? '#ff6b6b' : '#fff',
                 textShadow: '2px 2px 0 #000',
-                fontFamily: 'BebasNeue, sans-serif',
-                letterSpacing: '2px',
-                pointerEvents: 'none', // Allow clicks to pass through text to div
+                fontFamily: "'Bebas Neue', sans-serif",
+                letterSpacing: '1px',
+                pointerEvents: 'none',
                 textAlign: 'center',
                 width: '100%'
             }}>

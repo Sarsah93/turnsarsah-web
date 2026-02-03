@@ -3,62 +3,71 @@
 .settings-content {
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  padding: 20px;
+  gap: 25px;
+  padding: 30px;
+  background: rgba(15, 15, 20, 0.95);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .setting-item {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
 }
 
 .setting-item label {
-  color: #fff;
+  color: #ffd700;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 22px;
   font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  letter-spacing: 1px;
 }
 
 .volume-bars {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.volume-bars button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ffd700;
+  background-color: #222;
+  color: #ffd700;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.volume-bars button {
-  width: 25px;
-  height: 25px;
-  border: 2px solid #c8c8c8;
-  background-color: #3a3a3a;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s ease;
-}
-
 .volume-bars button:hover {
-  background-color: #5a5a5a;
-  border-color: #fff;
+  background-color: #ffd700;
+  color: #000;
 }
 
 .bars {
   display: flex;
-  gap: 5px;
+  gap: 4px;
 }
 
 .bar {
-  width: 20px;
-  height: 20px;
-  border: 1px solid #c8c8c8;
-  background-color: #3a3a3a;
+  width: 15px;
+  height: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(50, 50, 50, 0.5);
   border-radius: 2px;
   transition: all 0.2s ease;
 }
 
 .bar.active {
-  background-color: #32dc32;
-  border-color: #32dc32;
+  background-color: #3232dc;
+  border-color: #3232dc;
+  box-shadow: 0 0 10px rgba(50, 50, 220, 0.5);
 }

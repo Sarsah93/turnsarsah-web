@@ -11,14 +11,23 @@ interface ConditionIconProps {
 }
 
 export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition }) => {
-  // 실제로는 조건별 아이콘 이미지를 로드하면 됨
-  // 임시로 이니셜 표시
-  const getInitial = (name: string) => name[0].toUpperCase();
+  let filename = `${name}.png`;
+  if (name === 'Avoiding') filename = '회피(Avoiding).png';
+  if (name === 'Immune') filename = '면역(Immune).png';
+  if (name === 'Damage Reducing') filename = '피해감소(Damage Reducing).png';
+  if (name === 'Heavy Bleeding') filename = 'Heavy Bleeding.png';
+
+  const iconPath = `/assets/conditions/${filename}`;
 
   return (
     <Tooltip name={name} condition={condition}>
       <div className="condition-icon" title={name}>
-        {getInitial(name)}
+        <img
+          src={iconPath}
+          alt={name}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
       </div>
     </Tooltip>
   );

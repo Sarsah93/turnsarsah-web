@@ -18,7 +18,7 @@
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-image: url('/assets/cards/block_image_inactivated.png') !important;
+  background-image: url('/assets/etc images/inactivated block_image.png') !important;
 }
 
 /* Sizes */
@@ -38,7 +38,7 @@
   width: 280px;
   height: 70px;
   font-size: 24px;
-  background-image: url('/assets/cards/block_image_inactivated.png');
+  background-image: url('/assets/etc images/inactivated block_image.png');
 }
 
 /* Variants */
@@ -48,33 +48,33 @@
 }
 
 .btn-primary {
-  background-image: url('/assets/cards/block_image_inactivated.png');
+  background-image: url('/assets/etc images/inactivated block_image.png');
 }
 
 .btn-primary:hover:not(:disabled),
 .btn-primary.btn-hover {
-  background-image: url('/assets/cards/block_image_activated.png');
+  background-image: url('/assets/etc images/activated block_image.png');
   filter: brightness(1.2);
 }
 
 .btn-secondary {
   color: #000;
-  background-image: url('/assets/cards/block_image_inactivated.png');
+  background-image: url('/assets/etc images/inactivated block_image.png');
 }
 
 .btn-secondary:hover:not(:disabled),
 .btn-secondary.btn-hover {
-  background-image: url('/assets/cards/block_image_activated.png');
+  background-image: url('/assets/etc images/activated block_image.png');
 }
 
 .btn-danger {
   color: #fff;
-  background-image: url('/assets/cards/block_image_inactivated.png');
+  background-image: url('/assets/etc images/inactivated block_image.png');
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .btn-danger:hover:not(:disabled),
 .btn-danger.btn-hover {
-  background-image: url('/assets/cards/block_image_activated.png');
+  background-image: url('/assets/etc images/activated block_image.png');
   filter: brightness(1.2);
 }

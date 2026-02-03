@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Modal from '../Common/Modal';
-import Button from '../Common/Button';
+import { BlockButton } from '../BlockButton';
 import '../styles/SettingsMenu.css';
 
 interface SettingsMenuProps {
@@ -10,7 +10,7 @@ interface SettingsMenuProps {
   onClose?: () => void;
 }
 
-const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) => {
+export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) => {
   const [bgmVolume, setBgmVolume] = useState(5);
   const [sfxVolume, setSfxVolume] = useState(5);
 
@@ -27,10 +27,10 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) 
   };
 
   return (
-    <Modal title="설정" onClose={onClose}>
-      <div className="settings-content">
+    <Modal title="SETTINGS" onClose={onClose} width={600} height={550} showCloseButton={false}>
+      <div className="settings-content" style={{ padding: '40px', gap: '35px' }}>
         <div className="setting-item">
-          <label>배경음악: {bgmVolume}</label>
+          <label>BGM VOLUME</label>
           <div className="volume-bars">
             <button onClick={() => handleBgmChange(-1)}>-</button>
             <div className="bars">
@@ -42,7 +42,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) 
           </div>
         </div>
         <div className="setting-item">
-          <label>효과음: {sfxVolume}</label>
+          <label>SFX VOLUME</label>
           <div className="volume-bars">
             <button onClick={() => handleSfxChange(-1)}>-</button>
             <div className="bars">
@@ -53,12 +53,10 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) 
             <button onClick={() => handleSfxChange(1)}>+</button>
           </div>
         </div>
-        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8 }}>
-          <Button label="닫기" onClick={onClose} variant="primary" />
+        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
+          <BlockButton text="BACK" onClick={() => onClose?.()} width="160px" />
         </div>
       </div>
     </Modal>
   );
 };
-
-export default SettingsMenu;

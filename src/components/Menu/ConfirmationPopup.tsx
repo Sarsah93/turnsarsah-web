@@ -13,7 +13,7 @@ interface ConfirmationPopupProps {
   onNo?: () => void;
 }
 
-const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
+export const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
   message,
   yesLabel = 'YES',
   noLabel = 'NO',
@@ -32,5 +32,3 @@ const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
     </Modal>
   );
 };
-
-export default ConfirmationPopup;

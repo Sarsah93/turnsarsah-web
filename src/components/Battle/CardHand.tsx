@@ -5,29 +5,63 @@ import { useGameLoop } from '../../logic/useGameLoop';
 import { calculatePlayerDamage } from '../../logic/damageCalculation';
 import { BlockButton } from '../BlockButton';
 import { AudioManager } from '../../utils/AudioManager';
+import '../styles/CardHand.css';
 
-export const CardHand: React.FC = () => {
-  const { playerHand, player } = useGameStore();
-  const { executePlayerAttack, executeCardSwap } = useGameLoop();
+interface CardHandProps {
+  cards?: any[];
+  selectedCards?: number[];
+  onSelectCard?: (index: number) => void;
+  onAttack?: () => void;
+  isProcessing?: boolean;
+  disabled?: boolean;
+  bannedIndices?: number[];
+  blindIndices?: number[];
+}
 
+export const CardHand: React.FC<CardHandProps> = ({
+  cards: propCards,
+  selectedCards: propSelectedCards,
+  onSelectCard,
+  onAttack,
+  isProcessing = false,
+  disabled = false,
+  bannedIndices = [],
+  blindIndices = []
+}) => {
+  const { player, playerHand, setDrawsRemaining } = useGameStore();
+  const { executeCardSwap, executePlayerAttack } = useGameLoop();
+
+  const cards = propCards || playerHand;
+
+  // Internal selection logic if needed, but we should use props
+  // For now, let's bridge internal state with props to keep my new animation logic working
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
+  // Sync props to internal state if they change? Or just use props directly.
+  // The user wants my new animation logic, so I'll use internal state for local control during anim.
 
   // Combo / Score Preview
   const comboPreview = useMemo(() => {
     if (selectedIndices.length === 0) return null;
-    const selectedCards = selectedIndices.map(idx => playerHand[idx]);
+    const selectedCards = selectedIndices.map(idx => cards[idx]);
     const hasBlind = selectedCards.some(c => c.isBlind);
+    const hasJoker = selectedCards.some(c => c.isJoker);
 
     const result = calculatePlayerDamage(selectedCards, player.conditions.has('Debilitating'));
-    return {
-      type: result.handType,
-      score: hasBlind ? '???' : Math.floor(result.finalDamage)
-    };
-  }, [selectedIndices, playerHand, player.conditions]);
+
+    const damageLabel = hasBlind ? '???' : Math.floor(result.finalDamage);
+    const handTypeLabel = result.handType;
+    const wildSuffix = hasJoker ? ' (WILD)' : '';
+
+    return `Damage: ${damageLabel} ("${handTypeLabel}")${wildSuffix}`;
+  }, [selectedIndices, cards, player.conditions]);
+
+  type AnimPhase = 'IDLE' | 'GATHERING' | 'BUNCHING' | 'CHARGING' | 'THRUSTING' | 'SCATTERING';
+  const [phase, setPhase] = useState<AnimPhase>('IDLE');
 
   const handleCardClick = (index: number) => {
-    if (isAnimating) return;
+    if (phase !== 'IDLE') return;
+    if (onSelectCard) onSelectCard(index);
+
     setSelectedIndices(prev => {
       const alreadySelected = prev.includes(index);
       if (alreadySelected) {
@@ -39,103 +73,122 @@ export const CardHand: React.FC = () => {
     });
   };
 
-  const handleAttack = () => {
-    if (selectedIndices.length === 0 || isAnimating) return;
+  const handleAttack = async () => {
+    if (phase !== 'IDLE') return;
 
-    setIsAnimating(true);
+    // User Guide: If no cards selected, show message in screen center
+    if (selectedIndices.length === 0) {
+      useGameStore.getState().setMessage("SELECT CARDS AT LEAST ONE");
+      return;
+    }
 
-    // Animation Logic:
-    // 1. Cards move to center (handled by isAnimating flag and CSS)
+    // 1. GATHERING - Centralize
+    setPhase('GATHERING');
 
-    // 2. 0.5s after animation start: shuffling.mp3
+    // 2. BUNCHING (after 0.4s) - Fast merge
     setTimeout(() => {
+      setPhase('BUNCHING');
       AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
-    }, 500);
+    }, 400);
 
-    // 3. 1.0s after start: Thrust start (CSS keyframe)
-    // 4. 1.25s after start: whipping.mp3
+    // 3. CHARGING (after 0.7s) - Move slightly down
     setTimeout(() => {
+      setPhase('CHARGING');
+    }, 700);
+
+    // 4. THRUSTING (after 0.9s) - Fast up move
+    setTimeout(() => {
+      setPhase('THRUSTING');
       AudioManager.playSFX('/assets/audio/player/whipping.mp3');
-    }, 1250);
+    }, 900);
 
-    // 5. Final impact
+    // 5. SCATTERING & IMPACT (after 1.1s)
     setTimeout(() => {
-      executePlayerAttack(selectedIndices);
-      setSelectedIndices([]);
-      setIsAnimating(false);
-    }, 1500);
+      setPhase('SCATTERING');
+
+      if (onAttack) {
+        onAttack();
+      } else {
+        executePlayerAttack(selectedIndices);
+      }
+
+      // Wait for scattering and boss shake to finish
+      setTimeout(() => {
+        setSelectedIndices([]);
+        setPhase('IDLE');
+      }, 500);
+    }, 1100);
   };
 
   const handleSwap = () => {
-    if (isAnimating) return;
+    if (phase !== 'IDLE') return;
+
+    // User Guide: If no cards selected, show message
+    if (selectedIndices.length === 0) {
+      useGameStore.getState().setMessage("SELECT CARDS AT LEAST ONE");
+      return;
+    }
+
+    if ((player.drawsRemaining ?? 0) <= 0) return;
+    if (selectedIndices.length > 2) {
+      useGameStore.getState().setMessage("SELECT MAX 2 CARDS");
+      return;
+    }
+
     executeCardSwap(selectedIndices);
+    setDrawsRemaining((player.drawsRemaining ?? 0) - 1);
     setSelectedIndices([]);
   };
 
   return (
-    <div className="card-hand-container" style={{
-      position: 'absolute',
-      bottom: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      width: '100%',
-      gap: '15px'
-    }}>
-
+    <div className="card-hand-container">
       {/* Combo Preview */}
-      {comboPreview && (
-        <div style={{
-          color: '#2ecc71', fontSize: '2.2rem', fontFamily: 'BebasNeue',
-          textShadow: '2px 2px 2px #000', marginBottom: '5px'
-        }}>
-          {comboPreview.type}: {comboPreview.score}
+      {comboPreview && phase === 'IDLE' && (
+        <div className="combo-preview">
+          {comboPreview}
         </div>
       )}
 
-      {/* Action Buttons using BlockButton */}
-      <div className="action-buttons" style={{ display: 'flex', gap: '30px', marginBottom: '10px' }}>
-        <BlockButton
-          text="ATTACK"
-          onClick={handleAttack}
-          width="220px"
-          disabled={selectedIndices.length === 0 || isAnimating}
-        />
-        <BlockButton
-          text="DRAW / SWAP"
-          onClick={handleSwap}
-          width="280px"
-          disabled={isAnimating}
-        />
+      {/* Action Buttons - Moved to bottom */}
+      <div className="action-buttons">
+        <div className="attack-button-wrapper">
+          <BlockButton
+            text="ATTACK"
+            onClick={handleAttack}
+            width="150px"
+            disabled={phase !== 'IDLE'}
+          />
+        </div>
+        <div className="draw-button-wrapper" style={{ right: '40px' }}>
+          <BlockButton
+            text={`DRAW (${player.drawsRemaining ?? 2})`}
+            onClick={handleSwap}
+            width="180px"
+            disabled={phase !== 'IDLE'}
+          />
+        </div>
       </div>
 
-      {/* Cards Area */}
-      <div style={{ display: 'flex', justifyContent: 'center', height: '180px', position: 'relative', minWidth: '800px' }}>
-        {playerHand.map((card, idx) => {
+      {/* Cards Area - Positioned above buttons */}
+      <div className="cards-area" style={{ marginBottom: '80px' }}>
+        {cards.map((card: any, idx: number) => {
           const isSelected = selectedIndices.includes(idx);
-
-          // Animation styling
-          const animationStyle: React.CSSProperties = (isAnimating && isSelected) ? {
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%) scale(1.1)',
-            zIndex: 1000,
-            transition: 'all 0.5s ease-in-out'
-          } : {
-            position: 'relative',
-            transition: 'all 0.3s ease'
-          };
+          let phaseClass = '';
+          if (isSelected) {
+            if (phase === 'GATHERING') phaseClass = 'gathering';
+            else if (phase === 'BUNCHING') phaseClass = 'bunching';
+            else if (phase === 'CHARGING') phaseClass = 'charging';
+            else if (phase === 'THRUSTING') phaseClass = 'thrusting';
+            else if (phase === 'SCATTERING') phaseClass = 'scattering';
+          }
 
           return (
             <div key={`${card.suit}-${card.rank}-${idx}`}
-              className={(isAnimating && isSelected) ? 'thrust-anim' : ''}
-              style={{ ...animationStyle, margin: '0 5px' }}>
+              className={phaseClass}
+              style={{ margin: '0 5px', transition: 'all 0.3s ease' }}>
               <Card
                 card={card}
-                selected={isSelected && !isAnimating}
+                selected={isSelected && phase === 'IDLE'}
                 onClick={() => handleCardClick(idx)}
               />
             </div>
@@ -143,17 +196,31 @@ export const CardHand: React.FC = () => {
         })}
       </div>
 
-      <style>{`
-        @keyframes thrust {
-            0% { transform: translate(-50%, -50%) scale(1.1); }
-            70% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -150%) scale(1.5); opacity: 0; }
-        }
-        .thrust-anim {
-            animation: thrust 0.5s ease-in forwards;
-            animation-delay: 1.0s;
-        }
-      `}</style>
+      {/* Deck Stack - Moved higher */}
+      <div className="card-deck-section" style={{ position: 'absolute', bottom: '100px', right: '40px', width: '90px', height: '120px' }}>
+        <div className="card-deck-stack" style={{ position: 'relative', width: '100%', height: '100%' }}>
+          {[0, 1, 2, 3].map(i => (
+            <img
+              key={i}
+              src="/assets/cards/BACK2.png"
+              alt="Deck"
+              className="deck-card-image"
+              style={{
+                position: 'absolute',
+                top: `${-i * 3}px`,
+                right: `${i * 2}px`,
+                width: '85px',
+                height: '115px',
+                zIndex: 10 - i,
+                boxShadow: '-2px 2px 4px rgba(0,0,0,0.5)',
+                borderRadius: '4px'
+              }}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
+
+export default CardHand;

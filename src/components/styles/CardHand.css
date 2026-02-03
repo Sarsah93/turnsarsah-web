@@ -1,76 +1,105 @@
 /* styles/CardHand.css */
 
-.card-hand {
+.card-hand-container {
   position: absolute;
-  bottom: 0;
+  bottom: 0px;
   left: 0;
   right: 0;
   width: 100%;
+  height: 400px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  gap: 20px;
-  padding: 20px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.3));
-  min-height: 250px;
   z-index: 20;
 }
 
-.card-deck-section {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 100px;
-  height: 140px;
+.action-buttons {
   position: absolute;
-  right: 20px;
   bottom: 20px;
-}
-
-.card-deck-stack {
-  position: relative;
-  width: 75px;
-  height: 105px;
-}
-
-.deck-card-back {
-  position: absolute;
-  width: 75px;
-  height: 105px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  border: 2px solid #8b5a3c;
-  border-radius: 4px;
+  width: 100%;
+  height: 80px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: center;
-  color: #c8c8c8;
-  font-weight: bold;
-  font-size: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  z-index: 30;
 }
 
-.deck-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.attack-button-wrapper {
+  margin: 0 40px;
 }
 
-.cards-container {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-  max-width: 1000px;
-  min-height: 140px;
+.draw-button-wrapper {
+  margin: 0 40px;
 }
 
-.attack-section {
+.cards-area {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  align-items: flex-end;
+  height: 220px;
   width: 100%;
-  margin-top: 10px;
+  position: absolute;
+  bottom: 120px;
+  /* Shifted higher up */
+}
+
+/* Attack Animations */
+.gathering {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 150px !important;
+  transform: translateX(-50%) scale(1.1);
+  z-index: 100 !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.bunching {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 160px !important;
+  transform: translateX(-50%) scale(0.9);
+  z-index: 101 !important;
+  transition: all 0.2s ease-in;
+}
+
+.charging {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 130px !important;
+  transform: translateX(-50%) scale(0.95);
+  z-index: 101 !important;
+  transition: all 0.2s ease-out;
+}
+
+.thrusting {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 600px !important;
+  transform: translateX(-50%) scale(0.8);
+  opacity: 0.8;
+  z-index: 102 !important;
+  transition: all 0.2s cubic-bezier(0.6, -0.28, 0.735, 0.045);
+}
+
+.scattering {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 650px !important;
+  transform: translateX(-50%) scale(1.5);
+  opacity: 0;
+  filter: blur(5px);
+  z-index: 103 !important;
+  transition: all 0.4s ease-out;
+}
+
+.combo-preview {
+  color: #2ecc71;
+  font-size: 2.2rem;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  text-shadow: 2px 2px 2px #000;
+  margin-bottom: 20px;
+  text-align: center;
+  position: absolute;
+  bottom: 350px;
 }

@@ -2,112 +2,72 @@ import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { BlockButton } from './BlockButton';
 import { AudioManager } from '../utils/AudioManager';
-import { GameState } from '../constants/gameConfig';
+import { SaveLoadMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 
 export const MainMenu: React.FC = () => {
-    const { initGame } = useGameStore();
+    const { initGame, loadGame } = useGameStore();
 
     useEffect(() => {
-        // Play Main Menu BGM
         AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
     }, []);
 
+    const handleInteraction = () => {
+        AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
+    };
+
     const handleNewGame = () => {
-        // AudioManager.playSFX('/assets/audio/gui/click.mp3'); // Optional if added
         initGame(1);
     };
 
-    const [showSettings, setShowSettings] = useState(false);
-    const [showLoad, setShowLoad] = useState(false);
-
-    // Settings State
-    const [bgmVol, setBgmVol] = useState(40);
-    const [sfxVol, setSfxVol] = useState(50);
-
-    const handleVolChange = (type: 'BGM' | 'SFX', val: number) => {
-        const vol = Math.max(0, Math.min(100, val));
-        const decimal = vol / 100;
-        if (type === 'BGM') {
-            setBgmVol(vol);
-            AudioManager.setBGMVolume(decimal);
-        } else {
-            setSfxVol(vol);
-            AudioManager.setSFXVolume(decimal);
-        }
+    const handleLoadAction = (slot: number) => {
+        loadGame(slot); // Ensure loadGame(slot) is supported in store
+        setActiveMenu('NONE');
     };
 
+    const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT'>('NONE');
+
     return (
-        <div className="menu-screen" style={{
+        <div className="menu-screen" onClick={handleInteraction} style={{
             position: 'relative', width: '100%', height: '100%',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'url("/assets/backgrounds/main_menu_bg.png") center/cover no-repeat'
         }}>
             {/* Logo */}
             <img
                 src="/assets/etc images/turnsarsah_logo_image.png"
                 alt="Turn Sarsah"
-                style={{ width: '600px', maxWidth: '90%', marginBottom: '50px' }}
+                style={{ width: '600px', maxWidth: '90%', marginBottom: '50px', filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.5))' }}
             />
 
             {/* Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <BlockButton text="NEW GAME" onClick={() => initGame(1)} />
-                <BlockButton text="LOAD GAME" onClick={() => setShowLoad(true)} />
-                <BlockButton text="SETTINGS" onClick={() => setShowSettings(true)} />
-                <BlockButton text="QUIT" onClick={() => window.close()} />
+                <BlockButton text="NEW GAME" onClick={handleNewGame} />
+                <BlockButton text="LOAD GAME" onClick={() => setActiveMenu('LOAD')} />
+                <BlockButton text="SETTINGS" onClick={() => setActiveMenu('SETTINGS')} />
+                <BlockButton text="QUIT" onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
             </div>
 
-            {/* Settings Modal */}
-            {showSettings && (
-                <div className="modal-overlay" style={modalOverlayStyle}>
-                    <div className="modal-content" style={modalContentStyle}>
-                        <h2>SETTINGS</h2>
-
-                        <div className="setting-row" style={settingRowStyle}>
-                            <span>BGM: {bgmVol}%</span>
-                            <input
-                                type="range" min="0" max="100" value={bgmVol}
-                                onChange={(e) => handleVolChange('BGM', parseInt(e.target.value))}
-                            />
-                        </div>
-
-                        <div className="setting-row" style={settingRowStyle}>
-                            <span>SFX: {sfxVol}%</span>
-                            <input
-                                type="range" min="0" max="100" value={sfxVol}
-                                onChange={(e) => handleVolChange('SFX', parseInt(e.target.value))}
-                            />
-                        </div>
-
-                        <div style={{ marginTop: '30px' }}>
-                            <BlockButton text="CLOSE" onClick={() => setShowSettings(false)} width="200px" fontSize="1.5rem" />
-                        </div>
-                    </div>
-                </div>
+            {/* Modals using unified components */}
+            {activeMenu === 'SETTINGS' && (
+                <SettingsMenu
+                    onClose={() => setActiveMenu('NONE')}
+                />
             )}
 
-            {/* Load Game Modal */}
-            {showLoad && (
-                <div className="modal-overlay" style={modalOverlayStyle}>
-                    <div className="modal-content" style={modalContentStyle}>
-                        <h2>SAVED DATA</h2>
+            {activeMenu === 'LOAD' && (
+                <SaveLoadMenu
+                    mode="LOAD"
+                    onAction={handleLoadAction}
+                    onClose={() => setActiveMenu('NONE')}
+                />
+            )}
 
-                        {[1, 2, 3].map(slot => (
-                            <div key={slot} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                                <BlockButton
-                                    text={`SLOT ${slot} - EMPTY`}
-                                    onClick={() => alert(`Load Slot ${slot} (Empty)`)}
-                                    width="250px"
-                                    fontSize="1rem"
-                                />
-                                <button style={{ background: 'red', color: 'white', border: 'none', padding: '10px', cursor: 'pointer' }}>DEL</button>
-                            </div>
-                        ))}
-
-                        <div style={{ marginTop: '30px' }}>
-                            <BlockButton text="CLOSE" onClick={() => setShowLoad(false)} width="200px" fontSize="1.5rem" />
-                        </div>
-                    </div>
-                </div>
+            {activeMenu === 'CONFIRM_QUIT' && (
+                <ConfirmationPopup
+                    message="DO YOU REALLY WANT TO QUIT THE GAME?"
+                    onYes={() => window.close()}
+                    onNo={() => setActiveMenu('NONE')}
+                />
             )}
         </div>
     );

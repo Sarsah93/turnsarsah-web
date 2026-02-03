@@ -1,0 +1,22 @@
+﻿
+> turnsarsah-frontend@0.1.0 build
+> vite build
+
+node.exe : [33mThe CJS build of Vite's Node AP
+I is deprecated. See https://vite.dev/guide/tro
+ubleshooting.html#vite-cjs-node-api-deprecated 
+for more details.[39m
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Prog
+ram Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ( 
+   [33mThe CJS bu...e details.[39m:String) [  
+  ], RemoteException
+    + FullyQualifiedErrorId : NativeCommandErr 
+   or
+ 
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m??[39m 93 modules transformed.

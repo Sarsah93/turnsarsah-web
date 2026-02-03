@@ -157,7 +157,7 @@ export function removeCondition(
  * 턴 시작 시 조건 처리 (회복 등)
  */
 export interface ConditionEffect {
-  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'HEAVY_BLEED';
+  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'HEAVY_BLEED' | 'AVOIDED';
   amount: number;
 }
 
