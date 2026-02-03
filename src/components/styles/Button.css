@@ -1,0 +1,80 @@
+/* styles/Button.css */
+
+.btn {
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  border: none;
+  border-radius: 0;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  margin: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: relative;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-image: url('/assets/cards/block_image_inactivated.png') !important;
+}
+
+/* Sizes */
+.btn-sm {
+  width: 100px;
+  height: 40px;
+  font-size: 16px;
+}
+
+.btn-md {
+  width: 180px;
+  height: 60px;
+  font-size: 20px;
+}
+
+.btn-lg {
+  width: 280px;
+  height: 70px;
+  font-size: 24px;
+  background-image: url('/assets/cards/block_image_inactivated.png');
+}
+
+/* Variants */
+.btn-primary {
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.btn-primary {
+  background-image: url('/assets/cards/block_image_inactivated.png');
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-primary.btn-hover {
+  background-image: url('/assets/cards/block_image_activated.png');
+  filter: brightness(1.2);
+}
+
+.btn-secondary {
+  color: #000;
+  background-image: url('/assets/cards/block_image_inactivated.png');
+}
+
+.btn-secondary:hover:not(:disabled),
+.btn-secondary.btn-hover {
+  background-image: url('/assets/cards/block_image_activated.png');
+}
+
+.btn-danger {
+  color: #fff;
+  background-image: url('/assets/cards/block_image_inactivated.png');
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.btn-danger:hover:not(:disabled),
+.btn-danger.btn-hover {
+  background-image: url('/assets/cards/block_image_activated.png');
+  filter: brightness(1.2);
+}

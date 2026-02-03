@@ -1,0 +1,51 @@
+/* styles/HPBar.css */
+
+.hp-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #1e1e1e;
+}
+
+.hp-bar-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(40, 40, 40, 0.8);
+  z-index: 1;
+}
+
+.hp-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #dc3232, #ff6464);
+  transition: width 0.2s ease;
+  z-index: 2;
+}
+
+.hp-bar-red .hp-bar-fill {
+  background: linear-gradient(90deg, #dc3232, #ff6464);
+}
+
+.hp-bar-blue .hp-bar-fill {
+  background: linear-gradient(90deg, #3232dc, #6464ff);
+}
+
+.hp-bar-text {
+  position: relative;
+  z-index: 3;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}

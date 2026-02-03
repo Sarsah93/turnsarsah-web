@@ -1,0 +1,76 @@
+/* styles/CardHand.css */
+
+.card-hand {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 20px;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.3));
+  min-height: 250px;
+  z-index: 20;
+}
+
+.card-deck-section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100px;
+  height: 140px;
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+}
+
+.card-deck-stack {
+  position: relative;
+  width: 75px;
+  height: 105px;
+}
+
+.deck-card-back {
+  position: absolute;
+  width: 75px;
+  height: 105px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  border: 2px solid #8b5a3c;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c8c8c8;
+  font-weight: bold;
+  font-size: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.deck-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cards-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 1000px;
+  min-height: 140px;
+}
+
+.attack-section {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}

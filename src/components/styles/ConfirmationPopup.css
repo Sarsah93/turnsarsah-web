@@ -1,0 +1,31 @@
+/* styles/ConfirmationPopup.css */
+
+.confirmation-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 20px;
+  gap: 20px;
+}
+
+.confirmation-message {
+  color: #fff;
+  font-size: 16px;
+  text-align: center;
+  margin: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+}
+
+.confirmation-buttons button {
+  min-width: 150px;
+}

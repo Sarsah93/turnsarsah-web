@@ -1,0 +1,233 @@
+/* Fonts */
+@font-face {
+  font-family: 'BebasNeue';
+  src: url('/assets/fonts/BebasNeue-Regular.ttf') format('truetype');
+}
+
+/* App.css */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  font-family: 'BebasNeue', 'Arial', sans-serif;
+  /* Project Standard Font */
+  background-color: #1a1a1a;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  /* Prevent scroll */
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  /* Ensure absolute children are contained */
+}
+
+.ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  /* Higher than video */
+  pointer-events: none;
+  /* Let clicks pass unless caught by children */
+}
+
+/* Re-enable pointer events for interactive children */
+.ui-layer>* {
+  pointer-events: auto;
+}
+
+/* 메뉴 화면 */
+.menu-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  /* Semi-transparent for legibility */
+  padding: 40px;
+}
+
+.menu-screen h1 {
+  font-size: 64px;
+  margin-bottom: 40px;
+  color: #ffd700;
+  text-shadow: 0 4px 10px rgba(255, 215, 0, 0.5);
+}
+
+.stage-select {
+  text-align: center;
+}
+
+.stage-select h2 {
+  font-size: 28px;
+  margin-bottom: 30px;
+  color: #fff;
+}
+
+.stage-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 100px);
+  gap: 10px;
+  justify-content: center;
+}
+
+.stage-button {
+  padding: 15px 10px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #dc3232;
+  color: #fff;
+  border: 2px solid #b82020;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.stage-button:hover {
+  background-color: #e74c3c;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(220, 50, 50, 0.5);
+}
+
+.stage-button:active {
+  transform: scale(0.95);
+}
+
+/* 게임 종료 화면 */
+.game-over-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  padding: 40px;
+  text-align: center;
+}
+
+.game-over-screen h1 {
+  font-size: 72px;
+  margin-bottom: 20px;
+  color: #ffd700;
+  text-shadow: 0 4px 10px rgba(255, 215, 0, 0.5);
+}
+
+.game-over-screen p {
+  font-size: 20px;
+  margin-bottom: 40px;
+  color: #ccc;
+}
+
+.game-over-screen button {
+  padding: 15px 40px;
+  font-size: 18px;
+  background-color: #3232dc;
+  color: #fff;
+  border: 2px solid #2020b8;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.game-over-screen button:hover {
+  background-color: #4c4ce7;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(50, 50, 220, 0.5);
+}
+
+/* Animations */
+@keyframes shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
+
+@keyframes flashRed {
+  0% {
+    background-color: rgba(255, 0, 0, 0);
+  }
+
+  50% {
+    background-color: rgba(255, 0, 0, 0.3);
+  }
+
+  100% {
+    background-color: rgba(255, 0, 0, 0);
+  }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
+.shake-small {
+  animation: shake 0.3s;
+}
+
+.shake-heavy {
+  animation: shake 0.8s;
+}
+
+.flash-red {
+  animation: flashRed 0.5s;
+}

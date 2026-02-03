@@ -1,0 +1,84 @@
+/* styles/BattleField.css */
+
+.battlefield {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 20px;
+  background: transparent;
+  position: relative;
+  z-index: 10;
+  gap: 30px;
+}
+
+.popups-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.boss-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.boss-name {
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 32px;
+  color: #ffd700;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  position: absolute;
+  top: 50px;
+}
+
+.boss-portrait {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 20px;
+}
+
+.boss-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+  border: 2px solid #ffd700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+}
+
+.boss-conditions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 300px;
+}
+
+.player-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.player-conditions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 300px;
+}

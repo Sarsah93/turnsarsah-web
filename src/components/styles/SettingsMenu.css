@@ -1,0 +1,64 @@
+/* styles/SettingsMenu.css */
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 20px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setting-item label {
+  color: #fff;
+  font-weight: bold;
+  font-size: 16px;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+}
+
+.volume-bars {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.volume-bars button {
+  width: 25px;
+  height: 25px;
+  border: 2px solid #c8c8c8;
+  background-color: #3a3a3a;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.volume-bars button:hover {
+  background-color: #5a5a5a;
+  border-color: #fff;
+}
+
+.bars {
+  display: flex;
+  gap: 5px;
+}
+
+.bar {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #c8c8c8;
+  background-color: #3a3a3a;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.bar.active {
+  background-color: #32dc32;
+  border-color: #32dc32;
+}

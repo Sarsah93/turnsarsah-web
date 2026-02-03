@@ -1,0 +1,67 @@
+/* styles/Card.css */
+
+.card {
+  width: 75px;
+  height: 105px;
+  border: 2px solid #c8c8c8;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  user-select: none;
+  overflow: hidden;
+  background: #000;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card:hover:not(.card-blind) {
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.card-selected {
+  border-color: #ffd700;
+  border-width: 3px;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+
+.card-banned {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
+.card-ban-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
+}
+
+.card-banned .card-ban-overlay::before,
+.card-banned .card-ban-overlay::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 3px;
+  background-color: #c83232;
+}
+
+.card-banned .card-ban-overlay::before {
+  transform: rotate(45deg);
+}
+
+.card-banned .card-ban-overlay::after {
+  transform: rotate(-45deg);
+}
