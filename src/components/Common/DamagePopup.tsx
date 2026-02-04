@@ -23,28 +23,47 @@ export const DamagePopup: React.FC<DamagePopupProps> = ({
   onComplete,
 }) => {
   useEffect(() => {
-    const duration = 800; // ms - should match CSS animation
+    const duration = 700; // ms - should match CSS animation
     const t = setTimeout(() => {
       onComplete?.();
     }, duration);
     return () => clearTimeout(t);
   }, [onComplete]);
 
-  const displayText = amount === 0 && !isHeal ? 'Miss' : `${label ? label + ' ' : ''}${isHeal ? '+' : '-'}${amount}`;
+  const displayText = amount === 0 && !isHeal
+    ? 'Miss'
+    : isCritical
+      ? `Critical - ${amount}`
+      : `${label ? label + ' ' : ''}${isHeal ? '+' : '-'}${amount}`;
+
+  const textColor = isHeal
+    ? '#2ecc71'
+    : isCritical
+      ? '#f1c40f'
+      : '#e74c3c';
+
+  const fontSize = isCritical ? '3.2rem' : '3rem';
+  const fontWeight = isCritical ? 'bold' : 'normal';
 
   return (
     <div
-      className={`damage-popup ${isCritical ? 'critical' : ''} ${isHeal ? 'heal' : ''}`}
       style={{
         position: 'absolute',
         left: x,
         top: y,
         transform: 'translate(-50%, -50%)',
+        fontFamily: 'BebasNeue',
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+        color: textColor,
+        textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
         pointerEvents: 'none',
+        zIndex: 10000,
+        animation: 'floatUp 1.5s ease-out forwards',
+        opacity: 1,
       }}
     >
-      {isCritical && <div className="damage-popup-critical">CRITICAL!</div>}
-      <div className="damage-popup-text">{displayText}</div>
+      {displayText}
     </div>
   );
 };

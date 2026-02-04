@@ -1,7 +1,7 @@
 // components/Menu/PauseMenu.tsx
 
 import React from 'react';
-import Button from '../Common/Button';
+import { BlockButton } from '../BlockButton';
 import Modal from '../Common/Modal';
 import '../styles/PauseMenu.css';
 
@@ -28,12 +28,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
       isOpen={isOpen}
       onClose={onResume || onClose}
       showCloseButton={false}
+      width={400}
+      height={450}
     >
-      <div className="pause-menu-buttons">
-        <Button label="SAVE GAME" onClick={onSave} size="lg" variant="primary" />
-        <Button label="SETTINGS" onClick={onSettings} size="lg" variant="primary" />
-        <Button label="QUIT GAME" onClick={onQuit} size="lg" variant="danger" />
-        <Button label="BACK TO GAME" onClick={onResume || onClose} size="lg" variant="primary" />
+      <div className="pause-menu-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center', padding: '20px' }}>
+        <BlockButton text="RESUME" onClick={onResume || onClose || (() => { })} width="220px" height="40px" />
+        <BlockButton text="SAVE GAME" onClick={onSave || (() => { })} width="220px" height="40px" />
+        <BlockButton text="SETTINGS" onClick={onSettings || (() => { })} width="220px" height="40px" />
+        <BlockButton text="BACK TO MAIN PAGE" onClick={onQuit || (() => { })} width="220px" height="40px" fontSize="1.5rem" />
       </div>
     </Modal>
   );

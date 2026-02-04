@@ -1,5 +1,6 @@
 import { useGameStore } from '../../state/gameStore';
 import { HPBar } from '../Common/HPBar';
+import { ConditionIcon } from '../Common/ConditionIcon';
 
 export const BossDisplay: React.FC = () => {
     const { bot, stageNum } = useGameStore();
@@ -62,12 +63,7 @@ export const BossDisplay: React.FC = () => {
             </div>
 
             {/* Boss Image (Center) */}
-            <div style={{
-                position: 'absolute',
-                top: '15%', left: '50%', transform: 'translateX(-50%)',
-                width: '450px', height: '450px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>
+            <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`}>
                 <img
                     src={getBossImage(stageNum)}
                     alt={bot.name}
@@ -103,31 +99,9 @@ export const BossDisplay: React.FC = () => {
                 minHeight: '50px',
                 zIndex: 100
             }}>
-                {Array.from(bot.conditions.keys()).map(cond => {
-                    let filename = `${cond}.png`;
-                    if (cond === 'Avoiding') filename = '회피(Avoiding).png';
-                    if (cond === 'Immune') filename = '면역(Immune).png';
-                    if (cond === 'Damage Reducing') filename = '피해감소(Damage Reducing).png';
-                    // Heavy Bleeding check
-                    if (cond === 'Heavy Bleeding') filename = 'Heavy Bleeding.png';
-
-                    return (
-                        <div key={cond} style={{ position: 'relative' }}>
-                            <img
-                                src={`/assets/conditions/${filename}`}
-                                alt={cond}
-                                style={{ width: '40px', height: '40px' }}
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                            />
-                            <span style={{
-                                position: 'absolute', bottom: -15, left: '50%', transform: 'translateX(-50%)',
-                                fontSize: '0.8rem', color: '#fff', textShadow: '1px 1px 0 #000', whiteSpace: 'nowrap'
-                            }}>
-                                {cond}
-                            </span>
-                        </div>
-                    );
-                })}
+                {Array.from(bot.conditions.entries()).map(([name, condition]) => (
+                    <ConditionIcon key={name} name={name} condition={condition} />
+                ))}
             </div>
         </div>
     );

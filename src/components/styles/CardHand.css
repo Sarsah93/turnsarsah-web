@@ -45,52 +45,53 @@
 }
 
 /* Attack Animations */
+/* Attack Animations v2.0.0.7 */
 .gathering {
-  position: absolute !important;
+  position: fixed !important;
+  /* Move to viewport coordinates for centering */
   left: 50% !important;
-  bottom: 150px !important;
-  transform: translateX(-50%) scale(1.1);
-  z-index: 100 !important;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.bunching {
-  position: absolute !important;
-  left: 50% !important;
-  bottom: 160px !important;
-  transform: translateX(-50%) scale(0.9);
-  z-index: 101 !important;
-  transition: all 0.2s ease-in;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(1.1);
+  z-index: 1000 !important;
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .charging {
-  position: absolute !important;
+  position: fixed !important;
   left: 50% !important;
-  bottom: 130px !important;
-  transform: translateX(-50%) scale(0.95);
-  z-index: 101 !important;
-  transition: all 0.2s ease-out;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
+  z-index: 1001 !important;
+  transition: all 0.3s ease-in;
+  filter: brightness(1.2);
 }
 
 .thrusting {
-  position: absolute !important;
+  position: fixed !important;
   left: 50% !important;
-  bottom: 600px !important;
-  transform: translateX(-50%) scale(0.8);
-  opacity: 0.8;
-  z-index: 102 !important;
-  transition: all 0.2s cubic-bezier(0.6, -0.28, 0.735, 0.045);
+  top: 25% !important;
+  /* Thrust towards Boss (Top Center) */
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(0.8);
+  opacity: 1;
+  z-index: 1002 !important;
+  transition: all 0.2s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+  /* Sharp thrust */
 }
 
 .scattering {
-  position: absolute !important;
+  position: fixed !important;
   left: 50% !important;
-  bottom: 650px !important;
-  transform: translateX(-50%) scale(1.5);
+  top: 25% !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(1.5);
   opacity: 0;
-  filter: blur(5px);
-  z-index: 103 !important;
+  filter: blur(10px) brightness(2);
+  z-index: 1003 !important;
   transition: all 0.4s ease-out;
+  /* Shatter fade */
 }
 
 .combo-preview {

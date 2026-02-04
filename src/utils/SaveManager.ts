@@ -19,14 +19,23 @@ export class SaveManager {
    * 게임 저장
    */
   static saveGame(data: Omit<SaveData, 'timestamp'>, slot: number = 0): void {
-    const saveData: SaveData = {
+    // Convert Map to Array for serialization
+    const serializedData = {
       ...data,
+      player: {
+        ...data.player,
+        conditions: Array.from(data.player.conditions.entries()),
+      },
+      bot: {
+        ...data.bot,
+        conditions: Array.from(data.bot.conditions.entries()),
+      },
       timestamp: Date.now(),
     };
 
     const key = `${SAVE_KEY_PREFIX}${slot}`;
     try {
-      localStorage.setItem(key, JSON.stringify(saveData));
+      localStorage.setItem(key, JSON.stringify(serializedData));
       console.log(`게임이 슬롯 ${slot}에 저장되었습니다.`);
     } catch (error) {
       console.error('저장 실패:', error);
@@ -42,7 +51,31 @@ export class SaveManager {
       const data = localStorage.getItem(key);
       if (!data) return null;
 
-      const saveData = JSON.parse(data) as SaveData;
+      const parsedData = JSON.parse(data);
+
+      // Restore Map from serialized data
+      // Handle legacy saves (where conditions might be {}) or new saves (Array)
+      const restoreConditions = (cond: any) => {
+        if (Array.isArray(cond)) {
+          return new Map(cond);
+        } else if (typeof cond === 'object' && cond !== null) {
+          return new Map(Object.entries(cond)); // Initial simple object support
+        }
+        return new Map();
+      };
+
+      const saveData: SaveData = {
+        ...parsedData,
+        player: {
+          ...parsedData.player,
+          conditions: restoreConditions(parsedData.player.conditions),
+        },
+        bot: {
+          ...parsedData.bot,
+          conditions: restoreConditions(parsedData.bot.conditions),
+        },
+      };
+
       console.log(`게임이 슬롯 ${slot}에서 로드되었습니다.`);
       return saveData;
     } catch (error) {

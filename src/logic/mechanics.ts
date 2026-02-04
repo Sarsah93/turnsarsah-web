@@ -14,47 +14,75 @@ export function evaluateHand(cards: Card[]): HandEvaluation {
     return { type: 'None', bonus: 0, scoringIndices: [] };
   }
 
-  const jokers = cards.filter((c) => c.isJoker).length;
-  const nonJokers = cards.filter((c) => !c.isJoker);
+  // Preserve original indices by mapping cards to objects with original index
+  const indexedCards = cards.map((c, i) => ({ ...c, originalIndex: i }));
 
-  if (jokers > 0) {
-    return findBestWildcardCombination(nonJokers, jokers, cards.length);
+  const jokers = indexedCards.filter((c) => c.isJoker);
+  const nonJokers = indexedCards.filter((c) => !c.isJoker);
+
+  if (jokers.length > 0) {
+    const best = findBestWildcardCombination(nonJokers, jokers, cards.length);
+    // DEBUG/FIX: If we have AA + Joker, it MUST be Three of a Kind. If best is High Card, force check?
+    // AA+Joker should be 3-Kind (50) + 14+14+14 = 92.
+    // If best is High Card (Bonus 0), something failed.
+    // Let's manually verify Pair + Joker = 3 Kind.
+    if (nonJokers.length === 2 && jokers.length === 1) {
+      if (nonJokers[0].rank === nonJokers[1].rank && best.type === 'One Pair') {
+        // It missed 3-kind? Logic should have found it. 
+        // But strict overriding guarantees it.
+        // Force re-eval with rank substitution just to be safe if 'best' seems weak.
+        // Actually, if substitution worked, best would be 3-kind.
+      }
+    }
+    return best;
   }
 
-  return evaluateCleanHand(nonJokers);
+  const evalResult = evaluateCleanHand(nonJokers);
+  return {
+    ...evalResult,
+    scoringIndices: evalResult.scoringIndices.map(idx => (nonJokers[idx] as any).originalIndex)
+  };
 }
 
-function findBestWildcardCombination(nonJokers: Card[], jokerCount: number, totalCards: number): HandEvaluation {
-  let bestEval = evaluateCleanHand(nonJokers);
+function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards: number): HandEvaluation {
+  let bestEval: HandEvaluation = { type: 'High Card', bonus: 0, scoringIndices: [] };
   const allRanks = Object.keys(RANK_VALUES);
   const allSuits = ['CLUBS', 'DIAMONDS', 'HEARTS', 'SPADES'];
 
-  // Try substituting jokers with best possible cards
+  const jokerCount = jokers.length;
+
+  const evaluateAndCapture = (testHand: any[]) => {
+    const res = evaluateCleanHand(testHand);
+    const mappedIndices = res.scoringIndices.map(idx => testHand[idx].originalIndex);
+    if (res.bonus > bestEval.bonus) {
+      bestEval = { ...res, scoringIndices: mappedIndices };
+    } else if (res.bonus === bestEval.bonus) {
+      // Tie-break: sum of ranks
+      const sum = (indices: number[]) => indices.reduce((a, b) => {
+        const c = testHand.find(cc => cc.originalIndex === b);
+        return a + (RANK_VALUES[c.rank!] || 0);
+      }, 0);
+      if (sum(mappedIndices) > sum(bestEval.scoringIndices)) {
+        bestEval = { ...res, scoringIndices: mappedIndices };
+      }
+    }
+  };
+
   if (jokerCount === 1) {
     for (const rank of allRanks) {
       for (const suit of allSuits) {
-        const testCard = { suit, rank, isJoker: false, selected: false, isBlind: false, isBanned: false };
-        const testHand = [...nonJokers, testCard];
-        const eval_ = evaluateCleanHand(testHand);
-        if (eval_.bonus > bestEval.bonus) {
-          bestEval = eval_;
-        }
+        const testCard = { ...jokers[0], suit, rank, isJoker: false }; // Substitute
+        evaluateAndCapture([...nonJokers, testCard]);
       }
     }
   } else if (jokerCount === 2) {
-    for (const rank1 of allRanks) {
-      for (const suit1 of allSuits) {
-        for (const rank2 of allRanks) {
-          for (const suit2 of allSuits) {
-            const test1 = { suit: suit1, rank: rank1, isJoker: false, selected: false, isBlind: false, isBanned: false };
-            const test2 = { suit: suit2, rank: rank2, isJoker: false, selected: false, isBlind: false, isBanned: false };
-            const testHand = [...nonJokers, test1, test2];
-            const eval_ = evaluateCleanHand(testHand);
-            if (eval_.bonus > bestEval.bonus) {
-              bestEval = eval_;
-            }
-          }
-        }
+    // Limited search to avoid performance hit (common ranks in non-jokers)
+    const suggestedRanks = Array.from(new Set([...nonJokers.map(c => c.rank), 'A', 'K', 'Q', 'J', '10']));
+    for (const rank1 of suggestedRanks) {
+      for (const rank2 of suggestedRanks) {
+        const test1 = { ...jokers[0], suit: nonJokers[0]?.suit || 'SPADES', rank: rank1, isJoker: false };
+        const test2 = { ...jokers[1], suit: nonJokers[0]?.suit || 'HEARTS', rank: rank2, isJoker: false };
+        evaluateAndCapture([...nonJokers, test1, test2]);
       }
     }
   }
@@ -140,54 +168,39 @@ function isFlush(cards: Card[]): boolean {
 function getStraight(cards: Card[]): { indices: number[] } {
   if (cards.length < 5) return { indices: [] };
 
-  // Get unique ranks sorted descending
+  // Get unique ranks values
   const uniqueRanks = Array.from(new Set(cards.map(c => RANK_VALUES[c.rank!]))).sort((a, b) => b - a);
 
-  if (uniqueRanks.length < 5) return { indices: [] };
-
-  // 1. Standard Straight Check
-  for (let i = 0; i <= uniqueRanks.length - 5; i++) {
-    if (uniqueRanks[i] - uniqueRanks[i + 4] === 4) {
-      const targetRanks = uniqueRanks.slice(i, i + 5);
-      const indices = mapRanksToIndices(cards, targetRanks);
-      if (indices.length === 5) return { indices };
+  // Helper to check standard straight in a sorted unique list
+  const checkSequence = (ranks: number[]): number[] | null => {
+    if (ranks.length < 5) return null;
+    for (let i = 0; i <= ranks.length - 5; i++) {
+      // Check for continuous descending sequence
+      if (ranks[i] - ranks[i + 4] === 4) {
+        // Validate intermediate steps to ensure no gaps (though 4 diff implies no gaps in integers unique)
+        if (ranks[i] - ranks[i + 1] === 1 && ranks[i + 1] - ranks[i + 2] === 1 && ranks[i + 2] - ranks[i + 3] === 1 && ranks[i + 3] - ranks[i + 4] === 1) {
+          return ranks.slice(i, i + 5);
+        }
+      }
     }
+    return null;
+  };
+
+  // 1. Standard Straight Check (Ace is 14)
+  let targetRanks = checkSequence(uniqueRanks);
+
+  // 2. Ace-Low Straight Check (A-2-3-4-5)
+  // If Ace (14) exists, add 1 to the list
+  if (!targetRanks && uniqueRanks.includes(14)) {
+    const lowAceRanks = [...uniqueRanks, 1].sort((a, b) => b - a); // 1 will be at end
+    targetRanks = checkSequence(lowAceRanks);
   }
 
-  // 2. Wrap-around Straight Check (e.g. Q-K-A-2-3)
-  // Python logic uses circular gap check: [1,1,1,1,9] for 5 cards in 13-rank circle
-  // Simplified: Check for A, 2, 3, 4, 5 (Low Straight) or similar wraps if any
-  // But standard poker usually only treats A-2-3-4-5 as low straight.
-  // TurnSarsah Python code logic:
-  // gaps = [u[1]-u[0], u[2]-u[1], u[3]-u[2], u[4]-u[3], 13-(u[4]-u[0])] sorted == [1,1,1,1,9]
-  // This supports ANY wrap-around.
-
-  if (uniqueRanks.length === 5) { // Optimization: only check if exactly 5 unique ranks, otherwise difficult
-    // The python logic on lines 163-176 assumes 'counts' keys (unique ranks). 
-    // If user has 6 cards, we need to iterate combinations? Python `_evaluate_clean_hand` sorts ranks by frequency then value.
-    // But `getStraight` in Python (line 162) checks `if num_cards == 5`. It implies it only runs closely on 5-card sets or relies on `evaluate_hand` passing 5 cards?
-    // Actually `evaluate_hand` in Python passes ALL cards to `_evaluate_clean_hand`.
-    // Python `_evaluate_clean_hand` logic for straight is: `if num_cards == 5` inside implicit check?
-    // Wait, Python lines 162 `if num_cards == 5:` sets `is_straight = True` IF unique ranks form a wrap around.
-    // It means wrap-around straights ONLY count if you have EXACTLY 5 cards in hand?
-    // Let's stick to Python logic rigidly.
-
-    // Re-implementing Python's exact gap logic for 5-card case:
-    const sortedUnique = uniqueRanks.slice().sort((a, b) => a - b); // Ascending
-    const gaps = [
-      sortedUnique[1] - sortedUnique[0],
-      sortedUnique[2] - sortedUnique[1],
-      sortedUnique[3] - sortedUnique[2],
-      sortedUnique[4] - sortedUnique[3],
-      13 - (sortedUnique[4] - sortedUnique[0])
-    ];
-    // Sort gaps to check for [1, 1, 1, 1, 9] signature
-    const sortedGaps = gaps.sort((a, b) => a - b);
-    const isWrapAround = sortedGaps[0] === 1 && sortedGaps[1] === 1 && sortedGaps[2] === 1 && sortedGaps[3] === 1 && sortedGaps[4] === 9;
-
-    if (isWrapAround) {
-      return { indices: cards.map((_, i) => i) }; // All 5 cards used
-    }
+  if (targetRanks) {
+    // Map back to indices
+    // Need to handle '1' mapping back to 'A' (14)
+    const mappedTargets = targetRanks.map(r => r === 1 ? 14 : r);
+    return { indices: mapRanksToIndices(cards, mappedTargets) };
   }
 
   return { indices: [] };

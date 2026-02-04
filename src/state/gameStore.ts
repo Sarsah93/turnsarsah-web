@@ -31,6 +31,10 @@ interface GameStoreState {
   setBotHp: (hp: number) => void;
   setPlayerMaxHp: (maxHp: number) => void;
   setBotMaxHp: (maxHp: number) => void;
+  setPlayerAnimState: (state: 'NONE' | 'ATTACK' | 'HIT') => void;
+  setBotAnimState: (state: 'NONE' | 'ATTACK' | 'HIT') => void;
+  syncPlayer: (player: any) => void;
+  syncBot: (bot: any) => void;
 
   // Conditions
   addPlayerCondition: (name: string, duration: number, desc?: string, data?: unknown) => void;
@@ -51,6 +55,7 @@ interface GameStoreState {
   setPlayerHand: (hand: Card[]) => void;
   removePlayerCards: (indices: number[]) => void;
   drawCards: (count: number) => void;
+  refillHand: () => void;
   swapCards: (indices: number[]) => void;
   setDeck: (deck: Deck) => void;
 
@@ -67,6 +72,19 @@ interface GameStoreState {
   // Save/Load
   saveGame: () => void;
   loadGame: (slot: number) => void;
+
+  // New: Stage 6 Restoration
+  stage6EntryHp: number;
+  setStage6EntryHp: (hp: number) => void;
+
+  // v2.0.0.5 Phase 3: Transitions
+  isTransitioning: boolean;
+  setIsTransitioning: (val: boolean) => void;
+  triggerTransition: (action: () => void) => void;
+
+  // v2.0.0.7 Save/Load Handle
+  isGameLoaded: boolean;
+  setIsGameLoaded: (loaded: boolean) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -133,6 +151,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     set((state) => ({
       bot: { ...state.bot, maxHp, hp: Math.min(state.bot.hp, maxHp) },
     })),
+  setPlayerAnimState: (animState) =>
+    set((state) => ({ player: { ...state.player, animState } })),
+  setBotAnimState: (animState) =>
+    set((state) => ({ bot: { ...state.bot, animState } })),
+  syncPlayer: (player) =>
+    set((state) => ({ player: { ...state.player, ...player, conditions: new Map(player.conditions) } })),
+  syncBot: (bot) =>
+    set((state) => ({ bot: { ...state.bot, ...bot, conditions: new Map(bot.conditions) } })),
 
   // Player Conditions
   addPlayerCondition: (name, duration, desc, data) =>
@@ -198,6 +224,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const newCards = state.deck.draw(count);
     return { playerHand: [...state.playerHand, ...newCards] };
   }),
+  refillHand: () => set((state) => {
+    const needed = 8 - state.playerHand.length;
+    if (needed <= 0) return state;
+    const newCards = state.deck.draw(needed);
+    return { playerHand: [...state.playerHand, ...newCards] };
+  }),
   swapCards: (indices) => set((state) => {
     const newHand = [...state.playerHand];
     const newCards = state.deck.draw(indices.length);
@@ -214,28 +246,36 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   message: '',
   setMessage: (message) => set({ message }),
 
-  // Initialization
+  // Initialization (v2.0.0.5)
   initGame: (stageId: number) =>
     set((state) => {
       const stageConfig = STAGES[stageId];
       if (!stageConfig) return state;
 
       const newDeck = new Deck();
+      // v2.0.0.5: Start with 8 cards
       const initialHand = newDeck.draw(8);
+
+      // Stage 6 Special: Capture entry HP for restoration on loss
+      let stage6Hp = state.stage6EntryHp;
+      if (stageId === 6) {
+        stage6Hp = state.player.hp;
+      }
 
       return {
         stageNum: stageId,
         gameState: GameState.BATTLE,
         currentTurn: 0,
         playerHand: initialHand,
+        stage6EntryHp: stage6Hp,
         player: {
           ...state.player,
-          hp: stageId === 1 ? 200 : state.player.hp, // Reset HP only on Stage 1
+          hp: stageId === 1 ? 200 : state.player.hp,
           maxHp: stageId === 1 ? 200 : state.player.maxHp,
           baseMaxHp: stageId === 1 ? 200 : (state.player.baseMaxHp || 200),
           atk: 10,
           level: 1,
-          conditions: stageId === 1 ? new Map([['Avoiding', { duration: 9999, elapsed: 0, desc: 'Avoiding' }]]) : new Map(),
+          conditions: stageId === 1 ? new Map([['Avoiding', { duration: 9999, elapsed: 0, desc: 'AVOIDING: 5% EVADE PROB.' }]]) : new Map(),
           drawsRemaining: 2,
         },
         bot: {
@@ -245,7 +285,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           atk: stageConfig.atk,
           level: stageConfig.level,
           conditions: new Map(),
-          activeRules: [], // Rules will be initialized by GameEngine logic
+          activeRules: [],
         },
         deck: newDeck,
         isPaused: false,
@@ -290,16 +330,38 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     });
   },
 
+  // Save/Load Flags
+
   loadGame: (slot: number) => {
     const gameData = SaveManager.loadGame(slot);
     if (gameData) {
       set({
         stageNum: gameData.stageNum,
+        gameState: GameState.BATTLE,
         currentTurn: gameData.currentTurn,
         player: gameData.player,
         bot: gameData.bot,
         playerHand: gameData.playerHand,
+        deck: new Deck(),
+        isGameLoaded: true, // Flag to signal Game.tsx to skip init
       });
     }
   },
+
+  stage6EntryHp: 200,
+  setStage6EntryHp: (hp) => set({ stage6EntryHp: hp }),
+
+  // Transitions
+  isTransitioning: false,
+  setIsTransitioning: (isTransitioning) => set({ isTransitioning }),
+  triggerTransition: async (action) => {
+    set({ isTransitioning: true });
+    await new Promise(r => setTimeout(r, 800)); // Fade out duration
+    action();
+    await new Promise(r => setTimeout(r, 200)); // Gap
+    set({ isTransitioning: false });
+  },
+
+  isGameLoaded: false,
+  setIsGameLoaded: (isGameLoaded) => set({ isGameLoaded }),
 }));

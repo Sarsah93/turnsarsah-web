@@ -71,6 +71,9 @@
   align-items: center;
   gap: 15px;
   margin-bottom: 20px;
+  /* Ensure player section stays reachable for tooltips, above popups */
+  position: relative;
+  z-index: 200;
 }
 
 .player-conditions {
@@ -79,4 +82,85 @@
   flex-wrap: wrap;
   justify-content: center;
   max-width: 300px;
+}
+
+/* v2.0.0.5: Battle Animations */
+
+@keyframes thrust-down {
+  0% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(100px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes thrust-up {
+  0% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-100px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes hit-shake {
+  0% {
+    transform: translateX(0);
+  }
+
+  10% {
+    transform: translateX(-10px);
+  }
+
+  30% {
+    transform: translateX(10px);
+  }
+
+  50% {
+    transform: translateX(-10px);
+  }
+
+  70% {
+    transform: translateX(10px);
+  }
+
+  90% {
+    transform: translateX(-5px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-thrust-down {
+  animation: thrust-down 0.4s ease-out;
+}
+
+.animate-hit-shake {
+  animation: hit-shake 0.3s ease-in-out;
+}
+
+.boss-avatar-wrapper {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 450px;
+  height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
 }

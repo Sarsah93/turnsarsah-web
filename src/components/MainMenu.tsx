@@ -5,7 +5,7 @@ import { AudioManager } from '../utils/AudioManager';
 import { SaveLoadMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 
 export const MainMenu: React.FC = () => {
-    const { initGame, loadGame } = useGameStore();
+    const { initGame, loadGame, triggerTransition } = useGameStore();
 
     useEffect(() => {
         AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
@@ -16,7 +16,7 @@ export const MainMenu: React.FC = () => {
     };
 
     const handleNewGame = () => {
-        initGame(1);
+        triggerTransition(() => initGame(1));
     };
 
     const handleLoadAction = (slot: number) => {
@@ -30,7 +30,7 @@ export const MainMenu: React.FC = () => {
         <div className="menu-screen" onClick={handleInteraction} style={{
             position: 'relative', width: '100%', height: '100%',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            background: 'url("/assets/backgrounds/main_menu_bg.png") center/cover no-repeat'
+            background: 'transparent'
         }}>
             {/* Logo */}
             <img
@@ -51,6 +51,21 @@ export const MainMenu: React.FC = () => {
             {activeMenu === 'SETTINGS' && (
                 <SettingsMenu
                     onClose={() => setActiveMenu('NONE')}
+                    onVolumeChange={(type, vol) => {
+                        if (type === 'bgm') {
+                            AudioManager.setBGMVolume(vol);
+                            // Force BGM update for current page if not handled by AudioManager automatically
+                            // AudioManager logic seems to handle loop=true audio if referencing same src?
+                            // But here we are just calling static method. AudioManager implementation should handle it.
+                            // Let's ensure AudioManager.playBGM re-applies volume if needed or just setVolume works.
+                            // AudioManager.setBGMVolume sets this.bgmAudio.volume immediately.
+                            // But maybe we need to ensure MainMenu re-renders or invokes it corretly.
+                            // The key is that SettingsMenu calls onVolumeChange.
+                            // MainMenu just needs to pass this handler.
+                        } else {
+                            AudioManager.setSFXVolume(vol);
+                        }
+                    }}
                 />
             )}
 

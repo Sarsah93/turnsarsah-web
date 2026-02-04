@@ -5,6 +5,7 @@ export interface Condition {
   elapsed: number;
   desc: string;
   data?: unknown;
+  type?: string;
 }
 
 export interface Character {
@@ -19,6 +20,7 @@ export interface Character {
   baseMaxHp?: number; // Original MaxHP before stage modifications
   drawsRemaining?: number; // For player card swaps
   activeRules?: [string, unknown][]; // For bot stage rules
+  animState?: 'NONE' | 'ATTACK' | 'HIT'; // Player only uses HIT/NONE now, Bot uses all.
 }
 
 export interface CharacterJSON {

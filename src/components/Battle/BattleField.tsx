@@ -8,6 +8,7 @@ import '../styles/BattleField.css';
 interface BattleFieldProps {
   player: Character;
   bot: Character;
+  stageNum?: number;
   popups?: DamagePopupState[];
   onRemovePopup?: (id: string) => void;
   onMeasure?: (positions: { player: { x: number; y: number; w: number; h: number } | null; bot: { x: number; y: number; w: number; h: number } | null; scale: number }) => void;
@@ -23,13 +24,13 @@ interface DamagePopupState {
   isHeal: boolean;
 }
 
-export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = [], onRemovePopup, onMeasure }) => {
+export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum = 1, popups = [], onRemovePopup, onMeasure }) => {
   // Refs to measure element positions for popup placement
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const bossRef = React.useRef<HTMLDivElement | null>(null);
   const playerRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Map boss names to image filenames
+  // Map boss names to image filenames per v2.0.0.5 requirements
   const getBossImagePath = (bossName: string): string => {
     const nameMap: Record<string, string> = {
       'Goblin': 're_Goblin_01.png',
@@ -58,10 +59,10 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
     const scale = window.devicePixelRatio || 1;
 
     const bot = botRect
-      ? { x: botRect.left - cRect.left + botRect.width / 2, y: botRect.top - cRect.top + botRect.height / 2, w: botRect.width, h: botRect.height }
+      ? { x: botRect.left - cRect.left + botRect.width / 2, y: botRect.top - cRect.top + botRect.height / 2 + 50, w: botRect.width, h: botRect.height }
       : null;
     const playerPos = playerRect
-      ? { x: playerRect.left - cRect.left + playerRect.width / 2, y: playerRect.top - cRect.top + playerRect.height / 2, w: playerRect.width, h: playerRect.height }
+      ? { x: playerRect.left - cRect.left + playerRect.width / 2, y: playerRect.top - cRect.top - 20, w: playerRect.width, h: playerRect.height }
       : null;
 
     onMeasure?.({ player: playerPos, bot, scale });
@@ -75,16 +76,16 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
 
   return (
     <div className="battlefield">
-      {/* Boss Section - Top Right */}
-      <div className="boss-section" style={{
+      {/* Boss HP Bar & Conditions (New grouping for better alignment) */}
+      <div style={{
         position: 'absolute',
         top: '10px',
         right: '10px',
-        width: '420px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-end',
-        gap: '5px'
+        gap: '5px',
+        zIndex: 60
       }}>
         <HPBar
           hp={bot.hp}
@@ -92,25 +93,38 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
           label="BOSS"
           color="red"
           align="right"
+          fontSize="2.2rem"
         />
-        {/* Boss Stats Cluster */}
+        <div className="boss-conditions" style={{ display: 'flex', gap: '5px', justifyContent: 'flex-end', paddingRight: '10px', zIndex: 2000, position: 'relative', pointerEvents: 'auto' }}>
+          {Array.from(bot.conditions.entries()).map(([name, condition]) => (
+            <ConditionIcon key={name} name={name} condition={condition} />
+          ))}
+        </div>
+      </div>
+
+      {/* Boss Stats Overlay - Just Stats/Rules now */}
+      <div className="boss-stats-overlay" style={{
+        position: 'absolute',
+        top: '120px', // Shifted down slightly to avoid conditions
+        right: '25px',
+        width: '300px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: '5px',
+        zIndex: 50
+      }}>
         <div style={{
-          paddingRight: '10px',
-          textAlign: 'right',
           color: '#fff',
           fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: '1.8rem',
-          textShadow: '2px 2px 2px #000'
+          fontSize: '2.2rem',
+          textShadow: '2px 2px 2px #000',
+          textAlign: 'right'
         }}>
           <div style={{ color: '#fff' }}>ATK: {bot.atk}</div>
           <div style={{ color: '#f1c40f' }}>
             RULE: {bot.activeRules && bot.activeRules.length > 0 ? (bot.activeRules[0] as any).desc || (bot.activeRules[0] as any)[0] : 'NONE'}
           </div>
-        </div>
-        <div className="boss-conditions">
-          {Array.from(bot.conditions.entries()).map(([name, condition]) => (
-            <ConditionIcon key={name} name={name} condition={condition} />
-          ))}
         </div>
       </div>
 
@@ -125,13 +139,13 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
         textShadow: '2px 2px 4px #000',
         zIndex: 100
       }}>
-        STAGE 1
+        STAGE {stageNum}
       </div>
 
-      {/* Boss Portrait - Centered but higher */}
+      {/* Boss Portrait - Centered but higher and smaller (v2.0.0.5) */}
       <div style={{
         position: 'absolute',
-        top: '5%',
+        top: '2%',
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
@@ -139,10 +153,10 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
         alignItems: 'center',
         pointerEvents: 'none'
       }}>
-        <div className="boss-portrait" ref={bossRef} style={{ width: '400px', height: '400px', margin: 0 }}>
+        <div className={`boss-portrait ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`} ref={bossRef} style={{ width: '260px', height: '260px', margin: 0 }}>
           <img src={getBossImagePath(bot.name)} alt={bot.name} className="boss-image" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
-        <div className="boss-name" style={{ fontSize: '4rem', color: '#f1c40f', marginTop: '-20px' }}>
+        <div className="boss-name" style={{ fontSize: '2.2rem', color: '#f1c40f', marginTop: '0px', fontFamily: "'Bebas Neue', sans-serif" }}>
           {bot.name.toUpperCase()}
         </div>
       </div>
@@ -163,7 +177,7 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
       </div>
 
       {/* Player Section - Bottom Left */}
-      <div className="player-section" ref={playerRef} style={{
+      <div className={`player-section ${player.animState === 'HIT' ? 'animate-hit-shake' : ''}`} ref={playerRef} style={{
         position: 'absolute',
         bottom: '10px',
         left: '10px',
@@ -173,7 +187,16 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
         alignItems: 'flex-start',
         gap: '10px'
       }}>
-        <div className="player-conditions" style={{ paddingLeft: '10px', justifyContent: 'flex-start' }}>
+        <div className="player-conditions" style={{
+          paddingLeft: '10px',
+          display: 'flex',
+          gap: '8px',
+          justifyContent: 'flex-start',
+          marginBottom: '5px',
+          minHeight: '40px', // Ensure space for icons
+          zIndex: 200,
+          position: 'relative'
+        }}>
           {Array.from(player.conditions.entries()).map(([name, condition]) => (
             <ConditionIcon key={name} name={name} condition={condition} />
           ))}
@@ -184,6 +207,7 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, popups = 
           label="PLAYER"
           color="blue"
           align="left"
+          fontSize="2.2rem"
         />
       </div>
     </div>

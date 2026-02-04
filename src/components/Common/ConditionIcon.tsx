@@ -16,12 +16,14 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition })
   if (name === 'Immune') filename = '면역(Immune).png';
   if (name === 'Damage Reducing') filename = '피해감소(Damage Reducing).png';
   if (name === 'Heavy Bleeding') filename = 'Heavy Bleeding.png';
+  if (name === 'Frailty') filename = 'Debilitating.png'; // Map Frailty to Debilitating icon
+  if (name === 'Poison') filename = 'Poisoning.png'; // Handle potential naming mismatch
 
   const iconPath = `/assets/conditions/${filename}`;
 
   return (
     <Tooltip name={name} condition={condition}>
-      <div className="condition-icon" title={name}>
+      <div className="condition-icon" style={{ pointerEvents: 'auto', cursor: 'pointer' }}>
         <img
           src={iconPath}
           alt={name}

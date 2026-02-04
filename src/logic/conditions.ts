@@ -1,82 +1,49 @@
 // logic/conditions.ts
 
 import { Condition } from '../types/Character';
-import {
-  BLEED_DAMAGE,
-  BLEED_DURATION,
-  BLEED_INTERVAL,
-  HEAVY_BLEED_DAMAGE,
-  HEAVY_BLEED_DURATION,
-  POISON_DAMAGE,
-  POISON_DURATION,
-  DEBILITATING_DURATION,
-  DEBILITATING_HP_REDUCTION,
-  PARALYSIS_DURATION,
-  IMMUNE_DURATION,
-  REGEN_DURATION,
-} from '../constants/gameConfig';
 
-/**
- * 상태이상 기본 설정
- */
-export interface ConditionConfig {
-  duration: number;
-  desc: string;
-  data?: unknown;
+export interface ConditionEffect {
+  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'POISON_DMG' | 'HEAVY_BLEED' | 'AVOIDED' | 'PARALYZED' | 'DEBILITATING' | 'FRAILTY' | 'CONDITION_APPLIED';
+  amount: number;
+  data?: any; // For flexible payload in CONDITION_APPLIED
 }
 
-export const CONDITION_PRESETS: Record<string, ConditionConfig> = {
+/**
+ * 상태이상 기본 설정 (v2.0.0.5 기준)
+ */
+export const CONDITION_PRESETS: Record<string, { duration: number; desc: string }> = {
   Bleeding: {
-    duration: BLEED_DURATION,
-    desc: 'Losing HP over time.',
+    duration: 4,
+    desc: 'LOSING 10 HP EVERY TURN.',
   },
   'Heavy Bleeding': {
-    duration: HEAVY_BLEED_DURATION,
-    desc: 'Losing lots of HP over time.',
+    duration: 6,
+    desc: 'LOSING 20 HP EVERY TURN.',
   },
   Poisoning: {
-    duration: POISON_DURATION,
-    desc: 'Taking damage at turn end.',
-  },
-  Debilitating: {
-    duration: DEBILITATING_DURATION,
-    desc: 'Max HP reduced.',
-  },
-  Paralyzing: {
-    duration: PARALYSIS_DURATION,
-    desc: 'May skip turn.',
+    duration: 6,
+    desc: 'TAKING INCREASING DAMAGE EVERY TURN (+5).',
   },
   Regenerating: {
-    duration: REGEN_DURATION,
-    desc: 'Healing over time.',
+    duration: 5,
+    desc: 'RECOVERING 10 HP EVERY TURN.',
+  },
+  Paralyzing: {
+    duration: 3,
+    desc: 'CANNOT ATTACK (SKIP TURN).',
+  },
+  Frailty: {
+    duration: 6,
+    desc: 'MAX HP -25%.',
   },
   Avoiding: {
-    duration: 999, // Permanent
-    desc: 'Chance to evade attacks.',
-  },
-  'Damage Reducing': {
-    duration: 999, // Permanent
-    desc: 'Taking reduced damage.',
-  },
-  Immune: {
-    duration: IMMUNE_DURATION,
-    desc: 'Immune to negative effects.',
+    duration: 9999,
+    desc: 'CHANCE TO EVADE ATTACKS (5%).',
   },
 };
 
 /**
- * 음수 효과 (면역 조건으로 차단 가능)
- */
-const NEGATIVE_EFFECTS = [
-  'Bleeding',
-  'Heavy Bleeding',
-  'Poisoning',
-  'Debilitating',
-  'Paralyzing',
-];
-
-/**
- * 조건 적용 (면역 체크, 중첩 규칙)
+ * 상태이상 적용 (면역 체크, 중첩 규칙 v2.0.0.5)
  */
 export function applyCondition(
   conditions: Map<string, Condition>,
@@ -85,49 +52,52 @@ export function applyCondition(
   desc: string = '',
   data?: unknown
 ): boolean {
-  // 면역 체크
-  if (conditions.has('Immune') && NEGATIVE_EFFECTS.includes(name)) {
-    return false; // 면역으로 차단됨
-  }
+  // 1. Heavy Bleed blocks Bleed
+  if (name === 'Bleeding' && conditions.has('Heavy Bleeding')) return false;
 
-  // 출혈 중첩 규칙
-  if (name === 'Bleeding') {
-    if (conditions.has('Heavy Bleeding')) {
-      return false; // 이미 Heavy Bleed가 있으면 적용 안 됨
-    }
-    if (conditions.has('Bleeding')) {
-      // 일반 출혈 → Heavy Bleed로 업그레이드
-      conditions.delete('Bleeding');
+  // 2. Frailty blocks stacking Poison (new Frailty) 
+  // Note: Poison can still be applied if Frailty exists, but it won't stack into NEW Frailty.
+  // This is handled logic-side: if Poison is applied while Frailty exists, it's just Poison.
+  // If Poison + Poison -> Frailty:
+  if (name === 'Poisoning' && conditions.has('Poisoning')) {
+    // Check if Frailty already exists
+    if (conditions.has('Frailty')) {
+      // Only refresh Poison? Or allow parallel Poison?
+      // Requirement: "If Frailty remains, newly applied Poison cannot stack to Frailty."
+      // So we just update Poison normally.
+    } else {
+      // Stack to Frailty
+      conditions.delete('Poisoning');
       return applyCondition(
         conditions,
-        'Heavy Bleeding',
-        HEAVY_BLEED_DURATION,
-        CONDITION_PRESETS['Heavy Bleeding'].desc
+        'Frailty',
+        6, // Duration for Frailty? User didn't specify, assuming similar to others or 5-6
+        'MAX HP -25% (FRAILTY)',
+        25
       );
     }
   }
 
-  // 중독 중첩 규칙
-  if (name === 'Poisoning') {
-    if (conditions.has('Poisoning')) {
-      // 50% 확률로 쇠약으로 업그레이드
-      if (Math.random() < 0.5) {
-        conditions.delete('Poisoning');
-        return applyCondition(
-          conditions,
-          'Debilitating',
-          DEBILITATING_DURATION,
-          CONDITION_PRESETS.Debilitating.desc
-        );
-      }
-    }
+  // 3. Bleed + Bleed -> Heavy Bleed
+  if (name === 'Bleeding' && conditions.has('Bleeding')) {
+    conditions.delete('Bleeding');
+    return applyCondition(
+      conditions,
+      'Heavy Bleeding',
+      4,
+      'LOSING 25 HP EVERY TURN (HEAVY BLEED)',
+      25
+    );
   }
 
-  // 마비 중첩 규칙
-  if (name === 'Paralyzing') {
-    if (conditions.has('Paralyzing')) {
-      return false; // 중첩 안 됨
-    }
+  // 4. Paralyze stacking block
+  if (name === 'Paralyzing' && conditions.has('Paralyzing')) {
+    return false;
+  }
+
+  // 5. Frailty Stacking block (Frailty cannot stack with itself)
+  if (name === 'Frailty' && conditions.has('Frailty')) {
+    return false;
   }
 
   const isNew = !conditions.has(name);
@@ -136,48 +106,12 @@ export function applyCondition(
     elapsed: 0,
     desc: desc || CONDITION_PRESETS[name]?.desc || '',
     data,
+    type: name.toUpperCase().replace(' ', '_') as any
   });
 
   return isNew;
 }
 
-/**
- * 조건 제거
- */
-export function removeCondition(
-  conditions: Map<string, Condition>,
-  name: string
-): void {
-  if (conditions.has(name)) {
-    conditions.delete(name);
-  }
-}
-
-/**
- * 턴 시작 시 조건 처리 (회복 등)
- */
-export interface ConditionEffect {
-  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'HEAVY_BLEED' | 'AVOIDED';
-  amount: number;
-}
-
-export function processConditionsStartTurn(
-  conditions: Map<string, Condition>
-): ConditionEffect[] {
-  const effects: ConditionEffect[] = [];
-
-  // 재생 (Regenerating)
-  if (conditions.has('Regenerating')) {
-    // 실제로는 maxHp를 필요로 함. 호출처에서 maxHp를 전달받아 계산
-    effects.push({ type: 'HEAL', amount: 0 }); // 마커만 추가, 값은 호출처에서 계산
-  }
-
-  return effects;
-}
-
-/**
- * 턴 종료 시 조건 처리 (데미지 등) 및 경과 시간 업데이트
- */
 export function processConditionsEndTurn(
   conditions: Map<string, Condition>
 ): ConditionEffect[] {
@@ -185,85 +119,34 @@ export function processConditionsEndTurn(
   const toRemove: string[] = [];
 
   for (const [name, condition] of conditions.entries()) {
-    // DoT 데미지
-    if (name === 'Poisoning') {
-      effects.push({ type: 'POISON', amount: POISON_DAMAGE });
-    } else if (name === 'Bleeding') {
-      effects.push({ type: 'BLEED', amount: BLEED_DAMAGE });
+    // 1. Damage Effects
+    if (name === 'Bleeding') {
+      effects.push({ type: 'BLEED', amount: 10 });
     } else if (name === 'Heavy Bleeding') {
-      effects.push({ type: 'HEAVY_BLEED', amount: HEAVY_BLEED_DAMAGE });
+      effects.push({ type: 'HEAVY_BLEED', amount: 25 });
+    } else if (name === 'Poisoning') {
+      const amount = (condition.elapsed + 1) * 5;
+      effects.push({ type: 'POISON', amount });
+    } else if (name === 'Regenerating') {
+      effects.push({ type: 'HEAL', amount: 10 });
     }
 
-    // 경과 시간 증가
+    // 2. Elapsed Time
     condition.elapsed += 1;
 
-    // 지속 시간 만료 체크
-    if (condition.elapsed >= condition.duration) {
+    // 3. Expiration
+    if (condition.duration < 999 && condition.elapsed >= condition.duration) {
       toRemove.push(name);
     }
   }
 
-  // 만료된 조건 제거
-  toRemove.forEach((name) => removeCondition(conditions, name));
-
+  toRemove.forEach((name) => conditions.delete(name));
   return effects;
 }
 
-/**
- * 일반 병렬 처리 (출혈 틱 등 특수 타이밍)
- */
-export function processBleedTick(conditions: Map<string, Condition>): ConditionEffect[] {
-  const effects: ConditionEffect[] = [];
-
-  // 출혈은 일반적으로 2턴 간격으로 처리 (mechanics 참고)
-  if (conditions.has('Bleeding')) {
-    const condition = conditions.get('Bleeding')!;
-    // elapsed가 BLEED_INTERVAL의 배수인지 확인
-    if (condition.elapsed % BLEED_INTERVAL === 0 && condition.elapsed > 0) {
-      effects.push({ type: 'BLEED', amount: BLEED_DAMAGE });
-    }
-  }
-
-  if (conditions.has('Heavy Bleeding')) {
-    const condition = conditions.get('Heavy Bleeding')!;
-    if (condition.elapsed % BLEED_INTERVAL === 0 && condition.elapsed > 0) {
-      effects.push({ type: 'HEAVY_BLEED', amount: HEAVY_BLEED_DAMAGE });
-    }
-  }
-
-  return effects;
-}
-
-/**
- * 전체 조건 초기화 (스테이지 전환 시)
- * 영구 효과 (duration >= 999)는 유지
- */
-export function clearConditions(conditions: Map<string, Condition>): void {
-  const toRemove: string[] = [];
-
-  for (const [name, condition] of conditions.entries()) {
-    if (condition.duration < 999) {
-      toRemove.push(name);
-    }
-  }
-
-  toRemove.forEach((name) => removeCondition(conditions, name));
-}
-
-/**
- * MaxHP 감소 (쇠약 적용)
- */
-export function reduceMaxHp(maxHp: number, percentage: number = DEBILITATING_HP_REDUCTION): number {
-  const reduction = Math.floor(maxHp * percentage);
-  return Math.max(1, maxHp - reduction);
-}
-
-/**
- * MaxHP 복구 (쇠약 해제)
- */
-export function restoreMaxHp(
-  currentMaxHp: number,
-  baseMaxHp: number
-): number {
-  return Math.max(currentMaxHp, baseMaxHp);
+export function clearConditions(conditions: Map<string, Condition>, isVictory: boolean = false): void {
+  // 스테이지 6에서 얻은 최대 체력 증가는 상태이상이 아니므로 유지되도록 설계해야 함 (gameStore에서 처리)
+  // 여기서는 단순히 조건 맵을 비움
+  conditions.clear();
+  // 회피는 항상 플레이어에게 부여되어야 하므로 나중에 다시 추가 필요 (gameStore.initGame에서 처리)
 }

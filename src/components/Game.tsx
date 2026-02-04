@@ -7,6 +7,8 @@ import CardHand from './Battle/CardHand';
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import { TurnEngine } from '../logic/turnEngine';
 import { Card } from '../types/Card';
+import { AudioManager } from '../utils/AudioManager';
+import { BlockButton } from './BlockButton';
 import './Game.css';
 import displayUtils from '../utils/display';
 
@@ -27,19 +29,30 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [gameStatus, setGameStatus] = useState<'ONGOING' | 'PLAYER_WIN' | 'PLAYER_LOSE'>('ONGOING');
-  const [popups, setPopups] = useState<Array<{ id: string; x: number; y: number; amount: number; isCritical: boolean; isHeal: boolean }>>([]);
+  // Granular UI states for v2.0.0.6 Strict Flow
+  const [showDimOverlay, setShowDimOverlay] = useState(false);
+  const [showResultText, setShowResultText] = useState(false);
+  const [showResultButtons, setShowResultButtons] = useState(false);
+  const isFlowLockedRef = useRef(false); // Ref for synchronous locking
+
+  const [popups, setPopups] = useState<Array<{ id: string; x: number; y: number; amount: number; isCritical: boolean; isHeal: boolean; color?: string }>>([]);
   const popupResolvers = useRef<Map<string, () => void>>(new Map());
   const [entityPositions, setEntityPositions] = useState<{ player: { x: number; y: number; w: number; h: number } | null; bot: { x: number; y: number; w: number; h: number } | null; scale?: number }>({ player: null, bot: null, scale: 1 });
 
   const POPUP_VERTICAL_FACTOR = { player: 0.38, bot: 0.45 };
   const [screenShake, setScreenShake] = useState(false);
 
-  const addPopup = (x: number, y: number, amount: number, isCritical = false, isHeal = false): Promise<void> => {
+  const stopAudio = () => {
+    AudioManager.stopBGM();
+    // Also stop SFX if needed, but primarily BGM
+  };
+
+  const addPopup = (x: number, y: number, amount: number, isCritical = false, isHeal = false, color?: string): Promise<void> => {
     const id = Math.random().toString(36).slice(2);
     const promise = new Promise<void>((resolve) => {
       popupResolvers.current.set(id, resolve);
     });
-    setPopups((p) => [...p, { id, x, y, amount, isCritical, isHeal }]);
+    setPopups((p) => [...p, { id, x, y, amount, isCritical, isHeal, color }]);
     return promise;
   };
 
@@ -54,10 +67,126 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
 
   // 게임 초기화
   useEffect(() => {
-    store.initGame(stageId);
-    const engine = new TurnEngine(store.player, store.bot);
+    setGameStatus('ONGOING');
+    isFlowLockedRef.current = false; // Reset lock
+    setShowDimOverlay(false);
+    setShowResultText(false);
+    setShowResultButtons(false);
+    setIsProcessing(false);
+    setSelectedCards([]);
+
+    // v2.0.0.7: Check if loaded from save
+    if (store.isGameLoaded) {
+      store.setIsGameLoaded(false); // Consume
+      // Skip initGame to preserve loaded data
+    } else {
+      store.initGame(stageId);
+      // Apply Permanent 'Avoiding' Effect for every LOW stage start? 
+      // Actually user requested Avoiding at start of every stage.
+      // For loaded game, if it wasn't saved, we might miss it.
+      // But initGame resets conditions anyway.
+      // If loaded, conditions are loaded.
+      setTimeout(() => {
+        store.addPlayerCondition('Avoiding', 999, 'Chance to avoid attacks (5%)', 0);
+      }, 0);
+    }
+
+    const engine = new TurnEngine(store.player, store.bot, stageId);
     setTurnEngine(engine);
   }, [stageId]);
+
+  // ... (omitted)
+
+  const handleGameWin = async () => {
+    if (isFlowLockedRef.current) return;
+    isFlowLockedRef.current = true;
+
+    // 1. 상태 정리 (Heal + Clear Conditions)
+    store.clearPlayerConditions();
+
+    // Restore Max HP if it was reduced (e.g. by Frailty)
+    if (store.player.maxHp < (store.player.baseMaxHp || 200)) {
+      store.setPlayerMaxHp(store.player.baseMaxHp || 200);
+    }
+
+    // Stage 6 Bonus: +20% Max HP
+    if (stageId === 6) {
+      store.setPlayerMaxHp(240);
+      store.setPlayerHp(240);
+    } else {
+      // Standard Clear Bonus: +50 HP (clamped to Max HP)
+      const newHp = Math.min(store.player.maxHp, store.player.hp + 50);
+      store.setPlayerHp(newHp);
+    }
+
+    setGameStatus('PLAYER_WIN'); // Logical state, UI handled by local flags
+
+    // 2. Wait 0.5s
+    await new Promise(r => setTimeout(r, 500));
+
+    // 3. Dimming
+    setShowDimOverlay(true);
+
+    // 4. Wait 0.5s
+    await new Promise(r => setTimeout(r, 500));
+
+    // 5. Text + Audio
+    setShowResultText(true);
+    AudioManager.playSFX('/assets/audio/stages/victory/victory.mp3');
+
+    // 6. Wait for victory.mp3 (approx 5s)
+    await new Promise(r => setTimeout(r, 5000));
+
+    // 7. Fade Out -> Action -> Fade In (Next Stage)
+    setShowDimOverlay(false); // Reset for next stage logic (or handle in init)
+    setShowResultText(false);
+
+    const nextStage = stageId + 1;
+    if (nextStage > 10) {
+      handleQuit();
+    } else {
+      store.triggerTransition(() => {
+        isFlowLockedRef.current = false;
+        setGameStatus('ONGOING');
+        store.initGame(nextStage);
+      });
+    }
+  };
+
+  const handleGameLose = async () => {
+    if (isFlowLockedRef.current) return;
+    isFlowLockedRef.current = true;
+
+    // 1. 상태 정리
+    setGameStatus('PLAYER_LOSE');
+    store.clearPlayerConditions();
+    // Note: Do not restore Max HP here, user said "restores Max only when Frailty ends or Stage Clear/Fail".
+    // Frailty logic handles Max HP restore. If Defeat happens while Frailty active, we should restore Max HP.
+    if (store.player.maxHp < (store.player.baseMaxHp || 200)) {
+      store.setPlayerMaxHp(store.player.baseMaxHp || 200);
+    }
+
+    // 2. Wait 0.5s
+    await new Promise(r => setTimeout(r, 500));
+
+    // 3. Dimming
+    setShowDimOverlay(true);
+
+    // 4. Wait 0.5s
+    await new Promise(r => setTimeout(r, 500));
+
+    // 5. Text + Audio
+    setShowResultText(true);
+    AudioManager.playSFX('/assets/audio/stages/defeat/defeat.mp3');
+
+    // 6. Wait 0.5s
+    await new Promise(r => setTimeout(r, 500));
+
+    // 7. Button Popup
+    setShowResultButtons(true);
+
+    // Wait for User Click (Handled by Button onClick invoking handleQuit)
+  };
 
   // 메세지 자동 제거
   useEffect(() => {
@@ -68,6 +197,21 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       return () => clearTimeout(timer);
     }
   }, [store.message]);
+
+  // 키보드 이벤트 (ESC)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (menu === 'PAUSE') {
+          setMenu(null);
+        } else if (menu === null && !isProcessing) {
+          setMenu('PAUSE');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [menu, isProcessing]);
 
   // 게임 루프 (60 FPS)
   useEffect(() => {
@@ -81,29 +225,17 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       const status = turnEngine.checkGameStatus();
       if (status !== 'ONGOING') {
         if (status === 'PLAYER_WIN') {
-          setGameStatus('PLAYER_WIN');
-          // Play Victory Music
-          const audio = new Audio('/assets/audio/stages/victory/victory.mp3');
-          audio.play().catch(e => console.warn(e));
-          store.setMessage("YOU WIN");
-
-          audio.onended = () => {
-            onGameEnd?.('WIN');
-          };
-
-          // Safety fallback if audio fails or is blocked
-          setTimeout(() => {
-            if (audio.paused && !audio.ended) onGameEnd?.('WIN');
-          }, 5000);
+          handleGameWin();
         } else {
-          setGameStatus('PLAYER_LOSE');
-          onGameEnd?.('LOSE');
+          handleGameLose();
         }
       }
     }, 16); // 16ms ≈ 60 FPS
 
     return () => clearInterval(interval);
   }, [gameStatus, menu, turnEngine]);
+
+  // Legacy loop functions removed
 
   /**
    * 카드 선택
@@ -115,14 +247,14 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       if (prev.includes(index)) {
         return prev.filter((i) => i !== index);
       } else {
-        if (prev.length >= 5) return prev; // 최대 5개까지만 선택
+        if (prev.length >= 8) return prev; // Allowing up to 8 cards for v2.0.0.5
         return [...prev, index];
       }
     });
   };
 
   /**
-   * 공격 버튼
+   * 공격 버튼 (v2.0.0.5 Sequencing)
    */
   const handleAttack = useCallback(async () => {
     if (!turnEngine || selectedCards.length === 0 || isProcessing) {
@@ -132,32 +264,47 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
     setIsProcessing(true);
 
     try {
-      // 선택된 카드로 데미지 계산
       const cardsToPlay = selectedCards
         .map((idx) => store.playerHand[idx])
         .filter(Boolean) as Card[];
 
-      // 플레이어 공격 실행
+      // 1. 플레이어 공격 실행 (애니메이션 포함)
       const actions = turnEngine.executePlayerAttack(cardsToPlay);
       await processTurnActions(actions);
 
-      // 카드 제거 및 덱 리셋
+      // 2. 카드 제거 (IMPACT 이후 actions 내에서 처리되는 것이 아니라 여기서 수동 관리)
       store.removePlayerCards(selectedCards);
-      store.setPlayerHand([...store.playerHand, ...store.deck.draw(selectedCards.length)]);
       setSelectedCards([]);
 
-      // 보스 반격
+      // 3. 간격 (0.5s ~ 1.0s)
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      // 4. 보스 반격
       if (turnEngine.checkGameStatus() === 'ONGOING') {
-        await new Promise((resolve) => setTimeout(resolve, 500)); // 딜레이
         const botActions = turnEngine.executeBotAttack();
         await processTurnActions(botActions);
       }
 
-      // 게임 상태 체크
+      // 5. 간격 (0.5s ~ 1.0s) 및 턴 종료 처리
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      // Only run cleanup if game is still going
+      if (turnEngine.checkGameStatus() === 'ONGOING') {
+        const statusActions = [{ type: 'TURN_CLEANUP', timer: 1 }];
+        await processTurnActions(statusActions);
+      }
+
+      // 6. 턴 종료 후 핸드 리필 (v2.0.0.5)
+      store.refillHand();
+
+      // 최종 게임 상태 체크
       const status = turnEngine.checkGameStatus();
       if (status !== 'ONGOING') {
-        setGameStatus(status);
-        onGameEnd?.(status === 'PLAYER_WIN' ? 'WIN' : 'LOSE');
+        if (status === 'PLAYER_WIN') {
+          handleGameWin();
+        } else {
+          handleGameLose();
+        }
       }
     } finally {
       setIsProcessing(false);
@@ -184,10 +331,16 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
               handType: action.data.handType,
             } as any;
 
-            const effects = turnEngine.applyPlayerAttack(dmgRes);
-            store.setBotHp(turnEngine.getBot().hp);
+            // 1. Player Attack Anim
+            store.setPlayerAnimState('ATTACK');
+            await new Promise(r => setTimeout(r, 400));
+            store.setPlayerAnimState('NONE');
 
-            // show damage popups for effects (await animations)
+            // 2. Damage Application & Bot Hit Anim
+            const effects = turnEngine.applyPlayerAttack(dmgRes.finalDamage);
+            store.setBotAnimState('HIT');
+            store.syncBot(turnEngine.getBot());
+
             for (const eff of effects) {
               if (eff.type === 'DAMAGE') {
                 const pos = entityPositions.bot ?? { x: 640, y: 200, w: 0, h: 0 };
@@ -195,32 +348,55 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
                 await addPopup(pos.x, pos.y + offsetY, eff.amount, dmgRes.isCritical, false);
               }
             }
+            await new Promise(r => setTimeout(r, 200));
+            store.setBotAnimState('NONE');
+
+            // 3. Check for immediate win
+            if (turnEngine.getBot().hp <= 0) {
+              setGameStatus('PLAYER_WIN');
+              return; // Stop processing further actions in this turn
+            }
           }
           break;
 
-        case 'PLAYER_HIT':
+        case 'BOT_HIT': // From turnEngine BOT_HIT action
           if (turnEngine && action.data) {
+            // 1. Bot Attack Anim
+            store.setBotAnimState('ATTACK');
+            await new Promise(r => setTimeout(r, 400));
+            store.setBotAnimState('NONE');
+
+            // 2. Damage Application & Player Hit Anim
             const effects = turnEngine.applyBotAttack(action.data.damage);
-            store.setPlayerHp(turnEngine.getPlayer().hp);
+            store.setPlayerAnimState('HIT');
+            store.syncPlayer(turnEngine.getPlayer());
 
             for (const eff of effects) {
               const pos = entityPositions.player ?? { x: 640, y: 520, w: 0, h: 0 };
               const offsetY = pos.h ? -pos.h * POPUP_VERTICAL_FACTOR.player : -50;
               if (eff.type === 'DAMAGE') {
-                await addPopup(pos.x, pos.y + offsetY, eff.amount, false, false);
+                await addPopup(pos.x, pos.y + offsetY, eff.amount, false, false, 'red');
+              } else if (eff.type === 'BLEED' || eff.type === 'HEAVY_BLEED') {
+                await addPopup(pos.x, pos.y + offsetY, eff.amount, false, false, 'red');
+              } else if (eff.type === 'POISON' || eff.type === 'POISON_DMG') {
+                await addPopup(pos.x, pos.y + offsetY, eff.amount, false, false, 'purple');
               } else if ((eff.type as string) === 'AVOIDED') {
                 await addPopup(pos.x, pos.y + offsetY, 0, false, false);
               }
+            }
+            await new Promise(r => setTimeout(r, 200));
+            store.setPlayerAnimState('NONE');
+
+            // 3. Check for immediate lose
+            if (turnEngine.getPlayer().hp <= 0) {
+              handleGameLose(); // Invoke strict sequence
+              return;
             }
           }
           break;
 
         case 'BLEED_TICK':
-          if (turnEngine) {
-            turnEngine.processBleedTicks();
-            store.setPlayerHp(turnEngine.getPlayer().hp);
-            store.setBotHp(turnEngine.getBot().hp);
-          }
+          // Removed for strict end-turn logic
           break;
 
         case 'TURN_CLEANUP':
@@ -235,11 +411,25 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
               const bPos = entityPositions.bot ?? { x: 640, y: 200, w: 0, h: 0 };
               const pOffsetY = pPos.h ? -pPos.h * POPUP_VERTICAL_FACTOR.player : -50;
               const bOffsetY = bPos.h ? -bPos.h * POPUP_VERTICAL_FACTOR.bot : -60;
+
+              // Determine target - assume effects are on player mostly for dot, check eff?
+              // Actually TurnEngine returns a mix. But v2 logic puts conditions on Player mostly.
+              // Assuming effects are targeted based on source logic (TurnEngine doesn't spec target in Effect)
+              // For now, assume player effects unless it's HEAL on bot (Regen).
+              // Actually TurnEngine implementation returns Player effects first then Bot effects.
+              // We should probably separate them in TurnEngine or infer.
+              // Current TurnEngine implementation pushes Player effects first, then Bot.
+              // Let's assume positive effects like HEAL might be Bot or Player.
+              // Given constraints, just display on Player for conditions (as user mainly requested Condition UI).
+
               if (eff.type === 'HEAL') {
+                // Heuristic: if bot health increased, show on bot?
+                // Easier: show on both or assume player for now.
                 await addPopup(pPos.x, pPos.y + pOffsetY, eff.amount, false, true);
-              } else if (eff.type === 'POISON' || eff.type === 'BLEED' || eff.type === 'HEAVY_BLEED') {
-                await addPopup(pPos.x, pPos.y + pOffsetY, eff.amount, false, false);
-                await addPopup(bPos.x, bPos.y + bOffsetY, eff.amount, false, false);
+              } else if (eff.type === 'BLEED' || eff.type === 'HEAVY_BLEED') {
+                await addPopup(pPos.x, pPos.y + pOffsetY, eff.amount, false, false, 'red');
+              } else if (eff.type === 'POISON') {
+                await addPopup(pPos.x, pPos.y + pOffsetY, eff.amount, false, false, 'purple');
               }
             }
           }
@@ -260,6 +450,12 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
           }
           break;
         }
+
+        case 'MESSAGE':
+          if (action.data?.text) {
+            store.setMessage(action.data.text);
+          }
+          break;
 
         default:
           break;
@@ -310,28 +506,65 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
    * 게임 종료
    */
   const handleQuit = () => {
+    stopAudio();
     onGameEnd?.('LOSE');
   };
 
   /**
-   * 설정 - BGM/SFX 조절
+   * 설정 - BGM/SFX 조절 (v2.0.0.5 Linked)
    */
-  const handleVolumeChange = (type: 'bgm' | 'sfx', delta: number) => {
-    // TODO: 실제 오디오 관리자와 연결
-    console.log(`${type} volume change: ${delta}`);
+  const handleVolumeChange = (type: 'bgm' | 'sfx', volume: number) => {
+    if (type === 'bgm') {
+      AudioManager.setBGMVolume(volume);
+    } else {
+      AudioManager.setSFXVolume(volume);
+    }
   };
 
-  if (gameStatus !== 'ONGOING') {
-    return (
-      <div className="game-result">
-        <h1>{gameStatus === 'PLAYER_WIN' ? '승리!' : '패배...'}</h1>
-        <button onClick={() => onGameEnd?.('LOSE')}>메뉴로</button>
-      </div>
-    );
-  }
+  /*
+   * handleNextStage removed. Auto-transition via handleGameWin timeout.
+   */
 
   return (
     <div className={`game-container ${screenShake ? 'shake' : ''}`}>
+      {/* Game End Overlay (v2.0.0.5 Phase 3: Preserves UI background) */}
+      {gameStatus !== 'ONGOING' && (
+        <div className="game-overlay-screen" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 10000,
+          animation: 'fadeIn 0.5s forwards'
+        }}>
+          <h1 style={{
+            fontSize: '6rem',
+            fontFamily: 'BebasNeue',
+            color: '#f1c40f', // Bold Yellow for both
+            fontWeight: 'bold',
+            textShadow: '0 0 20px rgba(241, 196, 15, 0.5)',
+            marginBottom: '40px'
+          }}>
+            {gameStatus === 'PLAYER_WIN' ? 'VICTORY!' : 'DEFEAT!'}
+          </h1>
+
+          <div style={{ display: 'flex', gap: '20px' }}>
+            {gameStatus !== 'PLAYER_WIN' && (
+              <BlockButton
+                text="BACK TO MAIN PAGE"
+                onClick={handleQuit}
+                width="320px"
+              />
+            )}
+          </div>
+        </div>
+      )}
       {/* 배경 */}
       <div className="game-background" style={{ background: 'transparent' }} />
 
@@ -362,6 +595,7 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       {/* 게임 필드 */}
       <div className="battle-field-container">
         <BattleField
+          stageNum={stageId}
           player={store.player}
           bot={store.bot}
           onMeasure={(positions) => setEntityPositions({

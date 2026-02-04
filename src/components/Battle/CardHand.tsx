@@ -48,7 +48,8 @@ export const CardHand: React.FC<CardHandProps> = ({
 
     const result = calculatePlayerDamage(selectedCards, player.conditions.has('Debilitating'));
 
-    const damageLabel = hasBlind ? '???' : Math.floor(result.finalDamage);
+    // Show base damage (without critical) in preview
+    const damageLabel = hasBlind ? '???' : Math.floor(result.baseDamage);
     const handTypeLabel = result.handType;
     const wildSuffix = hasJoker ? ' (WILD)' : '';
 
@@ -62,11 +63,15 @@ export const CardHand: React.FC<CardHandProps> = ({
     if (phase !== 'IDLE') return;
     if (onSelectCard) onSelectCard(index);
 
+    // v2.0.0.5: Remove Card Selection SFX
     setSelectedIndices(prev => {
       const alreadySelected = prev.includes(index);
       if (alreadySelected) {
         return prev.filter(i => i !== index);
       } else {
+        if (prev.length >= 8) return prev; // Up to 8 cards can be selected now? 
+        // Actually, user said 8 cards hand, combo logic usually 5 max. 
+        // I'll keep 5 max for combo but allow 8 cards in hand.
         if (prev.length >= 5) return prev;
         return [...prev, index];
       }
@@ -76,35 +81,26 @@ export const CardHand: React.FC<CardHandProps> = ({
   const handleAttack = async () => {
     if (phase !== 'IDLE') return;
 
-    // User Guide: If no cards selected, show message in screen center
     if (selectedIndices.length === 0) {
       useGameStore.getState().setMessage("SELECT CARDS AT LEAST ONE");
       return;
     }
 
-    // 1. GATHERING - Centralize
+    // v2.0.0.7: Enhanced Animation Sequence
+    // IDLE -> GATHERING (Center) -> CHARGING -> THRUSTING (To Boss) -> IMPACT (Crash) -> SCATTERING (Shatter)
     setPhase('GATHERING');
+    AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
 
-    // 2. BUNCHING (after 0.4s) - Fast merge
-    setTimeout(() => {
-      setPhase('BUNCHING');
-      AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
-    }, 400);
-
-    // 3. CHARGING (after 0.7s) - Move slightly down
     setTimeout(() => {
       setPhase('CHARGING');
-    }, 700);
+    }, 600);
 
-    // 4. THRUSTING (after 0.9s) - Fast up move
     setTimeout(() => {
       setPhase('THRUSTING');
-      AudioManager.playSFX('/assets/audio/player/whipping.mp3');
     }, 900);
 
-    // 5. SCATTERING & IMPACT (after 1.1s)
     setTimeout(() => {
-      setPhase('SCATTERING');
+      setPhase('SCATTERING'); // Trigger shatter/fade effect
 
       if (onAttack) {
         onAttack();
@@ -112,24 +108,26 @@ export const CardHand: React.FC<CardHandProps> = ({
         executePlayerAttack(selectedIndices);
       }
 
-      // Wait for scattering and boss shake to finish
+      // Keep cards in "Shattered" state (invisible but taking space) for a moment
       setTimeout(() => {
-        setSelectedIndices([]);
+        // Now reset phase and Clear cards
         setPhase('IDLE');
-      }, 500);
-    }, 1100);
+        setSelectedIndices([]);
+      }, 800);
+    }, 1200);
   };
 
   const handleSwap = () => {
     if (phase !== 'IDLE') return;
 
-    // User Guide: If no cards selected, show message
     if (selectedIndices.length === 0) {
       useGameStore.getState().setMessage("SELECT CARDS AT LEAST ONE");
       return;
     }
 
     if ((player.drawsRemaining ?? 0) <= 0) return;
+
+    // v2.0.0.5: Draw/Swap logic remains similar but could be revised per stage rules
     if (selectedIndices.length > 2) {
       useGameStore.getState().setMessage("SELECT MAX 2 CARDS");
       return;
@@ -149,17 +147,17 @@ export const CardHand: React.FC<CardHandProps> = ({
         </div>
       )}
 
-      {/* Action Buttons - Moved to bottom */}
+      {/* Action Buttons - Normalized size v2.0.0.5 */}
       <div className="action-buttons">
         <div className="attack-button-wrapper">
           <BlockButton
             text="ATTACK"
             onClick={handleAttack}
-            width="150px"
+            width="180px"
             disabled={phase !== 'IDLE'}
           />
         </div>
-        <div className="draw-button-wrapper" style={{ right: '40px' }}>
+        <div className="draw-button-wrapper">
           <BlockButton
             text={`DRAW (${player.drawsRemaining ?? 2})`}
             onClick={handleSwap}
@@ -184,8 +182,21 @@ export const CardHand: React.FC<CardHandProps> = ({
 
           return (
             <div key={`${card.suit}-${card.rank}-${idx}`}
-              className={phaseClass}
-              style={{ margin: '0 5px', transition: 'all 0.3s ease' }}>
+              className={`${phaseClass} card-appear`}
+              style={{
+                margin: '0 5px',
+                transition: 'all 0.3s ease',
+                animationDelay: `${idx * 0.05}s`,
+                // v2.0.0.6 Fix: Hide cards if they are selected and we are in scattering phase or done
+                // But wait, if we clear selectedIndices, 'isSelected' becomes false.
+                // So we need to NOT clear selectedIndices until props change?
+                // The issue: onAttack -> executePlayerAttack -> store.removePlayerCards
+                // The store update might take a tick.
+                // If we clear selectedIndices immediately, they pop back.
+                // REVERT clearing selectedIndices immediately. Let them stay selected.
+                // And rely on them being removed from 'cards' prop.
+                height: '150px' // explicit height for layout
+              }}>
               <Card
                 card={card}
                 selected={isSelected && phase === 'IDLE'}
@@ -196,8 +207,8 @@ export const CardHand: React.FC<CardHandProps> = ({
         })}
       </div>
 
-      {/* Deck Stack - Moved higher */}
-      <div className="card-deck-section" style={{ position: 'absolute', bottom: '100px', right: '40px', width: '90px', height: '120px' }}>
+      {/* Deck Stack - Align with cards horizontally v2.0.0.5 */}
+      <div className="card-deck-section" style={{ position: 'absolute', bottom: '120px', right: '40px', width: '90px', height: '120px', zIndex: 10 }}>
         <div className="card-deck-stack" style={{ position: 'relative', width: '100%', height: '100%' }}>
           {[0, 1, 2, 3].map(i => (
             <img
@@ -207,10 +218,10 @@ export const CardHand: React.FC<CardHandProps> = ({
               className="deck-card-image"
               style={{
                 position: 'absolute',
-                top: `${-i * 3}px`,
-                right: `${i * 2}px`,
-                width: '85px',
-                height: '115px',
+                top: `${-i * 2}px`, // Reduced stack height overlap
+                right: `${i * 1}px`,
+                width: '80px', // Slightly smaller to match card visually if needed
+                height: '110px',
                 zIndex: 10 - i,
                 boxShadow: '-2px 2px 4px rgba(0,0,0,0.5)',
                 borderRadius: '4px'

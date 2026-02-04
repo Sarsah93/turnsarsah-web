@@ -7,33 +7,63 @@ import { RANK_VALUES } from '../constants/cards';
 
 /**
  * 크리티컬 확률 계산
- * Pygame 로직: 족보 구성에 기여한 A/조커 한 장당 10% 확률로 크리티컬
+ * v2.0.0.5: (A 개수 + 조커 개수) * 10% 확률로 크리티컬
+ * 보너스: 총 데미지의 1.25배
  */
-export function getCriticalInfo(cards: Card[], scoringIndices: number[]): boolean {
+export function getCriticalSuccess(cards: Card[], scoringIndices: number[]): boolean {
   if (scoringIndices.length === 0) return false;
 
   const scoringCards = scoringIndices.map((i) => cards[i]);
-  const criticalCards = scoringCards.filter(
+  const criticalCount = scoringCards.filter(
     (c) => c.isJoker || c.rank === 'A'
-  );
+  ).length;
 
-  const criticalProbability = criticalCards.length * 0.1;
-  return Math.random() < criticalProbability;
+  const probability = criticalCount * 0.1;
+  return Math.random() < probability;
 }
 
 /**
  * 기본 포커 족보에 따른 데미지 계산
- * A부터 K까지 각 등급별 기본 데미지
+ * v2.0.0.5: Hand Bonus + Sum of Scoring Card Values
  */
-export function calculateBaseDamage(hand: HandEvaluation): number {
-  // 기본 데미지 = 족보 보너스 + 카드 등급 합산
-  const baseBonus = hand.bonus;
+export function calculateBaseDamage(hand: HandEvaluation, cards: Card[]): number {
+  const scoringCards = hand.scoringIndices.map(idx => cards[idx]);
 
-  // 평균적인 추가 데미지: A=5, K=4, Q=3, J=2 정도
-  // 간단하게: hand.bonus / 10 정도의 추가 효과
-  const cardBonus = Math.ceil(baseBonus / 10);
+  // 1. Sum of Scoring Card Values (A=14, K=13..., Joker=14)
+  const sumValues = scoringCards.reduce((acc, card) => {
+    if (card.isJoker) return acc + 14;
+    return acc + (RANK_VALUES[card.rank!] || 0);
+  }, 0);
 
-  return baseBonus + cardBonus;
+  // 2. High Card Logic (No combination formed)
+  if (hand.type === 'High Card') {
+    // Top 2 highest cards from selection
+    const sortedValues = cards.map(c => {
+      if (c.isJoker) return 14;
+      return RANK_VALUES[c.rank!] || 0;
+    }).sort((a, b) => b - a);
+
+    const top1 = sortedValues[0] || 0;
+    const top2 = sortedValues[1] || 0;
+    return top1 + top2; // No bonus for high card
+  }
+
+  // 3. Add Hand Bonus
+  const bonuses: Record<string, number> = {
+    'One Pair': 10,
+    'Two Pair': 20,
+    'Three of a Kind': 50,
+    'Straight': 75,
+    'Flush': 100,
+    'Full House': 125,
+    'Four of a Kind': 150,
+    'Straight Flush': 175,
+    'Royal Flush': 300
+  };
+
+  const handBonus = bonuses[hand.type] || 0;
+
+  return handBonus + sumValues;
 }
 
 /**
@@ -52,23 +82,34 @@ export interface DamageCalculationResult {
 
 export function calculatePlayerDamage(
   cards: Card[],
-  hasDebilitating: boolean = false
+  hasDebilitating: boolean = false,
+  bannedHandType: string | null = null
 ): DamageCalculationResult {
-  // 족보 평가
+  // 1. Check Banned Hand (Stage Rule)
   const handEval = evaluateHand(cards);
-  const baseDamage = calculateBaseDamage(handEval);
+  if (bannedHandType && handEval.type === bannedHandType) {
+    return {
+      baseDamage: 0,
+      isCritical: false,
+      finalDamage: 0,
+      multiplier: 0,
+      handType: `${handEval.type} (BANNED)`,
+    };
+  }
 
-  // 크리티컬 판정
-  const isCritical = getCriticalInfo(cards, handEval.scoringIndices);
+  const baseDamage = calculateBaseDamage(handEval, cards);
+
+  // 2. Critical Hit Multiplier
+  const isCritical = getCriticalSuccess(cards, handEval.scoringIndices);
   let multiplier = 1.0;
 
   if (isCritical) {
-    multiplier *= 1 + CRITICAL_DAMAGE_BONUS;
+    multiplier *= 1.25; // 1.25x Total Damage
   }
 
-  // 쇠약 페널티
+  // 3. Debilitating Penalty
   if (hasDebilitating) {
-    multiplier *= 0.8; // -20% 데미지
+    multiplier *= 0.8; // 0.8x Total Damage
   }
 
   const finalDamage = Math.floor(baseDamage * multiplier);

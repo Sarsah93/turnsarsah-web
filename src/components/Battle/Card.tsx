@@ -30,7 +30,6 @@ export const Card: React.FC<CardProps> = ({ card, selected, onClick }) => {
         <div
             onClick={() => {
                 onClick();
-                AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
             }}
             onMouseEnter={() => {
                 // AudioManager.playSFX('/assets/audio/gui/hover.mp3'); 

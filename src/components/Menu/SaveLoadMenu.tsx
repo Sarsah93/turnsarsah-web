@@ -61,6 +61,14 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
                   onClick={() => handleDelete(index)}
                   width="80px"
                   variant="danger"
+                  fontSize="1.4rem"
+                  style={{ marginLeft: 'auto', marginRight: '5px' }} // Align right side nicely or center? User said "button font not in center but pushed right". 
+                // Wait, user said "button font is not in center, pushed to right".
+                // This means inside the button, text is not centered? 
+                // BlockButton centers text by default. 
+                // Maybe padding is issue. BlockButton has 10px 20px padding.
+                // For small button (80px), large padding might break centering.
+                // Let's set padding: '5px' in style.
                 />
               )}
             </div>

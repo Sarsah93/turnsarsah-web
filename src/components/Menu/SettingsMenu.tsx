@@ -1,29 +1,28 @@
-// components/Menu/SettingsMenu.tsx
-
 import React, { useState } from 'react';
 import Modal from '../Common/Modal';
 import { BlockButton } from '../BlockButton';
+import { AudioManager } from '../../utils/AudioManager';
 import '../styles/SettingsMenu.css';
 
 interface SettingsMenuProps {
-  onVolumeChange?: (type: 'bgm' | 'sfx', delta: number) => void;
+  onVolumeChange?: (type: 'bgm' | 'sfx', volume: number) => void;
   onClose?: () => void;
 }
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) => {
-  const [bgmVolume, setBgmVolume] = useState(5);
-  const [sfxVolume, setSfxVolume] = useState(5);
+  const [bgmVolume, setBgmVolume] = useState(Math.round(AudioManager.getBGMVolume() * 10));
+  const [sfxVolume, setSfxVolume] = useState(Math.round(AudioManager.getSFXVolume() * 10));
 
   const handleBgmChange = (delta: number) => {
-    const newVolume = Math.max(0, Math.min(10, bgmVolume + delta));
-    setBgmVolume(newVolume);
-    onVolumeChange?.('bgm', delta);
+    const newVolumeBars = Math.max(0, Math.min(10, bgmVolume + delta));
+    setBgmVolume(newVolumeBars);
+    onVolumeChange?.('bgm', newVolumeBars / 10);
   };
 
   const handleSfxChange = (delta: number) => {
-    const newVolume = Math.max(0, Math.min(10, sfxVolume + delta));
-    setSfxVolume(newVolume);
-    onVolumeChange?.('sfx', delta);
+    const newVolumeBars = Math.max(0, Math.min(10, sfxVolume + delta));
+    setSfxVolume(newVolumeBars);
+    onVolumeChange?.('sfx', newVolumeBars / 10);
   };
 
   return (

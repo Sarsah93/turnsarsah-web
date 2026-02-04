@@ -5,6 +5,7 @@ interface BlockButtonProps {
     text: string;
     onClick: () => void;
     width?: string;
+    height?: string;
     style?: React.CSSProperties;
     fontSize?: string;
     disabled?: boolean;
@@ -14,9 +15,10 @@ interface BlockButtonProps {
 export const BlockButton: React.FC<BlockButtonProps> = ({
     text,
     onClick,
-    width = '200px',
+    width = '180px',
+    height = 'auto',
     style,
-    fontSize = '1.2rem',
+    fontSize = '2.2rem',
     disabled = false,
     variant = 'primary'
 }) => {
@@ -42,6 +44,7 @@ export const BlockButton: React.FC<BlockButtonProps> = ({
             }}
             style={{
                 width: width,
+                height: height,
                 backgroundImage: `url('${bgImage}')`,
                 backgroundSize: '100% 100%',
                 backgroundRepeat: 'no-repeat',
@@ -49,7 +52,7 @@ export const BlockButton: React.FC<BlockButtonProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '10px 20px',
+                padding: '0', // Reset padding to rely on flexbox centering
                 cursor: disabled ? 'not-allowed' : 'pointer',
                 opacity: disabled ? 0.6 : 1,
                 transition: 'all 0.1s ease',
