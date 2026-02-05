@@ -64,8 +64,7 @@ function App() {
       {/* UI Layer */}
       <div className="ui-layer">
         {gameState === GameState.MENU && <MainMenu />}
-        {gameState === GameState.BATTLE && <Game stageId={stageNum} onGameEnd={handleGameEnd} />}
-        {gameState === GameState.GAMEOVER && <GameOverScreen />}
+        {(gameState === GameState.BATTLE || gameState === GameState.VICTORY || gameState === GameState.GAMEOVER) && <BattleScreen />}
       </div>
     </div>
   );

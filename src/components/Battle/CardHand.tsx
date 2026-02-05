@@ -1,213 +1,208 @@
 import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../../state/gameStore';
-import { Card } from './Card';
-import { useGameLoop } from '../../logic/useGameLoop';
+import { Card as CardComponent } from './Card';
+import { Card } from '../../types/Card';
 import { calculatePlayerDamage } from '../../logic/damageCalculation';
 import { BlockButton } from '../BlockButton';
-import { AudioManager } from '../../utils/AudioManager';
 import '../styles/CardHand.css';
 
 interface CardHandProps {
-  cards?: any[];
-  selectedCards?: number[];
-  onSelectCard?: (index: number) => void;
-  onAttack?: () => void;
-  isProcessing?: boolean;
+  cards: (Card | null)[];
+  selectedCards: number[]; // Controlled
+  onSelectCard: (index: number) => void; // Controlled
+  onAttack?: (indices: number[]) => void;
+  onSwap?: (indices: number[]) => void;
+  gamePhase?: string;
   disabled?: boolean;
-  bannedIndices?: number[];
+  isProcessing?: boolean;
   blindIndices?: number[];
 }
 
 export const CardHand: React.FC<CardHandProps> = ({
-  cards: propCards,
-  selectedCards: propSelectedCards,
+  cards,
+  selectedCards,
   onSelectCard,
   onAttack,
-  isProcessing = false,
+  onSwap,
+  gamePhase = '',
   disabled = false,
-  bannedIndices = [],
-  blindIndices = []
+  isProcessing = false
 }) => {
-  const { player, playerHand, setDrawsRemaining } = useGameStore();
-  const { executeCardSwap, executePlayerAttack } = useGameLoop();
+  const {
+    player,
+    bannedRanks,
+    bannedSuit,
+    bannedHand,
+    blindIndices
+  } = useGameStore();
 
-  const cards = propCards || playerHand;
+  // Selection state is now controlled from parent
 
-  // Internal selection logic if needed, but we should use props
-  // For now, let's bridge internal state with props to keep my new animation logic working
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
-  // Sync props to internal state if they change? Or just use props directly.
-  // The user wants my new animation logic, so I'll use internal state for local control during anim.
+  // v2.0.0.8: Master phase comes from gamePhase prop
+  const isInteracting = gamePhase === '' || gamePhase === 'NONE' || gamePhase === 'IDLE';
 
-  // Combo / Score Preview
+  // Combo / Score Preview (v2.0.0.13)
   const comboPreview = useMemo(() => {
-    if (selectedIndices.length === 0) return null;
-    const selectedCards = selectedIndices.map(idx => cards[idx]);
-    const hasBlind = selectedCards.some(c => c.isBlind);
-    const hasJoker = selectedCards.some(c => c.isJoker);
+    if (selectedCards.length === 0) return null;
 
-    const result = calculatePlayerDamage(selectedCards, player.conditions.has('Debilitating'));
+    const cardsToCalculate = selectedCards
+      .map(idx => cards[idx])
+      .filter((c): c is Card => c !== null);
 
-    // Show base damage (without critical) in preview
+    if (cardsToCalculate.length === 0) return null;
+
+    const hasBlind = selectedCards.some(idx => !!blindIndices.includes(idx));
+    const hasWild = cardsToCalculate.some(card => card.isJoker);
+
+    if (selectedCards.length === 1 && hasWild) {
+      return `(WILD)`;
+    }
+
+    const result = calculatePlayerDamage(
+      cardsToCalculate,
+      player.conditions.has('Debilitating'),
+      bannedHand,
+      bannedRanks,
+      bannedSuit
+    );
+
     const damageLabel = hasBlind ? '???' : Math.floor(result.baseDamage);
     const handTypeLabel = result.handType;
-    const wildSuffix = hasJoker ? ' (WILD)' : '';
+    const isBanned = result.baseDamage === 0 && handTypeLabel !== 'High Card';
 
-    return `Damage: ${damageLabel} ("${handTypeLabel}")${wildSuffix}`;
-  }, [selectedIndices, cards, player.conditions]);
+    if (isBanned) {
+      return `BANNED: ${handTypeLabel}${hasWild ? ' (WILD)' : ''}`;
+    }
 
-  type AnimPhase = 'IDLE' | 'GATHERING' | 'BUNCHING' | 'CHARGING' | 'THRUSTING' | 'SCATTERING';
-  const [phase, setPhase] = useState<AnimPhase>('IDLE');
+    return `DAMAGE: ${damageLabel} ("${handTypeLabel}")${hasWild ? ' (WILD)' : ''}`;
+  }, [selectedCards, cards, player.conditions, bannedRanks, bannedSuit, bannedHand, blindIndices]);
 
   const handleCardClick = (index: number) => {
-    if (phase !== 'IDLE') return;
-    if (onSelectCard) onSelectCard(index);
-
-    // v2.0.0.5: Remove Card Selection SFX
-    setSelectedIndices(prev => {
-      const alreadySelected = prev.includes(index);
-      if (alreadySelected) {
-        return prev.filter(i => i !== index);
-      } else {
-        if (prev.length >= 8) return prev; // Up to 8 cards can be selected now? 
-        // Actually, user said 8 cards hand, combo logic usually 5 max. 
-        // I'll keep 5 max for combo but allow 8 cards in hand.
-        if (prev.length >= 5) return prev;
-        return [...prev, index];
-      }
-    });
+    if (!isInteracting || disabled || !cards[index] || isProcessing) return;
+    onSelectCard(index);
   };
 
   const handleAttack = async () => {
-    if (phase !== 'IDLE') return;
+    if (!isInteracting || disabled) return;
 
-    if (selectedIndices.length === 0) {
-      useGameStore.getState().setMessage("SELECT CARDS AT LEAST ONE");
+    if (selectedCards.length === 0) {
+      useGameStore.getState().setMessage("SELECT CARDS!");
       return;
     }
 
-    // v2.0.0.7: Enhanced Animation Sequence
-    // IDLE -> GATHERING (Center) -> CHARGING -> THRUSTING (To Boss) -> IMPACT (Crash) -> SCATTERING (Shatter)
-    setPhase('GATHERING');
-    AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
-
-    setTimeout(() => {
-      setPhase('CHARGING');
-    }, 600);
-
-    setTimeout(() => {
-      setPhase('THRUSTING');
-    }, 900);
-
-    setTimeout(() => {
-      setPhase('SCATTERING'); // Trigger shatter/fade effect
-
-      if (onAttack) {
-        onAttack();
-      } else {
-        executePlayerAttack(selectedIndices);
-      }
-
-      // Keep cards in "Shattered" state (invisible but taking space) for a moment
-      setTimeout(() => {
-        // Now reset phase and Clear cards
-        setPhase('IDLE');
-        setSelectedIndices([]);
-      }, 800);
-    }, 1200);
+    if (onAttack) {
+      onAttack(selectedCards);
+    }
   };
 
   const handleSwap = () => {
-    if (phase !== 'IDLE') return;
+    if (!isInteracting || disabled) return;
 
-    if (selectedIndices.length === 0) {
-      useGameStore.getState().setMessage("SELECT CARDS AT LEAST ONE");
+    if (selectedCards.length === 0) {
+      useGameStore.getState().setMessage("SELECT CARDS TO SWAP!");
       return;
     }
 
-    if ((player.drawsRemaining ?? 0) <= 0) return;
-
-    // v2.0.0.5: Draw/Swap logic remains similar but could be revised per stage rules
-    if (selectedIndices.length > 2) {
-      useGameStore.getState().setMessage("SELECT MAX 2 CARDS");
+    const p = useGameStore.getState().player;
+    if ((p.drawsRemaining ?? 0) <= 0) {
+      useGameStore.getState().setMessage("NO SWAPS REMAINING!");
       return;
     }
 
-    executeCardSwap(selectedIndices);
-    setDrawsRemaining((player.drawsRemaining ?? 0) - 1);
-    setSelectedIndices([]);
+    if (selectedCards.length > 5) {
+      useGameStore.getState().setMessage("MAX 5 CARDS CAN BE SWAPPED!");
+      return;
+    }
+
+    if (onSwap) {
+      onSwap(selectedCards);
+    }
   };
 
   return (
     <div className="card-hand-container">
-      {/* Combo Preview */}
-      {comboPreview && phase === 'IDLE' && (
-        <div className="combo-preview">
+      {comboPreview && isInteracting && (
+        <div className="combo-preview" style={{ color: comboPreview.startsWith('BANNED') ? '#e74c3c' : '#f1c40f' }}>
           {comboPreview}
         </div>
       )}
 
-      {/* Action Buttons - Normalized size v2.0.0.5 */}
+      {/* Action Buttons */}
       <div className="action-buttons">
         <div className="attack-button-wrapper">
           <BlockButton
             text="ATTACK"
             onClick={handleAttack}
             width="180px"
-            disabled={phase !== 'IDLE'}
+            disabled={!isInteracting}
           />
         </div>
         <div className="draw-button-wrapper">
           <BlockButton
-            text={`DRAW (${player.drawsRemaining ?? 2})`}
+            text={`SWAP (${player.drawsRemaining ?? 0})`}
             onClick={handleSwap}
             width="180px"
-            disabled={phase !== 'IDLE'}
+            disabled={!isInteracting || (player.drawsRemaining ?? 0) <= 0}
           />
         </div>
       </div>
 
-      {/* Cards Area - Positioned above buttons */}
-      <div className="cards-area" style={{ marginBottom: '80px' }}>
-        {cards.map((card: any, idx: number) => {
-          const isSelected = selectedIndices.includes(idx);
+      {/* Cards Area */}
+      <div className="cards-area">
+        {cards.map((card, idx) => {
+          const isSelected = selectedCards.includes(idx);
+          const isBlind = card ? !!blindIndices.includes(idx) : false;
+          const isBannedRank = !!(card && card.rank && bannedRanks.includes(card.rank));
+          const isBannedSuit = !!(card && card.suit && card.suit === bannedSuit);
+          const isBanned = isBannedRank || isBannedSuit;
+
           let phaseClass = '';
+          const isAttacking = ['GATHERING', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);
+
           if (isSelected) {
-            if (phase === 'GATHERING') phaseClass = 'gathering';
-            else if (phase === 'BUNCHING') phaseClass = 'bunching';
-            else if (phase === 'CHARGING') phaseClass = 'charging';
-            else if (phase === 'THRUSTING') phaseClass = 'thrusting';
-            else if (phase === 'SCATTERING') phaseClass = 'scattering';
+            if (gamePhase === 'GATHERING') phaseClass = 'gathering';
+            else if (gamePhase === 'CHARGING') phaseClass = 'charging';
+            else if (gamePhase === 'THRUSTING') phaseClass = 'thrusting';
+            else if (gamePhase === 'SCATTERED') phaseClass = 'scattering';
           }
 
+          // Deal logic (v2.0.0.15/16)
+          const showDealAnim = !isAttacking;
+          const slotX = (idx - 3.5) * 95;
+          const deckX = 480;
+          const offsetX = deckX - slotX;
+
           return (
-            <div key={`${card.suit}-${card.rank}-${idx}`}
-              className={`${phaseClass} card-appear`}
-              style={{
-                margin: '0 5px',
-                transition: 'all 0.3s ease',
-                animationDelay: `${idx * 0.05}s`,
-                // v2.0.0.6 Fix: Hide cards if they are selected and we are in scattering phase or done
-                // But wait, if we clear selectedIndices, 'isSelected' becomes false.
-                // So we need to NOT clear selectedIndices until props change?
-                // The issue: onAttack -> executePlayerAttack -> store.removePlayerCards
-                // The store update might take a tick.
-                // If we clear selectedIndices immediately, they pop back.
-                // REVERT clearing selectedIndices immediately. Let them stay selected.
-                // And rely on them being removed from 'cards' prop.
-                height: '150px' // explicit height for layout
-              }}>
-              <Card
-                card={card}
-                selected={isSelected && phase === 'IDLE'}
-                onClick={() => handleCardClick(idx)}
-              />
+            <div key={`slot-${idx}`} className="card-slot" style={{
+              width: '80px',
+              height: '110px',
+              margin: '0 5px',
+              position: 'relative'
+            }}>
+              {card && (
+                <div key={card.id}
+                  className={`${phaseClass} ${showDealAnim ? 'card-deal' : ''}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    transition: isAttacking ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'none',
+                    ['--deal-offset-x' as any]: `${offsetX}px`,
+                    ['--deal-offset-y' as any]: '100px'
+                  }}>
+                  <CardComponent
+                    card={{ ...card, isBlind, isBanned }}
+                    selected={isSelected && isInteracting}
+                    onClick={() => handleCardClick(idx)}
+                  />
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Deck Stack - Align with cards horizontally v2.0.0.5 */}
+      {/* Deck Stack */}
       <div className="card-deck-section" style={{ position: 'absolute', bottom: '120px', right: '40px', width: '90px', height: '120px', zIndex: 10 }}>
         <div className="card-deck-stack" style={{ position: 'relative', width: '100%', height: '100%' }}>
           {[0, 1, 2, 3].map(i => (
@@ -218,9 +213,9 @@ export const CardHand: React.FC<CardHandProps> = ({
               className="deck-card-image"
               style={{
                 position: 'absolute',
-                top: `${-i * 2}px`, // Reduced stack height overlap
+                top: `${-i * 2}px`,
                 right: `${i * 1}px`,
-                width: '80px', // Slightly smaller to match card visually if needed
+                width: '80px',
                 height: '110px',
                 zIndex: 10 - i,
                 boxShadow: '-2px 2px 4px rgba(0,0,0,0.5)',

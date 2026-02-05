@@ -40,12 +40,27 @@ export const HPBar: React.FC<HPBarProps> = ({
           {/* Background 'Normal' version */}
           <img src={imgPath} alt="HP Bar Track" className="hp-bar-image hp-bar-image-bg" />
 
+          {/* Dimming layer - stays behind longer */}
+          <img
+            src={imgPath}
+            alt="HP Bar Dim"
+            className="hp-bar-image hp-bar-image-dim"
+            style={{
+              clipPath,
+              transition: 'clip-path 1.2s ease-out',
+              opacity: 0.5,
+              position: 'absolute',
+              top: 0,
+              left: 0
+            }}
+          />
+
           {/* Foreground 'Fill' version */}
           <img
             src={imgPath}
             alt="HP Bar Fill"
             className="hp-bar-image hp-bar-image-fill"
-            style={{ clipPath, transition: 'clip-path 0.5s ease-out' }}
+            style={{ clipPath, transition: 'clip-path 0.3s ease-out' }}
           />
         </div>
 

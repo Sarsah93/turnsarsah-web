@@ -62,23 +62,37 @@ export const BossDisplay: React.FC = () => {
                 STAGE {stageNum}
             </div>
 
-            {/* Boss Image (Center) */}
-            <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`}>
+            {/* Boss Image (Center Top) */}
+            <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`}
+                style={{
+                    position: 'absolute',
+                    top: '0%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '220px',
+                    height: '220px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    pointerEvents: 'none',
+                    zIndex: 50
+                }}
+            >
                 <img
                     src={getBossImage(stageNum)}
                     alt={bot.name}
-                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
-            </div>
-
-            {/* Boss Name - BELOW boss image */}
-            <div style={{
-                position: 'absolute',
-                top: '65%', left: '50%', transform: 'translateX(-50%)',
-                fontSize: '4rem', fontFamily: "'Bebas Neue', sans-serif", color: '#f1c40f', // Use gold name
-                textShadow: '2px 2px 4px #000, 0 0 10px rgba(241, 196, 15, 0.5)'
-            }}>
-                {bot.name.toUpperCase()}
+                {/* Boss Name - BELOW boss image */}
+                <div style={{
+                    fontSize: '1.8rem',
+                    fontFamily: "'Bebas Neue', sans-serif",
+                    color: '#f1c40f',
+                    textShadow: '2px 2px 4px #000, 0 0 10px rgba(241, 196, 15, 0.5)',
+                    marginTop: '-10px'
+                }}>
+                    {bot.name.toUpperCase()}
+                </div>
             </div>
 
             {/* Right Side Stats/Rules */}
@@ -88,7 +102,23 @@ export const BossDisplay: React.FC = () => {
                 textShadow: '2px 2px 2px #000'
             }}>
                 <div>ATK: {bot.atk}</div>
-                <div style={{ color: '#f1c40f' }}>RULE: {bot.activeRules && bot.activeRules.length > 0 ? bot.activeRules[0][0] : 'NONE'}</div>
+                <div style={{ color: '#f1c40f' }}>
+                    RULE: {(() => {
+                        const ruleMap: Record<number, string> = {
+                            1: 'NONE',
+                            2: 'BLIND_2 CARDS',
+                            3: 'BANNED_2 CARDS',
+                            4: 'BANNED_SUIT',
+                            5: 'BONUS',
+                            6: 'BANNED_HAND',
+                            7: 'ATK +10/TURN',
+                            8: 'REGEN+REDUCE 10%',
+                            9: 'ATK x2/TURN+REDUCE 10%',
+                            10: 'CHAOS+REGEN+REDUCE 15%'
+                        };
+                        return ruleMap[stageNum] || 'NONE';
+                    })()}
+                </div>
             </div>
 
             {/* BOSS Conditions Icons (Below HP Bar - Top Right area) */}

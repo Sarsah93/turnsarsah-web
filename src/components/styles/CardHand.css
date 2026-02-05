@@ -45,57 +45,83 @@
 }
 
 /* Attack Animations */
-/* Attack Animations v2.0.0.7 */
+@keyframes fly-to-center {
+  0% {
+    /* Starts from its layout position */
+  }
+
+  100% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(1.2) rotate(360deg);
+  }
+}
+
 .gathering {
   position: fixed !important;
-  /* Move to viewport coordinates for centering */
   left: 50% !important;
-  top: 50% !important;
-  bottom: auto !important;
-  transform: translate(-50%, -50%) scale(1.1);
+  top: 55% !important;
   z-index: 1000 !important;
-  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translate(-50%, -50%) rotate(360deg);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .charging {
   position: fixed !important;
   left: 50% !important;
-  top: 50% !important;
+  top: 65% !important;
+  /* Move backwards (down) */
   bottom: auto !important;
-  transform: translate(-50%, -50%) scale(0.9) rotate(-10deg);
+  transform: translate(-50%, -50%) scale(1.1) rotate(-5deg);
   z-index: 1001 !important;
-  transition: all 0.3s ease-in;
-  filter: brightness(1.2);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: brightness(1.4) drop-shadow(0 0 15px #f1c40f);
 }
 
 .thrusting {
   position: fixed !important;
   left: 50% !important;
-  top: 25% !important;
-  /* Thrust towards Boss (Top Center) */
+  top: 15% !important;
+  /* Hit boss center (boss is at top: 0) */
   bottom: auto !important;
-  transform: translate(-50%, -50%) scale(0.8);
+  transform: translate(-50%, -50%) scale(0.8) rotate(10deg);
   opacity: 1;
   z-index: 1002 !important;
-  transition: all 0.2s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+  transition: all 0.1s cubic-bezier(0.32, 0, 0.67, 0);
   /* Sharp thrust */
 }
 
 .scattering {
   position: fixed !important;
   left: 50% !important;
-  top: 25% !important;
+  top: 15% !important;
   bottom: auto !important;
-  transform: translate(-50%, -50%) scale(1.5);
+  transform: translate(-50%, -50%) scale(2);
   opacity: 0;
-  filter: blur(10px) brightness(2);
+  filter: blur(15px) brightness(3);
   z-index: 1003 !important;
   transition: all 0.4s ease-out;
-  /* Shatter fade */
+}
+
+/* Fly-from-deck Animation with Dynamic Offsets */
+@keyframes fly-from-deck {
+  0% {
+    transform: translate(var(--deal-offset-x, 400px), var(--deal-offset-y, 100px)) rotate(20deg) scale(0.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.card-deal {
+  animation: fly-from-deck 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2) forwards;
 }
 
 .combo-preview {
-  color: #2ecc71;
+  color: #f1c40f;
   font-size: 2.2rem;
   font-family: 'Bebas Neue', 'Arial Black', sans-serif;
   text-shadow: 2px 2px 2px #000;

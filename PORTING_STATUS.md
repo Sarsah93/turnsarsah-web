@@ -1,7 +1,7 @@
 # TurnSarsah JavaScript 포팅 진행 상황
 
 **시작일**: 2026-02-03  
-**목표**: Pygame v2.0.0.3 → Vite + React + TypeScript
+**목표**: Pygame v2.0.0.3 → Vite + React + TypeScript (v2.0.0.5)
 
 ---
 
@@ -14,13 +14,13 @@
 - [x] 프로젝트 구조 설계
 
 ### 기본 인프라
-- [x] Vite + React + TypeScript 스캐폴드 (frontend/)
+- [x] Vite + React + TypeScript 스캐폴드
 - [x] 폴더 구조 생성 (constants/, types/, logic/, state/, storage/, components/, styles/)
-- [x] package.json 의존성 추가 (zustand)
+- [x] package.json 의존성 추가 (zustand, vite-plugin-react 등)
 
 ### 상수 및 타입 레이어
-- [x] `constants/gameConfig.ts` - 화면, 게임 상태, 게임 규칙
-- [x] `constants/cards.ts` - 카드 수치, 족보 보너스
+- [x] `constants/gameConfig.ts` - 화면, 게임 상태, 게임 규칙 완전 정의
+- [x] `constants/cards.ts` - 카드 수치, 족보 보너스 완전 정의
 - [x] `constants/stages.ts` - 보스 스테이지 데이터
 - [x] `constants/colors.ts` - 색상 정의
 - [x] `types/Card.ts` - Card 인터페이스 및 CardFactory
@@ -29,110 +29,84 @@
 
 ### 핵심 로직
 - [x] `logic/Deck.ts` - 덱 구현 (뽑기, 리셔플)
-- [x] `logic/mechanics.ts` - 족보 판정 엔진 (완전 구현)
-  - Royal Flush, Straight Flush, Four of a Kind, Full House, Flush, Straight
-  - Three of a Kind, Two Pair, One Pair, High Card
-  - 조커 와일드카드 처리
+- [x] `logic/mechanics.ts` - 족보 판정 엔진 (조커 와일드카드 포함 완전 구현)
+- [x] `logic/damageCalculator.ts` - 데미지 및 크리티컬 계산 로직
+- [x] `logic/conditionManager.ts` - 상태이상(Bleeding, Poison 등) 처리 시스템
 
-### 상태 관리
-- [x] `state/gameStore.ts` - Zustand 스토어 (게임 상태, 플레이어, 보스, 핸드, 선택 카드)
+### UI 컴포넌트 (Phase 3 완료)
+- [x] 기본 UI 컴포넌트 (Button, BlockButton, HPBar, Modal, Tooltip, FadeOverlay)
+- [x] 전투 화면 컴포넌트 (BattleField, BattleScreen, CardHand, DamagePopup, BossDisplay, PlayerDisplay)
+- [x] 메뉴 컴포넌트 (MainMenu, StageSelect, SaveLoadMenu, SettingsMenu, PauseMenu)
+- [x] 결과 화면 (GameOverScreen, Victory/Defeat 처리)
 
-### 저장/로드
-- [x] `storage/SaveManager.ts` - LocalStorage 기반 저장/로드 시스템
+### 상태 관리 및 저장
+- [x] `state/gameStore.ts` - Zustand 기반 통합 상태 관리
+- [x] `storage/SaveManager.ts` - LocalStorage 기반 슬롯 저장/로드 시스템
+
+### 리소스 및 미디어 (Phase 4 완료)
+- [x] `VideoBackground.tsx` - 비디오 배경 렌더링 시스템
+- [x] 오디오 시스템 통합 (BGM 및 효과음)
 
 ---
 
 ## 🚧 진행 중인 작업
 
-- [ ] **UI 컴포넌트** (다음 단계)
-  - Button, Card, HPBar, Modal, Tooltip 등
-  - 메뉴 (MainMenu, StageSelect, SaveLoadMenu)
-  - 전투 화면 (BattleField, DamagePopup)
+- [ ] 세부 애니메이션 및 이펙트 튜닝
+- [ ] 밸런스 조정 및 버그 수정
 
 ---
 
 ## ⏳ 아직 할 작업
 
-### Phase 2: 엔티티 및 데미지 로직
-- [ ] 데미지 계산 함수 (크리티컬, 기본 공격)
-- [ ] 상태이상 시스템 (Bleeding, Poison, Paralysis, Immune, Regen)
-- [ ] 턴 시스템 진행 로직
-- [ ] 스테이지별 특별 규칙 적용
-
-### Phase 3: React 컴포넌트
-- [ ] 기본 UI 컴포넌트 (Button, Input, Modal)
-- [ ] 게임 화면 컴포넌트
-  - BattleField (보스, 플레이어, HP바, 조건 아이콘)
-  - CardHand (카드 렌더링, 선택)
-  - DamagePopup (데미지 표시 애니메이션)
-- [ ] 메뉴 컴포넌트
-  - MainMenu (스테이지 선택, 설정, 종료)
-  - StageSelect
-  - SaveLoadMenu (슬롯 관리)
-  - PauseMenu
-
-### Phase 4: 리소스 및 미디어
-- [ ] 이미지 자산 변환 (카드, 보스, 배경)
-- [ ] 비디오 배경 (wilderness_background.mp4 → WebM)
-- [ ] 오디오 시스템 (Web Audio API)
-
 ### Phase 5: 통합 및 최적화
-- [ ] 캐싱 전략 (텍스처, 렌더링)
-- [ ] 성능 프로파일링
-- [ ] 반응형 디자인
-- [ ] 크로스 브라우저 호환성
+- [ ] 캐싱 전략 고도화
+- [ ] 성능 프로파일링 및 렌더링 최적화
+- [ ] 다양한 해상도 대응 (반응형 보정)
 
 ### Phase 6: 배포
-- [ ] 빌드 및 번들링
-- [ ] 호스팅 설정 (Vercel, Netlify 등)
-- [ ] 테스트
+- [ ] 최종 빌드 및 프로덕션 번들링
+- [ ] 호스팅 설정 및 도메인 연결
+- [ ] 최종 QA 및 사용자 피드백 반영
 
 ---
 
 ## 📊 진행률
 
 ```
-기초 인프라:        ████████████░░░░░░░░░░ 50%
-타입 & 상수:       ████████████████░░░░░░░░ 65%
-로직 & 저장소:      ███████████████░░░░░░░░░ 55%
-UI 컴포넌트:       ░░░░░░░░░░░░░░░░░░░░░░░░ 0%
-리소스 & 미디어:   ░░░░░░░░░░░░░░░░░░░░░░░░ 0%
-통합 & 최적화:      ░░░░░░░░░░░░░░░░░░░░░░░░ 0%
+기초 인프라:        ████████████████████████ 100%
+타입 & 상수:       ████████████████████████ 100%
+로직 & 저장소:      ████████████████████████ 100%
+UI 컴포넌트:       ████████████████████████ 100%
+리소스 & 미디어:   ████████████████████████ 100%
+통합 & 최적화:      ████████████████░░░░░░░░ 65%
 
-전체:              ███████░░░░░░░░░░░░░░░░░░ 23%
+전체:              █████████████████████░░░ 88%
 ```
 
 ---
 
 ## 🔗 주요 참고 파일
 
-**Pygame 원본**
-- [src/constants.py](../src/constants.py)
-- [src/entities.py](../src/entities.py)
-- [src/mechanics.py](../src/mechanics.py)
-- [src/ui.py](../src/ui.py)
-- [src/main.py](../src/main.py)
+**핵심 소스코드**
+- [src/logic/mechanics.ts](file:///c:/Users/voinosis-pc/Desktop/project%20TurnSarsah/turnsarsah-web/src/logic/mechanics.ts)
+- [src/state/gameStore.ts](file:///c:/Users/voinosis-pc/Desktop/project%20TurnSarsah/turnsarsah-web/src/state/gameStore.ts)
+- [src/components/Game.tsx](file:///c:/Users/voinosis-pc/Desktop/project%20TurnSarsah/turnsarsah-web/src/components/Game.tsx)
 
 **문서**
-- [docs/task.md](../docs/task.md)
-- [docs/implementation_plan.md](../docs/implementation_plan.md)
-- [docs/walkthrough.md](../docs/walkthrough.md)
-- [JAVASCRIPT_PORT_GUIDE.md](../JAVASCRIPT_PORT_GUIDE.md)
+- [README.md](file:///c:/Users/voinosis-pc/Desktop/project%20TurnSarsah/turnsarsah-web/README.md)
+- [INSTRUCTION FOR USE.md](file:///c:/Users/voinosis-pc/Desktop/project%20TurnSarsah/turnsarsah-web/INSTRUCTION%20FOR%20USE.md)
 
 ---
 
 ## 🎯 다음 단계
 
-### 즉시 (내일)
-1. UI 컴포넌트 기초 구성 (Button, Card, HPBar)
-2. BattleField 컴포넌트 스캐폴드
-3. 데미지 계산 함수 구현
+### 즉시
+1. 사용자 가이드(INSTRUCTION FOR USE.md) 배포
+2. UI 미세 조정 (애니메이션 타이밍 등)
 
 ### 이후
-4. 상태이상 시스템 완성
-5. 메뉴 컴포넌트 구현
-6. 이미지 자산 최적화 및 통합
+3. 최종 빌드 테스트 및 배포 준비
 
 ---
 
-**마지막 업데이트**: 2026-02-03 분석 및 초기 인프라 완성
+**마지막 업데이트**: 2026-02-05 v2.0.0.5 빌드 내용 반영 및 UI 컴포넌트 구현 완료

@@ -1,6 +1,7 @@
 // types/Card.ts
 
 export interface Card {
+  id: string;
   suit: string | null;
   rank: string | null;
   isJoker: boolean;
@@ -10,6 +11,7 @@ export interface Card {
 }
 
 export interface CardJSON {
+  id: string;
   suit: string | null;
   rank: string | null;
   is_joker: boolean;
@@ -20,6 +22,7 @@ export interface CardJSON {
 export class CardFactory {
   static create(suit: string | null, rank: string | null, isJoker = false): Card {
     return {
+      id: Math.random().toString(36).substring(2, 11),
       suit,
       rank,
       isJoker,
@@ -31,6 +34,7 @@ export class CardFactory {
 
   static toJSON(card: Card): CardJSON {
     return {
+      id: card.id,
       suit: card.suit,
       rank: card.rank,
       is_joker: card.isJoker,
@@ -41,6 +45,7 @@ export class CardFactory {
 
   static fromJSON(data: CardJSON): Card {
     return {
+      id: data.id,
       suit: data.suit,
       rank: data.rank,
       isJoker: data.is_joker,

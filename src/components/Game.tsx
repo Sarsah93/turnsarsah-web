@@ -148,6 +148,9 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       store.triggerTransition(() => {
         isFlowLockedRef.current = false;
         setGameStatus('ONGOING');
+        setSelectedCards([]); // Fix selection bug
+        store.setMessage(""); // Clear victory message
+        store.setGamePhase('IDLE');
         store.initGame(nextStage);
       });
     }
@@ -616,10 +619,8 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
           onSelectCard={handleCardSelect}
           onAttack={handleAttack}
           isProcessing={isProcessing}
+          gamePhase={store.gamePhase}
           disabled={gameStatus !== 'ONGOING'}
-          bannedIndices={Array.from(store.player.conditions.values())
-            .filter((c: any) => c.type === 'BLIND')
-            .flatMap((c: any) => c.targetCardIndices || [])}
           blindIndices={Array.from(store.player.conditions.values())
             .filter((c: any) => c.type === 'BLIND')
             .flatMap((c: any) => c.targetCardIndices || [])}

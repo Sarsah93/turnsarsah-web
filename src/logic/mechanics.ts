@@ -22,18 +22,6 @@ export function evaluateHand(cards: Card[]): HandEvaluation {
 
   if (jokers.length > 0) {
     const best = findBestWildcardCombination(nonJokers, jokers, cards.length);
-    // DEBUG/FIX: If we have AA + Joker, it MUST be Three of a Kind. If best is High Card, force check?
-    // AA+Joker should be 3-Kind (50) + 14+14+14 = 92.
-    // If best is High Card (Bonus 0), something failed.
-    // Let's manually verify Pair + Joker = 3 Kind.
-    if (nonJokers.length === 2 && jokers.length === 1) {
-      if (nonJokers[0].rank === nonJokers[1].rank && best.type === 'One Pair') {
-        // It missed 3-kind? Logic should have found it. 
-        // But strict overriding guarantees it.
-        // Force re-eval with rank substitution just to be safe if 'best' seems weak.
-        // Actually, if substitution worked, best would be 3-kind.
-      }
-    }
     return best;
   }
 
@@ -46,6 +34,7 @@ export function evaluateHand(cards: Card[]): HandEvaluation {
 
 function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards: number): HandEvaluation {
   let bestEval: HandEvaluation = { type: 'High Card', bonus: 0, scoringIndices: [] };
+  let bestSum = 0;
   const allRanks = Object.keys(RANK_VALUES);
   const allSuits = ['CLUBS', 'DIAMONDS', 'HEARTS', 'SPADES'];
 
@@ -54,34 +43,43 @@ function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards
   const evaluateAndCapture = (testHand: any[]) => {
     const res = evaluateCleanHand(testHand);
     const mappedIndices = res.scoringIndices.map(idx => testHand[idx].originalIndex);
+    const currentSum = calculateSumOfIndices(testHand, res.scoringIndices);
+
+    // Priority 1: Hand Bonus (Tier)
     if (res.bonus > bestEval.bonus) {
       bestEval = { ...res, scoringIndices: mappedIndices };
-    } else if (res.bonus === bestEval.bonus) {
-      // Tie-break: sum of ranks
-      const sum = (indices: number[]) => indices.reduce((a, b) => {
-        const c = testHand.find(cc => cc.originalIndex === b);
-        return a + (RANK_VALUES[c.rank!] || 0);
-      }, 0);
-      if (sum(mappedIndices) > sum(bestEval.scoringIndices)) {
+      bestSum = currentSum;
+    }
+    // Priority 2: Card Sum of scoring cards (to pick higher rank combination)
+    else if (res.bonus === bestEval.bonus) {
+      if (currentSum > bestSum) {
         bestEval = { ...res, scoringIndices: mappedIndices };
+        bestSum = currentSum;
       }
     }
   };
 
+  const allPossibleCards: any[] = [];
+  for (const r of allRanks) {
+    for (const s of allSuits) {
+      allPossibleCards.push({ rank: r, suit: s, isJoker: false });
+    }
+  }
+
   if (jokerCount === 1) {
-    for (const rank of allRanks) {
-      for (const suit of allSuits) {
-        const testCard = { ...jokers[0], suit, rank, isJoker: false }; // Substitute
-        evaluateAndCapture([...nonJokers, testCard]);
-      }
+    for (const card1 of allPossibleCards) {
+      const test1 = { ...jokers[0], ...card1 };
+      evaluateAndCapture([...nonJokers, test1]);
     }
   } else if (jokerCount === 2) {
-    // Limited search to avoid performance hit (common ranks in non-jokers)
-    const suggestedRanks = Array.from(new Set([...nonJokers.map(c => c.rank), 'A', 'K', 'Q', 'J', '10']));
-    for (const rank1 of suggestedRanks) {
-      for (const rank2 of suggestedRanks) {
-        const test1 = { ...jokers[0], suit: nonJokers[0]?.suit || 'SPADES', rank: rank1, isJoker: false };
-        const test2 = { ...jokers[1], suit: nonJokers[0]?.suit || 'HEARTS', rank: rank2, isJoker: false };
+    // 52 * 52 = 2704 combinations. This is fast enough in JS.
+    for (const card1 of allPossibleCards) {
+      for (const card2 of allPossibleCards) {
+        // Optimization: Ensure we don't pick the exact same card if possible, 
+        // though in this game duplicate cards might be allowed due to deck logic.
+        // For poker logic, we treat them as independent wildcards.
+        const test1 = { ...jokers[0], ...card1 };
+        const test2 = { ...jokers[1], ...card2 };
         evaluateAndCapture([...nonJokers, test1, test2]);
       }
     }
@@ -89,6 +87,11 @@ function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards
 
   return bestEval;
 }
+
+function calculateSumOfIndices(hand: any[], indices: number[]): number {
+  return indices.reduce((a, b) => a + (RANK_VALUES[hand[b].rank!] || 0), 0);
+}
+
 
 function evaluateCleanHand(cards: Card[]): HandEvaluation {
   if (cards.length === 0) return { type: 'High Card', bonus: 0, scoringIndices: [] };
@@ -147,15 +150,22 @@ function getFullHouse(cards: Card[]): { indices: number[] } {
   let threes: number[] = [];
   let twos: number[] = [];
 
-  for (const rank of new Set(ranks)) {
-    const indices = cards.map((c, i) => (c.rank === rank ? i : -1)).filter((i) => i >= 0);
-    if (indices.length === 3) threes = indices;
-    if (indices.length === 2) twos = indices;
+  // Sort ranks by frequency to find full house correctly
+  const counts: Record<string, number[]> = {};
+  ranks.forEach((r, i) => {
+    if (!counts[r!]) counts[r!] = [];
+    counts[r!].push(i);
+  });
+
+  const sortedRanks = Object.keys(counts).sort((a, b) => {
+    if (counts[b].length !== counts[a].length) return counts[b].length - counts[a].length;
+    return RANK_VALUES[b] - RANK_VALUES[a];
+  });
+
+  if (counts[sortedRanks[0]]?.length >= 3 && counts[sortedRanks[1]]?.length >= 2) {
+    return { indices: [...counts[sortedRanks[0]].slice(0, 3), ...counts[sortedRanks[1]].slice(0, 2)] };
   }
 
-  if (threes.length === 3 && twos.length === 2) {
-    return { indices: [...threes, ...twos] };
-  }
   return { indices: [] };
 }
 
@@ -168,56 +178,37 @@ function isFlush(cards: Card[]): boolean {
 function getStraight(cards: Card[]): { indices: number[] } {
   if (cards.length < 5) return { indices: [] };
 
-  // Get unique ranks values
-  const uniqueRanks = Array.from(new Set(cards.map(c => RANK_VALUES[c.rank!]))).sort((a, b) => b - a);
+  const uniqueRankValues = Array.from(new Set(cards.map(c => RANK_VALUES[c.rank!]))).sort((a, b) => a - b);
 
-  // Helper to check standard straight in a sorted unique list
-  const checkSequence = (ranks: number[]): number[] | null => {
-    if (ranks.length < 5) return null;
-    for (let i = 0; i <= ranks.length - 5; i++) {
-      // Check for continuous descending sequence
-      if (ranks[i] - ranks[i + 4] === 4) {
-        // Validate intermediate steps to ensure no gaps (though 4 diff implies no gaps in integers unique)
-        if (ranks[i] - ranks[i + 1] === 1 && ranks[i + 1] - ranks[i + 2] === 1 && ranks[i + 2] - ranks[i + 3] === 1 && ranks[i + 3] - ranks[i + 4] === 1) {
-          return ranks.slice(i, i + 5);
-        }
-      }
-    }
-    return null;
-  };
+  // Possible straights (as sets of values)
+  // Standard and Ace-Low already covered by logic mostly, but let's be explicit for "wrap-around"
+  const straights = [
+    [2, 3, 4, 5, 14],      // A-2-3-4-5
+    [2, 3, 4, 13, 14],     // K-A-2-3-4
+    [2, 3, 12, 13, 14],    // Q-K-A-2-3
+    [2, 11, 12, 13, 14],   // J-Q-K-A-2
+  ];
 
-  // 1. Standard Straight Check (Ace is 14)
-  let targetRanks = checkSequence(uniqueRanks);
-
-  // 2. Ace-Low Straight Check (A-2-3-4-5)
-  // If Ace (14) exists, add 1 to the list
-  if (!targetRanks && uniqueRanks.includes(14)) {
-    const lowAceRanks = [...uniqueRanks, 1].sort((a, b) => b - a); // 1 will be at end
-    targetRanks = checkSequence(lowAceRanks);
+  // Also add standard straights
+  for (let i = 2; i <= 10; i++) {
+    straights.push([i, i + 1, i + 2, i + 3, i + 4]);
   }
 
-  if (targetRanks) {
-    // Map back to indices
-    // Need to handle '1' mapping back to 'A' (14)
-    const mappedTargets = targetRanks.map(r => r === 1 ? 14 : r);
-    return { indices: mapRanksToIndices(cards, mappedTargets) };
+  // Check each candidate straight
+  for (const candidate of straights.reverse()) { // Reverse to check high straights first
+    if (candidate.every(val => uniqueRankValues.includes(val))) {
+      // Map candidate values back to indices
+      const indices: number[] = [];
+      const usedValues = new Set();
+      for (const val of candidate) {
+        const idx = cards.findIndex((c, i) => RANK_VALUES[c.rank!] === val && !usedValues.has(i));
+        indices.push(idx);
+      }
+      return { indices };
+    }
   }
 
   return { indices: [] };
-}
-
-function mapRanksToIndices(cards: Card[], targetRanks: number[]): number[] {
-  const indices: number[] = [];
-  const usedRanks = new Set<number>();
-
-  for (let i = 0; i < cards.length; i++) {
-    const val = RANK_VALUES[cards[i].rank!];
-    if (targetRanks.includes(val) && !usedRanks.has(val)) {
-      indices.push(i);
-      usedRanks.add(val);
-    }
-  }
-  return indices.slice(0, 5);
 }
 
 function getThreeOfAKind(cards: Card[]): { indices: number[] } {
@@ -233,8 +224,10 @@ function getThreeOfAKind(cards: Card[]): { indices: number[] } {
 
 function getTwoPair(cards: Card[]): { indices: number[] } {
   const pairs: number[][] = [];
-  const ranks = cards.map((c) => c.rank);
-  for (const rank of new Set(ranks)) {
+  // Sort ranks to pick highest pairs
+  const uniqueRanks = Array.from(new Set(cards.map(c => c.rank!))).sort((a, b) => RANK_VALUES[b] - RANK_VALUES[a]);
+
+  for (const rank of uniqueRanks) {
     const indices = cards.map((c, i) => (c.rank === rank ? i : -1)).filter((i) => i >= 0);
     if (indices.length === 2) {
       pairs.push(indices);
@@ -247,8 +240,8 @@ function getTwoPair(cards: Card[]): { indices: number[] } {
 }
 
 function getOnePair(cards: Card[]): { indices: number[] } {
-  const ranks = cards.map((c) => c.rank);
-  for (const rank of new Set(ranks)) {
+  const uniqueRanks = Array.from(new Set(cards.map(c => c.rank!))).sort((a, b) => RANK_VALUES[b] - RANK_VALUES[a]);
+  for (const rank of uniqueRanks) {
     const indices = cards.map((c, i) => (c.rank === rank ? i : -1)).filter((i) => i >= 0);
     if (indices.length === 2) {
       return { indices };

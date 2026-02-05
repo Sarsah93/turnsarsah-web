@@ -26,9 +26,17 @@ export const PlayerDisplay: React.FC = () => {
             <div style={{ display: 'flex', gap: '8px', position: 'absolute', top: '-60px', left: '10px', zIndex: 100 }}>
                 {Array.from(player.conditions.keys()).map((cond: any) => {
                     let filename = `${cond}.png`;
-                    if (cond === 'Avoiding') filename = '회피(Avoiding).png';
-                    if (cond === 'Immune') filename = '면역(Immune).png';
-                    if (cond === 'Damage Reducing') filename = '피해감소(Damage Reducing).png';
+                    let displayName = cond;
+
+                    if (cond === 'Avoiding') { filename = '회피(Avoiding).png'; displayName = 'AVOIDING'; }
+                    if (cond === 'Immune') { filename = '면역(Immune).png'; displayName = 'IMMUNE'; }
+                    if (cond === 'Damage Reducing') { filename = '피해감소(Damage Reducing).png'; displayName = 'DMG REDUC.'; }
+                    if (cond === 'Bleeding') { displayName = 'BLEEDING'; }
+                    if (cond === 'Heavy Bleeding') { displayName = 'HEAVY BLEED.'; }
+                    if (cond === 'Poisoning') { displayName = 'POISONING'; }
+                    if (cond === 'Paralyzing') { displayName = 'PARALYZED'; }
+                    if (cond === 'Debilitating') { displayName = 'DEBILITATING'; }
+                    if (cond === 'Regenerating') { displayName = 'REGEN'; }
 
                     return (
                         <div key={cond} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
@@ -39,10 +47,9 @@ export const PlayerDisplay: React.FC = () => {
                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                             <span style={{
-                                fontSize: '0.7rem', color: '#fff', fontWeight: 'bold',
-                                textShadow: '1px 1px 1px #000', marginTop: '2px',
-                                fontFamily: "'Bebas Neue', sans-serif"
-                            }}>{cond}</span>
+                                fontSize: '0.8rem', color: '#fff', fontWeight: 'bold',
+                                textShadow: '1px 1px 1px #000', marginTop: '2px'
+                            }}>{displayName}</span>
                         </div>
                     );
                 })}

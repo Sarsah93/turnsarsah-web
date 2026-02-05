@@ -8,7 +8,7 @@ interface SaveData {
   currentTurn: number;
   player: Character;
   bot: Character;
-  playerHand: Card[];
+  playerHand: (Card | null)[];
   timestamp: number;
 }
 

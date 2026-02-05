@@ -15,30 +15,21 @@ export const Card: React.FC<CardProps> = ({ card, selected, onClick }) => {
     // Suit names in CardType are usually uppercase e.g. 'CLUBS'
     // Rank logic: '2'...'9', '10', 'J', 'Q', 'K', 'A'
 
-    const getCardImageSrc = (card: CardType) => {
+    const getCardImageSrc = (card: CardType & { isBlind?: boolean }) => {
+        if (card.isBlind) return '/assets/cards/BACK2.png';
         if (card.isJoker) return '/assets/cards/JOKER.png';
-        if (card.isBlind) return '/assets/cards/BACK2.png'; // Assuming BACK2 is card back
 
         let rankStr = card.rank;
-        // Verify assumes strict match with filename conventions
-        // Filenames: CLUBS_2.png, ... 
-
         return `/assets/cards/${card.suit}_${rankStr}.png`;
     };
 
     return (
         <div
-            onClick={() => {
-                onClick();
-            }}
-            onMouseEnter={() => {
-                // AudioManager.playSFX('/assets/audio/gui/hover.mp3'); 
-            }}
+            onClick={onClick}
             style={{
                 width: `${CARD_WIDTH}px`,
                 height: `${CARD_HEIGHT}px`,
                 position: 'relative',
-                margin: '0 5px',
                 cursor: 'pointer',
                 transition: 'transform 0.2s',
                 transform: selected ? 'translateY(-20px)' : 'none',
@@ -47,22 +38,17 @@ export const Card: React.FC<CardProps> = ({ card, selected, onClick }) => {
         >
             {/* Main Card Image */}
             <img
-                src={getCardImageSrc(card)}
-                alt={`${card.rank} of ${card.suit}`}
+                src={getCardImageSrc(card as any)}
+                alt={card.isBlind ? 'Blinded Card' : `${card.rank} of ${card.suit}`}
                 style={{
                     width: '100%',
                     height: '100%',
-                    borderRadius: '8px', // Match card border radius if needed
-                }}
-                onError={(e) => {
-                    // Fallback to text if image missing
-                    e.currentTarget.style.display = 'none';
-                    // We could render the old text UI here if needed, but let's assume assets exist.
+                    borderRadius: '8px',
                 }}
             />
 
             {/* Banned Overlay */}
-            {card.isBanned && (
+            {(card as any).isBanned && (
                 <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -73,16 +59,6 @@ export const Card: React.FC<CardProps> = ({ card, selected, onClick }) => {
                 }}>
                     BANNED
                 </div>
-            )}
-
-            {/* Blind/Back Overlay checked via isBlind prop, handled by src or explicit overlay */}
-            {card.isBlind && !card.isJoker && (
-                <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundImage: `url('/assets/cards/BACK2.png')`,
-                    backgroundSize: 'cover',
-                    borderRadius: '8px'
-                }} />
             )}
         </div>
     );
