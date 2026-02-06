@@ -156,17 +156,24 @@ export const CardHand: React.FC<CardHandProps> = ({
           const isBannedSuit = !!(card && card.suit && card.suit === bannedSuit);
           const isBanned = isBannedRank || isBannedSuit;
 
+          const selectedIdxInQueue = selectedCards.indexOf(idx);
+
           let phaseClass = '';
+          let phaseStyle: React.CSSProperties = {};
           const isAttacking = ['GATHERING', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);
 
           if (isSelected) {
-            if (gamePhase === 'GATHERING') phaseClass = 'gathering';
+            if (gamePhase === 'GATHERING') {
+              phaseClass = 'gathering';
+              // Staggered delay: 0.1s per card from left to right
+              phaseStyle.transitionDelay = `${selectedIdxInQueue * 0.1}s`;
+            }
             else if (gamePhase === 'CHARGING') phaseClass = 'charging';
             else if (gamePhase === 'THRUSTING') phaseClass = 'thrusting';
             else if (gamePhase === 'SCATTERED') phaseClass = 'scattering';
           }
 
-          // Deal logic (v2.0.0.15/16)
+          // Deal logic
           const showDealAnim = !isAttacking;
           const slotX = (idx - 3.5) * 95;
           const deckX = 480;
@@ -185,8 +192,9 @@ export const CardHand: React.FC<CardHandProps> = ({
                   style={{
                     width: '100%',
                     height: '100%',
-                    transition: isAttacking ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: 'none',
+                    // Only apply inline transition when NOT attacking; CSS classes handle attack transitions
+                    ...(isAttacking ? {} : { transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', transform: 'none' }),
+                    ...phaseStyle,
                     ['--deal-offset-x' as any]: `${offsetX}px`,
                     ['--deal-offset-y' as any]: '100px'
                   }}>

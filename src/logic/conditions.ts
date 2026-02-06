@@ -13,32 +13,32 @@ export interface ConditionEffect {
  */
 export const CONDITION_PRESETS: Record<string, { duration: number; desc: string }> = {
   'Bleeding': {
-    duration: 6,
-    desc: '매 턴 고정 데미지(5)를 입음. 중첩 시 과출혈.',
+    duration: 4,
+    desc: 'Takes 5 fixed damage per turn. Stacks to Heavy Bleeding.',
   },
   'Heavy Bleeding': {
     duration: 3,
-    desc: '매 턴 고정 데미지(15)를 입음. 추가 출혈 방지.',
+    desc: 'Takes 15 fixed damage per turn. Prevents additional Bleeding.',
   },
   'Poisoning': {
     duration: 4,
-    desc: '매 턴 중첩되는 데미지(5, 10, 15, 20)를 입음. 중첩 시 쇠약.',
+    desc: 'Takes stacking damage (5, 10, 15, 20) per turn. Stacks to Debilitating.',
   },
   'Regenerating': {
     duration: 5,
-    desc: '매 턴 체력을 회복함.',
+    desc: 'Restores HP each turn.',
   },
   'Paralyzing': {
     duration: 2,
-    desc: '플레이어 공격 불가 (보스 공격으로 바로 전환).',
+    desc: 'Player cannot attack (turn passes to boss).',
   },
   'Debilitating': {
     duration: 3,
-    desc: '최대 체력 20% 감소 및 입히는 데미지 20% 감소.',
+    desc: 'Reduces Max HP by 20% and damage dealt by 20%.',
   },
   'Immune': {
     duration: 3,
-    desc: '디버프성 상태이상(출혈, 중독, 마비, 쇠약)에 면역.',
+    desc: 'Immune to debuff effects (Bleeding, Poison, Paralyze, Debilitate).',
   },
 };
 

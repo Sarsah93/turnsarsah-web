@@ -112,7 +112,7 @@ export const useGameLoop = () => {
             if (conditionApplied === 'Poisoning') duration = 4;
             if (conditionApplied === 'Paralyzing') duration = 2;
 
-            addPlayerCondition(conditionApplied, duration, conditionApplied);
+            addPlayerCondition(conditionApplied, duration);
             playConditionSound(conditionApplied);
             setMessage(`${conditionApplied.toUpperCase()}!`);
             triggerScreenEffect('flash-red');
@@ -202,14 +202,15 @@ export const useGameLoop = () => {
         const isCrit = result.isCritical;
         const hasWild = selectedCards.some(c => c.isJoker);
 
-        // --- PHASE 1: GATHERING (0.2s) ---
+        // --- PHASE 1: GATHERING (0.6s) ---
+        // Extended from 0.2s to allow sequential card animations to complete
         store.setGamePhase('GATHERING');
         AudioManager.playSFX('/assets/audio/combat/gathering.mp3');
 
-        // v2.0.0.16: Shuffling SFX (start + 0.4s)
-        setTimeout(() => AudioManager.playSFX('/assets/audio/combat/shuffling.mp3'), 400);
+        // Shuffling SFX (Gathering start + 0.2s) - as Gathering sound effect
+        setTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
 
-        await new Promise(r => setTimeout(r, 200));
+        await new Promise(r => setTimeout(r, 600));
 
         // --- PHASE 2: CHARGING (0.8s) ---
         store.setGamePhase('CHARGING');
@@ -218,16 +219,12 @@ export const useGameLoop = () => {
 
         // --- PHASE 3: THRUSTING (0.1s) ---
         store.setGamePhase('THRUSTING');
-        AudioManager.playSFX('/assets/audio/combat/03_spear_thrust.mp3');
+        // Removed 03_spear_thrust.mp3 per user request - only whipping.mp3 should play
         await new Promise(r => setTimeout(r, 100));
 
-        // --- PHASE 4: IMPACT & RESOLUTION ---
-        // Impact Reach (T=0)
-        // Card bounce (0.1s)
-        await new Promise(r => setTimeout(r, 100));
-
-        // Whipping SFX (Impact + 0.1s)
-        AudioManager.playSFX('/assets/audio/combat/whipping.mp3');
+        // Whipping SFX (Thrust End + 0.2s) - per user request
+        await new Promise(r => setTimeout(r, 200));
+        AudioManager.playSFX('/assets/audio/player/whipping.mp3');
 
         // Boss Shake (Impact + 0.2s)
         await new Promise(r => setTimeout(r, 100));
@@ -330,18 +327,41 @@ export const useGameLoop = () => {
 
     const resolveStatusEffects = async () => {
         const store = useGameStore.getState();
+        const playerConditions = new Map(store.player.conditions);
+        const botConditions = new Map(store.bot.conditions);
+        const toRemovePlayer: string[] = [];
+        const toRemoveBot: string[] = [];
+
+        // Debuffs that can be randomly removed (15% chance per turn)
+        const removableDebuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating'];
 
         // Player Phase
-        for (const [cond, data] of Array.from(player.conditions.entries())) {
+        for (const [cond, data] of Array.from(playerConditions.entries())) {
+            // 15% chance to remove debuff early
+            if (removableDebuffs.includes(cond) && Math.random() < 0.15) {
+                toRemovePlayer.push(cond);
+                setMessage(`${cond.toUpperCase()} CLEARED!`);
+                continue;
+            }
+
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
                 playConditionSound(cond);
                 const dmg = cond === 'Heavy Bleeding' ? 15 : 5;
                 setPlayerHp(Math.max(0, player.hp - dmg));
                 showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
-                await new Promise(r => setTimeout(r, 800)); // 0.8s Gap
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            // Increment elapsed
+            data.elapsed += 1;
+
+            // Check for expiry (duration < 999 means not permanent)
+            if (data.duration < 999 && data.elapsed >= data.duration) {
+                toRemovePlayer.push(cond);
             }
         }
-        if (player.conditions.has('Regenerating')) {
+
+        if (playerConditions.has('Regenerating')) {
             playConditionSound('Regenerating');
             const heal = 10;
             setPlayerHp(Math.min(player.maxHp, player.hp + heal));
@@ -349,11 +369,15 @@ export const useGameLoop = () => {
             await new Promise(r => setTimeout(r, 800));
         }
 
+        // Remove expired player conditions
+        toRemovePlayer.forEach(name => playerConditions.delete(name));
+        store.setPlayer({ ...store.player, conditions: playerConditions });
+
         // 0.5s pause between phases
         await new Promise(r => setTimeout(r, 500));
 
         // Boss Phase
-        for (const [cond, data] of Array.from(bot.conditions.entries())) {
+        for (const [cond, data] of Array.from(botConditions.entries())) {
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
                 playConditionSound(cond);
                 const dmg = 10;
@@ -361,17 +385,29 @@ export const useGameLoop = () => {
                 showDamageText('BOT', `-${dmg}`, '#c0392b');
                 await new Promise(r => setTimeout(r, 800));
             }
+
+            // Increment elapsed
+            data.elapsed += 1;
+
+            // Check for expiry
+            if (data.duration < 999 && data.elapsed >= data.duration) {
+                toRemoveBot.push(cond);
+            }
         }
 
         // Infinite Boss Regen Renewal
-        if (bot.conditions.has('Regenerating')) {
-            const cond = bot.conditions.get('Regenerating')!;
+        if (botConditions.has('Regenerating')) {
+            const cond = botConditions.get('Regenerating')!;
             if (cond.duration - cond.elapsed <= 1) {
                 if ([6, 8, 10].includes(stageNum)) {
                     store.addBotCondition('Regenerating', 3, 'INFINITE REGEN');
                 }
             }
         }
+
+        // Remove expired bot conditions
+        toRemoveBot.forEach(name => botConditions.delete(name));
+        store.setBot({ ...store.bot, conditions: botConditions });
     };
 
     const executeCardSwap = (selectedIndices: number[]) => {
@@ -392,21 +428,21 @@ export const useGameLoop = () => {
         // 1. 상태 정리 (Heal + Clear Conditions)
         store.clearPlayerConditions();
 
-        // HP Bonus: +50 (clamped to Max HP)
         const currentHp = store.player.hp;
         let maxHp = store.player.maxHp;
 
-        // v2.0.0.14: Stage 6 Reward (+20% MAX HP)
+        // v2.0.0.14/16: Stage 6 Reward (+20% MAX HP + FULL HEAL)
         if (stageNum === 6) {
             const bonus = Math.floor(maxHp * 0.2);
             maxHp += bonus;
+            store.setHasStage6Bonus(true);
             store.setPlayerMaxHp(maxHp);
-            const baseMax = store.player.baseMaxHp || 200;
-            // update baseMaxHp in store manually as well if needed
+            setPlayerHp(maxHp); // FULL HEAL per user request
+        } else {
+            // Standard Heal for other stages
+            const newHp = Math.min(maxHp, currentHp + 50);
+            setPlayerHp(newHp);
         }
-
-        const newHp = Math.min(maxHp, currentHp + 50);
-        setPlayerHp(newHp);
 
         // 2. Victory State & Sound
         setGameState(GameState.VICTORY);

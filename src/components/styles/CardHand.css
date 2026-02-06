@@ -60,9 +60,10 @@
 .gathering {
   position: fixed !important;
   left: 50% !important;
-  top: 55% !important;
+  bottom: 30% !important;
+  top: auto !important;
   z-index: 1000 !important;
-  transform: translate(-50%, -50%) rotate(360deg);
+  transform: translateX(-50%) rotate(360deg);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -96,11 +97,12 @@
   left: 50% !important;
   top: 15% !important;
   bottom: auto !important;
-  transform: translate(-50%, -50%) scale(2);
+  transform: translate(-50%, -50%) scale(2.5) rotate(45deg);
   opacity: 0;
-  filter: blur(15px) brightness(3);
+  filter: blur(20px) brightness(4) contrast(150%);
   z-index: 1003 !important;
-  transition: all 0.4s ease-out;
+  transition: all 0.5s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+  box-shadow: 0 0 50px #fff, 0 0 100px #f1c40f;
 }
 
 /* Fly-from-deck Animation with Dynamic Offsets */

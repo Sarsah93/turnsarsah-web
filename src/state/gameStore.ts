@@ -100,6 +100,10 @@ interface GameStoreState {
   // v2.0.0.7 Save/Load Handle
   isGameLoaded: boolean;
   setIsGameLoaded: (loaded: boolean) => void;
+
+  // v2.0.0.16: Permanent Bonus
+  hasStage6Bonus: boolean;
+  setHasStage6Bonus: (val: boolean) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -113,6 +117,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   stageNum: 1,
   setStageNum: (stageNum) => set({ stageNum }),
   currentTurn: 0,
+  hasStage6Bonus: false,
+  setHasStage6Bonus: (hasStage6Bonus) => set({ hasStage6Bonus }),
   setCurrentTurn: (currentTurn) => set({ currentTurn }),
 
   // Entities
@@ -341,7 +347,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         player: {
           ...state.player,
           hp: stageId === 1 ? 200 : state.player.hp,
-          maxHp: stageId === 1 ? 200 : state.player.maxHp,
+          // v2.0.0.16: Apply Stage 6 bonus persistently
+          maxHp: stageId === 1 ? 200 : (state.hasStage6Bonus ? Math.floor(200 * 1.2) : state.player.maxHp),
           baseMaxHp: stageId === 1 ? 200 : (state.player.baseMaxHp || 200),
           atk: 10,
           level: 1,
@@ -408,6 +415,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       bannedHand = hands[Math.floor(Math.random() * hands.length)];
     } else if (activeStageId === 7 && turn > 0) {
       set({ bot: { ...bot, atk: bot.atk + 10 } });
+    } else if (activeStageId === 9 && turn > 0) {
+      // Stage 9: Boss ATK doubles each turn
+      set({ bot: { ...bot, atk: bot.atk * 2 } });
     }
 
     set({ bannedRanks, bannedSuit, bannedHand, blindIndices });
@@ -429,6 +439,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         level: 1,
         conditions: new Map<string, Condition>(),
       },
+      hasStage6Bonus: false,
       bot: {
         name: 'Bot',
         maxHp: 150,

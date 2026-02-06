@@ -87,9 +87,20 @@ export const BattleScreen: React.FC = () => {
 
     return (
         <div className={`battle-screen ${screenEffect}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+            {/* Defeat Dimming Overlay */}
+            {store.gameState === GameState.GAMEOVER && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    zIndex: 1500,
+                    pointerEvents: 'auto'
+                }} />
+            )}
+
             <div style={{
                 width: '100%', height: '100%',
-                pointerEvents: (activeMenu !== 'NONE' || gamePhase !== 'IDLE') ? 'none' : 'auto',
+                pointerEvents: (activeMenu !== 'NONE' || gamePhase !== 'IDLE' || store.gameState === GameState.GAMEOVER) ? 'none' : 'auto',
                 filter: activeMenu !== 'NONE' ? 'blur(5px)' : 'none'
             }}>
                 <BossDisplay />
@@ -152,18 +163,18 @@ export const BattleScreen: React.FC = () => {
                     </div>
                 )}
 
-                {/* Game Over Buttons */}
+                {/* Game Over Buttons (Centrally Layered and Active) */}
                 {store.gameState === GameState.GAMEOVER && (
                     <div style={{
                         position: 'absolute', top: '70%', left: '50%', transform: 'translateX(-50%)',
-                        display: 'flex', gap: '20px', zIndex: 2000
+                        display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 2000,
+                        pointerEvents: 'auto', alignItems: 'center'
                     }}>
-                        <BlockButton text="RETRY" onClick={() => {
-                            store.initGame(store.stageNum);
-                            store.setGameState(GameState.BATTLE);
-                            store.setMessage("");
-                        }} width="200px" />
-                        <BlockButton text="MAIN MENU" onClick={handleQuit} width="200px" />
+                        <BlockButton
+                            text="BACK TO MAIN PAGE"
+                            onClick={handleQuit}
+                            width="300px"
+                        />
                     </div>
                 )}
 

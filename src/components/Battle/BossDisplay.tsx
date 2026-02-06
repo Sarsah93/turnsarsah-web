@@ -104,13 +104,14 @@ export const BossDisplay: React.FC = () => {
                 <div>ATK: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
                     RULE: {(() => {
+                        const bannedHand = useGameStore.getState().bannedHand;
                         const ruleMap: Record<number, string> = {
                             1: 'NONE',
                             2: 'BLIND_2 CARDS',
                             3: 'BANNED_2 CARDS',
                             4: 'BANNED_SUIT',
-                            5: 'BONUS',
-                            6: 'BANNED_HAND',
+                            5: 'POISON',
+                            6: bannedHand ? `BANNED_${bannedHand.toUpperCase()}` : 'BANNED_HAND',
                             7: 'ATK +10/TURN',
                             8: 'REGEN+REDUCE 10%',
                             9: 'ATK x2/TURN+REDUCE 10%',
@@ -121,16 +122,16 @@ export const BossDisplay: React.FC = () => {
                 </div>
             </div>
 
-            {/* BOSS Conditions Icons (Below HP Bar - Top Right area) */}
+            {/* BOSS Conditions Icons (Below RULE text, left to right) */}
             <div style={{
                 position: 'absolute',
-                top: '110px', right: '10px',
-                display: 'flex', gap: '8px', justifyContent: 'flex-end',
+                top: '160px', right: '30px',
+                display: 'flex', gap: '8px', justifyContent: 'flex-start',
                 minHeight: '50px',
                 zIndex: 100
             }}>
                 {Array.from(bot.conditions.entries()).map(([name, condition]) => (
-                    <ConditionIcon key={name} name={name} condition={condition} />
+                    <ConditionIcon key={name} name={name} condition={condition} popupDirection="bottom-left" />
                 ))}
             </div>
         </div>
