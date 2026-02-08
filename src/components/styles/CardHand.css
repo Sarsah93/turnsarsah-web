@@ -59,21 +59,21 @@
 
 .gathering {
   position: fixed !important;
-  left: 50% !important;
+  /* left is set via inline style for accurate viewport centering */
   bottom: 30% !important;
   top: auto !important;
   z-index: 1000 !important;
-  transform: translateX(-50%) rotate(360deg);
+  transform: translateX(-50%) rotate(360deg) !important;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .charging {
   position: fixed !important;
-  left: 50% !important;
+  /* left is set via inline style for accurate viewport centering */
   top: 65% !important;
   /* Move backwards (down) */
   bottom: auto !important;
-  transform: translate(-50%, -50%) scale(1.1) rotate(-5deg);
+  transform: translate(-50%, -50%) scale(1.1) rotate(-5deg) !important;
   z-index: 1001 !important;
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   filter: brightness(1.4) drop-shadow(0 0 15px #f1c40f);
@@ -81,11 +81,11 @@
 
 .thrusting {
   position: fixed !important;
-  left: 50% !important;
+  /* left is set via inline style for accurate viewport centering */
   top: 15% !important;
   /* Hit boss center (boss is at top: 0) */
   bottom: auto !important;
-  transform: translate(-50%, -50%) scale(0.8) rotate(10deg);
+  transform: translate(-50%, -50%) scale(0.8) rotate(10deg) !important;
   opacity: 1;
   z-index: 1002 !important;
   transition: all 0.1s cubic-bezier(0.32, 0, 0.67, 0);
@@ -94,10 +94,10 @@
 
 .scattering {
   position: fixed !important;
-  left: 50% !important;
+  /* left is set via inline style for accurate viewport centering */
   top: 15% !important;
   bottom: auto !important;
-  transform: translate(-50%, -50%) scale(2.5) rotate(45deg);
+  transform: translate(-50%, -50%) scale(2.5) rotate(45deg) !important;
   opacity: 0;
   filter: blur(20px) brightness(4) contrast(150%);
   z-index: 1003 !important;

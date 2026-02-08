@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useGameStore } from '../../state/gameStore';
 import { Card as CardComponent } from './Card';
 import { Card } from '../../types/Card';
@@ -35,6 +36,27 @@ export const CardHand: React.FC<CardHandProps> = ({
     bannedHand,
     blindIndices
   } = useGameStore();
+
+  // Track if gathering animation has started (for two-phase animation)
+  const [gatheringStarted, setGatheringStarted] = useState(false);
+  const prevGamePhase = useRef(gamePhase);
+
+  // Trigger gathering animation after a frame to allow initial position render
+  useEffect(() => {
+    if (gamePhase === 'GATHERING' && prevGamePhase.current !== 'GATHERING') {
+      // Reset and start gathering animation
+      setGatheringStarted(false);
+      // Use requestAnimationFrame to ensure DOM has rendered at initial position
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setGatheringStarted(true);
+        });
+      });
+    } else if (gamePhase !== 'GATHERING') {
+      setGatheringStarted(false);
+    }
+    prevGamePhase.current = gamePhase;
+  }, [gamePhase]);
 
   // Selection state is now controlled from parent
 
@@ -157,21 +179,8 @@ export const CardHand: React.FC<CardHandProps> = ({
           const isBanned = isBannedRank || isBannedSuit;
 
           const selectedIdxInQueue = selectedCards.indexOf(idx);
-
-          let phaseClass = '';
-          let phaseStyle: React.CSSProperties = {};
           const isAttacking = ['GATHERING', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);
-
-          if (isSelected) {
-            if (gamePhase === 'GATHERING') {
-              phaseClass = 'gathering';
-              // Staggered delay: 0.1s per card from left to right
-              phaseStyle.transitionDelay = `${selectedIdxInQueue * 0.1}s`;
-            }
-            else if (gamePhase === 'CHARGING') phaseClass = 'charging';
-            else if (gamePhase === 'THRUSTING') phaseClass = 'thrusting';
-            else if (gamePhase === 'SCATTERED') phaseClass = 'scattering';
-          }
+          const shouldRenderInPortal = isSelected && isAttacking;
 
           // Deal logic
           const showDealAnim = !isAttacking;
@@ -179,6 +188,121 @@ export const CardHand: React.FC<CardHandProps> = ({
           const deckX = 480;
           const offsetX = deckX - slotX;
 
+          // Calculate viewport center for Portal-rendered cards
+          const viewportCenterX = typeof window !== 'undefined' ? window.innerWidth / 2 : 640;
+          const viewportCenterY = typeof window !== 'undefined' ? window.innerHeight / 2 : 360;
+
+          // Determine phase-specific styles for Portal cards
+          let portalStyle: React.CSSProperties = {};
+          if (shouldRenderInPortal) {
+            const baseStyle: React.CSSProperties = {
+              position: 'fixed',
+              width: '80px',
+              height: '110px',
+              zIndex: 1000 + selectedIdxInQueue,
+              left: `${viewportCenterX}px`,
+              transform: 'translateX(-50%)',
+              transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              transitionDelay: `${selectedIdxInQueue * 0.2}s`, // Changed to 0.2s interval
+            };
+
+            if (gamePhase === 'GATHERING') {
+              // Calculate original card position (where the card slot is)
+              // Cards are centered horizontally, each slot is 80px + 10px margin = 90px apart
+              // With 8 cards total, center offset calculation
+              const cardSlotOffset = (idx - 3.5) * 90; // Distance from center for this card slot
+              const originalX = viewportCenterX + cardSlotOffset;
+              const originalBottom = 120 + 110; // cards-area bottom (120px from bottom) + approx card height offset
+
+              if (!gatheringStarted) {
+                // Phase 1: Render at original position (no transition initially)
+                portalStyle = {
+                  ...baseStyle,
+                  left: `${originalX}px`,
+                  bottom: `${originalBottom}px`,
+                  top: 'auto',
+                  transform: 'translateX(-50%) rotate(0deg)',
+                  transition: 'none', // No transition for initial position
+                };
+              } else {
+                // Phase 2: Animate to center with staggered delay
+                portalStyle = {
+                  ...baseStyle,
+                  left: `${viewportCenterX}px`,
+                  bottom: '30%',
+                  top: 'auto',
+                  transform: 'translateX(-50%) rotate(720deg)', // Rotation during flight
+                  transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                  transitionDelay: `${selectedIdxInQueue * 0.2}s`, // 0.2s staggered delay per card
+                };
+              }
+            } else if (gamePhase === 'CHARGING') {
+              portalStyle = {
+                ...baseStyle,
+                top: '65%',
+                bottom: 'auto',
+                transform: 'translate(-50%, -50%) scale(1.1) rotate(-5deg)',
+                transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                transitionDelay: '0s', // No delay for charging - all cards move together
+                filter: 'brightness(1.4) drop-shadow(0 0 15px #f1c40f)',
+              };
+            } else if (gamePhase === 'THRUSTING') {
+              portalStyle = {
+                ...baseStyle,
+                top: '15%',
+                bottom: 'auto',
+                transform: 'translate(-50%, -50%) scale(0.8) rotate(10deg)',
+                transition: 'all 0.067s cubic-bezier(0.32, 0, 0.67, 0)', // 1.5x faster (0.1s -> 0.067s)
+                transitionDelay: '0s',
+              };
+            } else if (gamePhase === 'SCATTERED') {
+              // Shatter effect: random explosion direction per card
+              const shatterAngle = (selectedIdxInQueue * 60) - 90; // Different angle per card
+              const shatterDistance = 150 + (selectedIdxInQueue * 30);
+              const shatterX = Math.cos(shatterAngle * Math.PI / 180) * shatterDistance;
+              const shatterY = Math.sin(shatterAngle * Math.PI / 180) * shatterDistance;
+
+              portalStyle = {
+                ...baseStyle,
+                top: '15%',
+                bottom: 'auto',
+                transform: `translate(calc(-50% + ${shatterX}px), calc(-50% + ${shatterY}px)) scale(0.3) rotate(${shatterAngle * 2}deg)`,
+                opacity: 0,
+                filter: 'brightness(2) contrast(150%)',
+                transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                transitionDelay: `${selectedIdxInQueue * 0.05}s`, // Slight stagger for explosion
+                clipPath: 'polygon(0% 0%, 25% 10%, 50% 0%, 75% 15%, 100% 0%, 90% 25%, 100% 50%, 85% 75%, 100% 100%, 70% 90%, 50% 100%, 30% 85%, 0% 100%, 15% 70%, 0% 50%, 10% 25%)', // Jagged edges
+              };
+            }
+          }
+
+          // Render attacking cards via Portal to document.body
+          if (shouldRenderInPortal && card) {
+            return (
+              <React.Fragment key={`slot-${idx}`}>
+                {/* Empty slot placeholder */}
+                <div className="card-slot" style={{
+                  width: '80px',
+                  height: '110px',
+                  margin: '0 5px',
+                  position: 'relative'
+                }} />
+                {/* Card rendered via Portal */}
+                {createPortal(
+                  <div style={portalStyle}>
+                    <CardComponent
+                      card={{ ...card, isBlind, isBanned }}
+                      selected={false}
+                      onClick={() => { }}
+                    />
+                  </div>,
+                  document.body
+                )}
+              </React.Fragment>
+            );
+          }
+
+          // Normal card rendering (not attacking)
           return (
             <div key={`slot-${idx}`} className="card-slot" style={{
               width: '80px',
@@ -188,13 +312,12 @@ export const CardHand: React.FC<CardHandProps> = ({
             }}>
               {card && (
                 <div key={card.id}
-                  className={`${phaseClass} ${showDealAnim ? 'card-deal' : ''}`}
+                  className={showDealAnim ? 'card-deal' : ''}
                   style={{
                     width: '100%',
                     height: '100%',
-                    // Only apply inline transition when NOT attacking; CSS classes handle attack transitions
-                    ...(isAttacking ? {} : { transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', transform: 'none' }),
-                    ...phaseStyle,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'none',
                     ['--deal-offset-x' as any]: `${offsetX}px`,
                     ['--deal-offset-y' as any]: '100px'
                   }}>

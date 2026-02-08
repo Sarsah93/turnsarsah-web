@@ -202,28 +202,31 @@ export const useGameLoop = () => {
         const isCrit = result.isCritical;
         const hasWild = selectedCards.some(c => c.isJoker);
 
-        // --- PHASE 1: GATHERING (0.6s) ---
-        // Extended from 0.2s to allow sequential card animations to complete
+        // --- PHASE 1: GATHERING ---
+        // Dynamic duration based on number of cards (0.2s per card + 0.5s base animation)
         store.setGamePhase('GATHERING');
         AudioManager.playSFX('/assets/audio/combat/gathering.mp3');
 
         // Shuffling SFX (Gathering start + 0.2s) - as Gathering sound effect
         setTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
 
-        await new Promise(r => setTimeout(r, 600));
+        // Wait for all cards to gather: 0.2s delay per card + 0.5s for animation
+        const gatheringDuration = (selectedCards.length * 200) + 500;
+        await new Promise(r => setTimeout(r, gatheringDuration));
 
         // --- PHASE 2: CHARGING (0.8s) ---
         store.setGamePhase('CHARGING');
         // Loop charge sound?
         await new Promise(r => setTimeout(r, 800));
 
-        // --- PHASE 3: THRUSTING (0.1s) ---
+        // --- PHASE 3: THRUSTING ---
+        // Made 1.5x faster: reduced timing
         store.setGamePhase('THRUSTING');
         // Removed 03_spear_thrust.mp3 per user request - only whipping.mp3 should play
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 67)); // 1.5x faster (100ms -> 67ms)
 
-        // Whipping SFX (Thrust End + 0.2s) - per user request
-        await new Promise(r => setTimeout(r, 200));
+        // Whipping SFX (Thrust End + 0.13s) - faster
+        await new Promise(r => setTimeout(r, 133)); // 1.5x faster (200ms -> 133ms)
         AudioManager.playSFX('/assets/audio/player/whipping.mp3');
 
         // Boss Shake (Impact + 0.2s)
