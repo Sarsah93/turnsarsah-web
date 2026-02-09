@@ -3,7 +3,7 @@ import { useGameStore } from '../state/gameStore';
 import { AudioManager } from '../utils/AudioManager';
 import { calculatePlayerDamage, calculateBotDamage } from './damageCalculation';
 import { Card } from '../types/Card';
-import { GameState } from '../constants/gameConfig';
+import { GameState, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
 
 export interface DamageTextData {
     id: number;
@@ -93,17 +93,17 @@ export const useGameLoop = () => {
     };
 
     const applyBotStageMechanics = () => {
+        const store = useGameStore.getState();
+        const config = DIFFICULTY_CONFIGS[store.difficulty];
         const rand = Math.random();
         let conditionApplied = '';
 
-        // v2.0.0.14: Standardized Bleeding (30%, 4 turns) for stages 1-4, 7
-        if ([1, 2, 3, 4, 7].includes(stageNum) && rand < 0.3) {
+        // Difficulty-based probabilities for status effects
+        if ([1, 2, 3, 4].includes(stageNum) && rand < config.bleedProbStage1to4) {
             conditionApplied = 'Bleeding';
-        }
-        else if (stageNum === 5 && rand < 0.4) {
+        } else if (stageNum === 5 && rand < config.poisonProbStage5) {
             conditionApplied = 'Poisoning';
-        }
-        else if (stageNum === 8 && rand < 0.2) {
+        } else if (stageNum === 7 && rand < config.paralyzeProbStage7) {
             conditionApplied = 'Paralyzing';
         }
 
@@ -256,14 +256,20 @@ export const useGameLoop = () => {
         // v2.0.0.16: Remove cards only AFTER animation ends
         store.removePlayerCards(selectedIndices);
 
-        // Regen logic
-        if ((stageNum === 8 || stageNum === 10) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating')) {
-            store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
-            playConditionSound('Regenerating');
-        }
-        if (stageNum === 6 && newBotHp <= bot.maxHp * 0.5 && !bot.conditions.has('Regenerating')) {
-            store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
-            playConditionSound('Regenerating');
+        // Regen logic - Difficulty-aware
+        const config = DIFFICULTY_CONFIGS[store.difficulty];
+        const stagesWithRegen = [6, 8, 10];
+        if (config.stage9HasRegen) stagesWithRegen.push(9);
+
+        if (stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating')) {
+            // Stage 6 has HP threshold
+            if (stageNum === 6 && newBotHp <= bot.maxHp * 0.5) {
+                store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
+                playConditionSound('Regenerating');
+            } else if (stageNum !== 6) {
+                store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
+                playConditionSound('Regenerating');
+            }
         }
 
         if (newBotHp <= 0) {
@@ -275,7 +281,9 @@ export const useGameLoop = () => {
 
     const executeBotTurn = async () => {
         const store = useGameStore.getState();
-        const damage = calculateBotDamage(bot.atk);
+        const currentBot = store.bot;
+        const currentPlayer = store.player;
+        const damage = calculateBotDamage(currentBot.atk);
 
         await new Promise(r => setTimeout(r, 1500));
 
@@ -287,8 +295,9 @@ export const useGameLoop = () => {
             return;
         }
 
-        // Dodge Check (5%)
-        if (Math.random() < 0.05) {
+        // Dodge Check - Difficulty-based avoid chance
+        const config = DIFFICULTY_CONFIGS[store.difficulty];
+        if (config.avoidChance > 0 && Math.random() < config.avoidChance) {
             setMessage("ATTACK AVOIDED!");
             playConditionSound('Avoiding');
             triggerScreenEffect('flash-red');
@@ -297,7 +306,7 @@ export const useGameLoop = () => {
             return;
         }
 
-        setMessage(`${bot.name} ATTACKS!`);
+        setMessage(`${currentBot.name} ATTACKS!`);
         setBotAnimState('ATTACK');
         setTimeout(() => AudioManager.playSFX(getBossAttackSFX(stageNum)), 200);
 
@@ -305,16 +314,28 @@ export const useGameLoop = () => {
         triggerScreenEffect('shake-heavy');
         setPlayerAnimState('HIT');
 
-        const newPlayerHp = Math.max(0, player.hp - damage);
-        showDamageText('PLAYER', `-${damage}`, '#e74c3c');
+        // v2.0.0.18: Apply damage IMMEDIATELY to store state so that 
+        // subsequent status effects work on the correct HP/MaxHP.
+        const freshPlayer = useGameStore.getState().player;
+        const damageToApply = damage;
+        const hpAfterDamage = Math.max(0, freshPlayer.hp - damageToApply);
+
+        setPlayerHp(hpAfterDamage);
+        showDamageText('PLAYER', `-${damageToApply}`, '#e74c3c');
+
+        // Wait a bit for the hit visual before applying status effects
+        await new Promise(r => setTimeout(r, 200));
+
+        // Apply status effects AFTER boss damage is applied to state
         applyBotStageMechanics();
 
         await new Promise(r => setTimeout(r, 300));
-        setPlayerHp(newPlayerHp);
         setBotAnimState('NONE');
         setPlayerAnimState('NONE');
 
-        if (newPlayerHp <= 0) {
+        // Check death using fresh state after both damage and status effects
+        const finalPlayerHp = useGameStore.getState().player.hp;
+        if (finalPlayerHp <= 0) {
             await handleDefeat();
         } else {
             await proceedToEndTurn();
@@ -398,7 +419,8 @@ export const useGameLoop = () => {
                 setMessage('BOSS REGENERATING!');
                 playConditionSound('Regenerating');
                 const latestBot = useGameStore.getState().bot;
-                const heal = Math.floor(latestBot.maxHp * 0.05);
+                const regenPercent = (data.data as any)?.percent || 0.05;
+                const heal = Math.floor(latestBot.maxHp * regenPercent);
                 setBotHp(Math.min(latestBot.maxHp, latestBot.hp + heal));
                 showDamageText('BOT', `+${heal}`, '#2ecc71');
                 await new Promise(r => setTimeout(r, 800));
@@ -455,6 +477,7 @@ export const useGameLoop = () => {
 
     const handleVictory = async () => {
         const store = useGameStore.getState();
+        const config = DIFFICULTY_CONFIGS[store.difficulty];
 
         // 1. 상태 정리 (Heal + Clear Conditions)
         store.clearPlayerConditions();
@@ -462,39 +485,49 @@ export const useGameLoop = () => {
         const currentHp = store.player.hp;
         let maxHp = store.player.maxHp;
 
-        // v2.0.0.14/16: Stage 6 Reward (+20% MAX HP + FULL HEAL)
+        // v2.0.0.14/16: Stage 6 Reward (difficulty-based MAX HP bonus + FULL HEAL)
         if (stageNum === 6) {
-            const bonus = Math.floor(maxHp * 0.2);
+            const bonus = Math.floor(maxHp * config.stage6MaxHpBonus);
             maxHp += bonus;
             store.setHasStage6Bonus(true);
             store.setPlayerMaxHp(maxHp);
             setPlayerHp(maxHp); // FULL HEAL per user request
         } else {
-            // Standard Heal for other stages
-            const newHp = Math.min(maxHp, currentHp + 50);
+            // Standard Heal for other stages (difficulty-based)
+            const newHp = Math.min(maxHp, currentHp + config.clearHpBonus);
             setPlayerHp(newHp);
         }
 
         // 2. Victory State & Sound
         setGameState(GameState.VICTORY);
-        const victoryMsg = stageNum === 6 ? "VICTORY! MAX HP +20% BONUS!" : "VICTORY!";
+        const bonusPercent = Math.floor(config.stage6MaxHpBonus * 100);
+        const victoryMsg = stageNum === 6 ? `VICTORY! MAX HP +${bonusPercent}% BONUS!` : "VICTORY!";
         setMessage(victoryMsg);
         AudioManager.playSFX('/assets/audio/stages/victory/victory.mp3');
 
         // 3. Wait for victory.mp3 (approx 5s)
         await new Promise(r => setTimeout(r, 5000));
 
-        // 4. Transition to next stage
+        // 4. Transition to next stage or unlock difficulty on final stage clear
         const nextStage = stageNum + 1;
         if (nextStage > 10) {
-            alert("ALL CLEAR! YOU ARE THE MASTER OF TURN SARSAH!");
+            // Unlock next difficulty on game completion
+            if (store.difficulty === Difficulty.NORMAL) {
+                store.unlockDifficulty(Difficulty.HARD);
+                alert("ALL CLEAR! YOU ARE THE MASTER OF TURN SARSAH!\n\nHARD difficulty unlocked!");
+            } else if (store.difficulty === Difficulty.HARD) {
+                store.unlockDifficulty(Difficulty.HELL);
+                alert("ALL CLEAR! YOU ARE THE MASTER OF TURN SARSAH!\n\nHELL difficulty unlocked!");
+            } else {
+                alert("ALL CLEAR! YOU ARE THE MASTER OF TURN SARSAH!");
+            }
+            setMessage(""); // Clear Victory message before exiting
             setGameState(GameState.MENU);
         } else {
             triggerTransition(() => {
                 setMessage(""); // CLEAR MESSAGE FIRST to avoid overlap!
                 initGame(nextStage);
                 setGameState(GameState.BATTLE);
-                useGameStore.getState().applyStageRules(nextStage, 0);
                 startInitialDraw();
             });
         }

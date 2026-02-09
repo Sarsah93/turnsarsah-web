@@ -81,14 +81,6 @@ export const Game: React.FC<GameProps> = ({ stageId = 1, onGameEnd }) => {
       // Skip initGame to preserve loaded data
     } else {
       store.initGame(stageId);
-      // Apply Permanent 'Avoiding' Effect for every LOW stage start? 
-      // Actually user requested Avoiding at start of every stage.
-      // For loaded game, if it wasn't saved, we might miss it.
-      // But initGame resets conditions anyway.
-      // If loaded, conditions are loaded.
-      setTimeout(() => {
-        store.addPlayerCondition('Avoiding', 999, 'Chance to avoid attacks (5%)', 0);
-      }, 0);
     }
 
     const engine = new TurnEngine(store.player, store.bot, stageId);

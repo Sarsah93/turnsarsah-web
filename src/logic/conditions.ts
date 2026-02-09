@@ -22,11 +22,11 @@ export const CONDITION_PRESETS: Record<string, { duration: number; desc: string 
   },
   'Poisoning': {
     duration: 4,
-    desc: 'Takes stacking damage (5, 10, 15, 20) per turn. Stacks to Debilitating.',
+    desc: 'Takes stacking damage per turn. Stacks to Debilitating.',
   },
   'Regenerating': {
-    duration: 5,
-    desc: 'At the end of each turn, restores a certain amount of HP.',
+    duration: 999,
+    desc: 'Restores a portion of HP each turn.',
   },
   'Paralyzing': {
     duration: 2,
@@ -39,6 +39,10 @@ export const CONDITION_PRESETS: Record<string, { duration: number; desc: string 
   'Damage Reducing': {
     duration: 9999,
     desc: 'Reduces incoming damage by a percentage.',
+  },
+  'Avoiding': {
+    duration: 9999,
+    desc: 'Chance to avoid attacks.',
   },
   'Immune': {
     duration: 3,

@@ -2,24 +2,27 @@
 
 import { Card } from '../types/Card';
 import { evaluateHand, HandEvaluation } from './mechanics';
-import { CRITICAL_DAMAGE_BONUS } from '../constants/gameConfig';
+import { CRITICAL_DAMAGE_BONUS, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
 import { RANK_VALUES } from '../constants/cards';
+import { useGameStore } from '../state/gameStore';
 
 /**
- * 크리티컬 확률 계산
- * v2.0.0.5: (A 개수 + 조커 개수) * 10% 확률로 크리티컬
+ * 크리티컬 확률 계산 (Difficulty-aware)
  * - 족보에 '참여'하는 카드만 계산
  * - HIGH CARD는 크리티컬 발생 안함
  */
-export function getCriticalSuccess(cards: Card[], handType: string, scoringIndices: number[]): boolean {
+export function getCriticalSuccess(cards: Card[], handType: string, scoringIndices: number[], difficulty?: Difficulty): boolean {
   if (handType === 'High Card' || scoringIndices.length === 0) return false;
+
+  const diff = difficulty ?? useGameStore.getState().difficulty;
+  const config = DIFFICULTY_CONFIGS[diff];
 
   const scoringCards = scoringIndices.map((i) => cards[i]);
   const criticalCount = scoringCards.filter(
     (c) => c.isJoker || c.rank === 'A'
   ).length;
 
-  const probability = criticalCount * 0.1;
+  const probability = criticalCount * config.criticalChancePerCard;
   return Math.random() < probability;
 }
 
@@ -97,8 +100,12 @@ export function calculatePlayerDamage(
   hasDebilitating: boolean = false,
   bannedHandType: string | null = null,
   bannedRanks: string[] = [],
-  bannedSuit: string | null = null
+  bannedSuit: string | null = null,
+  difficulty?: Difficulty
 ): DamageCalculationResult {
+  const diff = difficulty ?? useGameStore.getState().difficulty;
+  const config = DIFFICULTY_CONFIGS[diff];
+
   // 1. Check Banned Hand (Stage Rule)
   const handEval = evaluateHand(cards);
   if (bannedHandType && handEval.type === bannedHandType && handEval.type !== 'High Card') {
@@ -113,12 +120,12 @@ export function calculatePlayerDamage(
 
   const baseDamage = calculateBaseDamage(handEval, cards, bannedRanks, bannedSuit);
 
-  // 2. Critical Hit Multiplier
-  const isCritical = getCriticalSuccess(cards, handEval.type, handEval.scoringIndices);
+  // 2. Critical Hit Multiplier (Difficulty-based)
+  const isCritical = getCriticalSuccess(cards, handEval.type, handEval.scoringIndices, diff);
   let multiplier = 1.0;
 
   if (isCritical) {
-    multiplier *= 1.25; // 1.25x Total Damage
+    multiplier *= config.criticalMultiplier;
   }
 
   // 3. Debilitating Penalty

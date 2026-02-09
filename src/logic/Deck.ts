@@ -5,8 +5,10 @@ import { SUITS, RANK_VALUES, JOKER_DRAW_PROBABILITY } from '../constants/cards';
 
 export class Deck {
   cards: Card[] = [];
+  jokerProbability: number;
 
-  constructor() {
+  constructor(jokerProbability: number = JOKER_DRAW_PROBABILITY) {
+    this.jokerProbability = jokerProbability;
     this.initialize();
   }
 
@@ -23,7 +25,7 @@ export class Deck {
   draw(count: number): Card[] {
     const drawn: Card[] = [];
     for (let i = 0; i < count; i++) {
-      if (Math.random() < JOKER_DRAW_PROBABILITY) {
+      if (Math.random() < this.jokerProbability) {
         drawn.push(CardFactory.create(null, null, true));
       } else if (this.cards.length > 0) {
         drawn.push(this.cards.shift()!);

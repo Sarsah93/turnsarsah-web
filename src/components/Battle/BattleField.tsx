@@ -97,7 +97,7 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
         />
         <div className="boss-conditions" style={{ display: 'flex', gap: '5px', justifyContent: 'flex-end', paddingRight: '10px', zIndex: 2000, position: 'relative', pointerEvents: 'auto' }}>
           {Array.from(bot.conditions.entries()).map(([name, condition]) => (
-            <ConditionIcon key={name} name={name} condition={condition} />
+            <ConditionIcon key={name} name={name} condition={condition} popupDirection="bottom-left" />
           ))}
         </div>
       </div>
@@ -198,7 +198,7 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
           position: 'relative'
         }}>
           {Array.from(player.conditions.entries()).map(([name, condition]) => (
-            <ConditionIcon key={name} name={name} condition={condition} />
+            <ConditionIcon key={name} name={name} condition={condition} popupDirection="top-right" />
           ))}
         </div>
         <HPBar

@@ -1,9 +1,23 @@
 import { useGameStore } from '../../state/gameStore';
 import { HPBar } from '../Common/HPBar';
 import { ConditionIcon } from '../Common/ConditionIcon';
+import { Difficulty } from '../../constants/gameConfig';
 
 export const BossDisplay: React.FC = () => {
-    const { bot, stageNum } = useGameStore();
+    const { bot, stageNum, stage10RuleText, difficulty } = useGameStore();
+
+    // Map difficulty to display text
+    const getDifficultyText = (diff: Difficulty) => {
+        const map: Record<Difficulty, { text: string; color: string }> = {
+            [Difficulty.EASY]: { text: 'EASY', color: '#27ae60' },
+            [Difficulty.NORMAL]: { text: 'NORMAL', color: '#3498db' },
+            [Difficulty.HARD]: { text: 'HARD', color: '#e67e22' },
+            [Difficulty.HELL]: { text: 'HELL', color: '#c0392b' },
+        };
+        return map[diff];
+    };
+
+    const diffInfo = getDifficultyText(difficulty);
 
     // Simple HP Bar calculation
     const hpPercent = Math.max(0, (bot.hp / bot.maxHp) * 100);
@@ -56,10 +70,14 @@ export const BossDisplay: React.FC = () => {
             {/* Stage Info (Top Left) */}
             <div style={{
                 position: 'absolute', top: '10px', left: '10px',
-                fontSize: '2.5rem', fontFamily: "'Bebas Neue', sans-serif", color: '#fff',
-                textShadow: '2px 2px 4px #000'
+                fontFamily: "'Bebas Neue', sans-serif", color: '#fff',
+                textShadow: '2px 2px 4px #000',
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start'
             }}>
-                STAGE {stageNum}
+                <span style={{ fontSize: '2.5rem' }}>STAGE {stageNum}</span>
+                <span style={{ fontSize: '1.2rem', color: diffInfo.color, marginTop: '-5px' }}>
+                    [{diffInfo.text}]
+                </span>
             </div>
 
             {/* Boss Image (Center Top) */}
@@ -103,7 +121,7 @@ export const BossDisplay: React.FC = () => {
             }}>
                 <div>ATK: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
-                    {stageNum === 10 ? useGameStore.getState().stage10RuleText : (
+                    {stageNum === 10 ? stage10RuleText : (
                         `RULE: ${(() => {
                             const bannedHand = useGameStore.getState().bannedHand;
                             const ruleMap: Record<number, string> = {

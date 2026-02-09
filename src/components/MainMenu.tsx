@@ -3,9 +3,11 @@ import { useGameStore } from '../state/gameStore';
 import { BlockButton } from './BlockButton';
 import { AudioManager } from '../utils/AudioManager';
 import { SaveLoadMenu, SettingsMenu, ConfirmationPopup } from './Menu';
+import { DifficultyPopup } from './DifficultyPopup';
+import { Difficulty } from '../constants/gameConfig';
 
 export const MainMenu: React.FC = () => {
-    const { initGame, loadGame, triggerTransition } = useGameStore();
+    const { initGameWithDifficulty, loadGame, triggerTransition } = useGameStore();
 
     useEffect(() => {
         AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
@@ -15,8 +17,9 @@ export const MainMenu: React.FC = () => {
         AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
     };
 
-    const handleNewGame = () => {
-        triggerTransition(() => initGame(1));
+    const handleDifficultySelect = (difficulty: Difficulty) => {
+        setActiveMenu('NONE');
+        triggerTransition(() => initGameWithDifficulty(1, difficulty));
     };
 
     const handleLoadAction = (slot: number) => {
@@ -24,7 +27,7 @@ export const MainMenu: React.FC = () => {
         setActiveMenu('NONE');
     };
 
-    const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT'>('NONE');
+    const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT' | 'DIFFICULTY'>('NONE');
 
     return (
         <div className="menu-screen" onClick={handleInteraction} style={{
@@ -41,11 +44,43 @@ export const MainMenu: React.FC = () => {
 
             {/* Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <BlockButton text="NEW GAME" onClick={handleNewGame} />
+                <BlockButton text="NEW GAME" onClick={() => setActiveMenu('DIFFICULTY')} />
                 <BlockButton text="LOAD GAME" onClick={() => setActiveMenu('LOAD')} />
                 <BlockButton text="SETTINGS" onClick={() => setActiveMenu('SETTINGS')} />
                 <BlockButton text="QUIT" onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
+
+                {/* v2.0.0.18: Debug Button for HELL Stage 10 Testing */}
+                <button
+                    onClick={() => {
+                        AudioManager.playSFX('/assets/audio/etc/04_button_click.mp3');
+                        initGameWithDifficulty(10, Difficulty.HELL);
+                    }}
+                    style={{
+                        marginTop: '20px',
+                        background: 'rgba(192, 57, 43, 0.3)',
+                        color: '#ff9999',
+                        border: '1px solid #c0392b',
+                        padding: '8px 16px',
+                        fontFamily: "'Bebas Neue', sans-serif",
+                        fontSize: '1.2rem',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(192, 57, 43, 0.6)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(192, 57, 43, 0.3)'}
+                >
+                    DEBUG: HELL STAGE 10
+                </button>
             </div>
+
+            {/* Difficulty Popup */}
+            {activeMenu === 'DIFFICULTY' && (
+                <DifficultyPopup
+                    onClose={() => setActiveMenu('NONE')}
+                    onSelect={handleDifficultySelect}
+                />
+            )}
 
             {/* Modals using unified components */}
             {activeMenu === 'SETTINGS' && (
