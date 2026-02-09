@@ -26,7 +26,7 @@ export const CONDITION_PRESETS: Record<string, { duration: number; desc: string 
   },
   'Regenerating': {
     duration: 5,
-    desc: 'Restores HP each turn.',
+    desc: 'At the end of each turn, restores a certain amount of HP.',
   },
   'Paralyzing': {
     duration: 2,
@@ -35,6 +35,10 @@ export const CONDITION_PRESETS: Record<string, { duration: number; desc: string 
   'Debilitating': {
     duration: 3,
     desc: 'Reduces Max HP by 20% and damage dealt by 20%.',
+  },
+  'Damage Reducing': {
+    duration: 9999,
+    desc: 'Reduces incoming damage by a percentage.',
   },
   'Immune': {
     duration: 3,

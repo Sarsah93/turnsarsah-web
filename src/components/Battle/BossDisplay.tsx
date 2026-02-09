@@ -103,30 +103,35 @@ export const BossDisplay: React.FC = () => {
             }}>
                 <div>ATK: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
-                    RULE: {(() => {
-                        const bannedHand = useGameStore.getState().bannedHand;
-                        const ruleMap: Record<number, string> = {
-                            1: 'NONE',
-                            2: 'BLIND_2 CARDS',
-                            3: 'BANNED_2 CARDS',
-                            4: 'BANNED_SUIT',
-                            5: 'POISON',
-                            6: bannedHand ? `BANNED_${bannedHand.toUpperCase()}` : 'BANNED_HAND',
-                            7: 'ATK +10/TURN',
-                            8: 'REGEN+REDUCE 10%',
-                            9: 'ATK x2/TURN+REDUCE 10%',
-                            10: 'CHAOS+REGEN+REDUCE 15%'
-                        };
-                        return ruleMap[stageNum] || 'NONE';
-                    })()}
+                    {stageNum === 10 ? useGameStore.getState().stage10RuleText : (
+                        `RULE: ${(() => {
+                            const bannedHand = useGameStore.getState().bannedHand;
+                            const ruleMap: Record<number, string> = {
+                                1: 'NONE',
+                                2: 'BLIND_2 CARDS',
+                                3: 'BANNED_2 CARDS',
+                                4: 'BANNED_SUIT',
+                                5: 'POISON',
+                                6: bannedHand ? `BANNED_${bannedHand.toUpperCase()}` : 'BANNED_HAND',
+                                7: 'ATK +10/TURN',
+                                8: 'REGEN+REDUCE 10%',
+                                9: 'ATK x2/TURN+REDUCE 10%',
+                            };
+                            return ruleMap[stageNum] || 'NONE';
+                        })()}`
+                    )}
                 </div>
             </div>
 
-            {/* BOSS Conditions Icons (Below RULE text, left to right) */}
+            {/* BOSS Conditions Icons (Below RULE text, right to left) */}
             <div style={{
                 position: 'absolute',
-                top: '160px', right: '30px',
-                display: 'flex', gap: '8px', justifyContent: 'flex-start',
+                top: '200px', // Lowered to avoid overlap with multi-line rules
+                right: '30px',
+                display: 'flex',
+                flexDirection: 'row-reverse', // Grow from right to left
+                gap: '8px',
+                justifyContent: 'flex-start',
                 minHeight: '50px',
                 zIndex: 100
             }}>

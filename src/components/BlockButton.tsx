@@ -75,3 +75,6 @@ export const BlockButton: React.FC<BlockButtonProps> = ({
         </div>
     );
 };
+
+// Memoized export for better rendering performance
+export default React.memo(BlockButton);

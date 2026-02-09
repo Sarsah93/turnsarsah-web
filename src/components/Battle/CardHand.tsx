@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameStore } from '../../state/gameStore';
 import { Card as CardComponent } from './Card';
@@ -131,8 +131,8 @@ export const CardHand: React.FC<CardHandProps> = ({
       return;
     }
 
-    if (selectedCards.length > 5) {
-      useGameStore.getState().setMessage("MAX 5 CARDS CAN BE SWAPPED!");
+    if (selectedCards.length > 2) {
+      useGameStore.getState().setMessage("MAXIMUM 2 CARDS CAN BE SWAPPED!");
       return;
     }
 
@@ -360,4 +360,5 @@ export const CardHand: React.FC<CardHandProps> = ({
   );
 };
 
-export default CardHand;
+// Memoized CardHand for performance
+export default memo(CardHand);

@@ -63,3 +63,6 @@ export const Card: React.FC<CardProps> = ({ card, selected, onClick }) => {
         </div>
     );
 };
+
+// Memoized export for better rendering performance
+export default React.memo(Card);

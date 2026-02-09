@@ -33,7 +33,8 @@ export const useGameLoop = () => {
 
     // v2.0.0.12: Auto-clear generic messages after 2.5s
     useEffect(() => {
-        if (message && message !== 'VICTORY!' && message !== 'DEFEAT...') {
+        const exempt = ['VICTORY!', 'DEFEAT...', 'PARALYZED! CANNOT ATTACK!'];
+        if (message && !exempt.includes(message)) {
             const timer = setTimeout(() => setMessage(""), 2500);
             return () => clearTimeout(timer);
         }
@@ -160,7 +161,8 @@ export const useGameLoop = () => {
             setMessage("PARALYZED! CANNOT ATTACK!");
             playConditionSound('Paralyzing');
             triggerScreenEffect('flash-red');
-            await new Promise(r => setTimeout(r, 1000));
+            // Wait a bit before bot turn starts
+            await new Promise(r => setTimeout(r, 1200));
             await executeBotTurn();
             return;
         }
@@ -191,13 +193,13 @@ export const useGameLoop = () => {
             return;
         }
 
-        // v2.0.0.14: Damage Reduction
-        let finalReduction = 0;
-        if (stageNum === 8 || stageNum === 9) finalReduction = 10;
-        else if (stageNum === 10) finalReduction = 15;
-
+        // v2.0.0.14: Damage Reduction - Unified via Conditions
         let damage = Math.floor(result.finalDamage);
-        if (finalReduction > 0) damage = Math.floor(damage * (1 - finalReduction / 100));
+        const reductionCond = bot.conditions.get('Damage Reducing');
+        if (reductionCond) {
+            const percent = (reductionCond.data as any)?.percent || 0;
+            damage = Math.floor(damage * (1 - percent / 100));
+        }
 
         const isCrit = result.isCritical;
         const hasWild = selectedCards.some(c => c.isJoker);
@@ -256,11 +258,11 @@ export const useGameLoop = () => {
 
         // Regen logic
         if ((stageNum === 8 || stageNum === 10) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating')) {
-            store.addBotCondition('Regenerating', 3, 'BOSS CONSTANT REGEN');
+            store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
             playConditionSound('Regenerating');
         }
         if (stageNum === 6 && newBotHp <= bot.maxHp * 0.5 && !bot.conditions.has('Regenerating')) {
-            store.addBotCondition('Regenerating', 3, 'GOLDEN REGEN');
+            store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
             playConditionSound('Regenerating');
         }
 
@@ -348,6 +350,7 @@ export const useGameLoop = () => {
             }
 
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
+                setMessage(`${cond.toUpperCase()}!`);
                 playConditionSound(cond);
                 const dmg = cond === 'Heavy Bleeding' ? 15 : 5;
                 setPlayerHp(Math.max(0, player.hp - dmg));
@@ -365,6 +368,7 @@ export const useGameLoop = () => {
         }
 
         if (playerConditions.has('Regenerating')) {
+            setMessage('REGENERATING!');
             playConditionSound('Regenerating');
             const heal = 10;
             setPlayerHp(Math.min(player.maxHp, player.hp + heal));
@@ -374,7 +378,9 @@ export const useGameLoop = () => {
 
         // Remove expired player conditions
         toRemovePlayer.forEach(name => playerConditions.delete(name));
-        store.setPlayer({ ...store.player, conditions: playerConditions });
+        // CRITICAL: Use FRESH player state to avoid overwriting HP changes from regeneration
+        const freshPlayer = useGameStore.getState().player;
+        useGameStore.getState().setPlayer({ ...freshPlayer, conditions: playerConditions });
 
         // 0.5s pause between phases
         await new Promise(r => setTimeout(r, 500));
@@ -382,10 +388,19 @@ export const useGameLoop = () => {
         // Boss Phase
         for (const [cond, data] of Array.from(botConditions.entries())) {
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
+                setMessage(`BOSS ${cond.toUpperCase()}!`);
                 playConditionSound(cond);
                 const dmg = 10;
                 setBotHp(Math.max(0, bot.hp - dmg));
                 showDamageText('BOT', `-${dmg}`, '#c0392b');
+                await new Promise(r => setTimeout(r, 800));
+            } else if (cond === 'Regenerating') {
+                setMessage('BOSS REGENERATING!');
+                playConditionSound('Regenerating');
+                const latestBot = useGameStore.getState().bot;
+                const heal = Math.floor(latestBot.maxHp * 0.05);
+                setBotHp(Math.min(latestBot.maxHp, latestBot.hp + heal));
+                showDamageText('BOT', `+${heal}`, '#2ecc71');
                 await new Promise(r => setTimeout(r, 800));
             }
 
@@ -403,17 +418,30 @@ export const useGameLoop = () => {
             const cond = botConditions.get('Regenerating')!;
             if (cond.duration - cond.elapsed <= 1) {
                 if ([6, 8, 10].includes(stageNum)) {
-                    store.addBotCondition('Regenerating', 3, 'INFINITE REGEN');
+                    store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
                 }
             }
         }
 
         // Remove expired bot conditions
         toRemoveBot.forEach(name => botConditions.delete(name));
-        store.setBot({ ...store.bot, conditions: botConditions });
+        // CRITICAL: Use FRESH bot state to avoid overwriting HP changes from regeneration
+        const freshBot = useGameStore.getState().bot;
+        useGameStore.getState().setBot({ ...freshBot, conditions: botConditions });
     };
 
     const executeCardSwap = (selectedIndices: number[]) => {
+        if (selectedIndices.length === 0) {
+            setMessage("SELECT CARDS!");
+            triggerScreenEffect('shake-small');
+            return;
+        }
+        if (selectedIndices.length > 2) {
+            setMessage("MAXIMUM 2 CARDS CAN BE SWAPPED!");
+            triggerScreenEffect('shake-small');
+            return;
+        }
+
         const p = useGameStore.getState().player;
         if ((p.drawsRemaining ?? 0) > 0) {
             swapCards(selectedIndices);

@@ -104,6 +104,10 @@ interface GameStoreState {
   // v2.0.0.16: Permanent Bonus
   hasStage6Bonus: boolean;
   setHasStage6Bonus: (val: boolean) => void;
+
+  // v2.0.0.17: Stage 10 Dynamic Rule Text
+  stage10RuleText: string;
+  setStage10RuleText: (text: string) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -120,6 +124,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   hasStage6Bonus: false,
   setHasStage6Bonus: (hasStage6Bonus) => set({ hasStage6Bonus }),
   setCurrentTurn: (currentTurn) => set({ currentTurn }),
+  stage10RuleText: '',
+  setStage10RuleText: (stage10RuleText) => set({ stage10RuleText }),
 
   // Entities
   player: {
@@ -175,7 +181,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         ...state.player,
         maxHp,
         hp: Math.min(state.player.hp, maxHp),
-        baseMaxHp: state.player.baseMaxHp || maxHp
+        // v2.0.0.17: Force update baseMaxHp if it's the permanent bonus
+        baseMaxHp: state.hasStage6Bonus ? maxHp : (state.player.baseMaxHp || maxHp)
       },
     })),
   setBotMaxHp: (maxHp) =>
@@ -334,6 +341,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         stage6Hp = state.player.hp;
       }
 
+      // v2.0.0.17: Boss Damage Reduction as Condition
+      const botConditions = new Map<string, Condition>();
+      if (stageId === 8 || stageId === 9) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, 'Reduces incoming damage by 10%.', { percent: 10 });
+      } else if (stageId === 10) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, 'Reduces incoming damage by 15%.', { percent: 15 });
+      }
+
       return {
         stageNum: stageId,
         gameState: GameState.BATTLE,
@@ -363,11 +378,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           maxHp: stageConfig.hp,
           atk: stageConfig.atk,
           level: stageConfig.level,
-          conditions: new Map<string, Condition>(),
+          conditions: botConditions,
           activeRules: [],
         },
         deck: newDeck,
         isPaused: false,
+        stage10RuleText: '',
       };
     }),
 
@@ -420,6 +436,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       set({ bot: { ...bot, atk: bot.atk * 2 } });
     }
 
+    // v2.0.0.17: Update Stage 10 Rule Text specifically
+    if (stageId === 10) {
+      let ruleDesc = '';
+      if (activeStageId === 2) ruleDesc = 'BLIND_2 CARDS';
+      else if (activeStageId === 3) ruleDesc = `BANNED_${bannedRanks.join('/')}`;
+      else if (activeStageId === 4) ruleDesc = `BANNED_${bannedSuit}`;
+      else if (state.player.conditions.has('Poisoning')) ruleDesc = 'POISON';
+      else if (activeStageId === 10) ruleDesc = 'CHAOS'; // Default if none of the above?
+
+      set({ stage10RuleText: `RULE: ${ruleDesc}+REGEN+REDUCE 15%` });
+    }
+
     set({ bannedRanks, bannedSuit, bannedHand, blindIndices });
   },
 
@@ -438,6 +466,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         atk: 10,
         level: 1,
         conditions: new Map<string, Condition>(),
+        baseMaxHp: 200,
       },
       hasStage6Bonus: false,
       bot: {
