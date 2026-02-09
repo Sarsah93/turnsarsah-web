@@ -11,6 +11,7 @@ export enum GameState {
   VICTORY = 'VICTORY',
   GAMEOVER = 'GAMEOVER',
   LOAD = 'LOAD',
+  TUTORIAL = 'TUTORIAL',
 }
 
 export enum PauseSubstate {

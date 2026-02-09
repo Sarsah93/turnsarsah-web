@@ -25,7 +25,8 @@ export const useGameLoop = () => {
         stageNum, initGame,
         addPlayerCondition,
         setBotAnimState, setPlayerAnimState,
-        triggerTransition
+        triggerTransition,
+        isTutorial, tutorialStep, setTutorialStep, gamePhase
     } = useGameStore();
 
     const [damageTexts, setDamageTexts] = useState<DamageTextData[]>([]);
@@ -118,6 +119,14 @@ export const useGameLoop = () => {
             setMessage(`${conditionApplied.toUpperCase()}!`);
             triggerScreenEffect('flash-red');
         }
+
+        // v2.0.0.19: Tutorial Forced Bleed (Step 9: Explanation -> Attack triggered)
+        if (store.isTutorial && store.tutorialStep === 9) {
+            addPlayerCondition('Bleeding', 3); // Guaranteed 3 turns
+            playConditionSound('Bleeding');
+            setMessage('BLEEDING!');
+            triggerScreenEffect('flash-red');
+        }
     };
 
     // v2.0.0.8: Sequential card draw
@@ -154,7 +163,7 @@ export const useGameLoop = () => {
     };
 
     const executePlayerAttack = async (selectedIndices: number[]) => {
-        if (gameState !== GameState.BATTLE) return;
+        if (gameState !== GameState.BATTLE && gameState !== GameState.TUTORIAL) return;
 
         // 1. 마비 체크 (Paralyzing)
         if (player.conditions.has('Paralyzing')) {
@@ -338,15 +347,36 @@ export const useGameLoop = () => {
         if (finalPlayerHp <= 0) {
             await handleDefeat();
         } else {
+            if (isTutorial && tutorialStep === 9) {
+                setTutorialStep(10);
+            }
             await proceedToEndTurn();
         }
     };
+
+    // v2.0.0.19: Trigger Bot Turn on Tutorial Step 9
+    useEffect(() => {
+        if (isTutorial && tutorialStep === 9 && gamePhase === 'IDLE') {
+            executeBotTurn();
+        }
+    }, [isTutorial, tutorialStep, gamePhase]);
 
     const proceedToEndTurn = async () => {
         await resolveStatusEffects();
         const store = useGameStore.getState();
         const nextTurn = store.currentTurn + 1;
         store.setCurrentTurn(nextTurn);
+
+        // v2.0.0.19: Tutorial Progression
+        if (store.isTutorial) {
+            if (store.tutorialStep === -1 || store.tutorialStep === 6) {
+                // If freedom turns are active
+                if (nextTurn >= 5) { // Turn 0: Trial, 1,2,3,4: Freedom. Now turn 5.
+                    store.setTutorialStep(7); // Joker Explanation
+                }
+            }
+        }
+
         store.applyStageRules(stageNum, nextTurn);
         await refillHandSequentially();
     };

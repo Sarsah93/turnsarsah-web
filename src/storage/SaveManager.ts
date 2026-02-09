@@ -37,6 +37,7 @@ export class SaveManager {
       if (data) {
         info[i] = {
           stageNum: data.stageNum,
+          difficulty: data.difficulty,
           date: data.date,
         };
       } else {

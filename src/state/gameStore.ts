@@ -1,7 +1,7 @@
 // state/gameStore.ts
 
 import { create } from 'zustand';
-import { Card } from '../types/Card';
+import { Card, CardFactory } from '../types/Card';
 import { Character, Condition } from '../types/Character';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS, UNLOCKED_DIFFICULTIES_KEY } from '../constants/gameConfig';
 import { Deck } from '../logic/Deck';
@@ -115,6 +115,11 @@ interface GameStoreState {
   unlockedDifficulties: Difficulty[];
   unlockDifficulty: (diff: Difficulty) => void;
   initGameWithDifficulty: (stageId: number, difficulty: Difficulty) => void;
+  // Tutorial System
+  isTutorial: boolean;
+  tutorialStep: number;
+  setTutorialStep: (step: number) => void;
+  initTutorial: () => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -133,6 +138,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setCurrentTurn: (currentTurn) => set({ currentTurn }),
   stage10RuleText: '',
   setStage10RuleText: (stage10RuleText) => set({ stage10RuleText }),
+  // Tutorial System
+  isTutorial: false,
+  tutorialStep: 0,
+  setTutorialStep: (tutorialStep) => set({ tutorialStep }),
 
   // Entities
   player: {
@@ -565,10 +574,54 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const state = get();
     SaveManager.saveGame({
       stageNum: state.stageNum,
+      difficulty: state.difficulty,
       currentTurn: state.currentTurn,
       player: state.player,
       bot: state.bot,
       playerHand: state.playerHand,
+    });
+  },
+
+  initTutorial: () => {
+    const tutorialHand = [
+      CardFactory.create('HEARTS', '10'),
+      CardFactory.create('HEARTS', 'J'),
+      CardFactory.create('HEARTS', 'Q'),
+      CardFactory.create('CLUBS', 'Q'),
+      CardFactory.create('HEARTS', 'K'),
+      CardFactory.create('HEARTS', 'A'),
+      CardFactory.create('CLUBS', 'A'),
+      CardFactory.create(null, null, true), // Joker
+    ];
+
+    set({
+      gameState: GameState.TUTORIAL,
+      isTutorial: true,
+      tutorialStep: 0,
+      stageNum: 0,
+      currentTurn: 0,
+      player: {
+        name: 'Player',
+        hp: 1000,
+        maxHp: 1000,
+        baseMaxHp: 1000,
+        atk: 10,
+        level: 1,
+        conditions: new Map<string, Condition>(),
+        drawsRemaining: 2,
+      },
+      bot: {
+        name: 'Tutorial Bot',
+        hp: 1000,
+        maxHp: 1000,
+        atk: 1,
+        level: 1,
+        conditions: new Map<string, Condition>(),
+        activeRules: [],
+      },
+      playerHand: tutorialHand,
+      deck: new Deck(0),
+      message: "TUTORIAL START",
     });
   },
 
@@ -577,6 +630,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (gameData) {
       set({
         stageNum: gameData.stageNum,
+        difficulty: gameData.difficulty,
         gameState: GameState.BATTLE,
         currentTurn: gameData.currentTurn,
         player: gameData.player,

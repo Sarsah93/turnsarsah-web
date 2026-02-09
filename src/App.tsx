@@ -19,7 +19,7 @@ function App() {
   useEffect(() => {
     if (gameState === GameState.MENU) {
       AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
-    } else if (gameState === GameState.BATTLE) {
+    } else if (gameState === GameState.BATTLE || gameState === GameState.TUTORIAL) {
       AudioManager.playBGM('/assets/backgrounds/wilderness_background.mp3');
     }
   }, [gameState]);
@@ -64,7 +64,7 @@ function App() {
       {/* UI Layer */}
       <div className="ui-layer">
         {gameState === GameState.MENU && <MainMenu />}
-        {(gameState === GameState.BATTLE || gameState === GameState.VICTORY || gameState === GameState.GAMEOVER) && <BattleScreen />}
+        {(gameState === GameState.BATTLE || gameState === GameState.TUTORIAL || gameState === GameState.VICTORY || gameState === GameState.GAMEOVER) && <BattleScreen />}
       </div>
     </div>
   );

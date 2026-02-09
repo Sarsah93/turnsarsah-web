@@ -43,8 +43,10 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
       'Troll': 're_Troll_08.png',
       'Giant Goblin': 're_Giant Goblin_09.png',
       'Goblin Lord': 're_Goblin Lord_10.png',
+      'Tutorial Bot': 'tutorial_bot.png',
     };
-    return `/assets/boss_goblin/${nameMap[bossName] || 're_Goblin_01.png'}`;
+    const pathPrefix = '/assets/boss_goblin/';
+    return `${pathPrefix}${nameMap[bossName] || 're_Goblin_01.png'}`;
   };
 
   // Measure positions and report to parent (relative to container)

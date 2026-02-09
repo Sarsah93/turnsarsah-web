@@ -8,6 +8,7 @@ import { AudioManager } from '../../utils/AudioManager';
 import { BlockButton } from '../BlockButton';
 import { useGameStore } from '../../state/gameStore';
 import { GameState } from '../../constants/gameConfig';
+import { TutorialOverlay } from '../Tutorial/TutorialOverlay';
 
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
 
@@ -17,7 +18,7 @@ export const BattleScreen: React.FC = () => {
         executePlayerAttack, executeCardSwap, startInitialDraw
     } = useGameLoop();
     const store = useGameStore();
-    const { playerHand, gamePhase } = store;
+    const { playerHand, gamePhase, isTutorial, tutorialStep, setTutorialStep } = store;
 
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
 
@@ -28,7 +29,8 @@ export const BattleScreen: React.FC = () => {
 
     // v2.0.0.16: Clear selection on stage change/victory
     useEffect(() => {
-        if (store.gameState !== GameState.BATTLE || gamePhase === 'IDLE') {
+        const isGameActive = store.gameState === GameState.BATTLE || store.gameState === GameState.TUTORIAL;
+        if (!isGameActive || gamePhase === 'IDLE') {
             setSelectedCards([]);
         }
     }, [store.gameState, gamePhase]);
@@ -50,6 +52,13 @@ export const BattleScreen: React.FC = () => {
     }, []);
 
     const handleCardSelect = (index: number) => {
+        // v2.0.0.19: Tutorial Lock - Step 5 requires ONE PAIR (specifically HQ/CQ or HA/CA)
+        // For simplicity, any selection is allowed but attack is blocked if not ONE PAIR
+        // Actually, user wants "ONE PAIR 외 다른 조합이나 SWAP 버튼을 눌렀을 시 경고"
+        if (isTutorial && tutorialStep === 5) {
+            // No strict lock on selection, but handleAttack will validate
+        }
+
         setSelectedCards(prev => {
             if (prev.includes(index)) {
                 return prev.filter(i => i !== index);
@@ -62,10 +71,30 @@ export const BattleScreen: React.FC = () => {
 
     const handleAttack = () => {
         if (selectedCards.length === 0) return;
+
+        if (isTutorial) {
+            if (tutorialStep === 5) {
+                const selected = selectedCards.map(i => playerHand[i]).filter(c => c !== null);
+                const hasJoker = selected.some(c => c?.isJoker);
+                const ranksMatch = selected.length === 2 && selected[0]?.rank === selected[1]?.rank;
+                const isPair = ranksMatch || (selected.length === 2 && hasJoker);
+
+                if (!isPair) {
+                    store.setMessage("ONE PAIR를 구성하세요.");
+                    return;
+                }
+                setTutorialStep(6);
+            }
+        }
+
         executePlayerAttack(selectedCards);
     };
 
     const handleSwap = () => {
+        if (isTutorial && tutorialStep < 6) {
+            store.setMessage("ONE PAIR를 구성하세요.");
+            return;
+        }
         if (selectedCards.length === 0) return;
         executeCardSwap(selectedCards);
     };
@@ -81,12 +110,27 @@ export const BattleScreen: React.FC = () => {
         setActiveMenu('NONE');
     };
 
+    const handleTutorialNext = () => {
+        setTutorialStep(tutorialStep + 1);
+    };
+
+    const handleTutorialExit = () => {
+        window.location.reload();
+    };
+
     const handleQuit = () => {
         window.location.reload();
     };
 
     return (
         <div className={`battle-screen ${screenEffect}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+            {isTutorial && (
+                <TutorialOverlay
+                    step={tutorialStep}
+                    onNext={handleTutorialNext}
+                    onExit={handleTutorialExit}
+                />
+            )}
             {/* Defeat Dimming Overlay */}
             {store.gameState === GameState.GAMEOVER && (
                 <div style={{

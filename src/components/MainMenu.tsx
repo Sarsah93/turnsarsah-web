@@ -7,7 +7,7 @@ import { DifficultyPopup } from './DifficultyPopup';
 import { Difficulty } from '../constants/gameConfig';
 
 export const MainMenu: React.FC = () => {
-    const { initGameWithDifficulty, loadGame, triggerTransition } = useGameStore();
+    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition } = useGameStore();
 
     useEffect(() => {
         AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
@@ -49,29 +49,10 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text="SETTINGS" onClick={() => setActiveMenu('SETTINGS')} />
                 <BlockButton text="QUIT" onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
 
-                {/* v2.0.0.18: Debug Button for HELL Stage 10 Testing */}
-                <button
-                    onClick={() => {
-                        AudioManager.playSFX('/assets/audio/etc/04_button_click.mp3');
-                        initGameWithDifficulty(10, Difficulty.HELL);
-                    }}
-                    style={{
-                        marginTop: '20px',
-                        background: 'rgba(192, 57, 43, 0.3)',
-                        color: '#ff9999',
-                        border: '1px solid #c0392b',
-                        padding: '8px 16px',
-                        fontFamily: "'Bebas Neue', sans-serif",
-                        fontSize: '1.2rem',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        transition: 'all 0.2s'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(192, 57, 43, 0.6)'}
-                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(192, 57, 43, 0.3)'}
-                >
-                    DEBUG: HELL STAGE 10
-                </button>
+                {/* v2.0.0.19: How to Play (Tutorial) Button */}
+                <BlockButton text="HOW TO PLAY" onClick={() => {
+                    triggerTransition(() => initTutorial());
+                }} />
             </div>
 
             {/* Difficulty Popup */}

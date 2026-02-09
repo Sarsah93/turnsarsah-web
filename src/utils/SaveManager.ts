@@ -2,9 +2,11 @@
 
 import { Character } from '../types/Character';
 import { Card } from '../types/Card';
+import { Difficulty } from '../constants/gameConfig';
 
 interface SaveData {
   stageNum: number;
+  difficulty: Difficulty;
   currentTurn: number;
   player: Character;
   bot: Character;
@@ -87,7 +89,7 @@ export class SaveManager {
   /**
    * 저장 데이터 정보 조회
    */
-  static getSaveInfo(slot: number): { stage: number; date: string } | null {
+  static getSaveInfo(slot: number): { stage: number; difficulty: Difficulty; date: string } | null {
     const key = `${SAVE_KEY_PREFIX}${slot}`;
     try {
       const data = localStorage.getItem(key);
@@ -96,6 +98,7 @@ export class SaveManager {
       const saveData = JSON.parse(data) as SaveData;
       return {
         stage: saveData.stageNum,
+        difficulty: saveData.difficulty,
         date: new Date(saveData.timestamp).toLocaleString(),
       };
     } catch (error) {

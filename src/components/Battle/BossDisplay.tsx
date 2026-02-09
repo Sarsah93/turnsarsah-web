@@ -4,7 +4,7 @@ import { ConditionIcon } from '../Common/ConditionIcon';
 import { Difficulty } from '../../constants/gameConfig';
 
 export const BossDisplay: React.FC = () => {
-    const { bot, stageNum, stage10RuleText, difficulty } = useGameStore();
+    const { bot, stageNum, stage10RuleText, difficulty, isTutorial } = useGameStore();
 
     // Map difficulty to display text
     const getDifficultyText = (diff: Difficulty) => {
@@ -24,6 +24,7 @@ export const BossDisplay: React.FC = () => {
 
     // Map stage number to filename
     const getBossImage = (stage: number) => {
+        if (isTutorial) return '/assets/boss_goblin/tutorial_bot.png';
         const mapping: Record<number, string> = {
             1: 're_Goblin_01.png',
             2: 're_Goblin Skirmisher_02.png',
@@ -74,9 +75,9 @@ export const BossDisplay: React.FC = () => {
                 textShadow: '2px 2px 4px #000',
                 display: 'flex', flexDirection: 'column', alignItems: 'flex-start'
             }}>
-                <span style={{ fontSize: '2.5rem' }}>STAGE {stageNum}</span>
-                <span style={{ fontSize: '1.2rem', color: diffInfo.color, marginTop: '-5px' }}>
-                    [{diffInfo.text}]
+                <span style={{ fontSize: '2.5rem' }}>{isTutorial ? "TUTORIAL STAGE" : `STAGE ${stageNum}`}</span>
+                <span style={{ fontSize: '2.4rem', color: isTutorial ? '#f1c40f' : diffInfo.color, marginTop: '-5px' }}>
+                    [{isTutorial ? "TUTORIAL" : diffInfo.text}]
                 </span>
             </div>
 
