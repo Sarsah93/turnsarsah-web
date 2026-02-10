@@ -143,7 +143,7 @@ export const useGameLoop = () => {
 
             if (nullIdx !== -1) {
                 // Case 1: Fill exist null slot (after attack)
-                const [newCard] = store.deck.draw(1);
+                const [newCard] = store.deck.draw(1, currentHand);
                 if (newCard) {
                     const updatedHand = [...useGameStore.getState().playerHand];
                     updatedHand[nullIdx] = newCard;
@@ -152,9 +152,10 @@ export const useGameLoop = () => {
                 }
             } else if (currentHand.length < targetCount) {
                 // Case 2: Append new card (initial draw or after some logic?)
-                const [newCard] = store.deck.draw(1);
+                const [newCard] = store.deck.draw(1, currentHand);
                 if (newCard) {
-                    setPlayerHand([...useGameStore.getState().playerHand, newCard]);
+                    const updatedHand = [...useGameStore.getState().playerHand];
+                    setPlayerHand([...updatedHand, newCard]);
                     await new Promise(r => setTimeout(r, totalDuration / targetCount));
                 }
             } else {
@@ -162,6 +163,7 @@ export const useGameLoop = () => {
                 break;
             }
         }
+
     };
 
     const executePlayerAttack = async (selectedIndices: number[]) => {
@@ -262,19 +264,42 @@ export const useGameLoop = () => {
             store.setMessage("TUTORIAL: BOSS HP RESTORED");
         }
 
-        // v2.0.0.21: Stage 10 Boss Phase 2 - Power Awakened
-        if (stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !bot.conditions.has('Power Awakened')) {
+        // v2.1.0: Stage 10 Boss Phase 2 - Awakening
+        // FIXED: Use current state's bot to ensure accurate condition check and prevent re-triggering.
+        const currentBotState = useGameStore.getState().bot;
+        let awakeningTriggered = false;
+
+        if (stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
             newBotHp = bot.maxHp; // FULL RESTORE
+            awakeningTriggered = true;
+
+            const atkBonus = {
+                [Difficulty.EASY]: 20,
+                [Difficulty.NORMAL]: 30,
+                [Difficulty.HARD]: 40,
+                [Difficulty.HELL]: 50
+            }[store.difficulty] || 30;
+
             const maxAtkCap = store.difficulty === Difficulty.HELL ? 200 : 100;
-            const newAtk = Math.min(maxAtkCap, bot.atk + 50); // +50 ATK capped at difficulty-based limit
-            store.addBotCondition('Power Awakened', 999, `Boss hp fell below 50%: ATK +50 (Cap ${maxAtkCap}), HP fully restored.`);
-            // We use syncBot to update both HP and ATK immediately
-            store.syncBot({ ...bot, hp: newBotHp, atk: newAtk });
-            store.setMessage("BOSS POWER AWAKENED! HP RESTORED!");
-            AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');
+            const newAtk = Math.min(maxAtkCap, bot.atk + atkBonus);
+
+            const newConditions = new Map(currentBotState.conditions);
+
+            // v2.2.0: Balancing - Remove 'Damage Reducing' and 'Regenerating' upon Awakening
+            newConditions.delete('Damage Reducing');
+            newConditions.delete('Regenerating');
+
+            import('../logic/conditions').then(({ applyCondition }) => {
+                applyCondition(newConditions, 'Awakening', 9999, `Target has awakened. ATK +${atkBonus}.`, { atkBonus });
+                store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
+            });
+
+            store.setMessage("BOSS AWAKENING! HP RESTORED!");
+            AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
+        } else {
+            setBotHp(newBotHp);
         }
 
-        setBotHp(newBotHp);
 
         // --- PHASE 5: SCATTERED (0.4s) ---
         store.setGamePhase('SCATTERED');
@@ -291,7 +316,10 @@ export const useGameLoop = () => {
         const stagesWithRegen = [6, 8, 10];
         if (config.stage9HasRegen) stagesWithRegen.push(9);
 
-        if (stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating')) {
+        // v2.2.0: Balancing - Boss cannot regenerate if Awakened
+        const isBotAwakened = useGameStore.getState().bot.conditions.has('Awakening');
+
+        if (stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating') && !isBotAwakened) {
             // Stage 6 has HP threshold
             if (stageNum === 6 && newBotHp <= bot.maxHp * 0.5) {
                 store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
@@ -305,7 +333,14 @@ export const useGameLoop = () => {
         if (newBotHp <= 0) {
             await handleVictory();
         } else {
-            await executeBotTurn();
+            // v2.1.0: If awakening triggered, boss skips its turn
+            if (awakeningTriggered) {
+                setMessage("BOSS IS AWAKENING... TURN SKIPPED.");
+                await new Promise(r => setTimeout(r, 1200));
+                await proceedToEndTurn();
+            } else {
+                await executeBotTurn();
+            }
         }
     };
 
@@ -470,7 +505,9 @@ export const useGameLoop = () => {
                 setMessage(`${cond.toUpperCase()}!`);
                 playConditionSound(cond);
                 const dmg = cond === 'Heavy Bleeding' ? 15 : 5;
-                setPlayerHp(Math.max(0, player.hp - dmg));
+                // FIXED: Use fresh state HP
+                const currentHp = useGameStore.getState().player.hp;
+                setPlayerHp(Math.max(0, currentHp - dmg));
                 showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
                 await new Promise(r => setTimeout(r, 800));
             }
@@ -488,7 +525,9 @@ export const useGameLoop = () => {
             setMessage('REGENERATING!');
             playConditionSound('Regenerating');
             const heal = 10;
-            setPlayerHp(Math.min(player.maxHp, player.hp + heal));
+            const currentHp = useGameStore.getState().player.hp;
+            const maxHp = useGameStore.getState().player.maxHp;
+            setPlayerHp(Math.min(maxHp, currentHp + heal));
             showDamageText('PLAYER', `+${heal}`, '#2ecc71');
             await new Promise(r => setTimeout(r, 800));
         }
@@ -534,7 +573,10 @@ export const useGameLoop = () => {
         // Infinite Boss Regen Renewal
         if (botConditions.has('Regenerating')) {
             const cond = botConditions.get('Regenerating')!;
-            if (cond.duration - cond.elapsed <= 1) {
+            // v2.2.0: Balancing - Do NOT renew regeneration if Awakened
+            const isBotAwakenedAfterResolution = botConditions.has('Awakening');
+
+            if (cond.duration - cond.elapsed <= 1 && !isBotAwakenedAfterResolution) {
                 if ([6, 8, 10].includes(stageNum)) {
                     store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
                 }

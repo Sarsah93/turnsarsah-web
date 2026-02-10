@@ -18,6 +18,7 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Heavy Bleeding') filename = 'Heavy Bleeding.png';
   if (name === 'Frailty') filename = 'Debilitating.png';
   if (name === 'Poison') filename = 'Poisoning.png';
+  if (name === 'Awakening') filename = 'Awakening.png';
 
   const iconPath = `/assets/conditions/${filename}`;
 

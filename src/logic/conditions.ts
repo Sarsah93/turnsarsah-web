@@ -48,6 +48,10 @@ export const CONDITION_PRESETS: Record<string, { duration: number; desc: string 
     duration: 3,
     desc: 'Immune to debuff effects (Bleeding, Poison, Paralyze, Debilitate).',
   },
+  'Awakening': {
+    duration: 9999,
+    desc: 'The target has awakened.',
+  },
 };
 
 /**

@@ -53,7 +53,21 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text="TUTORIAL" onClick={() => {
                     triggerTransition(() => initTutorial());
                 }} />
+
+                {/* DEBUG: STAGES (NORMAL) */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <BlockButton text="D: ST8" onClick={() => {
+                        triggerTransition(() => initGameWithDifficulty(1, 8, Difficulty.NORMAL));
+                    }} variant="danger" width="100px" />
+                    <BlockButton text="D: ST9" onClick={() => {
+                        triggerTransition(() => initGameWithDifficulty(1, 9, Difficulty.NORMAL));
+                    }} variant="danger" width="100px" />
+                    <BlockButton text="D: ST10" onClick={() => {
+                        triggerTransition(() => initGameWithDifficulty(1, 10, Difficulty.NORMAL));
+                    }} variant="danger" width="100px" />
+                </div>
             </div>
+
 
             {/* Difficulty Popup */}
             {activeMenu === 'DIFFICULTY' && (

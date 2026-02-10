@@ -322,7 +322,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }),
   drawCards: (count) => set((state) => {
     const newHand = [...state.playerHand];
-    const newCards = state.deck.draw(count);
+    const newCards = state.deck.draw(count, state.playerHand);
     let cardIdx = 0;
     for (let i = 0; i < newHand.length && cardIdx < newCards.length; i++) {
       if (newHand[i] === null) {
@@ -335,7 +335,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const newHand = [...state.playerHand];
     const emptyCount = newHand.filter(c => c === null).length;
     if (emptyCount === 0) return state;
-    const newCards = state.deck.draw(emptyCount);
+    const newCards = state.deck.draw(emptyCount, state.playerHand);
     let cardIdx = 0;
     for (let i = 0; i < newHand.length && cardIdx < newCards.length; i++) {
       if (newHand[i] === null) {
@@ -346,7 +346,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   }),
   swapCards: (indices) => set((state) => {
     const newHand = [...state.playerHand];
-    const newCards = state.deck.draw(indices.length);
+    const newCards = state.deck.draw(indices.length, state.playerHand);
     indices.forEach((idx, i) => {
       if (idx >= 0 && idx < 8) {
         newHand[idx] = newCards[i];
@@ -524,7 +524,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         // Update Stage 10 Rule Text
         const bossOverride = config.bossOverrides[chapterId]?.[10] || {};
         const reductionPercent = bossOverride.damageReduction ?? 15;
-        set({ stage10RuleText: `RULE: ${ruleDescs.join('+')}+REGEN+REDUCE ${reductionPercent}%` });
+
+        // v2.2.1: Dynamic Rule Text - Hide REGEN/REDUCE if Awakened
+        const isAwakened = bot.conditions.has('Awakening');
+        if (isAwakened) {
+          set({ stage10RuleText: `RULE: ${ruleDescs.join('+')}` });
+        } else {
+          set({ stage10RuleText: `RULE: ${ruleDescs.join('+')}+REGEN+REDUCE ${reductionPercent}%` });
+        }
       } else {
         // Normal stage rules - SWAPPED Stage 2 and 3
         // Stage 2 now has BAN_RANK (was BLIND), Stage 3 now has BLIND (was BAN_RANK)
