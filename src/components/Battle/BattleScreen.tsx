@@ -73,6 +73,10 @@ export const BattleScreen: React.FC = () => {
         if (selectedCards.length === 0) return;
 
         if (isTutorial) {
+            if (tutorialStep === 13) {
+                store.setMessage("카드를 최대 두 장 까지 선택 후, SWAP 버튼을 눌러 새로운 카드로 교환하세요");
+                return;
+            }
             if (tutorialStep === 5) {
                 const selected = selectedCards.map(i => playerHand[i]).filter(c => c !== null);
                 const hasJoker = selected.some(c => c?.isJoker);
@@ -84,6 +88,15 @@ export const BattleScreen: React.FC = () => {
                     return;
                 }
                 setTutorialStep(6);
+            } else if (tutorialStep === 7 || tutorialStep === -7) {
+                // Joker attack: Overlay is already hidden or will hide.
+                // Do NOT set Step 8 here; wait for turn to end in useGameLoop.
+            } else if (tutorialStep === 10 || tutorialStep === -10) {
+                // Advance to step 11 after first bleed turn attack
+                setTutorialStep(11);
+            } else if (tutorialStep === 11) {
+                // Advance to step 12 (END) after second bleed turn attack
+                setTutorialStep(12);
             }
         }
 
@@ -91,9 +104,21 @@ export const BattleScreen: React.FC = () => {
     };
 
     const handleSwap = () => {
-        if (isTutorial && tutorialStep < 6) {
-            store.setMessage("ONE PAIR를 구성하세요.");
-            return;
+        if (isTutorial) {
+            // Block SWAP only in early fixed tutorial steps (0 to 5)
+            if (tutorialStep >= 0 && tutorialStep <= 5) {
+                store.setMessage("ONE PAIR를 구성하세요.");
+                return;
+            }
+            if (tutorialStep === 13) {
+                if (selectedCards.length === 0) {
+                    store.setMessage("교환할 카드를 선택하세요.");
+                    return;
+                }
+                executeCardSwap(selectedCards);
+                setTutorialStep(-1); // Finish SWAP guide and return to freedom
+                return;
+            }
         }
         if (selectedCards.length === 0) return;
         executeCardSwap(selectedCards);
@@ -114,6 +139,12 @@ export const BattleScreen: React.FC = () => {
         setTutorialStep(tutorialStep + 1);
     };
 
+    const handleTutorialPrev = () => {
+        if (tutorialStep > 0) {
+            setTutorialStep(tutorialStep - 1);
+        }
+    };
+
     const handleTutorialExit = () => {
         window.location.reload();
     };
@@ -128,6 +159,7 @@ export const BattleScreen: React.FC = () => {
                 <TutorialOverlay
                     step={tutorialStep}
                     onNext={handleTutorialNext}
+                    onPrev={handleTutorialPrev}
                     onExit={handleTutorialExit}
                 />
             )}

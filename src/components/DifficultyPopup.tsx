@@ -4,6 +4,8 @@ import React from 'react';
 import { useGameStore } from '../state/gameStore';
 import { Difficulty } from '../constants/gameConfig';
 import { BlockButton } from './BlockButton';
+import Modal from './Common/Modal';
+import './styles/SettingsMenu.css';
 
 interface DifficultyPopupProps {
     onClose: () => void;
@@ -21,12 +23,9 @@ export const DifficultyPopup: React.FC<DifficultyPopupProps> = ({ onClose, onSel
     ];
 
     return (
-        <div style={overlayStyle}>
-            <div style={popupStyle}>
-                <h2 style={{ fontFamily: 'BebasNeue', fontSize: '2.5rem', marginBottom: '30px', color: '#ecf0f1' }}>
-                    SELECT DIFFICULTY
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%' }}>
+        <Modal title="SELECT DIFFICULTY" onClose={onClose} width={600} height={550} showCloseButton={false}>
+            <div className="settings-content" style={{ padding: '30px', gap: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', alignItems: 'center' }}>
                     {difficulties.map(({ key, label, color }) => {
                         const isUnlocked = unlockedDifficulties.includes(key);
                         return (
@@ -34,11 +33,33 @@ export const DifficultyPopup: React.FC<DifficultyPopupProps> = ({ onClose, onSel
                                 key={key}
                                 onClick={() => isUnlocked && onSelect(key)}
                                 disabled={!isUnlocked}
+                                className="difficulty-btn"
                                 style={{
-                                    ...buttonStyle,
-                                    backgroundColor: isUnlocked ? color : '#7f8c8d',
+                                    fontFamily: 'BebasNeue',
+                                    fontSize: '1.8rem',
+                                    padding: '12px 40px',
+                                    border: `2px solid ${isUnlocked ? color : '#7f8c8d'}`,
+                                    borderRadius: '8px',
+                                    backgroundColor: isUnlocked ? 'rgba(0,0,0,0.3)' : 'rgba(50,50,50,0.5)',
+                                    color: isUnlocked ? color : '#7f8c8d',
                                     cursor: isUnlocked ? 'pointer' : 'not-allowed',
                                     opacity: isUnlocked ? 1 : 0.5,
+                                    width: '300px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '2px',
+                                    transition: 'all 0.2s ease',
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (isUnlocked) {
+                                        e.currentTarget.style.backgroundColor = color;
+                                        e.currentTarget.style.color = '#000';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (isUnlocked) {
+                                        e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                                        e.currentTarget.style.color = color;
+                                    }
                                 }}
                             >
                                 {isUnlocked ? label : `🔒 ${label}`}
@@ -46,48 +67,11 @@ export const DifficultyPopup: React.FC<DifficultyPopupProps> = ({ onClose, onSel
                         );
                     })}
                 </div>
-                <div style={{ marginTop: '30px' }}>
-                    <BlockButton text="BACK TO MAIN PAGE" onClick={onClose} />
+                <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+                    <BlockButton text="BACK TO MAIN PAGE" onClick={onClose} width="300px" fontSize="1.6rem" />
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 };
 
-const overlayStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-};
-
-const popupStyle: React.CSSProperties = {
-    backgroundColor: '#2c3e50',
-    padding: '40px 50px',
-    borderRadius: '15px',
-    border: '3px solid #95a5a6',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    minWidth: '350px',
-    boxShadow: '0 0 30px rgba(0, 0, 0, 0.8)',
-};
-
-const buttonStyle: React.CSSProperties = {
-    fontFamily: 'BebasNeue',
-    fontSize: '1.8rem',
-    padding: '15px 40px',
-    border: 'none',
-    borderRadius: '8px',
-    color: '#fff',
-    textTransform: 'uppercase',
-    letterSpacing: '2px',
-    transition: 'all 0.2s ease',
-    minWidth: '250px',
-};

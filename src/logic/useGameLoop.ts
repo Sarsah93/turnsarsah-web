@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { AudioManager } from '../utils/AudioManager';
 import { calculatePlayerDamage, calculateBotDamage } from './damageCalculation';
-import { Card } from '../types/Card';
+import { Card, CardFactory } from '../types/Card';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
 
 export interface DamageTextData {
@@ -99,13 +99,15 @@ export const useGameLoop = () => {
         const rand = Math.random();
         let conditionApplied = '';
 
-        // Difficulty-based probabilities for status effects
-        if ([1, 2, 3, 4].includes(stageNum) && rand < config.bleedProbStage1to4) {
-            conditionApplied = 'Bleeding';
-        } else if (stageNum === 5 && rand < config.poisonProbStage5) {
-            conditionApplied = 'Poisoning';
-        } else if (stageNum === 7 && rand < config.paralyzeProbStage7) {
-            conditionApplied = 'Paralyzing';
+        // Difficulty-based probabilities for status effects (Skip in tutorial)
+        if (!store.isTutorial) {
+            if ([1, 2, 3, 4].includes(stageNum) && rand < config.bleedProbStage1to4) {
+                conditionApplied = 'Bleeding';
+            } else if (stageNum === 5 && rand < config.poisonProbStage5) {
+                conditionApplied = 'Poisoning';
+            } else if (stageNum === 7 && rand < config.paralyzeProbStage7) {
+                conditionApplied = 'Paralyzing';
+            }
         }
 
         if (conditionApplied) {
@@ -304,9 +306,9 @@ export const useGameLoop = () => {
             return;
         }
 
-        // Dodge Check - Difficulty-based avoid chance
+        // Dodge Check - Difficulty-based avoid chance (Skip in tutorial)
         const config = DIFFICULTY_CONFIGS[store.difficulty];
-        if (config.avoidChance > 0 && Math.random() < config.avoidChance) {
+        if (!isTutorial && config.avoidChance > 0 && Math.random() < config.avoidChance) {
             setMessage("ATTACK AVOIDED!");
             playConditionSound('Avoiding');
             triggerScreenEffect('flash-red');
@@ -348,6 +350,8 @@ export const useGameLoop = () => {
             await handleDefeat();
         } else {
             if (isTutorial && tutorialStep === 9) {
+                // v2.0.0.21: Wait 3 seconds so player can read the Step 9 explanation
+                await new Promise(r => setTimeout(r, 3000));
                 setTutorialStep(10);
             }
             await proceedToEndTurn();
@@ -372,8 +376,31 @@ export const useGameLoop = () => {
             if (store.tutorialStep === -1 || store.tutorialStep === 6) {
                 // If freedom turns are active
                 if (nextTurn >= 5) { // Turn 0: Trial, 1,2,3,4: Freedom. Now turn 5.
+                    // Force a Joker card if not already in hand
+                    const currentHand = store.playerHand;
+                    const hasJoker = currentHand.some(c => c?.isJoker);
+                    if (!hasJoker) {
+                        const nullIdx = currentHand.indexOf(null);
+                        const jokerCard = { ...CardFactory.create(null, null, true), isJoker: true };
+                        if (nullIdx !== -1) {
+                            const updatedHand = [...currentHand];
+                            updatedHand[nullIdx] = jokerCard;
+                            setPlayerHand(updatedHand);
+                        } else {
+                            // Replace the last card with a Joker if hand is full
+                            const updatedHand = [...currentHand];
+                            updatedHand[updatedHand.length - 1] = jokerCard;
+                            setPlayerHand(updatedHand);
+                        }
+                    }
                     store.setTutorialStep(7); // Joker Explanation
+                } else if (nextTurn === 3) {
+                    // Turn 1,2 finished. Now it's the start of Turn 3.
+                    store.setTutorialStep(13); // SWAP Guide
                 }
+            } else if (store.tutorialStep === 7 || store.tutorialStep === -7) {
+                // After Joker attack turn ends
+                store.setTutorialStep(8); // Status Effects Explanation
             }
         }
 
