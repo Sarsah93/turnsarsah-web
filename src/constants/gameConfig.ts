@@ -49,7 +49,8 @@ export interface DifficultyConfig {
   poisonProbStage5: number;
   paralyzeProbStage7: number;
   // Boss stats overrides per stage (HP, ATK)
-  bossOverrides: Record<number, { hp?: number; atk?: number; damageReduction?: number }>;
+  // v2.1.0: Nested by Chapter -> Stage
+  bossOverrides: Record<number, Record<number, { hp?: number; atk?: number; damageReduction?: number }>>;
   // Stage-specific rules
   stage9HasRegen: boolean;
   stage10RuleCount: number; // 1 for most, 2 for HELL
@@ -72,8 +73,10 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.3,
     paralyzeProbStage7: 0.2,
     bossOverrides: {
-      8: { atk: 30 },
-      10: { hp: 380 },
+      1: {
+        8: { atk: 30 },
+        10: { hp: 380 },
+      }
     },
     stage9HasRegen: false,
     stage10RuleCount: 1,
@@ -94,8 +97,10 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.35,
     bossOverrides: {
-      9: { /* stage9HasRegen handles this */ },
-      10: { atk: 20, damageReduction: 20 },
+      1: {
+        9: { /* stage9HasRegen handles this */ },
+        10: { atk: 20, damageReduction: 20 },
+      }
     },
     stage9HasRegen: true,
     stage10RuleCount: 1,
@@ -116,16 +121,18 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.2,
     bossOverrides: {
-      1: { hp: 170, atk: 15 },
-      2: { hp: 220, atk: 20 },
-      3: { hp: 270, atk: 25 },
-      4: { hp: 270, atk: 25 },
-      5: { hp: 320, atk: 15 },
-      6: { atk: 15 },
-      7: { hp: 320, atk: 20 },
-      8: { hp: 370, atk: 50 },
-      9: { hp: 370, atk: 10 },
-      10: { hp: 420, atk: 25, damageReduction: 20 },
+      1: {
+        1: { hp: 170, atk: 15 },
+        2: { hp: 220, atk: 20 },
+        3: { hp: 270, atk: 25 },
+        4: { hp: 270, atk: 25 },
+        5: { hp: 320, atk: 15 },
+        6: { atk: 15 },
+        7: { hp: 320, atk: 20 },
+        8: { hp: 370, atk: 50 },
+        9: { hp: 370, atk: 10 },
+        10: { hp: 420, atk: 25, damageReduction: 20 },
+      }
     },
     stage9HasRegen: true,
     stage10RuleCount: 1,
@@ -146,16 +153,18 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.2,
     bossOverrides: {
-      1: { hp: 200, atk: 15 },
-      2: { hp: 250, atk: 20 },
-      3: { hp: 300, atk: 25 },
-      4: { hp: 300, atk: 25 },
-      5: { hp: 350, atk: 15 },
-      6: { atk: 15 },
-      7: { hp: 350, atk: 20 },
-      8: { hp: 400, atk: 50, damageReduction: 15 },
-      9: { hp: 400, atk: 10, damageReduction: 15 },
-      10: { hp: 450, atk: 25, damageReduction: 30 },
+      1: {
+        1: { hp: 200, atk: 15 },
+        2: { hp: 250, atk: 20 },
+        3: { hp: 300, atk: 25 },
+        4: { hp: 300, atk: 25 },
+        5: { hp: 350, atk: 15 },
+        6: { atk: 15 },
+        7: { hp: 350, atk: 20 },
+        8: { hp: 400, atk: 50, damageReduction: 15 },
+        9: { hp: 400, atk: 10, damageReduction: 15 },
+        10: { hp: 450, atk: 25, damageReduction: 30 },
+      }
     },
     stage9HasRegen: true,
     stage10RuleCount: 2,

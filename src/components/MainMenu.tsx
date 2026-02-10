@@ -19,7 +19,7 @@ export const MainMenu: React.FC = () => {
 
     const handleDifficultySelect = (difficulty: Difficulty) => {
         setActiveMenu('NONE');
-        triggerTransition(() => initGameWithDifficulty(1, difficulty));
+        triggerTransition(() => initGameWithDifficulty(1, 1, difficulty)); // Chapter 1, Stage 1
     };
 
     const handleLoadAction = (slot: number) => {

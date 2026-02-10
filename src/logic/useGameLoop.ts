@@ -443,7 +443,7 @@ export const useGameLoop = () => {
             }
         }
 
-        store.applyStageRules(stageNum, nextTurn);
+        store.applyStageRules(store.chapterNum, stageNum, nextTurn);
         await refillHandSequentially();
     };
 
@@ -622,7 +622,7 @@ export const useGameLoop = () => {
         } else {
             triggerTransition(() => {
                 setMessage(""); // CLEAR MESSAGE FIRST to avoid overlap!
-                initGame(nextStage);
+                initGame(store.chapterNum, nextStage);
                 setGameState(GameState.BATTLE);
                 startInitialDraw();
             });
@@ -654,7 +654,7 @@ export const useGameLoop = () => {
         if (stageNum === 6) {
             const restoredHp = store.stage6EntryHp || 200;
             triggerTransition(() => {
-                initGame(7);
+                initGame(store.chapterNum, 7);
                 setGameState(GameState.BATTLE);
                 setPlayerHp(restoredHp);
                 setMessage("PROCEEDING TO STAGE 7...");

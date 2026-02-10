@@ -5,7 +5,7 @@ import { Card, CardFactory } from '../types/Card';
 import { Character, Condition } from '../types/Character';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS, UNLOCKED_DIFFICULTIES_KEY } from '../constants/gameConfig';
 import { Deck } from '../logic/Deck';
-import { STAGES } from '../constants/stages';
+import { CHAPTERS } from '../constants/stages';
 import { applyCondition, clearConditions } from '../logic/conditions';
 import { SaveManager } from '../utils/SaveManager';
 
@@ -15,6 +15,8 @@ interface GameStoreState {
   setGameState: (state: GameState) => void;
 
   // Current Stage
+  chapterNum: number;
+  setChapterNum: (chapter: number) => void;
   stageNum: number;
   setStageNum: (stage: number) => void;
   currentTurn: number;
@@ -86,8 +88,8 @@ interface GameStoreState {
   setActiveMenu: (menu: string) => void;
 
   // Game initialization
-  initGame: (stageId: number) => void;
-  applyStageRules: (stageId: number, turn: number) => void;
+  initGame: (chapterId: number, stageId: number) => void;
+  applyStageRules: (chapterId: number, stageId: number, turn: number) => void;
   resetGame: () => void;
 
   // Save/Load
@@ -124,7 +126,7 @@ interface GameStoreState {
   setDifficulty: (diff: Difficulty) => void;
   unlockedDifficulties: Difficulty[];
   unlockDifficulty: (diff: Difficulty) => void;
-  initGameWithDifficulty: (stageId: number, difficulty: Difficulty) => void;
+  initGameWithDifficulty: (chapterId: number, stageId: number, difficulty: Difficulty) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -135,6 +137,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setGamePhase: (gamePhase) => set({ gamePhase }),
 
   // Stage
+  chapterNum: 1,
+  setChapterNum: (chapterNum) => set({ chapterNum }),
   stageNum: 1,
   setStageNum: (stageNum) => set({ stageNum }),
   currentTurn: 0,
@@ -354,9 +358,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setDeck: (deck) => set({ deck }),
 
   // Initialization
-  initGame: (stageId: number) => {
+  initGame: (chapterId: number, stageId: number) => {
     set((state) => {
-      const stageConfig = STAGES[stageId];
+      const chapter = CHAPTERS[chapterId];
+      const stageConfig = chapter?.stages[stageId];
       if (!stageConfig) return state;
 
       const config = DIFFICULTY_CONFIGS[state.difficulty];
@@ -371,7 +376,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       // v2.0.0.17: Boss Damage Reduction as Condition
       const botConditions = new Map<string, Condition>();
       const baseReduction = stageId === 10 ? 15 : (stageId >= 8 ? 10 : 0);
-      const bossOverride = config.bossOverrides[stageId] || {};
+      const bossOverride = config.bossOverrides[chapterId]?.[stageId] || {};
       const damageReduction = bossOverride.damageReduction ?? baseReduction;
 
       if (damageReduction > 0) {
@@ -409,6 +414,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       }
 
       return {
+        chapterNum: chapterId,
         stageNum: stageId,
         gameState: GameState.BATTLE,
         currentTurn: 0,
@@ -418,7 +424,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         bannedSuit: null,
         bannedHand: null,
         blindIndices: [],
-        hasStage6Bonus: stageId === 1 ? false : state.hasStage6Bonus,
+        hasStage6Bonus: (chapterId === 1 && stageId === 1) ? false : state.hasStage6Bonus,
         player: {
           name: 'Player',
           hp: playerHp,
@@ -445,10 +451,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       };
     });
     // Immediately apply rules for turn 0
-    get().applyStageRules(stageId, 0);
+    get().applyStageRules(chapterId, stageId, 0);
   },
 
-  applyStageRules: (stageId: number, turn: number) => {
+  applyStageRules: (chapterId: number, stageId: number, turn: number) => {
     const state = get();
     const config = DIFFICULTY_CONFIGS[state.difficulty];
     let { bannedRanks, bannedSuit, bannedHand, blindIndices, bot } = state;
@@ -462,102 +468,106 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const ranks = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
     const hands = ['Royal Flush', 'Straight Flush', 'Four of a Kind', 'Full House', 'Flush', 'Straight', 'Three of a Kind', 'Two Pair', 'One Pair'];
 
-    // Stage 10 Random Rule Logic with HELL dual-rule support
-    let activeStageIds: number[] = [];
-    const ruleDescs: string[] = [];
+    // v2.1.0: Only chapter 1 rules for now
+    if (chapterId === 1) {
+      // Stage 10 Random Rule Logic with HELL dual-rule support
+      let activeStageIds: number[] = [];
+      const ruleDescs: string[] = [];
 
-    if (stageId === 10) {
-      const rules = ['BLIND', 'BAN_SUIT', 'BAN_RANK', 'BAN_HAND', 'POISON', 'ATK_UP'];
-      const ruleCount = config.stage10RuleCount;
-      const pickedRules: string[] = [];
+      if (stageId === 10) {
+        const rules = ['BLIND', 'BAN_SUIT', 'BAN_RANK', 'BAN_HAND', 'POISON', 'ATK_UP'];
+        const ruleCount = config.stage10RuleCount;
+        const pickedRules: string[] = [];
 
-      for (let i = 0; i < ruleCount; i++) {
-        let pick = rules[Math.floor(Math.random() * rules.length)];
-        while (pickedRules.includes(pick)) {
-          pick = rules[Math.floor(Math.random() * rules.length)];
-        }
-        pickedRules.push(pick);
-
-        if (pick === 'BLIND') {
-          activeStageIds.push(3); // BLIND is now Stage 3
-          const indices = [0, 1, 2, 3, 4, 5, 6, 7].filter(idx => !blindIndices.includes(idx));
-          for (let j = 0; j < 2 && indices.length > 0; j++) {
-            const randIdx = Math.floor(Math.random() * indices.length);
-            blindIndices.push(indices.splice(randIdx, 1)[0]);
+        for (let i = 0; i < ruleCount; i++) {
+          let pick = rules[Math.floor(Math.random() * rules.length)];
+          while (pickedRules.includes(pick)) {
+            pick = rules[Math.floor(Math.random() * rules.length)];
           }
-          ruleDescs.push('BLIND_2 CARDS');
-        } else if (pick === 'BAN_RANK') {
-          activeStageIds.push(2); // BAN_RANK is now Stage 2
+          pickedRules.push(pick);
+
+          if (pick === 'BLIND') {
+            activeStageIds.push(3); // BLIND is now Stage 3
+            const indices = [0, 1, 2, 3, 4, 5, 6, 7].filter(idx => !blindIndices.includes(idx));
+            for (let j = 0; j < 2 && indices.length > 0; j++) {
+              const randIdx = Math.floor(Math.random() * indices.length);
+              blindIndices.push(indices.splice(randIdx, 1)[0]);
+            }
+            ruleDescs.push('BLIND_2 CARDS');
+          } else if (pick === 'BAN_RANK') {
+            activeStageIds.push(2); // BAN_RANK is now Stage 2
+            const r1 = ranks[Math.floor(Math.random() * ranks.length)];
+            let r2 = ranks[Math.floor(Math.random() * ranks.length)];
+            while (r1 === r2) r2 = ranks[Math.floor(Math.random() * ranks.length)];
+            bannedRanks = [r1, r2];
+            ruleDescs.push(`BANNED_${bannedRanks.join('/')}`);
+          } else if (pick === 'BAN_SUIT') {
+            activeStageIds.push(4);
+            bannedSuit = suits[Math.floor(Math.random() * suits.length)];
+            ruleDescs.push(`BANNED_${bannedSuit}`);
+          } else if (pick === 'BAN_HAND') {
+            activeStageIds.push(6);
+            bannedHand = hands[Math.floor(Math.random() * hands.length)];
+            ruleDescs.push(`BANNED_${bannedHand}`);
+          } else if (pick === 'POISON') {
+            state.addPlayerCondition('Poisoning', 4);
+            ruleDescs.push('POISON');
+          } else if (pick === 'ATK_UP') {
+            activeStageIds.push(7);
+            if (turn === 0) {
+              set({ bot: { ...bot, atk: bot.atk + 10 } });
+            }
+            ruleDescs.push('ATK_UP');
+          }
+        }
+
+        // Update Stage 10 Rule Text
+        const bossOverride = config.bossOverrides[chapterId]?.[10] || {};
+        const reductionPercent = bossOverride.damageReduction ?? 15;
+        set({ stage10RuleText: `RULE: ${ruleDescs.join('+')}+REGEN+REDUCE ${reductionPercent}%` });
+      } else {
+        // Normal stage rules - SWAPPED Stage 2 and 3
+        // Stage 2 now has BAN_RANK (was BLIND), Stage 3 now has BLIND (was BAN_RANK)
+        if (stageId === 2) {
+          // BAN_RANK (swapped from Stage 3)
           const r1 = ranks[Math.floor(Math.random() * ranks.length)];
           let r2 = ranks[Math.floor(Math.random() * ranks.length)];
           while (r1 === r2) r2 = ranks[Math.floor(Math.random() * ranks.length)];
           bannedRanks = [r1, r2];
-          ruleDescs.push(`BANNED_${bannedRanks.join('/')}`);
-        } else if (pick === 'BAN_SUIT') {
-          activeStageIds.push(4);
-          bannedSuit = suits[Math.floor(Math.random() * suits.length)];
-          ruleDescs.push(`BANNED_${bannedSuit}`);
-        } else if (pick === 'BAN_HAND') {
-          activeStageIds.push(6);
-          bannedHand = hands[Math.floor(Math.random() * hands.length)];
-          ruleDescs.push(`BANNED_${bannedHand}`);
-        } else if (pick === 'POISON') {
-          state.addPlayerCondition('Poisoning', 4);
-          ruleDescs.push('POISON');
-        } else if (pick === 'ATK_UP') {
-          activeStageIds.push(7);
-          if (turn === 0) {
-            set({ bot: { ...bot, atk: bot.atk + 10 } });
-          }
-          ruleDescs.push('ATK_UP');
-        }
-      }
-
-      // Update Stage 10 Rule Text
-      const bossOverride = config.bossOverrides[10] || {};
-      const reductionPercent = bossOverride.damageReduction ?? 15;
-      set({ stage10RuleText: `RULE: ${ruleDescs.join('+')}+REGEN+REDUCE ${reductionPercent}%` });
-    } else {
-      // Normal stage rules - SWAPPED Stage 2 and 3
-      // Stage 2 now has BAN_RANK (was BLIND), Stage 3 now has BLIND (was BAN_RANK)
-      if (stageId === 2) {
-        // BAN_RANK (swapped from Stage 3)
-        const r1 = ranks[Math.floor(Math.random() * ranks.length)];
-        let r2 = ranks[Math.floor(Math.random() * ranks.length)];
-        while (r1 === r2) r2 = ranks[Math.floor(Math.random() * ranks.length)];
-        bannedRanks = [r1, r2];
-      } else if (stageId === 3) {
-        // BLIND (swapped from Stage 2)
-        const indices = [0, 1, 2, 3, 4, 5, 6, 7];
-        for (let i = 0; i < 2; i++) {
-          const randIdx = Math.floor(Math.random() * indices.length);
-          blindIndices.push(indices.splice(randIdx, 1)[0]);
-        }
-      } else if (stageId === 4) {
-        bannedSuit = suits[Math.floor(Math.random() * suits.length)];
-      } else if (stageId === 5 && (state.difficulty === Difficulty.HARD || state.difficulty === Difficulty.HELL)) {
-        // HARD/HELL: Stage 5 also has BAN_HAND
-        bannedHand = hands[Math.floor(Math.random() * hands.length)];
-      } else if (stageId === 6) {
-        bannedHand = hands[Math.floor(Math.random() * hands.length)];
-      } else if (stageId === 7 && turn > 0) {
-        // Scaling moved to executeBotTurn (conditional on hit)
-      } else if (stageId === 9 && turn > 0) {
-        // Scaling moved to executeBotTurn (conditional on hit)
-      }
-
-      // v2.0.0.21: Tutorial Boss Rule Practice (BLIND)
-      if (get().isTutorial) {
-        if ([16, -16, 17, -17].includes(get().tutorialStep)) {
+        } else if (stageId === 3) {
+          // BLIND (swapped from Stage 2)
           const indices = [0, 1, 2, 3, 4, 5, 6, 7];
-          blindIndices = [];
           for (let i = 0; i < 2; i++) {
             const randIdx = Math.floor(Math.random() * indices.length);
             blindIndices.push(indices.splice(randIdx, 1)[0]);
           }
-        } else {
-          blindIndices = []; // Clear for other steps
+        } else if (stageId === 4) {
+          bannedSuit = suits[Math.floor(Math.random() * suits.length)];
+        } else if (stageId === 5 && (state.difficulty === Difficulty.HARD || state.difficulty === Difficulty.HELL)) {
+          // HARD/HELL: Stage 5 also has BAN_HAND
+          bannedHand = hands[Math.floor(Math.random() * hands.length)];
+        } else if (stageId === 6) {
+          bannedHand = hands[Math.floor(Math.random() * hands.length)];
+        } else if (stageId === 7 && turn > 0) {
+          // Scaling moved to executeBotTurn (conditional on hit)
+        } else if (stageId === 9 && turn > 0) {
+          // Scaling moved to executeBotTurn (conditional on hit)
         }
+      }
+    }
+
+
+    // v2.0.0.21: Tutorial Boss Rule Practice (BLIND)
+    if (get().isTutorial) {
+      if ([16, -16, 17, -17].includes(get().tutorialStep)) {
+        const indices = [0, 1, 2, 3, 4, 5, 6, 7];
+        blindIndices = [];
+        for (let i = 0; i < 2; i++) {
+          const randIdx = Math.floor(Math.random() * indices.length);
+          blindIndices.push(indices.splice(randIdx, 1)[0]);
+        }
+      } else {
+        blindIndices = []; // Clear for other steps
       }
     }
 
@@ -600,6 +610,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       return;
     }
     SaveManager.saveGame(slot, {
+      chapterNum: state.chapterNum,
       stageNum: state.stageNum,
       difficulty: state.difficulty,
       currentTurn: state.currentTurn,
@@ -657,6 +668,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const gameData = SaveManager.loadGame(slot);
     if (gameData) {
       set({
+        chapterNum: gameData.chapterNum || 1,
         stageNum: gameData.stageNum,
         difficulty: gameData.difficulty,
         gameState: GameState.BATTLE,
@@ -668,7 +680,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         isGameLoaded: true,
       });
       // Re-apply rules to populate UI states (especially for Stage 10 rule text)
-      get().applyStageRules(gameData.stageNum, gameData.currentTurn);
+      get().applyStageRules(gameData.chapterNum || 1, gameData.stageNum, gameData.currentTurn);
     }
   },
 
@@ -708,13 +720,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       } catch { }
     }
   },
-  initGameWithDifficulty: (stageId: number, difficulty: Difficulty) => {
+  initGameWithDifficulty: (chapterId: number, stageId: number, difficulty: Difficulty) => {
     const config = DIFFICULTY_CONFIGS[difficulty];
-    const stageConfig = STAGES[stageId];
+    const chapter = CHAPTERS[chapterId];
+    const stageConfig = chapter?.stages[stageId];
     if (!stageConfig) return;
 
     // Boss stat overrides
-    const bossOverride = config.bossOverrides[stageId] || {};
+    const bossOverride = config.bossOverrides[chapterId]?.[stageId] || {};
     const bossHp = bossOverride.hp ?? stageConfig.hp;
     const bossAtk = bossOverride.atk ?? stageConfig.atk;
     const bossDamageReduction = bossOverride.damageReduction ?? (stageId === 10 ? 15 : (stageId >= 8 ? 10 : 0));
@@ -735,6 +748,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }
 
     set({
+      chapterNum: chapterId,
       stageNum: stageId,
       difficulty: difficulty,
       gameState: GameState.BATTLE,
@@ -771,6 +785,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       message: '',
     });
     // Immediately apply rules for turn 0
-    get().applyStageRules(stageId, 0);
+    get().applyStageRules(chapterId, stageId, 0);
   },
 }));

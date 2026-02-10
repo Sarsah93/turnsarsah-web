@@ -224,7 +224,7 @@ export const BattleScreen: React.FC = () => {
     // v2.0.0.21: Apply Blind Rule immediately at Step 16
     useEffect(() => {
         if (isTutorial && (tutorialStep === 15 || tutorialStep === 16)) {
-            store.applyStageRules(store.stageNum, store.currentTurn);
+            store.applyStageRules(store.chapterNum, store.stageNum, store.currentTurn);
         }
     }, [tutorialStep, isTutorial]);
 
@@ -286,7 +286,7 @@ export const BattleScreen: React.FC = () => {
                         zIndex: 1000, textAlign: 'center'
                     }}>
                         VICTORY!<br />
-                        <span style={{ fontSize: '3rem' }}>CLEARED STAGE {store.stageNum}!</span>
+                        <span style={{ fontSize: '3rem' }}>CLEARED CHAPTER {store.chapterNum}_STAGE {store.stageNum}!</span>
                     </div>
                 )}
 

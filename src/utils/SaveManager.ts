@@ -5,6 +5,7 @@ import { Card } from '../types/Card';
 import { Difficulty } from '../constants/gameConfig';
 
 interface SaveData {
+  chapterNum: number;
   stageNum: number;
   difficulty: Difficulty;
   currentTurn: number;
@@ -89,10 +90,11 @@ export class SaveManager {
   /**
    * 저장 데이터 정보 조회
    */
-  static getSaveInfo(slot: number): { stage: number; difficulty: Difficulty; date: string } | null {
+  static getSaveInfo(slot: number): { chapter: number; stage: number; difficulty: Difficulty; date: string } | null {
     const data = this.loadGame(slot);
     if (!data) return null;
     return {
+      chapter: data.chapterNum || 1,
       stage: data.stageNum,
       difficulty: data.difficulty,
       date: new Date(data.timestamp).toLocaleString(),
