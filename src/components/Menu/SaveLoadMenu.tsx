@@ -16,6 +16,7 @@ interface SaveLoadMenuProps {
 export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onClose }) => {
   const [slots, setSlots] = useState<Array<{ stage: string; date: string } | null>>([null, null, null]);
   const [confirmDeleteSlot, setConfirmDeleteSlot] = useState<number | null>(null);
+  const [confirmOverwriteSlot, setConfirmOverwriteSlot] = useState<number | null>(null);
 
   const refreshSlots = () => {
     const slotData = [0, 1, 2].map((i) => SaveManager.getSaveInfo(i));
@@ -26,6 +27,14 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
     refreshSlots();
   }, []);
 
+  const handleSlotClick = (index: number) => {
+    if (mode === 'SAVE' && slots[index] !== null) {
+      setConfirmOverwriteSlot(index);
+    } else {
+      onAction?.(index);
+    }
+  };
+
   const handleDelete = (index: number) => {
     setConfirmDeleteSlot(index);
   };
@@ -35,6 +44,13 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
       SaveManager.deleteSave(confirmDeleteSlot);
       setConfirmDeleteSlot(null);
       refreshSlots();
+    }
+  };
+
+  const confirmOverwrite = () => {
+    if (confirmOverwriteSlot !== null) {
+      onAction?.(confirmOverwriteSlot);
+      setConfirmOverwriteSlot(null);
     }
   };
 
@@ -51,7 +67,7 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
         <div className="save-load-slots">
           {slots.map((slot, index) => (
             <div key={index} className="save-slot">
-              <div className="slot-content" onClick={() => onAction?.(index)}>
+              <div className="slot-content" onClick={() => handleSlotClick(index)}>
                 <div className="slot-title">SLOT {index + 1}</div>
                 <div className="slot-detail">{slot ? `${slot.stage} - ${slot.date}` : 'EMPTY'}</div>
               </div>
@@ -84,6 +100,14 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
           message="DO YOU AGREE WITH DELETING THIS SAVED DATA?"
           onYes={confirmDelete}
           onNo={() => setConfirmDeleteSlot(null)}
+        />
+      )}
+
+      {confirmOverwriteSlot !== null && (
+        <ConfirmationPopup
+          message="REALLY WANT TO OVERWRITE THIS SAVED DATA SLOT?"
+          onYes={confirmOverwrite}
+          onNo={() => setConfirmOverwriteSlot(null)}
         />
       )}
     </>

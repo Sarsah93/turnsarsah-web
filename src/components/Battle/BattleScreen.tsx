@@ -95,8 +95,14 @@ export const BattleScreen: React.FC = () => {
                 // Advance to step 11 after first bleed turn attack
                 setTutorialStep(11);
             } else if (tutorialStep === 11) {
-                // Advance to step 12 (END) after second bleed turn attack
-                setTutorialStep(12);
+                // Move to BOSS RULE (Step 14) after the second bleeding attack.
+                setTutorialStep(14);
+            } else if (tutorialStep === 16 || tutorialStep === -16) {
+                // BOSS RULE PRACTICE (BLIND) - 1st turn
+                setTutorialStep(17);
+            } else if (tutorialStep === 17 || tutorialStep === -17) {
+                // BOSS RULE PRACTICE (BLIND) - 2nd turn
+                setTutorialStep(12); // END
             }
         }
 
@@ -124,8 +130,8 @@ export const BattleScreen: React.FC = () => {
         executeCardSwap(selectedCards);
     };
 
-    const handleSaveGame = () => {
-        store.saveGame();
+    const handleSaveGame = (slot: number) => {
+        store.saveGame(slot);
         setActiveMenu('NONE');
         store.setMessage("GAME SAVED!");
     };
@@ -144,6 +150,79 @@ export const BattleScreen: React.FC = () => {
             setTutorialStep(tutorialStep - 1);
         }
     };
+
+    // v2.0.0.21: Tutorial Highlights Orchestration
+    useEffect(() => {
+        if (!isTutorial) {
+            store.setTutorialHighlights([]);
+            return;
+        }
+
+        const isAlreadySelected = (idx: number) => selectedCards.includes(idx);
+
+        if (tutorialStep === 5) {
+            // One Pair - Find top pair dynamically
+            const highlights: number[] = [];
+
+            // Helper to get rank value
+            const getRankValue = (rank: string) => {
+                const values: Record<string, number> = { 'A': 14, 'K': 13, 'Q': 12, 'J': 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
+                return values[rank] || 0;
+            };
+
+            const rankCounts: Record<string, number[]> = {};
+            playerHand.forEach((card, idx) => {
+                if (card && !card.isJoker && typeof card.rank === 'string') {
+                    if (!rankCounts[card.rank]) rankCounts[card.rank] = [];
+                    rankCounts[card.rank].push(idx);
+                }
+            });
+
+            // Find highest value pair
+            let bestRank = '';
+            let bestValue = -1;
+            Object.entries(rankCounts).forEach(([rank, indices]) => {
+                if (indices.length >= 2) {
+                    const val = getRankValue(rank);
+                    if (val > bestValue) {
+                        bestValue = val;
+                        bestRank = rank;
+                    }
+                }
+            });
+
+            if (bestRank) {
+                const pairIndices = rankCounts[bestRank].slice(0, 2);
+                pairIndices.forEach(idx => {
+                    if (!isAlreadySelected(idx)) highlights.push(idx);
+                });
+            }
+
+            store.setTutorialHighlights(highlights);
+        } else if (tutorialStep === 7) {
+            // Joker - usually at index 7 in initTutorial
+            store.setTutorialHighlights(isAlreadySelected(7) ? [] : [7]);
+        } else if (tutorialStep === 13) {
+            // Swap - Pick 2 random (e.g., 0, 1)
+            const highlights: number[] = [];
+            if (!isAlreadySelected(0)) highlights.push(0);
+            if (!isAlreadySelected(1)) highlights.push(1);
+            store.setTutorialHighlights(highlights);
+        } else if (Math.abs(tutorialStep) === 16 || Math.abs(tutorialStep) === 17) {
+            // Blind Practice
+            const highlights = store.blindIndices.filter(idx => !isAlreadySelected(idx));
+            store.setTutorialHighlights(highlights);
+        } else {
+            store.setTutorialHighlights([]);
+        }
+    }, [tutorialStep, selectedCards, isTutorial, store.blindIndices, playerHand]);
+
+    // v2.0.0.21: Apply Blind Rule immediately at Step 16
+    useEffect(() => {
+        if (isTutorial && (tutorialStep === 15 || tutorialStep === 16)) {
+            store.applyStageRules(store.stageNum, store.currentTurn);
+        }
+    }, [tutorialStep, isTutorial]);
 
     const handleTutorialExit = () => {
         window.location.reload();

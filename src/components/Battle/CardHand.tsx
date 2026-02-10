@@ -34,7 +34,9 @@ export const CardHand: React.FC<CardHandProps> = ({
     bannedRanks,
     bannedSuit,
     bannedHand,
-    blindIndices
+    blindIndices,
+    tutorialStep,
+    tutorialHighlights
   } = useGameStore();
 
   // Track if gathering animation has started (for two-phase animation)
@@ -326,6 +328,16 @@ export const CardHand: React.FC<CardHandProps> = ({
                     selected={isSelected && isInteracting}
                     onClick={() => handleCardClick(idx)}
                   />
+
+                  {/* v2.0.0.21: Tutorial Highlight Markers */}
+                  {isInteracting && tutorialHighlights && tutorialHighlights.includes(idx) && (
+                    <div className="tutorial-cue-container">
+                      <div className="tutorial-text">
+                        {[16, 17].includes(Math.abs(tutorialStep)) ? 'BLINDED !' : 'CLICK HERE !'}
+                      </div>
+                      <div className="tutorial-arrow" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

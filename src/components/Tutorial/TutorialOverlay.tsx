@@ -22,10 +22,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
             return () => clearTimeout(timer);
         }
         if (step === 7) {
-            // 조커 카드 안내 후 3초 뒤 숨김 (공격 점수 등이 보이도록)
+            // 조커 카드 안내 후 6초 뒤 숨김 (공격 점수 등이 보이도록)
             const timer = setTimeout(() => {
                 setTutorialStep(-7);
-            }, 3000);
+            }, 6000);
             return () => clearTimeout(timer);
         }
         if (step === 10) {
@@ -35,9 +35,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
             }, 4000);
             return () => clearTimeout(timer);
         }
+        // v2.0.0.21: Removed auto-advance timers as per user request for manual NEXT navigation
+        /*
+        if (step === 14) {
+            const timer = setTimeout(() => { setTutorialStep(15); }, 5000);
+            return () => clearTimeout(timer);
+        }
+        if (step === 16 || step === 17) {
+            const timer = setTimeout(() => { setTutorialStep(step === 16 ? -16 : -17); }, 4000);
+            return () => clearTimeout(timer);
+        }
+        */
     }, [step, setTutorialStep]);
 
-    if (!isTutorial || step === -1 || step === -7 || step === -10) return null;
+    if (!isTutorial || step === -1 || step === -7 || step === -10 || step === -14 || step === -16 || step === -17) return null;
 
     const getTutorialContent = () => {
         switch (step) {
@@ -131,7 +142,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
             case 12:
                 return {
                     title: "TUTORIAL END",
-                    text: "출혈 외에도 다양한 상태이상 효과들이 플레이어에게 적용될 수 있습니다. 이제 본격적인 전장으로 떠나보세요!",
+                    text: "출혈 외에도 다양한 상태이상 효과들이 플레이어에게 적용될 수 있으며, 블라인드 룰 외에도 다양한 금지 룰과 보스룰이 적용될 수 있습니다. 이제 본격적인 전장으로 떠나보세요!",
                     showNext: false,
                     showExit: true,
                     showPrev: false
@@ -142,6 +153,42 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
                     text: "플레이어의 차례일 때, 원하는 카드가 나오지 않았거나, 수중 패에서 조합의 구성이 어려울 경우, 카드를 새로 랜덤하게 교환할 수 있습니다. 'ATTACK 버튼'의 우측에 있는 'SWAP' 버튼을 누르면, 한 번에 선택한 카드를 최대 2장까지 교환할 수 있습니다.",
                     showNext: false,
                     showPrev: false
+                };
+            case 14:
+                return {
+                    title: "BOSS RULE",
+                    text: (
+                        <div style={{ textAlign: 'left', fontSize: '1.2rem' }}>
+                            본 게임에서 스테이지마다 보스들이 존재하며, 보스들은 각각의 고유한 설정과 룰을 가지고 있습니다. 플레이어는 룰을 토대로 승리하기 위해 전략적으로 카드 조합을 구성해야 합니다.<br /><br />
+                            - BAN_TIER 2: 무작위 숫자 2개를 턴 마다 공격 포인트로 사용할 수 없게 됩니다.<br />
+                            - BAN_SUIT: 무작위 문양 1개를 턴 마다 공격 포인트로 사용할 수 없게 됩니다.<br />
+                            - BAN_BLIND 2: 플레이어의 수중패에서 무작위 카드 2개를 턴 마다 뒤집어 카드를 알 수 없게 합니다.<br />
+                            - BAN_HAND: 무작위 족보 1개를 턴 마다 금지시키고, 해당 족보로 공격할 수 없게 합니다.
+                        </div>
+                    ),
+                    showNext: true,
+                    showPrev: true
+                };
+            case 15:
+                return {
+                    title: "BOSS RULE: BLIND",
+                    text: "이제 플레이어에게 'BAN_BLIND 2' RULE을 적용시켜 보겠습니다. 수중패에서 2장이 무작위로 뒤집혀지기 때문에, 공격에는 사용할 수 있으나, 확실한 숫자를 알기는 어렵습니다. 그렇지만, 족보의 구성 유무와 JOKER 카드 유무 표시로 어느 정도는 유추할 수 있습니다.",
+                    showNext: true,
+                    showPrev: true
+                };
+            case 16:
+                return {
+                    title: "RULE PRACTICE (1/2)",
+                    text: "블라인드 룰이 적용된 상태에서 공격을 진행해 보세요! (1/2)",
+                    showNext: true,
+                    showPrev: true
+                };
+            case 17:
+                return {
+                    title: "RULE PRACTICE (2/2)",
+                    text: "블라인드 룰이 적용된 상태에서 공격을 한 번 더 진행해 보세요! (2/2)",
+                    showNext: true,
+                    showPrev: true
                 };
             default:
                 return null;

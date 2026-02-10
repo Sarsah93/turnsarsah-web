@@ -46,6 +46,14 @@ interface GameStoreState {
   setBannedHand: (hand: string | null) => void;
   setBlindIndices: (indices: number[]) => void;
 
+  // Tutorial System
+  isTutorial: boolean;
+  tutorialStep: number;
+  tutorialHighlights: number[]; // v2.0.0.21: Highlighted card indices
+  setTutorialStep: (step: number) => void;
+  setTutorialHighlights: (indices: number[]) => void;
+  initTutorial: () => void;
+
   // Conditions
   addPlayerCondition: (name: string, duration: number, desc?: string, data?: unknown) => void;
   removePlayerCondition: (name: string) => void;
@@ -74,6 +82,8 @@ interface GameStoreState {
   setPaused: (paused: boolean) => void;
   message: string;
   setMessage: (message: string) => void;
+  activeMenu: string;
+  setActiveMenu: (menu: string) => void;
 
   // Game initialization
   initGame: (stageId: number) => void;
@@ -81,7 +91,7 @@ interface GameStoreState {
   resetGame: () => void;
 
   // Save/Load
-  saveGame: () => void;
+  saveGame: (slot: number) => void;
   loadGame: (slot: number) => void;
 
   // New: Stage 6 Restoration
@@ -115,11 +125,6 @@ interface GameStoreState {
   unlockedDifficulties: Difficulty[];
   unlockDifficulty: (diff: Difficulty) => void;
   initGameWithDifficulty: (stageId: number, difficulty: Difficulty) => void;
-  // Tutorial System
-  isTutorial: boolean;
-  tutorialStep: number;
-  setTutorialStep: (step: number) => void;
-  initTutorial: () => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -141,7 +146,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   // Tutorial System
   isTutorial: false,
   tutorialStep: 0,
+  tutorialHighlights: [],
   setTutorialStep: (tutorialStep) => set({ tutorialStep }),
+  setTutorialHighlights: (tutorialHighlights) => set({ tutorialHighlights }),
 
   // Entities
   player: {
@@ -171,6 +178,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   bannedSuit: null,
   bannedHand: null,
   blindIndices: [],
+
+  // UI
+  isPaused: false,
+  setPaused: (isPaused) => set({ isPaused }),
+  message: '',
+  setMessage: (message) => set({ message }),
+  activeMenu: 'NONE',
+  setActiveMenu: (activeMenu) => set({ activeMenu }),
   setBannedRanks: (bannedRanks) => set({ bannedRanks }),
   setBannedSuit: (bannedSuit) => set({ bannedSuit }),
   setBannedHand: (bannedHand) => set({ bannedHand }),
@@ -335,13 +350,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     });
     return { playerHand: newHand };
   }),
+  // Deck
   setDeck: (deck) => set({ deck }),
-
-  // UI
-  isPaused: false,
-  setPaused: (isPaused) => set({ isPaused }),
-  message: '',
-  setMessage: (message) => set({ message }),
 
   // Initialization
   initGame: (stageId: number) => {
@@ -536,6 +546,20 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         // Stage 9: Boss ATK doubles each turn
         set({ bot: { ...bot, atk: bot.atk * 2 } });
       }
+
+      // v2.0.0.21: Tutorial Boss Rule Practice (BLIND)
+      if (get().isTutorial) {
+        if ([16, -16, 17, -17].includes(get().tutorialStep)) {
+          const indices = [0, 1, 2, 3, 4, 5, 6, 7];
+          blindIndices = [];
+          for (let i = 0; i < 2; i++) {
+            const randIdx = Math.floor(Math.random() * indices.length);
+            blindIndices.push(indices.splice(randIdx, 1)[0]);
+          }
+        } else {
+          blindIndices = []; // Clear for other steps
+        }
+      }
     }
 
     set({ bannedRanks, bannedSuit, bannedHand, blindIndices });
@@ -570,9 +594,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       message: '',
     }),
 
-  saveGame: () => {
+  saveGame: (slot: number) => {
     const state = get();
-    SaveManager.saveGame({
+    if (state.isTutorial) {
+      console.log("Saving is blocked during tutorial.");
+      return;
+    }
+    SaveManager.saveGame(slot, {
       stageNum: state.stageNum,
       difficulty: state.difficulty,
       currentTurn: state.currentTurn,
@@ -598,6 +626,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       gameState: GameState.TUTORIAL,
       isTutorial: true,
       tutorialStep: 0,
+      tutorialHighlights: [],
       stageNum: 0,
       currentTurn: 0,
       player: {

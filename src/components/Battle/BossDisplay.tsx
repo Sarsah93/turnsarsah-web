@@ -4,7 +4,7 @@ import { ConditionIcon } from '../Common/ConditionIcon';
 import { Difficulty } from '../../constants/gameConfig';
 
 export const BossDisplay: React.FC = () => {
-    const { bot, stageNum, stage10RuleText, difficulty, isTutorial } = useGameStore();
+    const { bot, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep } = useGameStore();
 
     // Map difficulty to display text
     const getDifficultyText = (diff: Difficulty) => {
@@ -122,13 +122,17 @@ export const BossDisplay: React.FC = () => {
             }}>
                 <div>ATK: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
-                    {stageNum === 10 ? stage10RuleText : (
+                    {isTutorial && [15, 16, 17, -15, -16, -17].includes(tutorialStep) ? (
+                        "RULE: BLIND 2 CARDS"
+                    ) : stageNum === 10 ? (
+                        stage10RuleText
+                    ) : (
                         `RULE: ${(() => {
                             const bannedHand = useGameStore.getState().bannedHand;
                             const ruleMap: Record<number, string> = {
                                 1: 'NONE',
-                                2: 'BLIND_2 CARDS',
-                                3: 'BANNED_2 CARDS',
+                                2: 'BANNED_2 CARDS',
+                                3: 'BLIND_2 CARDS',
                                 4: 'BANNED_SUIT',
                                 5: 'POISON',
                                 6: bannedHand ? `BANNED_${bannedHand.toUpperCase()}` : 'BANNED_HAND',

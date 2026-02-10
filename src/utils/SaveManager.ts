@@ -20,7 +20,7 @@ export class SaveManager {
   /**
    * 게임 저장
    */
-  static saveGame(data: Omit<SaveData, 'timestamp'>, slot: number = 0): void {
+  static saveGame(slot: number, data: Omit<SaveData, 'timestamp'>): void {
     // Convert Map to Array for serialization
     const serializedData = {
       ...data,
@@ -90,21 +90,13 @@ export class SaveManager {
    * 저장 데이터 정보 조회
    */
   static getSaveInfo(slot: number): { stage: number; difficulty: Difficulty; date: string } | null {
-    const key = `${SAVE_KEY_PREFIX}${slot}`;
-    try {
-      const data = localStorage.getItem(key);
-      if (!data) return null;
-
-      const saveData = JSON.parse(data) as SaveData;
-      return {
-        stage: saveData.stageNum,
-        difficulty: saveData.difficulty,
-        date: new Date(saveData.timestamp).toLocaleString(),
-      };
-    } catch (error) {
-      console.error('정보 조회 실패:', error);
-      return null;
-    }
+    const data = this.loadGame(slot);
+    if (!data) return null;
+    return {
+      stage: data.stageNum,
+      difficulty: data.difficulty,
+      date: new Date(data.timestamp).toLocaleString(),
+    };
   }
 
   /**

@@ -49,8 +49,8 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text="SETTINGS" onClick={() => setActiveMenu('SETTINGS')} />
                 <BlockButton text="QUIT" onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
 
-                {/* v2.0.0.19: How to Play (Tutorial) Button */}
-                <BlockButton text="HOW TO PLAY" onClick={() => {
+                {/* v2.0.0.19: Tutorial Button */}
+                <BlockButton text="TUTORIAL" onClick={() => {
                     triggerTransition(() => initTutorial());
                 }} />
             </div>

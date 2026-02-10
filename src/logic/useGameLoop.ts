@@ -254,7 +254,14 @@ export const useGameLoop = () => {
 
         // HP Reduction (0.1s after Popup/Shake)
         await new Promise(r => setTimeout(r, 100));
-        const newBotHp = Math.max(0, bot.hp - damage);
+        let newBotHp = Math.max(0, bot.hp - damage);
+
+        // v2.0.0.21: Tutorial safety - restore HP if below 300
+        if (store.isTutorial && newBotHp < 300) {
+            newBotHp = 1000;
+            store.setMessage("TUTORIAL: BOSS HP RESTORED");
+        }
+
         setBotHp(newBotHp);
 
         // --- PHASE 5: SCATTERED (0.4s) ---
