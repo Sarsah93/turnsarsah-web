@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Modal from '../Common/Modal';
 import { BlockButton } from '../BlockButton';
 import { AudioManager } from '../../utils/AudioManager';
+import { useGameStore } from '../../state/gameStore';
+import { TRANSLATIONS } from '../../constants/translations';
 import '../styles/SettingsMenu.css';
 
 interface SettingsMenuProps {
@@ -10,6 +12,8 @@ interface SettingsMenuProps {
 }
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) => {
+  const { language, setLanguage } = useGameStore();
+  const t = TRANSLATIONS[language].SETTINGS;
   const [bgmVolume, setBgmVolume] = useState(Math.round(AudioManager.getBGMVolume() * 10));
   const [sfxVolume, setSfxVolume] = useState(Math.round(AudioManager.getSFXVolume() * 10));
 
@@ -50,6 +54,27 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onCl
               ))}
             </div>
             <button onClick={() => handleSfxChange(1)}>+</button>
+          </div>
+        </div>
+
+        {/* Language Selection */}
+        <div className="setting-item" style={{ marginTop: '10px' }}>
+          <label>{t.LANGUAGE}</label>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+            <BlockButton
+              text={t.KOREAN}
+              onClick={() => setLanguage('KR')}
+              variant={language === 'KR' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.2rem"
+            />
+            <BlockButton
+              text={t.ENGLISH}
+              onClick={() => setLanguage('EN')}
+              variant={language === 'EN' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.2rem"
+            />
           </div>
         </div>
         <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>

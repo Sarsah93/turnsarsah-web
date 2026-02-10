@@ -8,6 +8,7 @@ import { Deck } from '../logic/Deck';
 import { CHAPTERS } from '../constants/stages';
 import { applyCondition, clearConditions } from '../logic/conditions';
 import { SaveManager } from '../utils/SaveManager';
+import { Language } from '../constants/translations';
 
 interface GameStoreState {
   // Game Flow
@@ -127,6 +128,10 @@ interface GameStoreState {
   unlockedDifficulties: Difficulty[];
   unlockDifficulty: (diff: Difficulty) => void;
   initGameWithDifficulty: (chapterId: number, stageId: number, difficulty: Difficulty) => void;
+
+  // Localization
+  language: Language;
+  setLanguage: (lang: Language) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -153,6 +158,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   tutorialHighlights: [],
   setTutorialStep: (tutorialStep) => set({ tutorialStep }),
   setTutorialHighlights: (tutorialHighlights) => set({ tutorialHighlights }),
+
+  // Localization
+  language: (localStorage.getItem('turnsarsah_lang') as Language) || 'KR',
+  setLanguage: (language) => {
+    set({ language });
+    localStorage.setItem('turnsarsah_lang', language);
+  },
 
   // Entities
   player: {

@@ -32,14 +32,27 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
       style={{ position: 'relative', pointerEvents: 'auto' }}
       onClick={() => setShowPopup(!showPopup)}
     >
-      <div className="condition-icon" style={{ cursor: 'pointer', position: 'relative' }}>
+      <div className="condition-icon" style={{
+        cursor: 'pointer',
+        position: 'relative',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        borderRadius: '50%',
+        border: '1px solid rgba(241, 196, 15, 0.3)',
+        padding: '2px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
         <img
           src={iconPath}
           alt={name}
-          style={{ width: '45px', height: '45px', objectFit: 'contain' }}
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+          onError={(e) => {
+            console.warn(`Condition icon failed to load: ${iconPath}`);
+            // Fallback to name text if image is missing
+            e.currentTarget.style.display = 'none';
+          }}
         />
-        {/* Indicator for clickability? Maybe a subtle glow or just the cursor change */}
       </div>
 
       {showPopup && (

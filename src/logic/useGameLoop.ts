@@ -438,7 +438,19 @@ export const useGameLoop = () => {
 
     const proceedToEndTurn = async () => {
         await resolveStatusEffects();
+
         const store = useGameStore.getState();
+
+        // v2.2.1: Check for death after status effect damage (Bleeding, Poison, etc.)
+        if (store.player.hp <= 0) {
+            await handleDefeat();
+            return;
+        }
+        if (store.bot.hp <= 0) {
+            await handleVictory();
+            return;
+        }
+
         const nextTurn = store.currentTurn + 1;
         store.setCurrentTurn(nextTurn);
 
