@@ -280,7 +280,7 @@ export const useGameLoop = () => {
                 [Difficulty.HELL]: 50
             }[store.difficulty] || 30;
 
-            const maxAtkCap = store.difficulty === Difficulty.HELL ? 200 : 100;
+            const maxAtkCap = 100;
             const newAtk = Math.min(maxAtkCap, bot.atk + atkBonus);
 
             const newConditions = new Map(currentBotState.conditions);
@@ -400,7 +400,7 @@ export const useGameLoop = () => {
 
         // v2.0.0.21: Boss ATK Scaling only on successful hit
         let updatedAtk = currentBot.atk;
-        const maxAtkCap = store.difficulty === Difficulty.HELL ? 200 : 100;
+        const maxAtkCap = 100;
 
         if (stageNum === 7) {
             updatedAtk = Math.min(maxAtkCap, updatedAtk + 10);
