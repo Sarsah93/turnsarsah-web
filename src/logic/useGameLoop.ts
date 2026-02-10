@@ -262,6 +262,18 @@ export const useGameLoop = () => {
             store.setMessage("TUTORIAL: BOSS HP RESTORED");
         }
 
+        // v2.0.0.21: Stage 10 Boss Phase 2 - Power Awakened
+        if (stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !bot.conditions.has('Power Awakened')) {
+            newBotHp = bot.maxHp; // FULL RESTORE
+            const maxAtkCap = store.difficulty === Difficulty.HELL ? 200 : 100;
+            const newAtk = Math.min(maxAtkCap, bot.atk + 50); // +50 ATK capped at difficulty-based limit
+            store.addBotCondition('Power Awakened', 999, `Boss hp fell below 50%: ATK +50 (Cap ${maxAtkCap}), HP fully restored.`);
+            // We use syncBot to update both HP and ATK immediately
+            store.syncBot({ ...bot, hp: newBotHp, atk: newAtk });
+            store.setMessage("BOSS POWER AWAKENED! HP RESTORED!");
+            AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');
+        }
+
         setBotHp(newBotHp);
 
         // --- PHASE 5: SCATTERED (0.4s) ---
@@ -351,6 +363,23 @@ export const useGameLoop = () => {
         setBotAnimState('NONE');
         setPlayerAnimState('NONE');
 
+        // v2.0.0.21: Boss ATK Scaling only on successful hit
+        let updatedAtk = currentBot.atk;
+        const maxAtkCap = store.difficulty === Difficulty.HELL ? 200 : 100;
+
+        if (stageNum === 7) {
+            updatedAtk = Math.min(maxAtkCap, updatedAtk + 10);
+        } else if (stageNum === 9) {
+            updatedAtk = Math.min(maxAtkCap, updatedAtk * 2);
+        }
+
+        // Global ATK Cap
+        updatedAtk = Math.min(maxAtkCap, updatedAtk);
+
+        if (updatedAtk !== currentBot.atk) {
+            store.syncBot({ ...currentBot, atk: updatedAtk });
+        }
+
         // Check death using fresh state after both damage and status effects
         const finalPlayerHp = useGameStore.getState().player.hp;
         if (finalPlayerHp <= 0) {
@@ -408,6 +437,9 @@ export const useGameLoop = () => {
             } else if (store.tutorialStep === 7 || store.tutorialStep === -7) {
                 // After Joker attack turn ends
                 store.setTutorialStep(8); // Status Effects Explanation
+            } else if (store.tutorialStep === 11) {
+                // v2.0.0.21: Delay Boss Rule explanation until all combat animations finish
+                store.setTutorialStep(14);
             }
         }
 
@@ -598,6 +630,9 @@ export const useGameLoop = () => {
     };
 
     const startInitialDraw = async () => {
+        // v2.0.0.21: Skip for tutorial if hand is already pre-set to avoid overwriting guaranteed cards
+        if (isTutorial && playerHand.some(c => c !== null)) return;
+
         // v2.0.0.10: Pre-fill with null to maintain slot positions, then refill.
         setPlayerHand(new Array(8).fill(null));
         await refillHandSequentially(1500);

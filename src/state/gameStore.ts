@@ -541,10 +541,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       } else if (stageId === 6) {
         bannedHand = hands[Math.floor(Math.random() * hands.length)];
       } else if (stageId === 7 && turn > 0) {
-        set({ bot: { ...bot, atk: bot.atk + 10 } });
+        // Scaling moved to executeBotTurn (conditional on hit)
       } else if (stageId === 9 && turn > 0) {
-        // Stage 9: Boss ATK doubles each turn
-        set({ bot: { ...bot, atk: bot.atk * 2 } });
+        // Scaling moved to executeBotTurn (conditional on hit)
       }
 
       // v2.0.0.21: Tutorial Boss Rule Practice (BLIND)

@@ -22,10 +22,10 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
             return () => clearTimeout(timer);
         }
         if (step === 7) {
-            // 조커 카드 안내 후 6초 뒤 숨김 (공격 점수 등이 보이도록)
+            // 조커 카드 안내 후 8초 뒤 숨김 (공격 점수 등이 보이도록)
             const timer = setTimeout(() => {
                 setTutorialStep(-7);
-            }, 6000);
+            }, 8000);
             return () => clearTimeout(timer);
         }
         if (step === 10) {

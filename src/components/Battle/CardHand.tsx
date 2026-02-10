@@ -333,7 +333,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                   {isInteracting && tutorialHighlights && tutorialHighlights.includes(idx) && (
                     <div className="tutorial-cue-container">
                       <div className="tutorial-text">
-                        {[16, 17].includes(Math.abs(tutorialStep)) ? 'BLINDED !' : 'CLICK HERE !'}
+                        {Math.abs(tutorialStep) === 7 ? 'JOKER' : [15, 16, 17].includes(Math.abs(tutorialStep)) ? 'BLINDED !' : 'CLICK!'}
                       </div>
                       <div className="tutorial-arrow" />
                     </div>

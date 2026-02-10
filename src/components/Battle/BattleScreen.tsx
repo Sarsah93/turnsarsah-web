@@ -95,8 +95,7 @@ export const BattleScreen: React.FC = () => {
                 // Advance to step 11 after first bleed turn attack
                 setTutorialStep(11);
             } else if (tutorialStep === 11) {
-                // Move to BOSS RULE (Step 14) after the second bleeding attack.
-                setTutorialStep(14);
+                // Move to BOSS RULE (Step 14) now handled in useGameLoop.ts (proceedToEndTurn)
             } else if (tutorialStep === 16 || tutorialStep === -16) {
                 // BOSS RULE PRACTICE (BLIND) - 1st turn
                 setTutorialStep(17);
@@ -199,17 +198,22 @@ export const BattleScreen: React.FC = () => {
             }
 
             store.setTutorialHighlights(highlights);
-        } else if (tutorialStep === 7) {
-            // Joker - usually at index 7 in initTutorial
-            store.setTutorialHighlights(isAlreadySelected(7) ? [] : [7]);
+        } else if (Math.abs(tutorialStep) === 7) {
+            // Joker - dynamically find the card index
+            const jokerIdx = playerHand.findIndex(c => c?.isJoker);
+            if (jokerIdx !== -1) {
+                store.setTutorialHighlights(isAlreadySelected(jokerIdx) ? [] : [jokerIdx]);
+            } else {
+                store.setTutorialHighlights([]);
+            }
         } else if (tutorialStep === 13) {
             // Swap - Pick 2 random (e.g., 0, 1)
             const highlights: number[] = [];
             if (!isAlreadySelected(0)) highlights.push(0);
             if (!isAlreadySelected(1)) highlights.push(1);
             store.setTutorialHighlights(highlights);
-        } else if (Math.abs(tutorialStep) === 16 || Math.abs(tutorialStep) === 17) {
-            // Blind Practice
+        } else if ([15, 16, 17, -15, -16, -17].includes(tutorialStep)) {
+            // Blind Practice (including explanation Step 15)
             const highlights = store.blindIndices.filter(idx => !isAlreadySelected(idx));
             store.setTutorialHighlights(highlights);
         } else {
