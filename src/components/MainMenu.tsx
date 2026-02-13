@@ -19,7 +19,7 @@ export const MainMenu: React.FC = () => {
 
     const handleDifficultySelect = (difficulty: Difficulty) => {
         setActiveMenu('NONE');
-        triggerTransition(() => initGameWithDifficulty(1, 1, difficulty)); // Chapter 1, Stage 1
+        triggerTransition(() => initGameWithDifficulty('1', 1, difficulty)); // Chapter 1, Stage 1
     };
 
     const handleLoadAction = (slot: number) => {
@@ -54,6 +54,16 @@ export const MainMenu: React.FC = () => {
                     triggerTransition(() => initTutorial());
                 }} />
 
+                {/* Debug Button for Testing Chapter 1 -> 2 Transition */}
+                <div style={{ marginTop: '20px' }}>
+                    <BlockButton
+                        text="DEBUG: STAGE 1-10 (EASY)"
+                        onClick={() => {
+                            triggerTransition(() => initGameWithDifficulty('1', 10, Difficulty.EASY));
+                        }}
+                        variant="danger"
+                    />
+                </div>
             </div>
 
 

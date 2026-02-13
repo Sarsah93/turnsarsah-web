@@ -23,22 +23,26 @@ export const BossDisplay: React.FC = () => {
     const hpPercent = Math.max(0, (bot.hp / bot.maxHp) * 100);
 
     // Map stage number to filename
-    const getBossImage = (stage: number) => {
+    const getBossImage = (chapter: string, stage: number) => {
         if (isTutorial) return '/assets/boss_goblin/tutorial_bot.png';
-        const mapping: Record<number, string> = {
-            1: 're_Goblin_01.png',
-            2: 're_Goblin Skirmisher_02.png',
-            3: 're_Goblin Rider_03.png',
-            4: 're_HobGoblin_04.png',
-            5: 're_Goblin Shaman_05.png',
-            6: 're_Golden Goblin_06.png',
-            7: 're_Elite Goblin_07.png',
-            8: 're_Troll_08.png',
-            9: 're_Giant Goblin_09.png',
-            10: 're_Goblin Lord_10.png'
-        };
-        const filename = mapping[stage] || 're_Goblin_01.png';
-        return `/assets/boss_goblin/${filename}`;
+        if (chapter === '1') {
+            const mapping: Record<number, string> = {
+                1: 're_Goblin_01.png',
+                2: 're_Goblin Skirmisher_02.png',
+                3: 're_Goblin Rider_03.png',
+                4: 're_HobGoblin_04.png',
+                5: 're_Goblin Shaman_05.png',
+                6: 're_Golden Goblin_06.png',
+                7: 're_Elite Goblin_07.png',
+                8: 're_Troll_08.png',
+                9: 're_Giant Goblin_09.png',
+                10: 're_Goblin Lord_10.png'
+            };
+            const filename = mapping[stage] || 're_Goblin_01.png';
+            return `/assets/boss_goblin/${filename}`;
+        }
+        // Chapter 2 placeholder
+        return '/assets/boss_goblin/re_Goblin_01.png';
     };
 
     return (
@@ -75,7 +79,7 @@ export const BossDisplay: React.FC = () => {
                 textShadow: '2px 2px 4px #000',
                 display: 'flex', flexDirection: 'column', alignItems: 'flex-start'
             }}>
-                <span style={{ fontSize: '2.5rem' }}>{isTutorial ? "TUTORIAL STAGE" : `CHAPTER ${chapterNum}_STAGE ${stageNum}`}</span>
+                <span style={{ fontSize: '2.5rem' }}>{isTutorial ? "TUTORIAL STAGE" : `CHAPTER ${chapterNum}-${stageNum}`}</span>
                 <span style={{ fontSize: '2.4rem', color: isTutorial ? '#f1c40f' : diffInfo.color, marginTop: '-5px' }}>
                     [{isTutorial ? "TUTORIAL" : diffInfo.text}]
                 </span>
@@ -98,7 +102,7 @@ export const BossDisplay: React.FC = () => {
                 }}
             >
                 <img
-                    src={getBossImage(stageNum)}
+                    src={getBossImage(chapterNum, stageNum)}
                     alt={bot.name}
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />

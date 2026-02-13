@@ -12,6 +12,7 @@ export enum GameState {
   GAMEOVER = 'GAMEOVER',
   LOAD = 'LOAD',
   TUTORIAL = 'TUTORIAL',
+  CHAPTER_SELECT = 'CHAPTER_SELECT',
 }
 
 export enum PauseSubstate {
@@ -50,7 +51,7 @@ export interface DifficultyConfig {
   paralyzeProbStage7: number;
   // Boss stats overrides per stage (HP, ATK)
   // v2.1.0: Nested by Chapter -> Stage
-  bossOverrides: Record<number, Record<number, { hp?: number; atk?: number; damageReduction?: number }>>;
+  bossOverrides: Record<string, Record<number, { hp?: number; atk?: number; damageReduction?: number }>>;
   // Stage-specific rules
   stage9HasRegen: boolean;
   stage10RuleCount: number; // 1 for most, 2 for HELL
@@ -73,7 +74,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.3,
     paralyzeProbStage7: 0.2,
     bossOverrides: {
-      1: {
+      '1': {
         8: { atk: 30 },
         10: { hp: 380 },
       }
@@ -97,7 +98,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.35,
     bossOverrides: {
-      1: {
+      '1': {
         9: { /* stage9HasRegen handles this */ },
         10: { atk: 20, damageReduction: 20 },
       }
@@ -121,7 +122,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.2,
     bossOverrides: {
-      1: {
+      '1': {
         1: { hp: 170, atk: 15 },
         2: { hp: 220, atk: 20 },
         3: { hp: 270, atk: 25 },
@@ -153,7 +154,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.2,
     bossOverrides: {
-      1: {
+      '1': {
         1: { hp: 200, atk: 15 },
         2: { hp: 250, atk: 20 },
         3: { hp: 300, atk: 25 },

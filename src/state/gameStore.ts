@@ -16,8 +16,8 @@ interface GameStoreState {
   setGameState: (state: GameState) => void;
 
   // Current Stage
-  chapterNum: number;
-  setChapterNum: (chapter: number) => void;
+  chapterNum: string;
+  setChapterNum: (chapter: string) => void;
   stageNum: number;
   setStageNum: (stage: number) => void;
   currentTurn: number;
@@ -89,8 +89,8 @@ interface GameStoreState {
   setActiveMenu: (menu: string) => void;
 
   // Game initialization
-  initGame: (chapterId: number, stageId: number) => void;
-  applyStageRules: (chapterId: number, stageId: number, turn: number) => void;
+  initGame: (chapterId: string, stageId: number) => void;
+  applyStageRules: (chapterId: string, stageId: number, turn: number) => void;
   resetGame: () => void;
 
   // Save/Load
@@ -127,7 +127,7 @@ interface GameStoreState {
   setDifficulty: (diff: Difficulty) => void;
   unlockedDifficulties: Difficulty[];
   unlockDifficulty: (diff: Difficulty) => void;
-  initGameWithDifficulty: (chapterId: number, stageId: number, difficulty: Difficulty) => void;
+  initGameWithDifficulty: (chapterId: string, stageId: number, difficulty: Difficulty) => void;
 
   // Localization
   language: Language;
@@ -142,7 +142,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setGamePhase: (gamePhase) => set({ gamePhase }),
 
   // Stage
-  chapterNum: 1,
+  chapterNum: '1',
   setChapterNum: (chapterNum) => set({ chapterNum }),
   stageNum: 1,
   setStageNum: (stageNum) => set({ stageNum }),
@@ -370,7 +370,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setDeck: (deck) => set({ deck }),
 
   // Initialization
-  initGame: (chapterId: number, stageId: number) => {
+  initGame: (chapterId: string, stageId: number) => {
     set((state) => {
       const chapter = CHAPTERS[chapterId];
       const stageConfig = chapter?.stages[stageId];
@@ -436,7 +436,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         bannedSuit: null,
         bannedHand: null,
         blindIndices: [],
-        hasStage6Bonus: (chapterId === 1 && stageId === 1) ? false : state.hasStage6Bonus,
+        hasStage6Bonus: (chapterId === '1' && stageId === 1) ? false : state.hasStage6Bonus,
         player: {
           name: 'Player',
           hp: playerHp,
@@ -466,7 +466,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     get().applyStageRules(chapterId, stageId, 0);
   },
 
-  applyStageRules: (chapterId: number, stageId: number, turn: number) => {
+  applyStageRules: (chapterId: string, stageId: number, turn: number) => {
     const state = get();
     const config = DIFFICULTY_CONFIGS[state.difficulty];
     let { bannedRanks, bannedSuit, bannedHand, blindIndices, bot } = state;
@@ -481,7 +481,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const hands = ['Royal Flush', 'Straight Flush', 'Four of a Kind', 'Full House', 'Flush', 'Straight', 'Three of a Kind', 'Two Pair', 'One Pair'];
 
     // v2.1.0: Only chapter 1 rules for now
-    if (chapterId === 1) {
+    if (chapterId === '1') {
       // Stage 10 Random Rule Logic with HELL dual-rule support
       let activeStageIds: number[] = [];
       const ruleDescs: string[] = [];
@@ -687,7 +687,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const gameData = SaveManager.loadGame(slot);
     if (gameData) {
       set({
-        chapterNum: gameData.chapterNum || 1,
+        chapterNum: gameData.chapterNum || '1',
         stageNum: gameData.stageNum,
         difficulty: gameData.difficulty,
         gameState: GameState.BATTLE,
@@ -699,7 +699,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         isGameLoaded: true,
       });
       // Re-apply rules to populate UI states (especially for Stage 10 rule text)
-      get().applyStageRules(gameData.chapterNum || 1, gameData.stageNum, gameData.currentTurn);
+      get().applyStageRules(gameData.chapterNum || '1', gameData.stageNum, gameData.currentTurn);
     }
   },
 
@@ -739,7 +739,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       } catch { }
     }
   },
-  initGameWithDifficulty: (chapterId: number, stageId: number, difficulty: Difficulty) => {
+  initGameWithDifficulty: (chapterId: string, stageId: number, difficulty: Difficulty) => {
     const config = DIFFICULTY_CONFIGS[difficulty];
     const chapter = CHAPTERS[chapterId];
     const stageConfig = chapter?.stages[stageId];
