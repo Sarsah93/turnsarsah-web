@@ -10,11 +10,11 @@ export const MainMenu: React.FC = () => {
     const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition } = useGameStore();
 
     useEffect(() => {
-        AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
+        AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
     }, []);
 
     const handleInteraction = () => {
-        AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
+        AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
     };
 
     const handleDifficultySelect = (difficulty: Difficulty) => {

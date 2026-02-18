@@ -20,22 +20,31 @@ function App() {
   // Background Music Transition Logic
   useEffect(() => {
     if (gameState === GameState.MENU) {
-      AudioManager.playBGM('/assets/backgrounds/medieval_music_openning.mp3');
+      AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
     } else if (gameState === GameState.BATTLE || gameState === GameState.TUTORIAL) {
-      AudioManager.playBGM('/assets/backgrounds/meadow field_background.mp3');
+      let bgm = 'meadow field_background.mp3';
+      if (chapterNum === '2A') bgm = 'desert_background.mp3';
+      else if (chapterNum === '2B') bgm = 'deep forest.mp3';
+
+      AudioManager.playBGM(`/assets/backgrounds/audio sounds/${bgm}`);
     }
-  }, [gameState]);
+  }, [gameState, chapterNum]);
 
   // Background Video Source
   const getBackgroundSource = () => {
     if (gameState === GameState.MENU) {
-      return "/assets/backgrounds/wilderness_background.mp4";
+      return "/assets/backgrounds/video/wilderness_background.mp4";
     }
-    // Chapter 2 (A or B) uses black screen (empty source/mock)
-    if (chapterNum.startsWith('2')) {
-      return ""; // No video = black background (assuming CSS handles it)
+
+    if (chapterNum === '2A') {
+      return "/assets/backgrounds/video/desert_background.mp4";
     }
-    return "/assets/backgrounds/meadow field_background.mp4";
+    if (chapterNum === '2B') {
+      return "/assets/backgrounds/video/deep forest.mp4";
+    }
+
+    // Default Chapter 1
+    return "/assets/backgrounds/video/meadow field_background.mp4";
   };
 
   const handleGameEnd = (result: 'WIN' | 'LOSE') => {

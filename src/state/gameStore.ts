@@ -385,14 +385,17 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         stage6Hp = state.player.hp;
       }
 
+      const bossOverride = config.bossOverrides[chapterId]?.[stageId] || {};
+
       // v2.0.0.17: Boss Damage Reduction as Condition
       const botConditions = new Map<string, Condition>();
-      const baseReduction = stageId === 10 ? 15 : (stageId >= 8 ? 10 : 0);
-      const bossOverride = config.bossOverrides[chapterId]?.[stageId] || {};
-      const damageReduction = bossOverride.damageReduction ?? baseReduction;
+      if (chapterId === '1') {
+        const baseReduction = stageId === 10 ? 15 : (stageId >= 8 ? 10 : 0);
+        const damageReduction = bossOverride.damageReduction ?? baseReduction;
 
-      if (damageReduction > 0) {
-        applyCondition(botConditions, 'Damage Reducing', 9999, `Reduces incoming damage by ${damageReduction}%.`, { percent: damageReduction });
+        if (damageReduction > 0) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, `Reduces incoming damage by ${damageReduction}%.`, { percent: damageReduction });
+        }
       }
 
       // Boss stat overrides based on difficulty
@@ -421,7 +424,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       // Player conditions - Avoiding based on difficulty
       const playerConditions = new Map<string, Condition>();
-      if (config.avoidChance > 0) {
+      if (chapterId === '1' && config.avoidChance > 0) {
         applyCondition(playerConditions, 'Avoiding', 9999, `AVOIDING: ${Math.floor(config.avoidChance * 100)}% EVADE PROB.`, { chance: config.avoidChance });
       }
 
@@ -756,13 +759,15 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     // Boss Damage Reduction as Condition
     const botConditions = new Map<string, Condition>();
-    if (bossDamageReduction > 0) {
-      applyCondition(botConditions, 'Damage Reducing', 9999, `Reduces incoming damage by ${bossDamageReduction}%.`, { percent: bossDamageReduction });
+    if (chapterId === '1') {
+      if (bossDamageReduction > 0) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, `Reduces incoming damage by ${bossDamageReduction}%.`, { percent: bossDamageReduction });
+      }
     }
 
     // Player conditions - Avoiding based on difficulty
     const playerConditions = new Map<string, Condition>();
-    if (config.avoidChance > 0) {
+    if (chapterId === '1' && config.avoidChance > 0) {
       applyCondition(playerConditions, 'Avoiding', 9999, `AVOIDING: ${Math.floor(config.avoidChance * 100)}% EVADE PROB.`, { chance: config.avoidChance });
     }
 

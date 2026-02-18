@@ -61,7 +61,7 @@
 | **2A-7** | SAND GOLEM | 350 | 35 | NONE |
 | **2A-8** | SAND DEATHWARM | 400 | 15 | NONE |
 | **2A-9** | SAND DRAGON | 400 | 20 | NONE |
-| **2A-10** | SPRINKS | 300 | 40 | NONE |
+| **2A-10** | SPHINX | 300 | 40 | NONE |
 
 ---
 

@@ -41,7 +41,38 @@ export const BossDisplay: React.FC = () => {
             const filename = mapping[stage] || 're_Goblin_01.png';
             return `/assets/boss_goblin/${filename}`;
         }
-        // Chapter 2 placeholder
+        if (chapter === '2A') {
+            const mapping: Record<number, string> = {
+                1: '01_mummy.png',
+                2: '02_sand snake.png',
+                3: '03_chimera snake human.png',
+                4: '04_sand niddle lizard.png',
+                5: '05_sand scorpion.png',
+                6: '06_desert vultures.png',
+                7: '07_sand golem.png',
+                8: '08_sand deathwarm.png',
+                9: '09_sand dragon.png',
+                10: '10_sphinx.png'
+            };
+            const filename = mapping[stage] || '01_mummy.png';
+            return `/assets/boss_desert/${filename}`;
+        }
+        if (chapter === '2B') {
+            const mapping: Record<number, string> = {
+                1: '01_orc.png',
+                2: '02_orc savage.png',
+                3: '03_half orc.png',
+                4: '04_orc warrior.png',
+                5: '05_orc chieftain.png',
+                6: '06_high orc.png',
+                7: '07_high orc warrior.png',
+                8: '08_high orc assassin.png',
+                9: '09_high orc chieftain.png',
+                10: '10_hight orc lord.png'
+            };
+            const filename = mapping[stage] || '01_orc.png';
+            return `/assets/boss_ork/${filename}`;
+        }
         return '/assets/boss_goblin/re_Goblin_01.png';
     };
 

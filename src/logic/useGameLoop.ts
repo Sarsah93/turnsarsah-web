@@ -76,7 +76,9 @@ export const useGameLoop = () => {
         AudioManager.playSFX(path);
     };
 
-    const getBossAttackSFX = (stage: number) => {
+    const getBossAttackSFX = (chapter: string, stage: number) => {
+        if (chapter !== '1') return ''; // No SFX for Chapter 2 per request
+
         const map: Record<number, string> = {
             1: '01_sword hit_light.mp3',
             2: '02_arrow_hit.mp3',
@@ -90,11 +92,13 @@ export const useGameLoop = () => {
             10: '10_cruel_swing.mp3'
         };
         const file = map[stage] || '01_sword hit_light.mp3';
-        return `/assets/audio/combat/${file}`;
+        return `/assets/audio/combat/chapter 1 goblin/${file}`;
     };
 
     const applyBotStageMechanics = () => {
         const store = useGameStore.getState();
+        if (store.chapterNum !== '1') return; // Skip in Chapter 2 (Vanilla)
+
         const config = DIFFICULTY_CONFIGS[store.difficulty];
         const rand = Math.random();
         let conditionApplied = '';
@@ -264,12 +268,11 @@ export const useGameLoop = () => {
             store.setMessage("TUTORIAL: BOSS HP RESTORED");
         }
 
-        // v2.1.0: Stage 10 Boss Phase 2 - Awakening
-        // FIXED: Use current state's bot to ensure accurate condition check and prevent re-triggering.
+        // v2.1.0: Stage 10 Boss Phase 2 - Awakening (Chapter 1 Only)
         const currentBotState = useGameStore.getState().bot;
         let awakeningTriggered = false;
 
-        if (stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
+        if (store.chapterNum === '1' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
             newBotHp = bot.maxHp; // FULL RESTORE
             awakeningTriggered = true;
 
@@ -319,7 +322,7 @@ export const useGameLoop = () => {
         // v2.2.0: Balancing - Boss cannot regenerate if Awakened
         const isBotAwakened = useGameStore.getState().bot.conditions.has('Awakening');
 
-        if (stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating') && !isBotAwakened) {
+        if (store.chapterNum === '1' && stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating') && !isBotAwakened) {
             // Stage 6 has HP threshold
             if (stageNum === 6 && newBotHp <= bot.maxHp * 0.5) {
                 store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
@@ -352,9 +355,9 @@ export const useGameLoop = () => {
 
         await new Promise(r => setTimeout(r, 1500));
 
-        if (stageNum === 8 && store.currentTurn % 2 === 0) {
+        if (store.chapterNum === '1' && stageNum === 8 && store.currentTurn % 2 === 0) {
             setMessage("BOSS SKIPPED ATTACKING");
-            AudioManager.playSFX('/assets/audio/combat/06_swing_ weapon.mp3');
+            AudioManager.playSFX('/assets/audio/combat/chapter 1 goblin/06_swing_ weapon.mp3');
             await new Promise(r => setTimeout(r, 1000));
             await proceedToEndTurn();
             return;
@@ -373,7 +376,8 @@ export const useGameLoop = () => {
 
         setMessage(`${currentBot.name} ATTACKS!`);
         setBotAnimState('ATTACK');
-        setTimeout(() => AudioManager.playSFX(getBossAttackSFX(stageNum)), 200);
+        const sfx = getBossAttackSFX(store.chapterNum, stageNum);
+        if (sfx) setTimeout(() => AudioManager.playSFX(sfx), 200);
 
         await new Promise(r => setTimeout(r, 200));
         triggerScreenEffect('shake-heavy');
@@ -398,14 +402,16 @@ export const useGameLoop = () => {
         setBotAnimState('NONE');
         setPlayerAnimState('NONE');
 
-        // v2.0.0.21: Boss ATK Scaling only on successful hit
+        // v2.0.0.21: Boss ATK Scaling only on successful hit (Chapter 1 Only)
         let updatedAtk = currentBot.atk;
         const maxAtkCap = 100;
 
-        if (stageNum === 7) {
-            updatedAtk = Math.min(maxAtkCap, updatedAtk + 10);
-        } else if (stageNum === 9) {
-            updatedAtk = Math.min(maxAtkCap, updatedAtk * 2);
+        if (store.chapterNum === '1') {
+            if (stageNum === 7) {
+                updatedAtk = Math.min(maxAtkCap, updatedAtk + 10);
+            } else if (stageNum === 9) {
+                updatedAtk = Math.min(maxAtkCap, updatedAtk * 2);
+            }
         }
 
         // Global ATK Cap
@@ -589,7 +595,7 @@ export const useGameLoop = () => {
             const isBotAwakenedAfterResolution = botConditions.has('Awakening');
 
             if (cond.duration - cond.elapsed <= 1 && !isBotAwakenedAfterResolution) {
-                if ([6, 8, 10].includes(stageNum)) {
+                if (store.chapterNum === '1' && [6, 8, 10].includes(stageNum)) {
                     store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
                 }
             }
@@ -635,8 +641,8 @@ export const useGameLoop = () => {
         const currentHp = store.player.hp;
         let maxHp = store.player.maxHp;
 
-        // v2.0.0.14/16: Stage 6 Reward (difficulty-based MAX HP bonus + FULL HEAL)
-        if (stageNum === 6) {
+        // v2.0.0.14/16: Stage 6 Reward (Chapter 1 Only: difficulty-based MAX HP bonus + FULL HEAL)
+        if (store.chapterNum === '1' && stageNum === 6) {
             const bonus = Math.floor(maxHp * config.stage6MaxHpBonus);
             maxHp += bonus;
             store.setHasStage6Bonus(true);
@@ -651,7 +657,7 @@ export const useGameLoop = () => {
         // 2. Victory State & Sound
         setGameState(GameState.VICTORY);
         const bonusPercent = Math.floor(config.stage6MaxHpBonus * 100);
-        const victoryMsg = stageNum === 6 ? `VICTORY! MAX HP +${bonusPercent}% BONUS!` : "VICTORY!";
+        const victoryMsg = (store.chapterNum === '1' && stageNum === 6) ? `VICTORY! MAX HP +${bonusPercent}% BONUS!` : "VICTORY!";
         setMessage(victoryMsg);
         AudioManager.playSFX('/assets/audio/stages/victory/victory.mp3');
 
@@ -707,8 +713,8 @@ export const useGameLoop = () => {
         // 2. Wait for 5s (Allow user to see defeat message)
         await new Promise(r => setTimeout(r, 5000));
 
-        // 3. Stage 6 Special: Restore HP and proceed to 7
-        if (stageNum === 6) {
+        // 3. Stage 6 Special: Restore HP and proceed to 7 (Chapter 1 Only)
+        if (store.chapterNum === '1' && stageNum === 6) {
             const restoredHp = store.stage6EntryHp || 200;
             triggerTransition(() => {
                 initGame(store.chapterNum, 7);
@@ -718,9 +724,7 @@ export const useGameLoop = () => {
                 startInitialDraw();
             });
         } else {
-            // Standard Defeat: Back to Menu or let BattleScreen handle it?
-            // User's Game.tsx showed buttons. I'll add buttons to BattleScreen.tsx.
-            // For now, let's keep it in GAMEOVER state.
+            // Standard Defeat
         }
     };
 
