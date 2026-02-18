@@ -396,8 +396,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       }
 
       // Boss stat overrides based on difficulty
-      const bossHp = bossOverride.hp ?? stageConfig.hp;
-      const bossAtk = bossOverride.atk ?? stageConfig.atk;
+      const bossHp = bossOverride.hp ?? Math.floor(stageConfig.hp * config.hpScale);
+      const bossAtk = bossOverride.atk ?? Math.floor(stageConfig.atk * config.atkScale);
 
       // Player HP handling - preserve on stage transitions, reset on new game
       let playerHp: number;
@@ -747,8 +747,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     // Boss stat overrides
     const bossOverride = config.bossOverrides[chapterId]?.[stageId] || {};
-    const bossHp = bossOverride.hp ?? stageConfig.hp;
-    const bossAtk = bossOverride.atk ?? stageConfig.atk;
+    const bossHp = bossOverride.hp ?? Math.floor(stageConfig.hp * config.hpScale);
+    const bossAtk = bossOverride.atk ?? Math.floor(stageConfig.atk * config.atkScale);
     const bossDamageReduction = bossOverride.damageReduction ?? (stageId === 10 ? 15 : (stageId >= 8 ? 10 : 0));
 
     const newDeck = new Deck(config.jokerProbability);

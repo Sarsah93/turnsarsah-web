@@ -664,15 +664,18 @@ export const useGameLoop = () => {
             // Unlock next difficulty on game completion
             if (store.difficulty === Difficulty.NORMAL) {
                 store.unlockDifficulty(Difficulty.HARD);
-                alert("ALL CLEAR! YOU ARE THE MASTER OF TURN SARSAH!\n\nHARD difficulty unlocked!");
             } else if (store.difficulty === Difficulty.HARD) {
                 store.unlockDifficulty(Difficulty.HELL);
-                alert("ALL CLEAR! YOU ARE THE MASTER OF TURN SARSAH!\n\nHELL difficulty unlocked!");
-            } else {
-                alert("ALL CLEAR! YOU ARE THE MASTER OF TURN SARSAH!");
             }
-            setMessage(""); // Clear Victory message before exiting
-            setGameState(GameState.MENU);
+
+            if (store.chapterNum === '1') {
+                // Chapter 1 Clear -> Selection Screen
+                setMessage("");
+                setGameState(GameState.CHAPTER_SELECT);
+            } else {
+                // Chapter 2 (or later) Clear -> Stay in VICTORY state for DIMMING & BACK TO MAIN button
+                // The BattleScreen will handle showing the back to main button based on stageNum === 10 and gameState === VICTORY
+            }
         } else {
             triggerTransition(() => {
                 setMessage(""); // CLEAR MESSAGE FIRST to avoid overlap!

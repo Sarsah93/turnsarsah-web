@@ -46,3 +46,36 @@
 *   **각성 (Awakening)**: 스테이지 10 보스 한정. 체력이 50% 이하로 떨어지는 순간 **즉시 체력을 100% 회복**하며 공격력이 난이도별로 **증가**합니다. (EASY +20 / NORMAL +30 / HARD +40 / HELL +50). 각성 시 보스는 해당 턴에 공격하지 않고 턴을 넘기며, 기존에 보유한 **경감(Reduction)** 및 **재생(Regen)** 효과가 유저 유리함을 위해 영구 제거됩니다. (회수 제한 1회)
 *   **성장형 공격 (Stat Growth)**: 스테이지 7(덧셈), 스테이지 9(곱셈) 보스는 매 턴 유저를 피격할 때마다 공격력이 상승합니다. 이는 설정된 **공격력 상한(CAP)**까지만 작동합니다.
 *   **스테이지 6 보너스**: 황금 고블린 처치 시 유저는 영구적으로 최대 체력 버프를 획득하여 후반 스테이지 생존력이 강화됩니다.
+---
+
+## 🏜️ 챕터 2A: 사막 지대 (Chapter 2A: Desert)
+
+| 스테이지 | 보스 이름 | 체력 (HP) | 공격력 (ATK) | 주요 규칙 (RULE) |
+| :---: | :--- | :---: | :---: | :---: |
+| **2A-1** | MUMMY | 180 | 20 | NONE |
+| **2A-2** | SAND SNAKE | 200 | 25 | NONE |
+| **2A-3** | CHIMERA SNAKE HUMAN | 200 | 30 | NONE |
+| **2A-4** | SAND NIDDLE LIZARD | 250 | 30 | NONE |
+| **2A-5** | SAND SCORPION | 250 | 20 | NONE |
+| **2A-6** | DESERT VULTURES | 200 | 20 | NONE |
+| **2A-7** | SAND GOLEM | 350 | 35 | NONE |
+| **2A-8** | SAND DEATHWARM | 400 | 15 | NONE |
+| **2A-9** | SAND DRAGON | 400 | 20 | NONE |
+| **2A-10** | SPRINKS | 300 | 40 | NONE |
+
+---
+
+## 🌲 챕터 2B: 깊은 숲 (Chapter 2B: Deep Forest)
+
+| 스테이지 | 보스 이름 | 체력 (HP) | 공격력 (ATK) | 주요 규칙 (RULE) |
+| :---: | :--- | :---: | :---: | :---: |
+| **2B-1** | ORC | 180 | 15 | NONE |
+| **2B-2** | ORC SAVAGE | 220 | 20 | NONE |
+| **2B-3** | HALF ORC | 240 | 25 | NONE |
+| **2B-4** | ORC WARRIOR | 260 | 25 | NONE |
+| **2B-5** | ORC CHIEFTAIN | 280 | 25 | NONE |
+| **2B-6** | HIGH ORC | 300 | 30 | NONE |
+| **2B-7** | HIGH ORC WARRIOR | 350 | 35 | NONE |
+| **2B-8** | HIGH ORC ASSASSIN | 300 | 30 | NONE |
+| **2B-9** | HIGH ORC CHIEFTAIN | 350 | 40 | NONE |
+| **2B-10** | HIGH ORC LORD | 400 | 50 | NONE |

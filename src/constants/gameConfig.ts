@@ -49,6 +49,9 @@ export interface DifficultyConfig {
   bleedProbStage7: number;
   poisonProbStage5: number;
   paralyzeProbStage7: number;
+  // v2.1.0: Global stat scaling factors
+  hpScale: number;
+  atkScale: number;
   // Boss stats overrides per stage (HP, ATK)
   // v2.1.0: Nested by Chapter -> Stage
   bossOverrides: Record<string, Record<number, { hp?: number; atk?: number; damageReduction?: number }>>;
@@ -73,6 +76,8 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.3,
     paralyzeProbStage7: 0.2,
+    hpScale: 0.8,
+    atkScale: 0.8,
     bossOverrides: {
       '1': {
         8: { atk: 30 },
@@ -97,6 +102,8 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.35,
+    hpScale: 1.0,
+    atkScale: 1.0,
     bossOverrides: {
       '1': {
         9: { /* stage9HasRegen handles this */ },
@@ -121,6 +128,8 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.2,
+    hpScale: 1.2,
+    atkScale: 1.2,
     bossOverrides: {
       '1': {
         1: { hp: 170, atk: 15 },
@@ -153,6 +162,8 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.5,
     paralyzeProbStage7: 0.2,
+    hpScale: 1.5,
+    atkScale: 2.0,
     bossOverrides: {
       '1': {
         1: { hp: 200, atk: 15 },
