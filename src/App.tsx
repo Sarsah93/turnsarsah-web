@@ -16,6 +16,16 @@ function App() {
   const gameState = useGameStore((state) => state.gameState);
   const stageNum = useGameStore((state) => state.stageNum);
   const chapterNum = useGameStore((state) => state.chapterNum);
+  const fontSize = useGameStore((state) => state.fontSize);
+
+  // Global Font Size Handling
+  useEffect(() => {
+    if (fontSize === 'SMALL') {
+      document.documentElement.classList.add('font-small-root');
+    } else {
+      document.documentElement.classList.remove('font-small-root');
+    }
+  }, [fontSize]);
 
   // Background Music Transition Logic
   useEffect(() => {

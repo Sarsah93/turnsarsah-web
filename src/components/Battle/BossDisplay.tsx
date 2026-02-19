@@ -1,18 +1,20 @@
 import { useGameStore } from '../../state/gameStore';
 import { HPBar } from '../Common/HPBar';
 import { ConditionIcon } from '../Common/ConditionIcon';
-import { Difficulty } from '../../constants/gameConfig';
+import { Difficulty, DIFFICULTY_CONFIGS } from '../../constants/gameConfig';
+import { TRANSLATIONS } from '../../constants/translations';
 
 export const BossDisplay: React.FC = () => {
-    const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep } = useGameStore();
+    const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep, language } = useGameStore();
+    const t = TRANSLATIONS[language];
 
     // Map difficulty to display text
     const getDifficultyText = (diff: Difficulty) => {
         const map: Record<Difficulty, { text: string; color: string }> = {
-            [Difficulty.EASY]: { text: 'EASY', color: '#27ae60' },
-            [Difficulty.NORMAL]: { text: 'NORMAL', color: '#3498db' },
-            [Difficulty.HARD]: { text: 'HARD', color: '#e67e22' },
-            [Difficulty.HELL]: { text: 'HELL', color: '#c0392b' },
+            [Difficulty.EASY]: { text: t.UI.DIFFICULTY_EASY, color: '#27ae60' },
+            [Difficulty.NORMAL]: { text: t.UI.DIFFICULTY_NORMAL, color: '#3498db' },
+            [Difficulty.HARD]: { text: t.UI.DIFFICULTY_HARD, color: '#e67e22' },
+            [Difficulty.HELL]: { text: t.UI.DIFFICULTY_HELL, color: '#c0392b' },
         };
         return map[diff];
     };
@@ -50,8 +52,8 @@ export const BossDisplay: React.FC = () => {
                 5: '05_sand scorpion.png',
                 6: '06_desert vultures.png',
                 7: '07_sand golem.png',
-                8: '08_sand deathwarm.png',
-                9: '09_sand dragon.png',
+                8: '08_wyvern.png',
+                9: '09_sand deathwarm.png',
                 10: '10_sphinx.png'
             };
             const filename = mapping[stage] || '01_mummy.png';
@@ -97,7 +99,7 @@ export const BossDisplay: React.FC = () => {
                 <HPBar
                     hp={bot.hp}
                     maxHp={bot.maxHp}
-                    label="BOSS"
+                    label={t.UI.BOSS}
                     color="red"
                     align="right"
                 />
@@ -110,7 +112,7 @@ export const BossDisplay: React.FC = () => {
                 textShadow: '2px 2px 4px #000',
                 display: 'flex', flexDirection: 'column', alignItems: 'flex-start'
             }}>
-                <span style={{ fontSize: '2.5rem' }}>{isTutorial ? "TUTORIAL STAGE" : `CHAPTER ${chapterNum}-${stageNum}`}</span>
+                <span style={{ fontSize: '2.5rem' }}>{isTutorial ? `TUTORIAL ${t.UI.STAGE_NUM}` : `${t.UI.CHAPTER_NUM} ${chapterNum}-${stageNum}`}</span>
                 <span style={{ fontSize: '2.4rem', color: isTutorial ? '#f1c40f' : diffInfo.color, marginTop: '-5px' }}>
                     [{isTutorial ? "TUTORIAL" : diffInfo.text}]
                 </span>
@@ -155,27 +157,27 @@ export const BossDisplay: React.FC = () => {
                 textAlign: 'right', color: '#fff', fontSize: '1.8rem', fontFamily: 'BebasNeue',
                 textShadow: '2px 2px 2px #000'
             }}>
-                <div>ATK: {bot.atk}</div>
+                <div>{t.UI.ATK}: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
                     {isTutorial && [15, 16, 17, -15, -16, -17].includes(tutorialStep) ? (
-                        "RULE: BLIND 2 CARDS"
+                        `${t.RULES.RULE_HINT}${t.RULES.BLIND_2_CARDS}`
                     ) : stageNum === 10 ? (
                         stage10RuleText
                     ) : (
-                        `RULE: ${(() => {
+                        `${t.RULES.RULE_HINT}${(() => {
                             const bannedHand = useGameStore.getState().bannedHand;
                             const ruleMap: Record<number, string> = {
-                                1: 'NONE',
-                                2: 'BANNED_2 CARDS',
-                                3: 'BLIND_2 CARDS',
-                                4: 'BANNED_SUIT',
-                                5: 'POISON',
-                                6: bannedHand ? `BANNED_${bannedHand.toUpperCase()}` : 'BANNED_HAND',
-                                7: 'ATK +10/TURN',
-                                8: 'REGEN+REDUCE 10%',
-                                9: 'ATK x2/TURN+REDUCE 10%',
+                                1: t.RULES.NONE,
+                                2: t.RULES.BANNED_2_CARDS,
+                                3: t.RULES.BLIND_2_CARDS,
+                                4: t.RULES.BANNED_SUIT,
+                                5: t.RULES.POISON,
+                                6: bannedHand ? `${t.RULES.BANNED_HAND}${bannedHand.toUpperCase()}` : t.RULES.BANNED_HAND,
+                                7: t.RULES.ATK_UP,
+                                8: t.RULES.REGEN_REDUCE.replace('{percent}', '10'),
+                                9: t.RULES.ATK_GROWTH.replace('{type}', 'x2').split('+')[0] + '+' + t.RULES.REGEN_REDUCE.replace('{percent}', '10').replace(t.RULES.RULE_HINT, ''), // This is complex, might need better translation structure
                             };
-                            return ruleMap[stageNum] || 'NONE';
+                            return ruleMap[stageNum] || t.RULES.NONE;
                         })()}`
                     )}
                 </div>

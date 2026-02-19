@@ -132,6 +132,10 @@ interface GameStoreState {
   // Localization
   language: Language;
   setLanguage: (lang: Language) => void;
+
+  // Font Size
+  fontSize: 'NORMAL' | 'SMALL';
+  setFontSize: (size: 'NORMAL' | 'SMALL') => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -140,6 +144,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setGameState: (gameState) => set({ gameState }),
   gamePhase: 'IDLE',
   setGamePhase: (gamePhase) => set({ gamePhase }),
+
+  // Font Size
+  fontSize: (localStorage.getItem('turnsarsah_font_size') as 'NORMAL' | 'SMALL') || 'NORMAL',
+  setFontSize: (fontSize) => {
+    set({ fontSize });
+    localStorage.setItem('turnsarsah_font_size', fontSize);
+  },
 
   // Stage
   chapterNum: '1',
@@ -394,7 +405,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         const damageReduction = bossOverride.damageReduction ?? baseReduction;
 
         if (damageReduction > 0) {
-          applyCondition(botConditions, 'Damage Reducing', 9999, `Reduces incoming damage by ${damageReduction}%.`, { percent: damageReduction });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: damageReduction });
         }
       }
 
@@ -425,7 +436,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       // Player conditions - Avoiding based on difficulty
       const playerConditions = new Map<string, Condition>();
       if (chapterId === '1' && config.avoidChance > 0) {
-        applyCondition(playerConditions, 'Avoiding', 9999, `AVOIDING: ${Math.floor(config.avoidChance * 100)}% EVADE PROB.`, { chance: config.avoidChance });
+        applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance });
       }
 
       return {
@@ -761,14 +772,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const botConditions = new Map<string, Condition>();
     if (chapterId === '1') {
       if (bossDamageReduction > 0) {
-        applyCondition(botConditions, 'Damage Reducing', 9999, `Reduces incoming damage by ${bossDamageReduction}%.`, { percent: bossDamageReduction });
+        applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: bossDamageReduction });
       }
     }
 
     // Player conditions - Avoiding based on difficulty
     const playerConditions = new Map<string, Condition>();
     if (chapterId === '1' && config.avoidChance > 0) {
-      applyCondition(playerConditions, 'Avoiding', 9999, `AVOIDING: ${Math.floor(config.avoidChance * 100)}% EVADE PROB.`, { chance: config.avoidChance });
+      applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance });
     }
 
     set({

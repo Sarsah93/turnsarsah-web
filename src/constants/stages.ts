@@ -40,8 +40,8 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       5: { name: 'STAGE 5', bossName: 'SAND SCORPION', hp: 250, atk: 20, level: 15, rule: 'NONE' },
       6: { name: 'STAGE 6', bossName: 'DESERT VULTURES', hp: 200, atk: 20, level: 16, rule: 'NONE' },
       7: { name: 'STAGE 7', bossName: 'SAND GOLEM', hp: 350, atk: 35, level: 17, rule: 'NONE' },
-      8: { name: 'STAGE 8', bossName: 'SAND DEATHWARM', hp: 400, atk: 15, level: 18, rule: 'NONE' },
-      9: { name: 'STAGE 9', bossName: 'SAND DRAGON', hp: 400, atk: 20, level: 19, rule: 'NONE' },
+      8: { name: 'STAGE 8', bossName: 'SAND WYVERN', hp: 400, atk: 15, level: 18, rule: 'NONE' },
+      9: { name: 'STAGE 9', bossName: 'SAND DEATHWARM', hp: 400, atk: 20, level: 19, rule: 'NONE' },
       10: { name: 'STAGE 10', bossName: 'SPHINX', hp: 300, atk: 40, level: 20, rule: 'NONE' },
     }
   },

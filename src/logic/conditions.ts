@@ -11,47 +11,17 @@ export interface ConditionEffect {
 /**
  * 상태이상 기본 설정 (v2.0.0.6 기준)
  */
-export const CONDITION_PRESETS: Record<string, { duration: number; desc: string }> = {
-  'Bleeding': {
-    duration: 4,
-    desc: 'Takes 5 fixed damage per turn. Stacks to Heavy Bleeding.',
-  },
-  'Heavy Bleeding': {
-    duration: 3,
-    desc: 'Takes 15 fixed damage per turn. Prevents additional Bleeding.',
-  },
-  'Poisoning': {
-    duration: 4,
-    desc: 'Takes stacking damage per turn. Stacks to Debilitating.',
-  },
-  'Regenerating': {
-    duration: 999,
-    desc: 'Restores a portion of HP each turn.',
-  },
-  'Paralyzing': {
-    duration: 2,
-    desc: 'Player cannot attack (turn passes to boss).',
-  },
-  'Debilitating': {
-    duration: 3,
-    desc: 'Reduces Max HP by 20% and damage dealt by 20%.',
-  },
-  'Damage Reducing': {
-    duration: 9999,
-    desc: 'Reduces incoming damage by a percentage.',
-  },
-  'Avoiding': {
-    duration: 9999,
-    desc: 'Chance to avoid attacks.',
-  },
-  'Immune': {
-    duration: 3,
-    desc: 'Immune to debuff effects (Bleeding, Poison, Paralyze, Debilitate).',
-  },
-  'Awakening': {
-    duration: 9999,
-    desc: 'The target has awakened.',
-  },
+export const CONDITION_PRESETS: Record<string, { duration: number }> = {
+  'Bleeding': { duration: 4 },
+  'Heavy Bleeding': { duration: 3 },
+  'Poisoning': { duration: 4 },
+  'Regenerating': { duration: 999 },
+  'Paralyzing': { duration: 2 },
+  'Debilitating': { duration: 3 },
+  'Damage Reducing': { duration: 9999 },
+  'Avoiding': { duration: 9999 },
+  'Immune': { duration: 3 },
+  'Awakening': { duration: 9999 },
 };
 
 /**
@@ -104,9 +74,9 @@ export function applyCondition(
   conditions.set(name, {
     duration,
     elapsed: 0,
-    desc: desc || CONDITION_PRESETS[name]?.desc || '',
+    desc: desc || '', // Descs are now handled by the UI/Translation system
     data,
-    type: name.toUpperCase().replace(' ', '_') as any
+    type: name.toUpperCase().replace(/\s+/g, '_') as any
   });
 
   return isNew;

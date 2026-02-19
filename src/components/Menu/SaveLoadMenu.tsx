@@ -5,6 +5,8 @@ import Modal from '../Common/Modal';
 import { BlockButton } from '../BlockButton';
 import { SaveManager } from '../../utils/SaveManager';
 import { ConfirmationPopup } from './ConfirmationPopup';
+import { useGameStore } from '../../state/gameStore';
+import { TRANSLATIONS } from '../../constants/translations';
 import '../styles/SaveLoadMenu.css';
 
 interface SaveLoadMenuProps {
@@ -14,13 +16,15 @@ interface SaveLoadMenuProps {
 }
 
 export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onClose }) => {
+  const { language } = useGameStore();
+  const t = TRANSLATIONS[language];
   const [slots, setSlots] = useState<Array<{ stage: string; date: string } | null>>([null, null, null]);
   const [confirmDeleteSlot, setConfirmDeleteSlot] = useState<number | null>(null);
   const [confirmOverwriteSlot, setConfirmOverwriteSlot] = useState<number | null>(null);
 
   const refreshSlots = () => {
     const slotData = [0, 1, 2].map((i) => SaveManager.getSaveInfo(i));
-    setSlots(slotData.map((info) => (info ? { stage: `Stage ${info.stage}`, date: info.date } : null)));
+    setSlots(slotData.map((info) => (info ? { stage: `${t.UI.STAGE_NUM} ${info.stage}`, date: info.date } : null)));
   };
 
   useEffect(() => {
@@ -57,7 +61,7 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
   return (
     <>
       <Modal
-        title={mode === 'SAVE' ? 'SAVE GAME' : 'LOAD GAME'}
+        title={mode === 'SAVE' ? t.UI.SAVE_GAME : t.UI.LOAD_GAME}
         onClose={onClose}
         isOpen={true}
         width={650}
@@ -68,36 +72,30 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
           {slots.map((slot, index) => (
             <div key={index} className="save-slot">
               <div className="slot-content" onClick={() => handleSlotClick(index)}>
-                <div className="slot-title">SLOT {index + 1}</div>
-                <div className="slot-detail">{slot ? `${slot.stage} - ${slot.date}` : 'EMPTY'}</div>
+                <div className="slot-title">{t.UI.SLOT} {index + 1}</div>
+                <div className="slot-detail">{slot ? `${slot.stage} - ${slot.date}` : t.UI.EMPTY}</div>
               </div>
               {slot && (
                 <BlockButton
-                  text="DELETE"
+                  text={t.UI.DELETE}
                   onClick={() => handleDelete(index)}
                   width="80px"
                   variant="danger"
                   fontSize="1.4rem"
-                  style={{ marginLeft: 'auto', marginRight: '5px' }} // Align right side nicely or center? User said "button font not in center but pushed right". 
-                // Wait, user said "button font is not in center, pushed to right".
-                // This means inside the button, text is not centered? 
-                // BlockButton centers text by default. 
-                // Maybe padding is issue. BlockButton has 10px 20px padding.
-                // For small button (80px), large padding might break centering.
-                // Let's set padding: '5px' in style.
+                  style={{ marginLeft: 'auto', marginRight: '5px' }}
                 />
               )}
             </div>
           ))}
           <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
-            <BlockButton text="CANCEL" onClick={() => onClose?.()} width="160px" />
+            <BlockButton text={t.UI.CANCEL} onClick={() => onClose?.()} width="160px" />
           </div>
         </div>
       </Modal>
 
       {confirmDeleteSlot !== null && (
         <ConfirmationPopup
-          message="DO YOU AGREE WITH DELETING THIS SAVED DATA?"
+          message={t.UI.DELETE_CONFIRM}
           onYes={confirmDelete}
           onNo={() => setConfirmDeleteSlot(null)}
         />
@@ -105,7 +103,7 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
 
       {confirmOverwriteSlot !== null && (
         <ConfirmationPopup
-          message="REALLY WANT TO OVERWRITE THIS SAVED DATA SLOT?"
+          message={t.UI.OVERWRITE_CONFIRM}
           onYes={confirmOverwrite}
           onNo={() => setConfirmOverwriteSlot(null)}
         />

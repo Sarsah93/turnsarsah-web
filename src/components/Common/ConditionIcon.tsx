@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Condition } from '../../types/Character';
+import { useGameStore } from '../../state/gameStore';
+import { TRANSLATIONS } from '../../constants/translations';
 import '../styles/ConditionIcon.css';
 
 interface ConditionIconProps {
@@ -10,6 +12,12 @@ interface ConditionIconProps {
 
 export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, popupDirection }) => {
   const [showPopup, setShowPopup] = useState(false);
+  const { language } = useGameStore();
+  const t = TRANSLATIONS[language];
+
+  // Map functional names to translation keys (Upper Snake Case)
+  const translationKey = name.toUpperCase().replace(/\s+/g, '_');
+  const conditionInfo = (t.CONDITIONS as any)[translationKey] || { NAME: name, DESC: condition.desc };
 
   let filename = `${name}.png`;
   if (name === 'Avoiding') filename = '회피(Avoiding).png';
@@ -25,6 +33,20 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   const popupStyle: React.CSSProperties = popupDirection === 'bottom-left'
     ? { right: '0px', top: '100%', marginTop: '5px' }
     : { left: '0px', bottom: '100%', marginBottom: '5px' };
+
+  // Resolve description with dynamic data if applicable
+  let resolvedDesc = conditionInfo.DESC;
+  if (name === 'Damage Reducing' && condition.data) {
+    const percent = (condition.data as any).percent || 0;
+    resolvedDesc = resolvedDesc.replace('{percent}', percent.toString());
+  } else if (name === 'Avoiding' && condition.data) {
+    const chance = Math.floor(((condition.data as any).chance || 0) * 100);
+    resolvedDesc = resolvedDesc.replace('{percent}', chance.toString());
+  }
+
+  const durationText = condition.duration > 999
+    ? t.UI.PERMANENT
+    : `${condition.duration - condition.elapsed} ${t.UI.TURNS_REMAINING}`;
 
   return (
     <div
@@ -49,7 +71,6 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
           style={{ width: '40px', height: '40px', objectFit: 'contain' }}
           onError={(e) => {
             console.warn(`Condition icon failed to load: ${iconPath}`);
-            // Fallback to name text if image is missing
             e.currentTarget.style.display = 'none';
           }}
         />
@@ -75,13 +96,13 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
           }}
         >
           <div style={{ color: '#f1c40f', fontSize: '1.2rem', marginBottom: '4px', borderBottom: '1px solid #f1c40f' }}>
-            {name.toUpperCase()}
+            {conditionInfo.NAME.toUpperCase()}
           </div>
           <div style={{ lineHeight: '1.4' }}>
-            {condition.desc || 'No description available.'}
+            {resolvedDesc}
           </div>
           <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#aaa', textAlign: 'right' }}>
-            {condition.duration > 999 ? 'PERMANENT' : `${condition.duration - condition.elapsed} TURNS REMAINING`}
+            {durationText}
           </div>
         </div>
       )}

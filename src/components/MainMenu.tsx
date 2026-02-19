@@ -5,9 +5,11 @@ import { AudioManager } from '../utils/AudioManager';
 import { SaveLoadMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import { DifficultyPopup } from './DifficultyPopup';
 import { Difficulty } from '../constants/gameConfig';
+import { TRANSLATIONS } from '../constants/translations';
 
 export const MainMenu: React.FC = () => {
-    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition } = useGameStore();
+    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language } = useGameStore();
+    const t = TRANSLATIONS[language];
 
     useEffect(() => {
         AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
@@ -44,13 +46,13 @@ export const MainMenu: React.FC = () => {
 
             {/* Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <BlockButton text="NEW GAME" onClick={() => setActiveMenu('DIFFICULTY')} />
-                <BlockButton text="LOAD GAME" onClick={() => setActiveMenu('LOAD')} />
-                <BlockButton text="SETTINGS" onClick={() => setActiveMenu('SETTINGS')} />
-                <BlockButton text="QUIT" onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
+                <BlockButton text={t.UI.NEW_GAME} onClick={() => setActiveMenu('DIFFICULTY')} />
+                <BlockButton text={t.UI.LOAD_GAME} onClick={() => setActiveMenu('LOAD')} />
+                <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} />
+                <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
 
                 {/* v2.0.0.19: Tutorial Button */}
-                <BlockButton text="TUTORIAL" onClick={() => {
+                <BlockButton text={t.UI.TUTORIAL} onClick={() => {
                     triggerTransition(() => initTutorial());
                 }} />
 
@@ -99,7 +101,7 @@ export const MainMenu: React.FC = () => {
 
             {activeMenu === 'CONFIRM_QUIT' && (
                 <ConfirmationPopup
-                    message="DO YOU REALLY WANT TO QUIT THE GAME?"
+                    message={t.UI.QUIT_ASK}
                     onYes={() => window.close()}
                     onNo={() => setActiveMenu('NONE')}
                 />

@@ -11,9 +11,13 @@ export const TRANSLATIONS = {
             LANGUAGE: "언어 설정",
             KOREAN: "한국어",
             ENGLISH: "영어",
+            FONT_SIZE: "글자 크기",
+            FONT_NORMAL: "보통",
+            FONT_SMALL: "작게",
             BACK: "뒤로가기"
         },
         TUTORIAL: {
+            // ... (keeping existing tutorial steps)
             STEP_0: {
                 TITLE: "WELCOME TO TURNSARSAH",
                 TEXT: "'Turn Sarsah'는 스테이지 마다 다양한 패턴으로 구성된 보스들을 하나씩 1:1로 턴제 배틀을 통해, 무력화시키는 게임입니다."
@@ -24,7 +28,7 @@ export const TRANSLATIONS = {
             },
             STEP_2: {
                 TITLE: "포커 족보",
-                TEXT: "같은 숫자쌍(PAIR), 같은 모양(FLUSH), 연속된 숫자(STRAIGHT) 등으로 족보를 만들 수 있습니다. ONE PAIR는 같은 숫자 2장을 선택할 때 적용되며 족보 보너스 10점을 얻습니다."
+                TEXT: "같은 숫자쌍(PAIR), 같은 모양(FLUSH), 연속된 숫자(STRAIGHT) 등으로 족보를 만들 수 있습니다. ONE PAIR는 같은 숫자 2장을 선택할 때 적용되며 족보 보너스 10점이 주어집니다."
             },
             STEP_3: {
                 TITLE: "포커 족보 (계속)",
@@ -80,15 +84,145 @@ export const TRANSLATIONS = {
             },
             STEP_16: {
                 TITLE: "실습: 블라인드 (1/2)",
-                TEXT: "뒤집힌 카도가 있는 상태에서 공격을 진행해 보세요! (1/2)"
+                TEXT: "뒤집힌 카드가 있는 상태에서 공격을 진행해 보세요! (1/2)"
             },
             STEP_17: {
                 TITLE: "실습: 블라인드 (2/2)",
                 TEXT: "한 번 더 블라인드 상태에서 공격을 해봅시다! (2/2)"
             },
+            STEP_14_DESC: "본 게임에서 스테이지마다 보스들이 존재하며, 보스들은 각각의 고유한 설정과 룰을 가지고 있습니다. 플레이어는 룰을 토대로 승리하기 위해 전략적으로 카드 조합을 구성해야 합니다.\n\n- BAN_RANK 2: 무작위 숫자 2개를 턴 마다 공격 포인트로 사용할 수 없게 됩니다.\n- BAN_SUIT: 무작위 문양 1개를 턴 마다 공격 포인트로 사용할 수 없게 됩니다.\n- BAN_BLIND 2: 플레이어의 수중패에서 무작위 카드 2개를 턴 마다 뒤집어 카드를 알 수 없게 합니다.\n- BAN_HAND: 무작위 족보 1개를 턴 마다 금지시키고, 해당 족보로 공격할 수 없게 합니다.",
             NEXT: "다음",
             PREV: "이전",
             EXIT: "메인 화면으로"
+        },
+        COMBAT: {
+            VICTORY: "승리!",
+            DEFEAT: "패배...",
+            SELECT_CARDS: "카드를 선택하세요!",
+            MAX_SWAP: "최대 2장까지만 교환 가능합니다!",
+            CARDS_SWAPPED: "카드 교환 완료!",
+            NO_SWAPS: "남은 교환 횟수가 없습니다!",
+            BANNED_HAND: "금지된 족보: ",
+            PARALYZED: "마비 상태입니다! 공격 불가!",
+            CRITICAL_HIT: "크리티컬 히트!",
+            AWAKENING: "보스 각성! HP 회복!",
+            BOSS_SKIPPED: "보스가 공격을 건너뛰었습니다.",
+            ATTACK_AVOIDED: "공격을 회피했습니다!",
+            BOSS_ATTACKS: "보스의 공격!",
+            ST_AWAKENING: "보스가 각성 중입니다... 턴 종료.",
+            TUTORIAL_RESTORED: "튜토리얼: 보스 체력 회복",
+            PROCEED_STAGE7: "스테이지 7로 이동합니다...",
+            STAGE6_BONUS: "승리! 최대 HP +{percent}% 보너스!",
+            CLEARED_INFO: "챕터 {chapter}_스테이지 {stage} 클리어!",
+            BOSS_BLEEDING: "보스 출혈!",
+            BOSS_POISONING: "보스 중독!",
+            BOSS_HEAVY_BLEEDING: "보스 과출혈!",
+            BOSS_REGENERATING: "보스 재생 중!",
+            PLAYER_CLEARED: "{cond} 해제!",
+            PLAYER_REGEN: "체력 재생 중!",
+            ONE_PAIR_REQ: "ONE PAIR를 구성하세요.",
+            SELECT_SWAP_CARDS: "교환할 카드를 선택하세요.",
+            SWAP_GUIDE: "카드를 최대 두 장 까지 선택 후, SWAP 버튼을 눌러 새로운 카드로 교환하세요",
+            DAMAGE: "데미지",
+            BANNED: "금지됨"
+        },
+        CONDITIONS: {
+            BLEEDING: {
+                NAME: "출혈",
+                DESC: "매 턴 5의 고정 피해를 입습니다. 중첩 시 과출혈로 진화합니다."
+            },
+            HEAVY_BLEEDING: {
+                NAME: "과출혈",
+                DESC: "매 턴 15의 고정 피해를 입습니다. 추가 출혈이 쌓이지 않습니다."
+            },
+            POISONING: {
+                NAME: "중독",
+                DESC: "매 턴 피해량이 점진적으로 증가합니다. 중첩 시 쇠약으로 진화합니다."
+            },
+            REGENERATING: {
+                NAME: "재생",
+                DESC: "매 턴 일정량의 체력을 회복합니다."
+            },
+            PARALYZING: {
+                NAME: "마비",
+                DESC: "공격이 불가능하며 턴이 보스에게 넘어갑니다."
+            },
+            DEBILITATING: {
+                NAME: "쇠약",
+                DESC: "최대 체력이 20% 감소하고 가하는 피해량이 20% 감소합니다."
+            },
+            DAMAGE_REDUCING: {
+                NAME: "경감",
+                DESC: "받는 피해량이 {percent}% 감소합니다."
+            },
+            AVOIDING: {
+                NAME: "회피",
+                DESC: "{percent}% 확률로 적의 공격을 회피합니다."
+            },
+            IMMUNE: {
+                NAME: "면역",
+                DESC: "모든 상태이상 효과에 면역이 됩니다."
+            },
+            AWAKENING: {
+                NAME: "각성",
+                DESC: "보스가 각성하여 공격력이 상승했습니다."
+            }
+        },
+        RULES: {
+            NONE: "없음",
+            BANNED_2_CARDS: "카드 2장 사용 금지",
+            BLIND_2_CARDS: "카드 2장 블라인드",
+            BANNED_SUIT: "특정 문양 사용 금지",
+            POISON: "독성 안개 (매 턴 중독)",
+            BANNED_HAND: "특정 족보 금지: ",
+            ATK_UP: "공격력 상승 (매 턴 +10)",
+            REGEN_REDUCE: "재생 + 경감 {percent}%",
+            ATK_GROWTH: "공격 시 공격력 {type}",
+            RULE_HINT: "규칙: "
+        },
+        UI: {
+            BACK_TO_MAIN: "메인 화면으로",
+            ATTACK: "공격",
+            SWAP: "교체",
+            BOSS: "보스",
+            PLAYER: "플레이어",
+            ATK: "공격력",
+            HP: "체력",
+            QUIT_CONFIRM: "메인 화면으로 돌아가시겠습니까?",
+            SAVE_SUCCESS: "게임이 저장되었습니다!",
+            DIFFICULTY_EASY: "쉬움",
+            DIFFICULTY_NORMAL: "보통",
+            DIFFICULTY_HARD: "어려움",
+            DIFFICULTY_HELL: "지옥",
+            STAGE_NUM: "스테이지",
+            CHAPTER_NUM: "챕터",
+            PERMANENT: "영구 지속",
+            TURNS_REMAINING: "턴 남음",
+            WILD: " (조커)",
+            JOKER_CUE: "조커",
+            BLINDED_CUE: "블라인드!",
+            CLICK_CUE: "클릭!",
+            NEW_GAME: "새 게임",
+            START_GAME: "게임 시작",
+            TUTORIAL: "튜토리얼",
+            QUIT: "종료",
+            QUIT_ASK: "정말로 게임을 종료하시겠습니까?",
+            SELECT_DIFFICULTY: "난이도 선택",
+            YES: "예",
+            NO: "아니오",
+            CONFIRM: "확인",
+            CANCEL: "취소",
+            DELETE: "삭제",
+            SAVE: "저장",
+            LOAD: "불러오기",
+            EMPTY: "비어있음",
+            PAUSE: "일시정지",
+            RESUME: "계속하기",
+            SAVE_GAME: "게임 저장",
+            LOAD_GAME: "불러오기",
+            SLOT: "슬롯",
+            DELETE_CONFIRM: "해당 저장 데이터를 삭제하시겠습니까?",
+            OVERWRITE_CONFIRM: "해당 슬롯에 덮어씌우시겠습니까?"
         }
     },
     EN: {
@@ -99,6 +233,9 @@ export const TRANSLATIONS = {
             LANGUAGE: "LANGUAGE",
             KOREAN: "KOREAN",
             ENGLISH: "ENGLISH",
+            FONT_SIZE: "FONT SIZE",
+            FONT_NORMAL: "NORMAL",
+            FONT_SMALL: "SMALL",
             BACK: "BACK"
         },
         TUTORIAL: {
@@ -174,9 +311,139 @@ export const TRANSLATIONS = {
                 TITLE: "PRACTICE: BLIND (2/2)",
                 TEXT: "Attack once more in the Blind state! (2/2)"
             },
+            STEP_14_DESC: "In this game, each stage has a boss with unique settings and rules. You must strategically form hands based on these rules to win.\n\n- BAN_RANK 2: Two random ranks are banned from being used in attack points.\n- BAN_SUIT: One random suit is banned from being used in attack points.\n- BAN_BLIND 2: Two random cards in your hand are flipped face down.\n- BAN_HAND: One random poker hand is banned from being used for attacks.",
             NEXT: "NEXT",
             PREV: "PREV",
             EXIT: "BACK TO MAIN"
+        },
+        COMBAT: {
+            VICTORY: "VICTORY!",
+            DEFEAT: "DEFEAT...",
+            SELECT_CARDS: "SELECT CARDS!",
+            MAX_SWAP: "MAXIMUM 2 CARDS CAN BE SWAPPED!",
+            CARDS_SWAPPED: "CARDS SWAPPED!",
+            NO_SWAPS: "NO SWAPS REMAINING!",
+            BANNED_HAND: "BANNED HAND: ",
+            PARALYZED: "PARALYZED! CANNOT ATTACK!",
+            CRITICAL_HIT: "CRITICAL HIT!",
+            AWAKENING: "BOSS AWAKENING! HP RESTORED!",
+            BOSS_SKIPPED: "BOSS SKIPPED ATTACKING",
+            ATTACK_AVOIDED: "ATTACK AVOIDED!",
+            BOSS_ATTACKS: "BOSS ATTACKS!",
+            ST_AWAKENING: "BOSS IS AWAKENING... TURN SKIPPED.",
+            TUTORIAL_RESTORED: "TUTORIAL: BOSS HP RESTORED",
+            PROCEED_STAGE7: "PROCEEDING TO STAGE 7...",
+            STAGE6_BONUS: "VICTORY! MAX HP +{percent}% BONUS!",
+            CLEARED_INFO: "CLEARED CHAPTER {chapter}_STAGE {stage}!",
+            BOSS_BLEEDING: "BOSS BLEEDING!",
+            BOSS_POISONING: "BOSS POISONING!",
+            BOSS_HEAVY_BLEEDING: "BOSS HEAVY BLEEDING!",
+            BOSS_REGENERATING: "BOSS REGENERATING!",
+            PLAYER_CLEARED: "{cond} CLEARED!",
+            PLAYER_REGEN: "REGENERATING!",
+            ONE_PAIR_REQ: "SELECT A ONE PAIR.",
+            SELECT_SWAP_CARDS: "SELECT CARDS TO SWAP.",
+            SWAP_GUIDE: "SELECT UP TO 2 CARDS AND PRESS SWAP TO REFRESH THEM.",
+            DAMAGE: "DAMAGE",
+            BANNED: "BANNED"
+        },
+        CONDITIONS: {
+            BLEEDING: {
+                NAME: "Bleeding",
+                DESC: "Takes 5 fixed damage per turn. Stacks to Heavy Bleeding."
+            },
+            HEAVY_BLEEDING: {
+                NAME: "Heavy Bleeding",
+                DESC: "Takes 15 fixed damage per turn. Prevents additional Bleeding."
+            },
+            POISONING: {
+                NAME: "Poisoning",
+                DESC: "Takes stacking damage per turn. Stacks to Debilitating."
+            },
+            REGENERATING: {
+                NAME: "Regenerating",
+                DESC: "Restores a portion of HP each turn."
+            },
+            PARALYZING: {
+                NAME: "Paralyzing",
+                DESC: "Player cannot attack (turn passes to boss)."
+            },
+            DEBILITATING: {
+                NAME: "Debilitating",
+                DESC: "Reduces Max HP by 20% and damage dealt by 20%."
+            },
+            DAMAGE_REDUCING: {
+                NAME: "Reduction",
+                DESC: "Reduces incoming damage by {percent}%."
+            },
+            AVOIDING: {
+                NAME: "Avoiding",
+                DESC: "{percent}% chance to avoid attacks."
+            },
+            IMMUNE: {
+                NAME: "Immune",
+                DESC: "Immune to debuff effects (Bleeding, Poison, Paralyze, Debilitate)."
+            },
+            AWAKENING: {
+                NAME: "Awakened",
+                DESC: "The target has awakened."
+            }
+        },
+        RULES: {
+            NONE: "NONE",
+            BANNED_2_CARDS: "BANNED_2 CARDS",
+            BLIND_2_CARDS: "BLIND_2 CARDS",
+            BANNED_SUIT: "BANNED_SUIT",
+            POISON: "POISON GAS (Envenom every turn)",
+            BANNED_HAND: "BANNED HAND: ",
+            ATK_UP: "ATK UP (+10 every turn)",
+            REGEN_REDUCE: "REGEN+REDUCE {percent}%",
+            ATK_GROWTH: "ATK {type} on hit",
+            RULE_HINT: "RULE: "
+        },
+        UI: {
+            BACK_TO_MAIN: "BACK TO MAIN PAGE",
+            ATTACK: "ATTACK",
+            SWAP: "SWAP",
+            BOSS: "BOSS",
+            PLAYER: "PLAYER",
+            ATK: "ATK",
+            HP: "HP",
+            QUIT_CONFIRM: "DO YOU WANT TO GO BACK TO MAIN PAGE?",
+            SAVE_SUCCESS: "GAME SAVED!",
+            DIFFICULTY_EASY: "EASY",
+            DIFFICULTY_NORMAL: "NORMAL",
+            DIFFICULTY_HARD: "HARD",
+            DIFFICULTY_HELL: "HELL",
+            STAGE_NUM: "STAGE",
+            CHAPTER_NUM: "CHAPTER",
+            PERMANENT: "PERMANENT",
+            TURNS_REMAINING: "TURNS REMAINING",
+            WILD: " (WILD)",
+            JOKER_CUE: "JOKER",
+            BLINDED_CUE: "BLINDED !",
+            CLICK_CUE: "CLICK!",
+            NEW_GAME: "NEW GAME",
+            START_GAME: "START GAME",
+            TUTORIAL: "TUTORIAL",
+            QUIT: "QUIT",
+            QUIT_ASK: "DO YOU REALLY WANT TO QUIT THE GAME?",
+            SELECT_DIFFICULTY: "SELECT DIFFICULTY",
+            YES: "YES",
+            NO: "NO",
+            CONFIRM: "CONFIRM",
+            CANCEL: "CANCEL",
+            DELETE: "DELETE",
+            SAVE: "SAVE",
+            LOAD: "LOAD",
+            EMPTY: "EMPTY",
+            PAUSE: "PAUSE",
+            RESUME: "RESUME",
+            SAVE_GAME: "SAVE GAME",
+            LOAD_GAME: "LOAD GAME",
+            SLOT: "SLOT",
+            DELETE_CONFIRM: "DO YOU AGREE WITH DELETING THIS SAVED DATA?",
+            OVERWRITE_CONFIRM: "REALLY WANT TO OVERWRITE THIS SAVED DATA SLOT?"
         }
     }
 };

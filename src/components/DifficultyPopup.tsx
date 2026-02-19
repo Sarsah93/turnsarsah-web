@@ -3,6 +3,7 @@
 import React from 'react';
 import { useGameStore } from '../state/gameStore';
 import { Difficulty } from '../constants/gameConfig';
+import { TRANSLATIONS } from '../constants/translations';
 import { BlockButton } from './BlockButton';
 import Modal from './Common/Modal';
 import './styles/SettingsMenu.css';
@@ -13,17 +14,18 @@ interface DifficultyPopupProps {
 }
 
 export const DifficultyPopup: React.FC<DifficultyPopupProps> = ({ onClose, onSelect }) => {
-    const unlockedDifficulties = useGameStore((state) => state.unlockedDifficulties);
+    const { unlockedDifficulties, language } = useGameStore();
+    const t = TRANSLATIONS[language];
 
     const difficulties: { key: Difficulty; label: string; color: string }[] = [
-        { key: Difficulty.EASY, label: 'EASY', color: '#27ae60' },
-        { key: Difficulty.NORMAL, label: 'NORMAL', color: '#3498db' },
-        { key: Difficulty.HARD, label: 'HARD', color: '#e67e22' },
-        { key: Difficulty.HELL, label: 'HELL', color: '#c0392b' },
+        { key: Difficulty.EASY, label: t.UI.DIFFICULTY_EASY, color: '#27ae60' },
+        { key: Difficulty.NORMAL, label: t.UI.DIFFICULTY_NORMAL, color: '#3498db' },
+        { key: Difficulty.HARD, label: t.UI.DIFFICULTY_HARD, color: '#e67e22' },
+        { key: Difficulty.HELL, label: t.UI.DIFFICULTY_HELL, color: '#c0392b' },
     ];
 
     return (
-        <Modal title="SELECT DIFFICULTY" onClose={onClose} width={600} height={550} showCloseButton={false}>
+        <Modal title={t.UI.SELECT_DIFFICULTY} onClose={onClose} width={600} height={550} showCloseButton={false}>
             <div className="settings-content" style={{ padding: '30px', gap: '20px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', alignItems: 'center' }}>
                     {difficulties.map(({ key, label, color }) => {
@@ -68,7 +70,7 @@ export const DifficultyPopup: React.FC<DifficultyPopupProps> = ({ onClose, onSel
                     })}
                 </div>
                 <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
-                    <BlockButton text="BACK TO MAIN PAGE" onClick={onClose} width="300px" fontSize="1.6rem" />
+                    <BlockButton text={t.UI.BACK_TO_MAIN} onClick={onClose} width="300px" fontSize="1.6rem" />
                 </div>
             </div>
         </Modal>

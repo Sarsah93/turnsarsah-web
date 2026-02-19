@@ -2,9 +2,11 @@ import React from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { HPBar } from '../Common/HPBar';
 import { ConditionIcon } from '../Common/ConditionIcon';
+import { TRANSLATIONS } from '../../constants/translations';
 
 export const PlayerDisplay: React.FC = () => {
-    const { player } = useGameStore();
+    const { player, language } = useGameStore();
+    const t = TRANSLATIONS[language];
 
     return (
         <div className="player-display" style={{
@@ -18,7 +20,7 @@ export const PlayerDisplay: React.FC = () => {
             <HPBar
                 hp={player.hp}
                 maxHp={player.maxHp}
-                label="PLAYER"
+                label={t.UI.PLAYER}
                 color="blue"
                 align="left"
             />

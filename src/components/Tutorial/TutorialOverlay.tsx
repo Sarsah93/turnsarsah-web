@@ -159,21 +159,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
             case 14:
                 return {
                     title: t.STEP_14.TITLE,
-                    text: language === 'KR' ? (
-                        <div style={{ textAlign: 'left', fontSize: '1.2rem' }}>
-                            본 게임에서 스테이지마다 보스들이 존재하며, 보스들은 각각의 고유한 설정과 룰을 가지고 있습니다. 플레이어는 룰을 토대로 승리하기 위해 전략적으로 카드 조합을 구성해야 합니다.<br /><br />
-                            - BAN_TIER 2: 무작위 숫자 2개를 턴 마다 공격 포인트로 사용할 수 없게 됩니다.<br />
-                            - BAN_SUIT: 무작위 문양 1개를 턴 마다 공격 포인트로 사용할 수 없게 됩니다.<br />
-                            - BAN_BLIND 2: 플레이어의 수중패에서 무작위 카드 2개를 턴 마다 뒤집어 카드를 알 수 없게 합니다.<br />
-                            - BAN_HAND: 무작위 족보 1개를 턴 마다 금지시키고, 해당 족보로 공격할 수 없게 합니다.
-                        </div>
-                    ) : (
-                        <div style={{ textAlign: 'left', fontSize: '1.2rem' }}>
-                            In this game, each stage has a boss with unique settings and rules. You must strategically form hands based on these rules to win.<br /><br />
-                            - BAN_RANK 2: Two random ranks are banned from being used in attack points.<br />
-                            - BAN_SUIT: One random suit is banned from being used in attack points.<br />
-                            - BAN_BLIND 2: Two random cards in your hand are flipped face down.<br />
-                            - BAN_HAND: One random poker hand is banned from being used for attacks.
+                    text: (
+                        <div style={{ textAlign: 'left', fontSize: '1.2rem', whiteSpace: 'pre-wrap' }}>
+                            {(t as any).STEP_14_DESC}
                         </div>
                     ),
                     showNext: true,
@@ -190,14 +178,14 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
                 return {
                     title: t.STEP_16.TITLE,
                     text: t.STEP_16.TEXT,
-                    showNext: true,
+                    showNext: false,
                     showPrev: true
                 };
             case 17:
                 return {
                     title: t.STEP_17.TITLE,
                     text: t.STEP_17.TEXT,
-                    showNext: true,
+                    showNext: false,
                     showPrev: true
                 };
             default:

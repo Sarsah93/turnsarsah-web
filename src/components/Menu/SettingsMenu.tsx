@@ -12,7 +12,7 @@ interface SettingsMenuProps {
 }
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) => {
-  const { language, setLanguage } = useGameStore();
+  const { language, setLanguage, fontSize, setFontSize } = useGameStore();
   const t = TRANSLATIONS[language].SETTINGS;
   const [bgmVolume, setBgmVolume] = useState(Math.round(AudioManager.getBGMVolume() * 10));
   const [sfxVolume, setSfxVolume] = useState(Math.round(AudioManager.getSFXVolume() * 10));
@@ -30,10 +30,10 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onCl
   };
 
   return (
-    <Modal title="SETTINGS" onClose={onClose} width={600} height={550} showCloseButton={false}>
-      <div className="settings-content" style={{ padding: '40px', gap: '35px' }}>
+    <Modal title={t.TITLE} onClose={onClose} width={600} height={550} showCloseButton={false}>
+      <div className="settings-content" style={{ padding: '30px', gap: '20px' }}>
         <div className="setting-item">
-          <label>BGM VOLUME</label>
+          <label>{t.BGM}</label>
           <div className="volume-bars">
             <button onClick={() => handleBgmChange(-1)}>-</button>
             <div className="bars">
@@ -45,7 +45,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onCl
           </div>
         </div>
         <div className="setting-item">
-          <label>SFX VOLUME</label>
+          <label>{t.SFX}</label>
           <div className="volume-bars">
             <button onClick={() => handleSfxChange(-1)}>-</button>
             <div className="bars">
@@ -58,27 +58,49 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onCl
         </div>
 
         {/* Language Selection */}
-        <div className="setting-item" style={{ marginTop: '10px' }}>
+        <div className="setting-item" style={{ marginTop: '5px' }}>
           <label>{t.LANGUAGE}</label>
-          <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
             <BlockButton
               text={t.KOREAN}
               onClick={() => setLanguage('KR')}
               variant={language === 'KR' ? 'primary' : undefined}
               width="150px"
-              fontSize="1.2rem"
+              fontSize="1.1rem"
             />
             <BlockButton
               text={t.ENGLISH}
               onClick={() => setLanguage('EN')}
               variant={language === 'EN' ? 'primary' : undefined}
               width="150px"
-              fontSize="1.2rem"
+              fontSize="1.1rem"
             />
           </div>
         </div>
-        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
-          <BlockButton text="BACK" onClick={() => onClose?.()} width="160px" />
+
+        {/* Font Size Selection */}
+        <div className="setting-item" style={{ marginTop: '5px' }}>
+          <label>{t.FONT_SIZE}</label>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
+            <BlockButton
+              text={t.FONT_NORMAL}
+              onClick={() => setFontSize('NORMAL')}
+              variant={fontSize === 'NORMAL' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+            <BlockButton
+              text={t.FONT_SMALL}
+              onClick={() => setFontSize('SMALL')}
+              variant={fontSize === 'SMALL' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+          </div>
+        </div>
+
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+          <BlockButton text={t.BACK} onClick={() => onClose?.()} width="160px" />
         </div>
       </div>
     </Modal>

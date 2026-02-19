@@ -12,19 +12,48 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  font-size: 16px;
+  /* 1rem = 16px */
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 body {
   width: 100vw;
   height: 100vh;
   font-family: 'BebasNeue', 'Arial', sans-serif;
-  /* Project Standard Font */
   background-color: #1a1a1a;
   color: #fff;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  /* Prevent scroll */
   background: transparent;
+}
+
+.App.font-small {
+  font-size: 14px;
+  /* Reduces rem-based sizes globally */
+}
+
+/* Ensure rem values in App scale if we apply class to .App */
+/* Actually, for rem to work, it must be on html. */
+/* But we can't easily toggle class on html from React without direct DOM manipulation. */
+/* If we use :root variables, it might be cleaner. */
+
+:root {
+  --base-font-size: 16px;
+}
+
+html {
+  font-size: var(--base-font-size);
+}
+
+.font-small-root {
+  --base-font-size: 14px;
 }
 
 .App {

@@ -1,51 +1,72 @@
-# Developer Handoff: TurnSarsah-web
+# Developer Localization Guide
 
-This document summarizes the current architecture, recent logic refinements (V11-V14), and critical considerations for future development.
+This guide provides instructions for managing and expanding multi-language support in TurnSarsah.
 
-## 1. Project Overview
-- **Framework**: Vite + React + TypeScript
-- **State Management**: Zustand (`src/state/gameStore.ts`)
-- **Combat Logic**: Custom hook (`src/logic/useGameLoop.ts`)
-- **Card Engine**: `src/types/Card.ts`, `src/logic/damageCalculation.ts`
+## Centralized Translations
 
-### Chapter System (V15)
-- **Nested Structure**: `stages.ts` now uses `CHAPTERS[chapterId].stages[stageId]` instead of a flat `STAGES` record.
-- **State Extension**: `useGameStore` now includes `chapterNum`. All initialization methods (`initGame`, `initGameWithDifficulty`) and logic hooks (`applyStageRules`) are refactored to be chapter-aware.
-- **UI Format**: All stage-related labels (BossDisplay, Victory screen) now follow the `CHAPTER X_STAGE Y` format for better scalability as new content is added.
+All localized strings are managed in `src/constants/translations.ts`. The structure follows a nested object pattern:
 
-### Boss Scaling & Balancing (V11-V14)
-- **Conditional Scaling**: Stage 7 (+10 ATK) and Stage 9 (2x ATK) scaling is triggered in `executeBotTurn` only if the attack is **NOT avoided** (requires a successful hit).
-- **Difficulty-Based ATK Cap**:
-  - EASY, NORMAL, HARD: **100 ATK**
-  - HELL: **200 ATK**
-  - These caps are applied globally in `useGameLoop.ts` whenever Boss ATK is modified.
-- **Stage 10 Phase 2**: Triggers once when HP <= 50%. Restores 100% HP and adds +50 ATK (clamped by cap). Tracked via 'Power Awakened' condition.
+```typescript
+export const TRANSLATIONS = {
+    KR: {
+        SETTINGS: { ... },
+        TUTORIAL: { ... },
+        COMBAT: { ... },
+        CONDITIONS: { ... },
+        RULES: { ... },
+        UI: { ... }
+    },
+    EN: {
+        // Must mirror KR structure exactly
+    }
+};
+```
 
-### Tutorial refinements
-- **Hand Preservation**: `startInitialDraw` in `useGameLoop.ts` skips the draw if a tutorial hand is already set, preventing regressions in guaranteed card patterns.
-- **Joker Logic**: Dynamic detection of Joker index in `BattleScreen.tsx`. Increased auto-advance timer to 8s (was 6s).
-- **Flow Control**:
-  - Boss Rule (Step 14) is moved to `proceedToEndTurn` to ensure it only pops up after animations finish.
-  - Manual "NEXT" buttons only for Steps 14, 16, 17.
+## Adding New Strings
 
-## 3. Implementation Considerations
+1.  **Update `translations.ts`**: Add new keys to both `KR` and `EN` sections.
+2.  **Use in Components**:
+    ```tsx
+    const { language } = useGameStore();
+    const t = TRANSLATIONS[language];
+    
+    return <div>{t.UI.YOUR_NEW_LABEL}</div>;
+    ```
+3.  **Use in Logic Hooks**:
+    ```typescript
+    const t = TRANSLATIONS[language];
+    setMessage(t.COMBAT.SOME_ACTION);
+    ```
 
-### State Synchronization
-- **CRITICAL**: Use `store.syncBot(...)` or `store.syncPlayer(...)` when modifying multiple properties (like HP and ATK simultaneously) to avoid race conditions or state overwrite.
-- **Rules & Conditions**: Rules are applied at turn start (`applyStageRules`), while conditions are resolved at turn end (`resolveStatusEffects`).
+## Status Effect Descriptions
 
-### UI & Animations
-- **Marker Overlap**: Use short strings for tutorial highlights (e.g., "CLICK!" or "JOKER") to prevent adjacent markers from overlapping. Card slots are 80px wide.
-- **Sequence Timing**: `useGameLoop.ts` uses `await new Promise(r => setTimeout(r, ...))` to sequence combat phases. When adding new effects, ensure they are awaited correctly to maintain visual sync.
+Status effect (Condition) descriptions are no longer hardcoded in `CONDITION_PRESETS`. Instead, they are fetched dynamically:
 
-## 4. Known Data Keys
-- **Zustand Store**: `useGameStore`
-- **LocalStorage**: `turnsarsah_save_slot_X`, `unlocked_difficulties`
+```typescript
+const condKey = conditionName.toUpperCase().replace(/\s+/g, '_');
+const description = (t.CONDITIONS as any)[condKey]?.DESC;
+```
 
-## 5. Future Roadmap
-- [ ] Add visual "Stage Transition" screen (currently handled by `triggerTransition`).
-- [ ] Improve Deck visualization (remaining cards display).
-- [ ] Balance Hell difficulty further (current cap 200).
+> [!IMPORTANT]
+> When adding a new status effect, you **must** add its `NAME` and `DESC` to the `CONDITIONS` section in `translations.ts` using the UPPER_SNAKE_CASE of its name.
 
----
-**Maintained by: Antigravity AI**
+## Boss Rules
+
+Boss rules for Stage 10 and generic stage indicators use keys from `t.RULES`.
+
+- Stage 10 rules are often combined (e.g., `RULE: BLIND+BAN_SUIT`).
+- Use `t.RULES.RULE_HINT` to prefix rules (e.g., "RULE: ").
+
+## Best Practices
+
+- **Avoid Hardcoded Strings**: Never use literal strings for UI messages. Always use `t.SECTION.KEY`.
+- **Dynamic Content**: Use `.replace('{variable}', value)` for strings containing dynamic data.
+- **Mirroring**: Ensure every key added to `KR` is also added to `EN` (and vice versa) to avoid undefined errors.
+- **Type Safety**: Use `(t.SECTION as any)[key]` when keys are generated dynamically from names/types.
+
+## Future Languages
+
+To add a new language (e.g., Japanese):
+1.  Add `JP` to the `Language` type in `translations.ts`.
+2.  Add the `JP` object to `TRANSLATIONS`.
+3.  Update `SettingsMenu.tsx` to include the Japanese selection option.

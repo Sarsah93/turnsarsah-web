@@ -4,6 +4,7 @@ import { AudioManager } from '../utils/AudioManager';
 import { calculatePlayerDamage, calculateBotDamage } from './damageCalculation';
 import { Card, CardFactory } from '../types/Card';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
+import { TRANSLATIONS } from '../constants/translations';
 
 export interface DamageTextData {
     id: number;
@@ -26,15 +27,18 @@ export const useGameLoop = () => {
         addPlayerCondition,
         setBotAnimState, setPlayerAnimState,
         triggerTransition,
-        isTutorial, tutorialStep, setTutorialStep, gamePhase
+        isTutorial, tutorialStep, setTutorialStep, gamePhase,
+        language
     } = useGameStore();
+
+    const t = TRANSLATIONS[language];
 
     const [damageTexts, setDamageTexts] = useState<DamageTextData[]>([]);
     const [screenEffect, setScreenEffect] = useState<string>('');
 
     // v2.0.0.12: Auto-clear generic messages after 2.5s
     useEffect(() => {
-        const exempt = ['VICTORY!', 'DEFEAT...', 'PARALYZED! CANNOT ATTACK!'];
+        const exempt = [t.COMBAT.VICTORY, t.COMBAT.DEFEAT, t.COMBAT.PARALYZED];
         if (message && !exempt.includes(message)) {
             const timer = setTimeout(() => setMessage(""), 2500);
             return () => clearTimeout(timer);
@@ -122,7 +126,9 @@ export const useGameLoop = () => {
 
             addPlayerCondition(conditionApplied, duration);
             playConditionSound(conditionApplied);
-            setMessage(`${conditionApplied.toUpperCase()}!`);
+            const condKey = conditionApplied.toUpperCase().replace(/\s+/g, '_');
+            const condName = (t.CONDITIONS as any)[condKey]?.NAME || conditionApplied.toUpperCase();
+            setMessage(`${condName}!`);
             triggerScreenEffect('flash-red');
         }
 
@@ -130,7 +136,7 @@ export const useGameLoop = () => {
         if (store.isTutorial && store.tutorialStep === 9) {
             addPlayerCondition('Bleeding', 3); // Guaranteed 3 turns
             playConditionSound('Bleeding');
-            setMessage('BLEEDING!');
+            setMessage(t.COMBAT.BOSS_BLEEDING);
             triggerScreenEffect('flash-red');
         }
     };
@@ -175,7 +181,7 @@ export const useGameLoop = () => {
 
         // 1. 마비 체크 (Paralyzing)
         if (player.conditions.has('Paralyzing')) {
-            setMessage("PARALYZED! CANNOT ATTACK!");
+            setMessage(t.COMBAT.PARALYZED);
             playConditionSound('Paralyzing');
             triggerScreenEffect('flash-red');
             // Wait a bit before bot turn starts
@@ -188,7 +194,7 @@ export const useGameLoop = () => {
         const currentPlayerHand = store.playerHand;
 
         if (selectedIndices.length === 0) {
-            setMessage("SELECT CARDS!");
+            setMessage(t.COMBAT.SELECT_CARDS);
             triggerScreenEffect('shake-small');
             return;
         }
@@ -205,7 +211,7 @@ export const useGameLoop = () => {
         );
 
         if (result.baseDamage === 0 && result.handType !== 'High Card') {
-            setMessage(`BANNED HAND: ${result.handType}`);
+            setMessage(`${t.COMBAT.BANNED_HAND}${result.handType}`);
             triggerScreenEffect('shake');
             return;
         }
@@ -255,8 +261,8 @@ export const useGameLoop = () => {
 
         // Damage Popup
         showDamageText('BOT', `-${damage}`, isCrit ? '#c0392b' : '#ecf0f1');
-        const wildSuffix = hasWild ? ' (WILD)' : '';
-        setMessage(isCrit ? `CRITICAL HIT! ${result.handType}${wildSuffix}` : `${result.handType}${wildSuffix}`);
+        const wildSuffix = hasWild ? t.UI.WILD : '';
+        setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${result.handType}${wildSuffix}` : `${result.handType}${wildSuffix}`);
 
         // HP Reduction (0.1s after Popup/Shake)
         await new Promise(r => setTimeout(r, 100));
@@ -265,7 +271,7 @@ export const useGameLoop = () => {
         // v2.0.0.21: Tutorial safety - restore HP if below 300
         if (store.isTutorial && newBotHp < 300) {
             newBotHp = 1000;
-            store.setMessage("TUTORIAL: BOSS HP RESTORED");
+            store.setMessage(t.COMBAT.TUTORIAL_RESTORED);
         }
 
         // v2.1.0: Stage 10 Boss Phase 2 - Awakening (Chapter 1 Only)
@@ -297,7 +303,7 @@ export const useGameLoop = () => {
                 store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
             });
 
-            store.setMessage("BOSS AWAKENING! HP RESTORED!");
+            store.setMessage(t.COMBAT.AWAKENING);
             AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
         } else {
             setBotHp(newBotHp);
@@ -338,7 +344,7 @@ export const useGameLoop = () => {
         } else {
             // v2.1.0: If awakening triggered, boss skips its turn
             if (awakeningTriggered) {
-                setMessage("BOSS IS AWAKENING... TURN SKIPPED.");
+                setMessage(t.COMBAT.ST_AWAKENING);
                 await new Promise(r => setTimeout(r, 1200));
                 await proceedToEndTurn();
             } else {
@@ -356,17 +362,22 @@ export const useGameLoop = () => {
         await new Promise(r => setTimeout(r, 1500));
 
         if (store.chapterNum === '1' && stageNum === 8 && store.currentTurn % 2 === 0) {
-            setMessage("BOSS SKIPPED ATTACKING");
+            setMessage(t.COMBAT.BOSS_SKIPPED);
             AudioManager.playSFX('/assets/audio/combat/chapter 1 goblin/06_swing_ weapon.mp3');
             await new Promise(r => setTimeout(r, 1000));
             await proceedToEndTurn();
             return;
         }
 
-        // Dodge Check - Difficulty-based avoid chance (Skip in tutorial)
+        // v2.1.2: Unified Evasion Check (Passive Skill)
         const config = DIFFICULTY_CONFIGS[store.difficulty];
-        if (!isTutorial && config.avoidChance > 0 && Math.random() < config.avoidChance) {
-            setMessage("ATTACK AVOIDED!");
+        const avoidCond = currentPlayer.conditions.get('Avoiding');
+        const finalAvoidChance = avoidCond ? ((avoidCond.data as any)?.chance ?? config.avoidChance) : config.avoidChance;
+
+        const isAvoided = !isTutorial && finalAvoidChance > 0 && Math.random() < finalAvoidChance;
+
+        if (isAvoided) {
+            setMessage(t.COMBAT.ATTACK_AVOIDED);
             playConditionSound('Avoiding');
             triggerScreenEffect('flash-red');
             await new Promise(r => setTimeout(r, 1000));
@@ -374,7 +385,7 @@ export const useGameLoop = () => {
             return;
         }
 
-        setMessage(`${currentBot.name} ATTACKS!`);
+        setMessage(t.COMBAT.BOSS_ATTACKS);
         setBotAnimState('ATTACK');
         const sfx = getBossAttackSFX(store.chapterNum, stageNum);
         if (sfx) setTimeout(() => AudioManager.playSFX(sfx), 200);
@@ -395,7 +406,8 @@ export const useGameLoop = () => {
         // Wait a bit for the hit visual before applying status effects
         await new Promise(r => setTimeout(r, 200));
 
-        // Apply status effects AFTER boss damage is applied to state
+        // v2.1.2: Boss ATK Scaling and Status Effects only on successful hit
+        // applyBotStageMechanics and ATK scaling are now naturally guarded by the early return on evasion above.
         applyBotStageMechanics();
 
         await new Promise(r => setTimeout(r, 300));
@@ -515,12 +527,15 @@ export const useGameLoop = () => {
             // 15% chance to remove debuff early
             if (removableDebuffs.includes(cond) && Math.random() < 0.15) {
                 toRemovePlayer.push(cond);
-                setMessage(`${cond.toUpperCase()} CLEARED!`);
+                const condKey = cond.toUpperCase().replace(/\s+/g, '_');
+                const condName = (t.CONDITIONS as any)[condKey]?.NAME || cond;
+                setMessage(t.COMBAT.PLAYER_CLEARED.replace('{cond}', condName.toUpperCase()));
                 continue;
             }
 
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
-                setMessage(`${cond.toUpperCase()}!`);
+                const toastMsg = cond === 'Poisoning' ? t.COMBAT.BOSS_POISONING : (cond === 'Heavy Bleeding' ? t.COMBAT.BOSS_HEAVY_BLEEDING : t.COMBAT.BOSS_BLEEDING);
+                setMessage(toastMsg.replace('BOSS ', '')); // reuse keys but strip BOSS prefix for player
                 playConditionSound(cond);
                 const dmg = cond === 'Heavy Bleeding' ? 15 : 5;
                 // FIXED: Use fresh state HP
@@ -540,7 +555,7 @@ export const useGameLoop = () => {
         }
 
         if (playerConditions.has('Regenerating')) {
-            setMessage('REGENERATING!');
+            setMessage(t.COMBAT.PLAYER_REGEN);
             playConditionSound('Regenerating');
             const heal = 10;
             const currentHp = useGameStore.getState().player.hp;
@@ -562,14 +577,15 @@ export const useGameLoop = () => {
         // Boss Phase
         for (const [cond, data] of Array.from(botConditions.entries())) {
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
-                setMessage(`BOSS ${cond.toUpperCase()}!`);
+                const toastMsg = cond === 'Poisoning' ? t.COMBAT.BOSS_POISONING : (cond === 'Heavy Bleeding' ? t.COMBAT.BOSS_HEAVY_BLEEDING : t.COMBAT.BOSS_BLEEDING);
+                setMessage(toastMsg);
                 playConditionSound(cond);
                 const dmg = 10;
                 setBotHp(Math.max(0, bot.hp - dmg));
                 showDamageText('BOT', `-${dmg}`, '#c0392b');
                 await new Promise(r => setTimeout(r, 800));
             } else if (cond === 'Regenerating') {
-                setMessage('BOSS REGENERATING!');
+                setMessage(t.COMBAT.BOSS_REGENERATING);
                 playConditionSound('Regenerating');
                 const latestBot = useGameStore.getState().bot;
                 const regenPercent = (data.data as any)?.percent || 0.05;
@@ -610,12 +626,12 @@ export const useGameLoop = () => {
 
     const executeCardSwap = (selectedIndices: number[]) => {
         if (selectedIndices.length === 0) {
-            setMessage("SELECT CARDS!");
+            setMessage(t.COMBAT.SELECT_CARDS);
             triggerScreenEffect('shake-small');
             return;
         }
         if (selectedIndices.length > 2) {
-            setMessage("MAXIMUM 2 CARDS CAN BE SWAPPED!");
+            setMessage(t.COMBAT.MAX_SWAP);
             triggerScreenEffect('shake-small');
             return;
         }
@@ -624,9 +640,9 @@ export const useGameLoop = () => {
         if ((p.drawsRemaining ?? 0) > 0) {
             swapCards(selectedIndices);
             useGameStore.getState().setDrawsRemaining((p.drawsRemaining ?? 0) - 1);
-            setMessage("CARDS SWAPPED!");
+            setMessage(t.COMBAT.CARDS_SWAPPED);
         } else {
-            setMessage("NO SWAPS REMAINING!");
+            setMessage(t.COMBAT.NO_SWAPS);
             triggerScreenEffect('shake-small');
         }
     };
@@ -657,7 +673,9 @@ export const useGameLoop = () => {
         // 2. Victory State & Sound
         setGameState(GameState.VICTORY);
         const bonusPercent = Math.floor(config.stage6MaxHpBonus * 100);
-        const victoryMsg = (store.chapterNum === '1' && stageNum === 6) ? `VICTORY! MAX HP +${bonusPercent}% BONUS!` : "VICTORY!";
+        const victoryMsg = (store.chapterNum === '1' && stageNum === 6)
+            ? t.COMBAT.STAGE6_BONUS.replace('{percent}', bonusPercent.toString())
+            : t.COMBAT.VICTORY;
         setMessage(victoryMsg);
         AudioManager.playSFX('/assets/audio/stages/victory/victory.mp3');
 
@@ -706,7 +724,7 @@ export const useGameLoop = () => {
 
         // 1. 상태 정리
         setGameState(GameState.GAMEOVER);
-        setMessage("DEFEAT...");
+        setMessage(t.COMBAT.DEFEAT);
         AudioManager.playSFX('/assets/audio/stages/defeat/defeat.mp3');
         store.clearPlayerConditions();
 
@@ -720,7 +738,7 @@ export const useGameLoop = () => {
                 initGame(store.chapterNum, 7);
                 setGameState(GameState.BATTLE);
                 setPlayerHp(restoredHp);
-                setMessage("PROCEEDING TO STAGE 7...");
+                setMessage(t.COMBAT.PROCEED_STAGE7);
                 startInitialDraw();
             });
         } else {

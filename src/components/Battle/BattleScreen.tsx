@@ -9,6 +9,7 @@ import { BlockButton } from '../BlockButton';
 import { useGameStore } from '../../state/gameStore';
 import { GameState } from '../../constants/gameConfig';
 import { TutorialOverlay } from '../Tutorial/TutorialOverlay';
+import { TRANSLATIONS } from '../../constants/translations';
 
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
 
@@ -18,7 +19,8 @@ export const BattleScreen: React.FC = () => {
         executePlayerAttack, executeCardSwap, startInitialDraw
     } = useGameLoop();
     const store = useGameStore();
-    const { playerHand, gamePhase, isTutorial, tutorialStep, setTutorialStep, stageNum, chapterNum } = store;
+    const { playerHand, gamePhase, isTutorial, tutorialStep, setTutorialStep, stageNum, chapterNum, language } = store;
+    const t = TRANSLATIONS[language];
 
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
 
@@ -74,7 +76,7 @@ export const BattleScreen: React.FC = () => {
 
         if (isTutorial) {
             if (tutorialStep === 13) {
-                store.setMessage("카드를 최대 두 장 까지 선택 후, SWAP 버튼을 눌러 새로운 카드로 교환하세요");
+                store.setMessage(t.COMBAT.SWAP_GUIDE);
                 return;
             }
             if (tutorialStep === 5) {
@@ -84,7 +86,7 @@ export const BattleScreen: React.FC = () => {
                 const isPair = ranksMatch || (selected.length === 2 && hasJoker);
 
                 if (!isPair) {
-                    store.setMessage("ONE PAIR를 구성하세요.");
+                    store.setMessage(t.COMBAT.ONE_PAIR_REQ);
                     return;
                 }
                 setTutorialStep(6);
@@ -112,12 +114,12 @@ export const BattleScreen: React.FC = () => {
         if (isTutorial) {
             // Block SWAP only in early fixed tutorial steps (0 to 5)
             if (tutorialStep >= 0 && tutorialStep <= 5) {
-                store.setMessage("ONE PAIR를 구성하세요.");
+                store.setMessage(t.COMBAT.ONE_PAIR_REQ);
                 return;
             }
             if (tutorialStep === 13) {
                 if (selectedCards.length === 0) {
-                    store.setMessage("교환할 카드를 선택하세요.");
+                    store.setMessage(t.COMBAT.SELECT_SWAP_CARDS);
                     return;
                 }
                 executeCardSwap(selectedCards);
@@ -132,7 +134,7 @@ export const BattleScreen: React.FC = () => {
     const handleSaveGame = (slot: number) => {
         store.saveGame(slot);
         setActiveMenu('NONE');
-        store.setMessage("GAME SAVED!");
+        store.setMessage(t.UI.SAVE_SUCCESS);
     };
 
     const handleLoadGame = (slot: number) => {
@@ -278,31 +280,31 @@ export const BattleScreen: React.FC = () => {
                 ))}
 
                 {/* Victory / Defeat Overlay */}
-                {message === 'VICTORY!' && (
+                {message === t.COMBAT.VICTORY && (
                     <div style={{
                         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                         color: '#f1c40f', fontSize: '5rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
                         textShadow: '0 0 20px #f39c12, 4px 4px 0 #000',
                         zIndex: 1000, textAlign: 'center'
                     }}>
-                        VICTORY!<br />
-                        <span style={{ fontSize: '3rem' }}>CLEARED CHAPTER {store.chapterNum}_STAGE {store.stageNum}!</span>
+                        {t.COMBAT.VICTORY}<br />
+                        <span style={{ fontSize: '3rem' }}>{t.COMBAT.CLEARED_INFO.replace('{chapter}', store.chapterNum).replace('{stage}', store.stageNum.toString())}</span>
                     </div>
                 )}
 
-                {message === 'DEFEAT...' && (
+                {message === t.COMBAT.DEFEAT && (
                     <div style={{
                         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                         color: '#c0392b', fontSize: '6rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
                         textShadow: '0 0 20px #e74c3c, 4px 4px 0 #000',
                         zIndex: 1000, textAlign: 'center'
                     }}>
-                        DEFEAT...
+                        {t.COMBAT.DEFEAT}
                     </div>
                 )}
 
                 {/* Generic Toast Area */}
-                {message && message !== 'VICTORY!' && message !== 'DEFEAT...' && (
+                {message && message !== t.COMBAT.VICTORY && message !== t.COMBAT.DEFEAT && (
                     <div style={{
                         position: 'absolute',
                         top: '40%', left: '50%',
@@ -330,7 +332,7 @@ export const BattleScreen: React.FC = () => {
                         pointerEvents: 'auto', alignItems: 'center'
                     }}>
                         <BlockButton
-                            text="BACK TO MAIN PAGE"
+                            text={t.UI.BACK_TO_MAIN}
                             onClick={handleQuit}
                             width="300px"
                         />
@@ -387,7 +389,7 @@ export const BattleScreen: React.FC = () => {
 
             {activeMenu === 'CONFIRM_QUIT' && (
                 <ConfirmationPopup
-                    message="DO YOU WANT TO GO BACK TO MAIN PAGE?"
+                    message={t.UI.QUIT_CONFIRM}
                     onYes={handleQuit}
                     onNo={() => setActiveMenu('PAUSE')}
                 />

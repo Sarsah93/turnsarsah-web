@@ -5,6 +5,7 @@ import { Card as CardComponent } from './Card';
 import { Card } from '../../types/Card';
 import { calculatePlayerDamage } from '../../logic/damageCalculation';
 import { BlockButton } from '../BlockButton';
+import { TRANSLATIONS } from '../../constants/translations';
 import '../styles/CardHand.css';
 
 interface CardHandProps {
@@ -36,8 +37,11 @@ export const CardHand: React.FC<CardHandProps> = ({
     bannedHand,
     blindIndices,
     tutorialStep,
-    tutorialHighlights
+    tutorialHighlights,
+    language
   } = useGameStore();
+
+  const t = TRANSLATIONS[language];
 
   // Track if gathering animation has started (for two-phase animation)
   const [gatheringStarted, setGatheringStarted] = useState(false);
@@ -79,7 +83,7 @@ export const CardHand: React.FC<CardHandProps> = ({
     const hasWild = cardsToCalculate.some(card => card.isJoker);
 
     if (selectedCards.length === 1 && hasWild) {
-      return `(WILD)`;
+      return t.UI.WILD;
     }
 
     const result = calculatePlayerDamage(
@@ -93,13 +97,14 @@ export const CardHand: React.FC<CardHandProps> = ({
     const damageLabel = hasBlind ? '???' : Math.floor(result.baseDamage);
     const handTypeLabel = result.handType;
     const isBanned = result.baseDamage === 0 && handTypeLabel !== 'High Card';
+    const wildSuffix = hasWild ? t.UI.WILD : '';
 
     if (isBanned) {
-      return `BANNED: ${handTypeLabel}${hasWild ? ' (WILD)' : ''}`;
+      return `${t.COMBAT.BANNED}: ${handTypeLabel}${wildSuffix}`;
     }
 
-    return `DAMAGE: ${damageLabel} ("${handTypeLabel}")${hasWild ? ' (WILD)' : ''}`;
-  }, [selectedCards, cards, player.conditions, bannedRanks, bannedSuit, bannedHand, blindIndices]);
+    return `${t.COMBAT.DAMAGE}: ${damageLabel} ("${handTypeLabel}")${wildSuffix}`;
+  }, [selectedCards, cards, player.conditions, bannedRanks, bannedSuit, bannedHand, blindIndices, t]);
 
   const handleCardClick = (index: number) => {
     if (!isInteracting || disabled || !cards[index] || isProcessing) return;
@@ -110,7 +115,7 @@ export const CardHand: React.FC<CardHandProps> = ({
     if (!isInteracting || disabled) return;
 
     if (selectedCards.length === 0) {
-      useGameStore.getState().setMessage("SELECT CARDS!");
+      useGameStore.getState().setMessage(t.COMBAT.SELECT_CARDS);
       return;
     }
 
@@ -123,18 +128,18 @@ export const CardHand: React.FC<CardHandProps> = ({
     if (!isInteracting || disabled) return;
 
     if (selectedCards.length === 0) {
-      useGameStore.getState().setMessage("SELECT CARDS TO SWAP!");
+      useGameStore.getState().setMessage(t.COMBAT.SELECT_SWAP_CARDS);
       return;
     }
 
     const p = useGameStore.getState().player;
     if ((p.drawsRemaining ?? 0) <= 0) {
-      useGameStore.getState().setMessage("NO SWAPS REMAINING!");
+      useGameStore.getState().setMessage(t.COMBAT.NO_SWAPS);
       return;
     }
 
     if (selectedCards.length > 2) {
-      useGameStore.getState().setMessage("MAXIMUM 2 CARDS CAN BE SWAPPED!");
+      useGameStore.getState().setMessage(t.COMBAT.MAX_SWAP);
       return;
     }
 
@@ -155,7 +160,7 @@ export const CardHand: React.FC<CardHandProps> = ({
       <div className="action-buttons">
         <div className="attack-button-wrapper">
           <BlockButton
-            text="ATTACK"
+            text={t.UI.ATTACK}
             onClick={handleAttack}
             width="180px"
             disabled={!isInteracting}
@@ -163,7 +168,7 @@ export const CardHand: React.FC<CardHandProps> = ({
         </div>
         <div className="draw-button-wrapper">
           <BlockButton
-            text={`SWAP (${player.drawsRemaining ?? 0})`}
+            text={`${t.UI.SWAP} (${player.drawsRemaining ?? 0})`}
             onClick={handleSwap}
             width="180px"
             disabled={!isInteracting || (player.drawsRemaining ?? 0) <= 0}
@@ -333,7 +338,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                   {isInteracting && tutorialHighlights && tutorialHighlights.includes(idx) && (
                     <div className="tutorial-cue-container">
                       <div className="tutorial-text">
-                        {Math.abs(tutorialStep) === 7 ? 'JOKER' : [15, 16, 17].includes(Math.abs(tutorialStep)) ? 'BLINDED !' : 'CLICK!'}
+                        {Math.abs(tutorialStep) === 7 ? t.UI.JOKER_CUE : [15, 16, 17].includes(Math.abs(tutorialStep)) ? t.UI.BLINDED_CUE : t.UI.CLICK_CUE}
                       </div>
                       <div className="tutorial-arrow" />
                     </div>
