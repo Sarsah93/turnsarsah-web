@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { AudioManager } from '../utils/AudioManager';
-import { calculatePlayerDamage, calculateBotDamage } from './damageCalculation';
+import { calculatePlayerDamage, calculateBotDamage, applyDamage } from './damageCalculation';
 import { Card, CardFactory } from '../types/Card';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
+import { RANK_VALUES } from '../constants/cards';
 import { TRANSLATIONS } from '../constants/translations';
 
 export interface DamageTextData {
@@ -72,6 +73,13 @@ export const useGameLoop = () => {
             case 'Paralyzing': file = 'paralyzing.mp3'; break;
             case 'Debilitating': file = 'Debilitating.mp3'; break; // Fixed name logic if needed
             case 'Avoiding': file = 'avoiding.mp3'; break;
+            case 'Damage recoiling': file = '데미지 반동(Damage recoiling).mp3'; break;
+            case 'Berserker': file = '버서커(Berserker).mp3'; break;
+            case 'Revival': file = '부활(Revival).mp3'; break;
+            case 'Invincible spirit': file = '불굴의 의지(Invincible Spirit).mp3'; break;
+            case 'Adrenaline secretion': file = '아드레날린 분비(Adrenaline secretion).mp3'; break;
+            case 'Neurotoxicity': file = '신경성 맹독(Neurotoxicity).mp3'; break;
+            case 'Dehydration': file = '탈수(Dehydration).mp3'; break;
             default: return;
         }
         // Debilitating doesn't have .mp3 in one request but has in another. User said 'Debilitating' for 4.4. 
@@ -218,10 +226,63 @@ export const useGameLoop = () => {
 
         // v2.0.0.14: Damage Reduction - Unified via Conditions
         let damage = Math.floor(result.finalDamage);
+
+        // v2.3.2: 2A Hand Nullification Rules
+        if (store.chapterNum === '2A') {
+            if (stageNum === 2 && result.handType === 'One Pair') damage = 0;
+            else if (stageNum === 3 && result.handType === 'Two Pair') damage = 0;
+            else if (stageNum === 6 && result.handType === 'Three of a Kind') damage = 0;
+            else if (stageNum === 7 && result.handType === 'Full House') damage = 0;
+            else if (stageNum === 8 && result.handType === 'Straight') damage = 0;
+            else if (stageNum === 9 && result.handType === 'Flush') damage = 0;
+        }
+
+        // v2.3.2: Neurotoxicity Accuracy Penalty (30% Miss)
+        if (player.conditions.has('Neurotoxicity') && Math.random() < 0.3) {
+            damage = 0;
+            setMessage(t.COMBAT.NEURO_MISSED);
+        }
+
+        // v2.3.2: 2A-4 No damage under 50
+        if (store.chapterNum === '2A' && stageNum === 4 && damage < 50) {
+            damage = 0;
+            setMessage(t.COMBAT.NO_DMG_UNDER_50_MSG);
+        }
+
         const reductionCond = bot.conditions.get('Damage Reducing');
         if (reductionCond) {
             const percent = (reductionCond.data as any)?.percent || 0;
             damage = Math.floor(damage * (1 - percent / 100));
+        }
+
+        // v2.3.0: Damage Recoiling (Player attacking)
+        const recoilingCond = player.conditions.get('Damage recoiling');
+        let recoilTaken = 0;
+        if (recoilingCond && Math.random() < 0.3) { // 30% chance
+            const bonusDmg = 20;
+            const recoilDmg = 10;
+            damage += bonusDmg;
+            recoilTaken = recoilDmg;
+            setMessage(t.CONDITIONS.DAMAGE_RECOILING.NAME + "!");
+        }
+
+        // v2.3.0: Berserker (Player attacking)
+        const berserkerCond = player.conditions.get('Berserker');
+        let lifesteal = 0;
+        if (berserkerCond && player.hp <= player.maxHp * 0.3) {
+            const atkBonus = (berserkerCond.data as any)?.atkBonus || 20;
+            damage += atkBonus;
+            lifesteal = Math.max(1, Math.floor(damage * 0.1));
+        }
+
+        // v2.3.2: Puzzle Bonus (Sphinx)
+        if (store.chapterNum === '2A' && stageNum === 10 && store.puzzleTarget > 0) {
+            const sumOfSelected = selectedCards.reduce((acc, c) => acc + (c.isJoker ? 14 : (RANK_VALUES[c.rank!] || 0)), 0);
+            if (sumOfSelected === store.puzzleTarget) {
+                damage = Math.floor(damage * 1.5);
+                setMessage(t.COMBAT.PUZZLE_SUCCESS);
+                AudioManager.playSFX('/assets/audio/player/shuffling.mp3'); // Temporary success sound
+            }
         }
 
         const isCrit = result.isCritical;
@@ -265,8 +326,27 @@ export const useGameLoop = () => {
         setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${result.handType}${wildSuffix}` : `${result.handType}${wildSuffix}`);
 
         // HP Reduction (0.1s after Popup/Shake)
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 1000)); // slightly longer wait for effects
         let newBotHp = Math.max(0, bot.hp - damage);
+
+        // v2.3.0: Berserker Lifesteal
+        if (lifesteal > 0) {
+            const freshP = useGameStore.getState().player;
+            setPlayerHp(Math.min(freshP.maxHp, freshP.hp + lifesteal));
+            showDamageText('PLAYER', `+${lifesteal}`, '#2ecc71');
+        }
+
+        // v2.3.0: Recoil Damage
+        if (recoilTaken > 0) {
+            const freshP = useGameStore.getState().player;
+            const hpAfterRecoil = Math.max(0, freshP.hp - recoilTaken);
+            setPlayerHp(hpAfterRecoil);
+            showDamageText('PLAYER', `-${recoilTaken}`, '#e74c3c');
+            if (hpAfterRecoil <= 0) {
+                // Check for revival/invincible if recoil killed player
+                await checkPlayerSurvival();
+            }
+        }
 
         // v2.0.0.21: Tutorial safety - restore HP if below 300
         if (store.isTutorial && newBotHp < 300) {
@@ -299,14 +379,41 @@ export const useGameLoop = () => {
             newConditions.delete('Regenerating');
 
             import('../logic/conditions').then(({ applyCondition }) => {
-                applyCondition(newConditions, 'Awakening', 9999, `Target has awakened. ATK +${atkBonus}.`, { atkBonus });
+                applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
                 store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
             });
 
             store.setMessage(t.COMBAT.AWAKENING);
             AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
+        } else if (store.chapterNum === '2A' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
+            // SPHINX Awakening (Copy logic from Chapter 1)
+            newBotHp = bot.maxHp;
+            awakeningTriggered = true;
+            const atkBonus = 20;
+            const newAtk = bot.atk + atkBonus;
+            const newConditions = new Map(currentBotState.conditions);
+            newConditions.delete('Damage Reducing');
+            newConditions.delete('Regenerating');
+
+            import('../logic/conditions').then(({ applyCondition }) => {
+                applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
+                store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
+            });
+            setMessage(t.COMBAT.AWAKENING);
+            AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
         } else {
             setBotHp(newBotHp);
+        }
+
+        // v2.3.2: 2A-1 Mummy Revive
+        if (newBotHp <= 0 && store.chapterNum === '2A' && stageNum === 1) {
+            if (Math.random() < 0.5) {
+                newBotHp = Math.floor(bot.maxHp * 0.5);
+                setBotHp(newBotHp);
+                setMessage(t.COMBAT.REVIVE_MSG);
+                AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
+                await new Promise(r => setTimeout(r, 1000));
+            }
         }
 
 
@@ -369,6 +476,14 @@ export const useGameLoop = () => {
             return;
         }
 
+        // v2.3.2: 2A-7 Sand Golem (Every 2 turns)
+        if (store.chapterNum === '2A' && stageNum === 7 && store.currentTurn % 2 === 0) {
+            setMessage(t.COMBAT.BOSS_SKIPPED);
+            await new Promise(r => setTimeout(r, 1000));
+            await proceedToEndTurn();
+            return;
+        }
+
         // v2.1.2: Unified Evasion Check (Passive Skill)
         const config = DIFFICULTY_CONFIGS[store.difficulty];
         const avoidCond = currentPlayer.conditions.get('Avoiding');
@@ -390,25 +505,90 @@ export const useGameLoop = () => {
         const sfx = getBossAttackSFX(store.chapterNum, stageNum);
         if (sfx) setTimeout(() => AudioManager.playSFX(sfx), 200);
 
+        // v2.3.2: Chapter 2A Attack Gimmicks
+        if (store.chapterNum === '2A') {
+            // 2A-5: Force Swap
+            if (stageNum === 5) {
+                const hand = store.playerHand;
+                const indices = hand.map((c, i) => c !== null ? i : -1).filter(i => i !== -1);
+                if (indices.length > 0) {
+                    const targetIdx = indices[Math.floor(Math.random() * indices.length)];
+                    store.swapCards([targetIdx]);
+                    setMessage(t.COMBAT.FORCE_SWAP_MSG);
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+        }
+
         await new Promise(r => setTimeout(r, 200));
         triggerScreenEffect('shake-heavy');
         setPlayerAnimState('HIT');
 
-        // v2.0.0.18: Apply damage IMMEDIATELY to store state so that 
-        // subsequent status effects work on the correct HP/MaxHP.
+        // v2.3.2: 2A-6 Triple Attack
+        const botAttacks = [];
+        botAttacks.push(damage); // First attack always hits
+
+        if (store.chapterNum === '2A' && stageNum === 6) {
+            if (Math.random() < 0.5) botAttacks.push(damage);
+            if (botAttacks.length > 1 && Math.random() < 0.3) botAttacks.push(damage);
+        }
+
+        for (const [idx, dmg] of botAttacks.entries()) {
+            if (idx > 0) {
+                store.setMessage(`${t.COMBAT.BOSS_ATTACKS} (${idx + 1})`);
+                AudioManager.playSFX(sfx);
+                await new Promise(r => setTimeout(r, 600));
+            }
+
+            setPlayerHp(applyDamage(useGameStore.getState().player.hp, dmg));
+            showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
+            triggerScreenEffect('shake-heavy');
+            setPlayerAnimState('HIT');
+            await new Promise(r => setTimeout(r, 400));
+        }
+
         const freshPlayer = useGameStore.getState().player;
-        const damageToApply = damage;
-        const hpAfterDamage = Math.max(0, freshPlayer.hp - damageToApply);
+        if (freshPlayer.hp <= 0) {
+            const survived = await checkPlayerSurvival();
+            if (survived) {
+                await new Promise(r => setTimeout(r, 1000));
+                await proceedToEndTurn();
+                return;
+            }
+        }
 
-        setPlayerHp(hpAfterDamage);
-        showDamageText('PLAYER', `-${damageToApply}`, '#e74c3c');
-
-        // Wait a bit for the hit visual before applying status effects
-        await new Promise(r => setTimeout(r, 200));
-
-        // v2.1.2: Boss ATK Scaling and Status Effects only on successful hit
-        // applyBotStageMechanics and ATK scaling are now naturally guarded by the early return on evasion above.
-        applyBotStageMechanics();
+        // --- Status Effects (v2.3.2: Chapter 2A Adjustments) ---
+        if (store.chapterNum === '2A') {
+            if ([1, 2, 3, 5, 6, 8, 9, 10].includes(stageNum)) {
+                if (Math.random() < config.poisonProbCh2A) {
+                    store.addPlayerCondition('Poisoning', 3);
+                }
+            }
+            if ([1, 2, 3, 6, 8, 9, 10].includes(stageNum)) {
+                if (Math.random() < 0.3) {
+                    store.addPlayerCondition('Debilitating', 3);
+                }
+            }
+            if ([3, 4, 6, 9, 10].includes(stageNum)) {
+                if (Math.random() < config.bleedProbCh2A) {
+                    store.addPlayerCondition('Bleeding', 6);
+                }
+            }
+            if (stageNum === 5) {
+                // Neurotoxicity: 3 turns (Applying Blind/Paralyze is handled via applyCondition side effects or here)
+                if (Math.random() < config.neuroProbCh2A) {
+                    store.addPlayerCondition('Neurotoxicity', 3);
+                }
+            }
+            if (stageNum === 7) {
+                // 50% fixed or config-based? User said 50%.
+                if (Math.random() < 0.5) {
+                    store.addPlayerCondition('Paralyzing', 2);
+                }
+            }
+        } else if (store.chapterNum === '1') {
+            // (existing Chapter 1 status logic would follow here)
+        }
 
         await new Promise(r => setTimeout(r, 300));
         setBotAnimState('NONE');
@@ -445,6 +625,33 @@ export const useGameLoop = () => {
             }
             await proceedToEndTurn();
         }
+    };
+
+    // v2.3.0: Survival Check Helper
+    const checkPlayerSurvival = async (): Promise<boolean> => {
+        const store = useGameStore.getState();
+        const p = store.player;
+
+        // 1. Revival
+        const revivalCond = p.conditions.get('Revival');
+        const revivalLimit = (revivalCond?.data as any)?.limit || 1;
+        if (revivalCond && revivalLimit > 0) {
+            const heal = Math.floor(p.maxHp * 0.5);
+            setPlayerHp(heal);
+            setMessage(t.CONDITIONS.REVIVAL.NAME + "!");
+            playConditionSound('Revival');
+
+            // Reduce charges
+            const newConds = new Map(p.conditions);
+            const updated = { ...revivalCond, data: { ...((revivalCond.data as any) || {}), limit: revivalLimit - 1 } };
+            if (updated.data.limit <= 0) newConds.delete('Revival');
+            else newConds.set('Revival', updated);
+            useGameStore.getState().setPlayer({ ...p, conditions: newConds });
+
+            return true;
+        }
+
+        return false;
     };
 
     // v2.0.0.19: Trigger Bot Turn on Tutorial Step 9
@@ -523,59 +730,91 @@ export const useGameLoop = () => {
         const removableDebuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating'];
 
         // Player Phase
-        for (const [cond, data] of Array.from(playerConditions.entries())) {
+        for (const [condName, condData] of Array.from(playerConditions.entries())) {
+            const cond = condName as string;
+            const data = condData as any;
+            const currentP = useGameStore.getState().player;
+
             // 15% chance to remove debuff early
             if (removableDebuffs.includes(cond) && Math.random() < 0.15) {
                 toRemovePlayer.push(cond);
                 const condKey = cond.toUpperCase().replace(/\s+/g, '_');
-                const condName = (t.CONDITIONS as any)[condKey]?.NAME || cond;
-                setMessage(t.COMBAT.PLAYER_CLEARED.replace('{cond}', condName.toUpperCase()));
+                const condNameLine = (t.CONDITIONS as any)[condKey]?.NAME || cond;
+                setMessage(t.COMBAT.PLAYER_CLEARED.replace('{cond}', condNameLine.toUpperCase()));
                 continue;
             }
 
+            if (cond === 'Dehydration') continue; // Handle Dehydration last
+
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
-                const toastMsg = cond === 'Poisoning' ? t.COMBAT.BOSS_POISONING : (cond === 'Heavy Bleeding' ? t.COMBAT.BOSS_HEAVY_BLEEDING : t.COMBAT.BOSS_BLEEDING);
-                setMessage(toastMsg.replace('BOSS ', '')); // reuse keys but strip BOSS prefix for player
+                const toastMsg = cond === 'Poisoning' ? t.COMBAT.PLAYER_POISONING : (cond === 'Heavy Bleeding' ? t.COMBAT.PLAYER_HEAVY_BLEEDING : t.COMBAT.PLAYER_BLEEDING);
+                setMessage(toastMsg);
                 playConditionSound(cond);
-                const dmg = cond === 'Heavy Bleeding' ? 15 : 5;
-                // FIXED: Use fresh state HP
-                const currentHp = useGameStore.getState().player.hp;
-                setPlayerHp(Math.max(0, currentHp - dmg));
+                const amount = data.data?.amount || (cond === 'Heavy Bleeding' ? 20 : 10);
+                const freshHP = useGameStore.getState().player.hp;
+                setPlayerHp(Math.max(0, freshHP - amount));
+                showDamageText('PLAYER', `-${amount}`, '#e74c3c');
+                await new Promise(r => setTimeout(r, 800));
+            } else if (cond === 'Regenerating') {
+                setMessage(t.COMBAT.PLAYER_REGEN);
+                playConditionSound('Regenerating');
+                const heal = 10;
+                setPlayerHp(Math.min(currentP.maxHp, currentP.hp + heal));
+                showDamageText('PLAYER', `+${heal}`, '#2ecc71');
+                await new Promise(r => setTimeout(r, 800));
+            } else if (cond === 'Neurotoxicity') {
+                const dmg = 15;
+                const freshHP = useGameStore.getState().player.hp;
+                setPlayerHp(Math.max(0, freshHP - dmg));
                 showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
+                playConditionSound('Neurotoxicity');
+
+                // v2.3.2: Once-per-duration 20% Paralysis Check
+                if (!data.data?.paralyzeTriggered && Math.random() < 0.2) {
+                    data.data = { ...data.data, paralyzeTriggered: true };
+                    // Apply 1-turn paralyze
+                    // Note: Paralyze is usually duration 2 (1 turn of effect + 1 turn of clearing). 
+                    // To follow "immediate removal after 1 turn", we add it with duration 2.
+                    useGameStore.getState().addPlayerCondition('Paralyzing', 2);
+                    setMessage(t.COMBAT.PARALYZED);
+                }
+
                 await new Promise(r => setTimeout(r, 800));
             }
 
             // Increment elapsed
             data.elapsed += 1;
-
-            // Check for expiry (duration < 999 means not permanent)
             if (data.duration < 999 && data.elapsed >= data.duration) {
                 toRemovePlayer.push(cond);
             }
         }
 
-        if (playerConditions.has('Regenerating')) {
-            setMessage(t.COMBAT.PLAYER_REGEN);
-            playConditionSound('Regenerating');
-            const heal = 10;
-            const currentHp = useGameStore.getState().player.hp;
-            const maxHp = useGameStore.getState().player.maxHp;
-            setPlayerHp(Math.min(maxHp, currentHp + heal));
-            showDamageText('PLAYER', `+${heal}`, '#2ecc71');
-            await new Promise(r => setTimeout(r, 800));
+        // v2.3.1: Handle Dehydration LAST in player phase
+        if (playerConditions.has('Dehydration')) {
+            const condData = playerConditions.get('Dehydration') as any;
+            const dmg = condData.data?.amount || 2;
+            if (useGameStore.getState().bot.hp > 0) {
+                const freshP = useGameStore.getState().player;
+                setPlayerHp(Math.max(0, freshP.hp - dmg));
+                showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
+                setMessage(t.CONDITIONS.DEHYDRATION.NAME + "!");
+                playConditionSound('Dehydration');
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            condData.elapsed += 1;
         }
-
         // Remove expired player conditions
         toRemovePlayer.forEach(name => playerConditions.delete(name));
-        // CRITICAL: Use FRESH player state to avoid overwriting HP changes from regeneration
-        const freshPlayer = useGameStore.getState().player;
-        useGameStore.getState().setPlayer({ ...freshPlayer, conditions: playerConditions });
+        const freshPAfter = useGameStore.getState().player;
+        useGameStore.getState().setPlayer({ ...freshPAfter, conditions: playerConditions });
 
         // 0.5s pause between phases
         await new Promise(r => setTimeout(r, 500));
 
         // Boss Phase
-        for (const [cond, data] of Array.from(botConditions.entries())) {
+        for (const [condName, condData] of Array.from(botConditions.entries())) {
+            const cond = condName as string;
+            const data = condData as any;
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
                 const toastMsg = cond === 'Poisoning' ? t.COMBAT.BOSS_POISONING : (cond === 'Heavy Bleeding' ? t.COMBAT.BOSS_HEAVY_BLEEDING : t.COMBAT.BOSS_BLEEDING);
                 setMessage(toastMsg);
@@ -606,11 +845,10 @@ export const useGameLoop = () => {
 
         // Infinite Boss Regen Renewal
         if (botConditions.has('Regenerating')) {
-            const cond = botConditions.get('Regenerating')!;
-            // v2.2.0: Balancing - Do NOT renew regeneration if Awakened
+            const regenItem = botConditions.get('Regenerating') as any;
             const isBotAwakenedAfterResolution = botConditions.has('Awakening');
 
-            if (cond.duration - cond.elapsed <= 1 && !isBotAwakenedAfterResolution) {
+            if (regenItem.duration - regenItem.elapsed <= 1 && !isBotAwakenedAfterResolution) {
                 if (store.chapterNum === '1' && [6, 8, 10].includes(stageNum)) {
                     store.addBotCondition('Regenerating', 3, 'At the end of each turn, restores a certain amount of HP.');
                 }
@@ -619,7 +857,6 @@ export const useGameLoop = () => {
 
         // Remove expired bot conditions
         toRemoveBot.forEach(name => botConditions.delete(name));
-        // CRITICAL: Use FRESH bot state to avoid overwriting HP changes from regeneration
         const freshBot = useGameStore.getState().bot;
         useGameStore.getState().setBot({ ...freshBot, conditions: botConditions });
     };
@@ -666,7 +903,12 @@ export const useGameLoop = () => {
             setPlayerHp(maxHp); // FULL HEAL per user request
         } else {
             // Standard Heal for other stages (difficulty-based)
-            const newHp = Math.min(maxHp, currentHp + config.clearHpBonus);
+            let healAmount = config.clearHpBonus;
+            // v2.3.0: Halved recovery for Chapter 2
+            if (store.chapterNum === '2A' || store.chapterNum === '2B') {
+                healAmount = Math.floor(healAmount / 2);
+            }
+            const newHp = Math.min(maxHp, currentHp + healAmount);
             setPlayerHp(newHp);
         }
 

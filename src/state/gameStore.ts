@@ -8,7 +8,7 @@ import { Deck } from '../logic/Deck';
 import { CHAPTERS } from '../constants/stages';
 import { applyCondition, clearConditions } from '../logic/conditions';
 import { SaveManager } from '../utils/SaveManager';
-import { Language } from '../constants/translations';
+import { Language, TRANSLATIONS } from '../constants/translations';
 
 interface GameStoreState {
   // Game Flow
@@ -136,6 +136,10 @@ interface GameStoreState {
   // Font Size
   fontSize: 'NORMAL' | 'SMALL';
   setFontSize: (size: 'NORMAL' | 'SMALL') => void;
+
+  // v2.3.2: Puzzle Gimmick (Chapter 2A-10)
+  puzzleTarget: number;
+  setPuzzleTarget: (target: number) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -367,6 +371,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }
     return { playerHand: newHand };
   }),
+  // v2.3.2: Puzzle Gimmick
+  puzzleTarget: 0,
+  setPuzzleTarget: (target) => set({ puzzleTarget: target }),
+
   swapCards: (indices) => set((state) => {
     const newHand = [...state.playerHand];
     const newCards = state.deck.draw(indices.length, state.playerHand);
@@ -392,7 +400,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const initialHand = new Array(8).fill(null);
 
       let stage6Hp = state.stage6EntryHp;
-      if (stageId === 6) {
+      if (chapterId === '1' && stageId === 6) {
         stage6Hp = state.player.hp;
       }
 
@@ -406,6 +414,20 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
         if (damageReduction > 0) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: damageReduction });
+        }
+      } else if (chapterId === '2A') {
+        // Chapter 2A Boss Passives
+        const avoidStages = { 2: 0.10, 3: 0.08, 6: 0.15 };
+        const drStages = { 4: 15, 5: 20, 7: 30, 8: 10, 9: 10, 10: 40 };
+
+        const avoidChance = (avoidStages as any)[stageId];
+        const drPercent = (drStages as any)[stageId];
+
+        if (avoidChance !== undefined) {
+          applyCondition(botConditions, 'Avoiding', 9999, '', { chance: avoidChance });
+        }
+        if (drPercent !== undefined) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: drPercent });
         }
       }
 
@@ -433,11 +455,20 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         playerSwaps = config.swapCount;
       }
 
-      // Player conditions - Avoiding based on difficulty
+      // Player conditions - Chapter-based Passives
       const playerConditions = new Map<string, Condition>();
       if (chapterId === '1' && config.avoidChance > 0) {
         applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance });
+      } else if (chapterId === '2A') {
+        const dehydrationDmg = {
+          [Difficulty.EASY]: 1,
+          [Difficulty.NORMAL]: 2,
+          [Difficulty.HARD]: 3,
+          [Difficulty.HELL]: 4
+        }[state.difficulty] || 2;
+        applyCondition(playerConditions, 'Dehydration', 9999, '', { amount: dehydrationDmg });
       }
+      // Chapter 2B: No Avoiding (Passive from Ch 1 is naturally absent)
 
       return {
         chapterNum: chapterId,
@@ -602,6 +633,31 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       } else {
         blindIndices = []; // Clear for other steps
       }
+    } else if (chapterId === '2A') {
+      // Chapter 2A Stage Rules
+      const t = TRANSLATIONS[get().language];
+      if (stageId === 8) {
+        // BLIND 1
+        const indices = [0, 1, 2, 3, 4, 5, 6, 7];
+        const randIdx = Math.floor(Math.random() * indices.length);
+        blindIndices.push(indices[randIdx]);
+        set({ stage10RuleText: t.RULES.BLIND_1 });
+      } else if (stageId === 9) {
+        // BLIND 1 & BAN 1
+        const indices = [0, 1, 2, 3, 4, 5, 6, 7];
+        const randIdx = Math.floor(Math.random() * indices.length);
+        blindIndices.push(indices[randIdx]);
+
+        const r1 = ranks[Math.floor(Math.random() * ranks.length)];
+        bannedRanks = [r1];
+        set({ stage10RuleText: t.RULES.BLIND_1_BAN_1.replace('{rank}', r1) });
+      } else if (stageId === 10) {
+        // SPHINX PUZZLE
+        const target = Math.floor(Math.random() * (100 - 15 + 1)) + 15;
+        set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_TARGET.replace('{target}', target.toString()) });
+      } else {
+        set({ stage10RuleText: '' });
+      }
     }
 
     set({ bannedRanks, bannedSuit, bannedHand, blindIndices });
@@ -753,8 +809,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       } catch { }
     }
   },
-  initGameWithDifficulty: (chapterId: string, stageId: number, difficulty: Difficulty) => {
-    const config = DIFFICULTY_CONFIGS[difficulty];
+  initGameWithDifficulty: (chapterId: string, stageId: number, difficulty?: Difficulty) => {
+    const diff = difficulty ?? (useGameStore.getState().difficulty as Difficulty);
+    const config = DIFFICULTY_CONFIGS[diff];
     const chapter = CHAPTERS[chapterId];
     const stageConfig = chapter?.stages[stageId];
     if (!stageConfig) return;
@@ -763,23 +820,44 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const bossOverride = config.bossOverrides[chapterId]?.[stageId] || {};
     const bossHp = bossOverride.hp ?? Math.floor(stageConfig.hp * config.hpScale);
     const bossAtk = bossOverride.atk ?? Math.floor(stageConfig.atk * config.atkScale);
-    const bossDamageReduction = bossOverride.damageReduction ?? (stageId === 10 ? 15 : (stageId >= 8 ? 10 : 0));
+
+    // v2.3.2: 2A Passive System
+    let bossDamageReduction = 0;
+    let bossAvoidChance = 0;
+
+    if (chapterId === '2A') {
+      const drStages: Record<number, number> = { 4: 15, 5: 20, 7: 30, 8: 10, 9: 10, 10: 40 };
+      const avoidStages: Record<number, number> = { 2: 10, 3: 8, 6: 15 };
+      bossDamageReduction = drStages[stageId] || 0;
+      bossAvoidChance = (avoidStages[stageId] || 0) / 100;
+    } else {
+      bossDamageReduction = bossOverride.damageReduction ?? (stageId === 10 ? 15 : (stageId >= 8 ? 10 : 0));
+    }
 
     const newDeck = new Deck(config.jokerProbability);
     const initialHand = new Array(8).fill(null);
 
-    // Boss Damage Reduction as Condition
+    // Boss Conditions - Passive Skills
     const botConditions = new Map<string, Condition>();
-    if (chapterId === '1') {
-      if (bossDamageReduction > 0) {
-        applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: bossDamageReduction });
-      }
+    if (bossDamageReduction > 0) {
+      applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: bossDamageReduction });
+    }
+    if (bossAvoidChance > 0) {
+      applyCondition(botConditions, 'Avoiding', 9999, '', { chance: bossAvoidChance });
     }
 
-    // Player conditions - Avoiding based on difficulty
+    // Player conditions - Chapter-based Passives
     const playerConditions = new Map<string, Condition>();
     if (chapterId === '1' && config.avoidChance > 0) {
       applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance });
+    } else if (chapterId === '2A') {
+      const dehydrationDmg = {
+        [Difficulty.EASY]: 1,
+        [Difficulty.NORMAL]: 2,
+        [Difficulty.HARD]: 3,
+        [Difficulty.HELL]: 4
+      }[difficulty as Difficulty] || 2;
+      applyCondition(playerConditions, 'Dehydration', 9999, '', { amount: dehydrationDmg });
     }
 
     set({

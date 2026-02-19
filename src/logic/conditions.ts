@@ -3,7 +3,7 @@
 import { Condition } from '../types/Character';
 
 export interface ConditionEffect {
-  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'POISON_DMG' | 'HEAVY_BLEED' | 'AVOIDED' | 'PARALYZED' | 'DEBILITATING' | 'FRAILTY' | 'CONDITION_APPLIED';
+  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'POISON_DMG' | 'HEAVY_BLEED' | 'AVOIDED' | 'PARALYZED' | 'DEBILITATING' | 'FRAILTY' | 'CONDITION_APPLIED' | 'DEHYDRATION_DMG' | 'NEUROTOXICITY_DMG' | 'ADRENALINE_NULL' | 'RECOIL_DMG' | 'LIFESTEAL';
   amount: number;
   data?: any; // For flexible payload in CONDITION_APPLIED
 }
@@ -22,6 +22,13 @@ export const CONDITION_PRESETS: Record<string, { duration: number }> = {
   'Avoiding': { duration: 9999 },
   'Immune': { duration: 3 },
   'Awakening': { duration: 9999 },
+  'Damage recoiling': { duration: 3 },
+  'Berserker': { duration: 3 },
+  'Revival': { duration: 9999 }, // Charge-based
+  'Invincible spirit': { duration: 9999 }, // Charge-based
+  'Adrenaline secretion': { duration: 3 },
+  'Neurotoxicity': { duration: 3 },
+  'Dehydration': { duration: 9999 },
 };
 
 /**
@@ -79,6 +86,9 @@ export function applyCondition(
     type: name.toUpperCase().replace(/\s+/g, '_') as any
   });
 
+  // Special immediate effects
+  // Neurotoxicity (v2.3.2): Immediate paralyze removed, replaced with once-per-duration turn-start check.
+
   return isNew;
 }
 
@@ -109,6 +119,14 @@ export function processConditionsEndTurn(
       effects.push({ type: 'POISON', amount });
     } else if (name === 'Regenerating') {
       effects.push({ type: 'HEAL', amount: 10 });
+    } else if (name === 'Neurotoxicity') {
+      effects.push({ type: 'NEUROTOXICITY_DMG', amount: 15 });
+    } else if (name === 'Dehydration') {
+      // Dehydration damage is passed as data { amount: N }
+      const dmg = (condition.data as any)?.amount || 0;
+      if (dmg > 0) {
+        effects.push({ type: 'DEHYDRATION_DMG', amount: dmg });
+      }
     }
 
     // 3. 경과 시간

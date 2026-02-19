@@ -11,12 +11,15 @@ import { AudioManager } from './utils/AudioManager';
 import { Game } from './components/Game';
 import { GameOverScreen } from './components/GameOverScreen';
 import { FadeOverlay } from './components/Common/FadeOverlay';
+import { TRANSLATIONS } from './constants/translations';
 
 function App() {
   const gameState = useGameStore((state) => state.gameState);
   const stageNum = useGameStore((state) => state.stageNum);
   const chapterNum = useGameStore((state) => state.chapterNum);
   const fontSize = useGameStore((state) => state.fontSize);
+  const language = useGameStore((state) => state.language);
+  const t = TRANSLATIONS[language];
 
   // Global Font Size Handling
   useEffect(() => {
@@ -78,7 +81,7 @@ function App() {
         store.triggerTransition(() => {
           store.initGame('1', 7);
           store.setPlayerHp(restoredHp);
-          store.setMessage("DEFEAT... PROCEEDING TO STAGE 7");
+          store.setMessage(t.COMBAT.PROCEED_STAGE7);
         });
       } else {
         store.triggerTransition(() => store.setGameState(GameState.MENU));

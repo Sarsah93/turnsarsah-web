@@ -29,16 +29,22 @@ export class TurnEngine {
   private player: Character;
   private bot: Character;
   private stageNum: number;
+  private chapterNum: string;
   private turnCount: number = 0;
 
-  constructor(player: Character, bot: Character, stageNum: number = 1) {
+  constructor(player: Character, bot: Character, stageNum: number = 1, chapterNum: string = '1') {
     this.player = player;
     this.bot = bot;
     this.stageNum = stageNum;
+    this.chapterNum = chapterNum;
   }
 
   public setStageNum(stage: number) {
     this.stageNum = stage;
+  }
+
+  public setChapterNum(chapter: string) {
+    this.chapterNum = chapter;
   }
 
   /**
@@ -256,22 +262,23 @@ export class TurnEngine {
       }
     });
 
-    // 2. Stage-specific end turn logic
+    // 2. Stage-specific end turn logic (Chapter 1 Only Legacy)
+    if (this.chapterNum === '1') {
+      // Stage 6 & 8 & 10: Regeneration
+      if (this.stageNum === 6 && this.bot.hp <= this.bot.maxHp * 0.5) {
+        this.bot.hp = Math.min(this.bot.maxHp, this.bot.hp + 10);
+        effects.push({ type: 'HEAL', amount: 10 }); // Marker for bot heal
+      }
+      if (this.stageNum === 8 || this.stageNum === 10) {
+        // Regeneration every turn (v2.0.0.5 Stage 8/10)
+        this.bot.hp = Math.min(this.bot.maxHp, this.bot.hp + 10);
+        effects.push({ type: 'HEAL', amount: 10 });
+      }
 
-    // Stage 6 & 8 & 10: Regeneration
-    if (this.stageNum === 6 && this.bot.hp <= this.bot.maxHp * 0.5) {
-      this.bot.hp = Math.min(this.bot.maxHp, this.bot.hp + 10);
-      effects.push({ type: 'HEAL', amount: 10 }); // Marker for bot heal
-    }
-    if (this.stageNum === 8 || this.stageNum === 10) {
-      // Regeneration every turn (v2.0.0.5 Stage 8/10)
-      this.bot.hp = Math.min(this.bot.maxHp, this.bot.hp + 10);
-      effects.push({ type: 'HEAL', amount: 10 });
-    }
-
-    // Stage 9: Double ATK each turn
-    if (this.stageNum === 9) {
-      this.bot.atk *= 2;
+      // Stage 9: Double ATK each turn
+      if (this.stageNum === 9) {
+        this.bot.atk *= 2;
+      }
     }
 
     // Stage 10: Special ATK logic

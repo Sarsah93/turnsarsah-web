@@ -27,6 +27,13 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Frailty') filename = 'Debilitating.png';
   if (name === 'Poison') filename = 'Poisoning.png';
   if (name === 'Awakening') filename = 'Awakening.png';
+  if (name === 'Damage recoiling') filename = '데미지 반동(Damage Recoiling).png';
+  if (name === 'Berserker') filename = '버서커(Berserker).png';
+  if (name === 'Revival') filename = '부활(Revival).png';
+  if (name === 'Invincible spirit') filename = '불굴의 의지(Invincible Spirit).png';
+  if (name === 'Adrenaline secretion') filename = '아드레날린 분비(Adrenaline Secretion).png';
+  if (name === 'Neurotoxicity') filename = '신경성 맹독(Neurotoxicity).png';
+  if (name === 'Dehydration') filename = '탈수(Dehydration).png';
 
   const iconPath = `/assets/conditions/${filename}`;
 
@@ -42,10 +49,29 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   } else if (name === 'Avoiding' && condition.data) {
     const chance = Math.floor(((condition.data as any).chance || 0) * 100);
     resolvedDesc = resolvedDesc.replace('{percent}', chance.toString());
+  } else if (name === 'Damage recoiling') {
+    resolvedDesc = resolvedDesc.replace('{chance}', '30').replace('{bonus}', '20').replace('{recoil}', '10');
+  } else if (name === 'Berserker') {
+    resolvedDesc = resolvedDesc.replace('{threshold}', '30').replace('{atkBonus}', '15');
+  } else if (name === 'Revival' && condition.data) {
+    resolvedDesc = resolvedDesc.replace('{count}', ((condition.data as any).limit || 0).toString());
+  } else if (name === 'Invincible spirit' && condition.data) {
+    resolvedDesc = resolvedDesc.replace('{threshold}', '20').replace('{heal}', '50').replace('{count}', ((condition.data as any).limit || 0).toString());
+  } else if (name === 'Adrenaline secretion') {
+    resolvedDesc = resolvedDesc.replace('{limit}', '10');
+  } else if (name === 'Neurotoxicity') {
+    resolvedDesc = resolvedDesc.replace('{percent}', '20').replace('{dmg}', '15');
+  } else if (name === 'Dehydration' && condition.data) {
+    resolvedDesc = resolvedDesc.replace('{dmg}', ((condition.data as any).amount || 0).toString());
   }
 
+  const countConds = ['Revival', 'Invincible spirit'];
+  const isCountBased = countConds.includes(name);
+
   const durationText = condition.duration > 999
-    ? t.UI.PERMANENT
+    ? (isCountBased
+      ? `${(condition.data as any)?.limit || 0} ${(t.UI as any).USES_REMAINING}`
+      : t.UI.PERMANENT)
     : `${condition.duration - condition.elapsed} ${t.UI.TURNS_REMAINING}`;
 
   return (

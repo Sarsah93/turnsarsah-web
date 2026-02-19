@@ -34,18 +34,18 @@
 
 ## 🏜️ 챕터 2A - 사막 (Chapter 2A - Desert)
 
-| 스테이지 | 보스 이름 | 체력 (HP) | 공격력 (ATK) | 주요 규칙 (RULE) |
-| :---: | :--- | :---: | :---: | :---: |
-| **2A-1** | MUMMY | 180 | 20 | NONE |
-| **2A-2** | SAND SNAKE | 200 | 25 | NONE |
-| **2A-3** | CHIMERA SNAKE HUMAN | 200 | 30 | NONE |
-| **2A-4** | SAND NIDDLE LIZARD | 250 | 30 | NONE |
-| **2A-5** | SAND SCORPION | 250 | 20 | NONE |
-| **2A-6** | DESERT VULTURES | 200 | 20 | NONE |
-| **2A-7** | SAND GOLEM | 350 | 35 | NONE |
-| **2A-8** | SAND WYVERN | 400 | 15 | NONE |
-| **2A-9** | SAND DEATHWARM | 400 | 20 | NONE |
-| **2A-10** | SPHINX | 300 | 40 | NONE |
+| 스테이지 | 보스 이름 | 체력 (HP) | 공격력 (ATK) | 부여 상태이상 | 패시브 / 주요 규칙 (RULE) |
+| :---: | :--- | :---: | :---: | :--- | :--- |
+| **2A-1** | MUMMY | 180 | 15 | 독, 쇠약 | **부활(50%)**: HP 0 이하 시 50% 확률로 부활. "RULE: REVIVE_50%" |
+| **2A-2** | SAND SNAKE | 200 | 20 | 독, 쇠약 | **회피(10%)**, **원페어 무효**: One Pair 데미지 0. "RULE: ONE PAIR DMG_0" |
+| **2A-3** | CHIMERA SNAKE HUMAN | 200 | 20 | 출혈, 독, 쇠약 | **회피(8%)**, **투페어 무효**: Two Pair 데미지 0. "RULE: TWO PAIR DMG_0" |
+| **2A-4** | SAND NIDDLE LIZARD | 250 | 20 | 출혈 | **경감(15%)**, **소액 무효**: 50 미만 데미지 무시. "RULE: NO DMG_UNDER 50" |
+| **2A-5** | SAND SCORPION | 250 | 15 | 신경맹독 | **경감(20%)**, **강제교체**: 공격 성공 시 카드 1장 강제 교체. "RULE: FORCE_SWAP" |
+| **2A-6** | DESERT VULTURES | 200 | 15 | 출혈, 독, 쇠약 | **회피(15%)**, **트리플 무효**: Triple 데미지 0, **3연속 공격**(50%, 30%). "RULE: TRIPLE ATTACK" |
+| **2A-7** | SAND GOLEM | 320 | 35 | 마비 | **경감(30%)**, **풀하우스 무효**: Full House 데미지 0, **2턴마다 공격**, **마비(50%)**. "RULE: TWO TIMES_PARALYZE 50%" |
+| **2A-8** | SAND WYVERN | 300 | 20 | 독, 쇠약 | **경감(10%)**, **스트레이트 무효**: Straight 데미지 0, **매턴 1장 시야제한(BLIND)**. "RULE: NO DMG STRAIGHT_BLIND 1" |
+| **2A-9** | SAND DEATHWARM | 360 | 20 | 출혈, 독, 쇠약 | **경감(10%)**, **플러쉬 무효**: Flush 데미지 0, **매턴 1장 BLIND & 1장 BAN**. "RULE: RANDOM_BLIND&BAN 1" |
+| **2A-10** | SPHINX | 330 | 40 | 출혈, 독, 쇠약 | **경감(40%)**, **각성(50% HP)**, **수수께끼(PUZZLE)**: 제시된 숫자(15~100)와 카드 합 일치 시 데미지 +50%. "RULE: PUZZLE" |
 
 ---
 

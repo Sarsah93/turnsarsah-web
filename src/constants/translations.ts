@@ -111,7 +111,7 @@ export const TRANSLATIONS = {
             BOSS_ATTACKS: "보스의 공격!",
             ST_AWAKENING: "보스가 각성 중입니다... 턴 종료.",
             TUTORIAL_RESTORED: "튜토리얼: 보스 체력 회복",
-            PROCEED_STAGE7: "스테이지 7로 이동합니다...",
+            PROCEED_STAGE7: "패배... 스테이지 7로 이동합니다...",
             STAGE6_BONUS: "승리! 최대 HP +{percent}% 보너스!",
             CLEARED_INFO: "챕터 {chapter}_스테이지 {stage} 클리어!",
             BOSS_BLEEDING: "보스 출혈!",
@@ -120,11 +120,19 @@ export const TRANSLATIONS = {
             BOSS_REGENERATING: "보스 재생 중!",
             PLAYER_CLEARED: "{cond} 해제!",
             PLAYER_REGEN: "체력 재생 중!",
+            PLAYER_POISONING: "플레이어 중독 피해!",
+            PLAYER_HEAVY_BLEEDING: "플레이어 과출혈 피해!",
+            PLAYER_BLEEDING: "플레이어 출혈 피해!",
             ONE_PAIR_REQ: "ONE PAIR를 구성하세요.",
             SELECT_SWAP_CARDS: "교환할 카드를 선택하세요.",
             SWAP_GUIDE: "카드를 최대 두 장 까지 선택 후, SWAP 버튼을 눌러 새로운 카드로 교환하세요",
             DAMAGE: "데미지",
-            BANNED: "금지됨"
+            BANNED: "금지됨",
+            REVIVE_MSG: "룰: 부활!",
+            FORCE_SWAP_MSG: "룰: 강제 교체!",
+            NO_DMG_UNDER_50_MSG: "룰: 50 미만 데미지 무효",
+            NEURO_MISSED: "공격 실패! (신경성 맹독)",
+            PUZZLE_SUCCESS: "퍼즐 성공! 데미지 +50%!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -166,6 +174,34 @@ export const TRANSLATIONS = {
             AWAKENING: {
                 NAME: "각성",
                 DESC: "보스가 각성하여 공격력이 상승했습니다."
+            },
+            DAMAGE_RECOILING: {
+                NAME: "데미지 반동",
+                DESC: "타격 시 {chance}% 확률로 발동. 피해량 +{bonus} 및 본인에게 +{recoil} 반동 피해. (최대 3턴)"
+            },
+            BERSERKER: {
+                NAME: "버서커",
+                DESC: "HP {threshold}% 미만 시 발동. 공격력 +{atkBonus} 및 피해량의 10% 회복. (최대 3턴)"
+            },
+            REVIVAL: {
+                NAME: "부활",
+                DESC: "HP 0 이하 시 50% 체력으로 부활. (잔여 횟수: {count}회)"
+            },
+            INVINCIBLE_SPIRIT: {
+                NAME: "불굴의 의지",
+                DESC: "HP {threshold}% 이하 시 조건부 발동. 스테이지 당 1회 체력 {heal} 회복. (잔여 횟수: {count}회)"
+            },
+            ADRENALINE_SECRETION: {
+                NAME: "아드레날린 분비",
+                DESC: "받는 피해가 {limit} 이하일 때 피해량을 0으로 무효화. (최대 3턴)"
+            },
+            NEUROTOXICITY: {
+                NAME: "신경성 맹독",
+                DESC: "매 턴 15의 고정 독 피해를 입으며, 공격 시 30% 확률로 빗나갑니다. 지속 중 매 턴 시작 시 20% 확률로 1턴 마비가 발생합니다 (최대 1회)."
+            },
+            DEHYDRATION: {
+                NAME: "탈수",
+                DESC: "턴 종료 후 HP가 {dmg} 감소. 보스 클리어 시 다음 스테이지로 이월."
             }
         },
         RULES: {
@@ -178,7 +214,10 @@ export const TRANSLATIONS = {
             ATK_UP: "공격력 상승 (매 턴 +10)",
             REGEN_REDUCE: "재생 + 경감 {percent}%",
             ATK_GROWTH: "공격 시 공격력 {type}",
-            RULE_HINT: "규칙: "
+            RULE_HINT: "규칙: ",
+            BLIND_1: "룰: 카드 1장 블라인드",
+            BLIND_1_BAN_1: "룰: 블라인드 1 + {rank} 금지",
+            PUZZLE_TARGET: "룰: 수수께끼 {target}"
         },
         UI: {
             BACK_TO_MAIN: "메인 화면으로",
@@ -198,6 +237,7 @@ export const TRANSLATIONS = {
             CHAPTER_NUM: "챕터",
             PERMANENT: "영구 지속",
             TURNS_REMAINING: "턴 남음",
+            USES_REMAINING: "회 남음",
             WILD: " (조커)",
             JOKER_CUE: "조커",
             BLINDED_CUE: "블라인드!",
@@ -332,7 +372,7 @@ export const TRANSLATIONS = {
             BOSS_ATTACKS: "BOSS ATTACKS!",
             ST_AWAKENING: "BOSS IS AWAKENING... TURN SKIPPED.",
             TUTORIAL_RESTORED: "TUTORIAL: BOSS HP RESTORED",
-            PROCEED_STAGE7: "PROCEEDING TO STAGE 7...",
+            PROCEED_STAGE7: "DEFEAT... PROCEEDING TO STAGE 7...",
             STAGE6_BONUS: "VICTORY! MAX HP +{percent}% BONUS!",
             CLEARED_INFO: "CLEARED CHAPTER {chapter}_STAGE {stage}!",
             BOSS_BLEEDING: "BOSS BLEEDING!",
@@ -341,11 +381,19 @@ export const TRANSLATIONS = {
             BOSS_REGENERATING: "BOSS REGENERATING!",
             PLAYER_CLEARED: "{cond} CLEARED!",
             PLAYER_REGEN: "REGENERATING!",
+            PLAYER_POISONING: "PLAYER POISON DAMAGE!",
+            PLAYER_HEAVY_BLEEDING: "PLAYER HEAVY BLEED DAMAGE!",
+            PLAYER_BLEEDING: "PLAYER BLEED DAMAGE!",
             ONE_PAIR_REQ: "SELECT A ONE PAIR.",
             SELECT_SWAP_CARDS: "SELECT CARDS TO SWAP.",
             SWAP_GUIDE: "SELECT UP TO 2 CARDS AND PRESS SWAP TO REFRESH THEM.",
             DAMAGE: "DAMAGE",
-            BANNED: "BANNED"
+            BANNED: "BANNED",
+            REVIVE_MSG: "RULE: REVIVE!",
+            FORCE_SWAP_MSG: "RULE: FORCE SWAP!",
+            NO_DMG_UNDER_50_MSG: "RULE: NO DMG UNDER 50",
+            NEURO_MISSED: "MISSED! (NEUROTOXICITY)",
+            PUZZLE_SUCCESS: "PUZZLE SUCCESS! DMG +50%!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -387,6 +435,34 @@ export const TRANSLATIONS = {
             AWAKENING: {
                 NAME: "Awakened",
                 DESC: "The target has awakened."
+            },
+            DAMAGE_RECOILING: {
+                NAME: "Damage Recoiling",
+                DESC: "{chance}% chance on hit to deal +{bonus} dmg and take +{recoil} recoil dmg. (Max 3 turns)"
+            },
+            BERSERKER: {
+                NAME: "Berserker",
+                DESC: "Triggers below {threshold}% HP. ATK +{atkBonus} and heals 10% of damage dealt. (Max 3 turns)"
+            },
+            REVIVAL: {
+                NAME: "Revival",
+                DESC: "Revives with 50% HP when HP reaches 0. (Remaining: {count})"
+            },
+            INVINCIBLE_SPIRIT: {
+                NAME: "Invincible Spirit",
+                DESC: "Conditional heal of {heal} when HP is below {threshold}%. (Remaining: {count})"
+            },
+            ADRENALINE_SECRETION: {
+                NAME: "Adrenaline Secretion",
+                DESC: "Nullifies incoming damage if it is {limit} or less. (Max 3 turns)"
+            },
+            NEUROTOXICITY: {
+                NAME: "Neurotoxicity",
+                DESC: "Takes 15 fixed damage per turn and has a 30% miss chance. Each turn start, has a 20% chance to cause 1-turn paralysis (max once per application)."
+            },
+            DEHYDRATION: {
+                NAME: "Dehydration",
+                DESC: "Loses {dmg} HP at the end of each turn. Delayed if boss is cleared."
             }
         },
         RULES: {
@@ -399,7 +475,10 @@ export const TRANSLATIONS = {
             ATK_UP: "ATK UP (+10 every turn)",
             REGEN_REDUCE: "REGEN+REDUCE {percent}%",
             ATK_GROWTH: "ATK {type} on hit",
-            RULE_HINT: "RULE: "
+            RULE_HINT: "RULE: ",
+            BLIND_1: "RULE: BLIND 1",
+            BLIND_1_BAN_1: "RULE: BLIND 1 + BANNED {rank}",
+            PUZZLE_TARGET: "RULE: PUZZLE {target}"
         },
         UI: {
             BACK_TO_MAIN: "BACK TO MAIN PAGE",

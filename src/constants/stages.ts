@@ -33,16 +33,16 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
   '2A': {
     name: 'CHAPTER 2 (DESERT)',
     stages: {
-      1: { name: 'STAGE 1', bossName: 'MUMMY', hp: 180, atk: 20, level: 11, rule: 'NONE' },
-      2: { name: 'STAGE 2', bossName: 'SAND SNAKE', hp: 200, atk: 25, level: 12, rule: 'NONE' },
-      3: { name: 'STAGE 3', bossName: 'CHIMERA SNAKE HUMAN', hp: 200, atk: 30, level: 13, rule: 'NONE' },
-      4: { name: 'STAGE 4', bossName: 'SAND NIDDLE LIZARD', hp: 250, atk: 30, level: 14, rule: 'NONE' },
-      5: { name: 'STAGE 5', bossName: 'SAND SCORPION', hp: 250, atk: 20, level: 15, rule: 'NONE' },
-      6: { name: 'STAGE 6', bossName: 'DESERT VULTURES', hp: 200, atk: 20, level: 16, rule: 'NONE' },
-      7: { name: 'STAGE 7', bossName: 'SAND GOLEM', hp: 350, atk: 35, level: 17, rule: 'NONE' },
-      8: { name: 'STAGE 8', bossName: 'SAND WYVERN', hp: 400, atk: 15, level: 18, rule: 'NONE' },
-      9: { name: 'STAGE 9', bossName: 'SAND DEATHWARM', hp: 400, atk: 20, level: 19, rule: 'NONE' },
-      10: { name: 'STAGE 10', bossName: 'SPHINX', hp: 300, atk: 40, level: 20, rule: 'NONE' },
+      1: { name: 'STAGE 1', bossName: 'MUMMY', hp: 180, atk: 15, level: 11, rule: 'REVIVE_50%' },
+      2: { name: 'STAGE 2', bossName: 'SAND SNAKE', hp: 200, atk: 20, level: 12, rule: 'ONE_PAIR_DMG_0' },
+      3: { name: 'STAGE 3', bossName: 'CHIMERA SNAKE HUMAN', hp: 200, atk: 20, level: 13, rule: 'TWO_PAIR_DMG_0' },
+      4: { name: 'STAGE 4', bossName: 'SAND NIDDLE LIZARD', hp: 250, atk: 20, level: 14, rule: 'NO_DMG_UNDER_50' },
+      5: { name: 'STAGE 5', bossName: 'SAND SCORPION', hp: 250, atk: 15, level: 15, rule: 'FORCE_SWAP' },
+      6: { name: 'STAGE 6', bossName: 'DESERT VULTURES', hp: 200, atk: 15, level: 16, rule: 'TRIPLE_ATTACK' },
+      7: { name: 'STAGE 7', bossName: 'SAND GOLEM', hp: 320, atk: 35, level: 17, rule: 'TWO_TIMES_PARALYZE_50' },
+      8: { name: 'STAGE 8', bossName: 'SAND WYVERN', hp: 300, atk: 20, level: 18, rule: 'NO_DMG_STRAIGHT_BLIND_1' },
+      9: { name: 'STAGE 9', bossName: 'SAND DEATHWARM', hp: 360, atk: 20, level: 19, rule: 'RANDOM_BLIND_BAN_1' },
+      10: { name: 'STAGE 10', bossName: 'SPHINX', hp: 330, atk: 40, level: 20, rule: 'PUZZLE' },
     }
   },
   '2B': {

@@ -133,7 +133,11 @@ export function calculatePlayerDamage(
     multiplier *= 0.8; // 0.8x Total Damage
   }
 
-  const finalDamage = Math.floor(baseDamage * multiplier);
+  let finalDamage = Math.floor(baseDamage * multiplier);
+
+  // v2.3.0: Berserker / Damage Recoiling fixed bonuses (if passed)
+  // These are handled in useGameLoop to keep calculation pure,
+  // but we can add them to the result for transparency.
 
   return {
     baseDamage,
@@ -181,7 +185,15 @@ export function applyDamageModifiers(
     damage = Math.floor(damage * (1 - damageReducingPercent / 100));
   }
 
+  // v2.3.0: Adrenaline Secretion (Nullify small damage)
+  // This is handled in useGameLoop for better control over the "threshold"
+  // but providing a helper here.
   return Math.max(0, damage);
+}
+
+export function applyAdrenaline(damage: number, limit: number): number {
+  if (damage <= limit) return 0;
+  return damage;
 }
 
 /**
