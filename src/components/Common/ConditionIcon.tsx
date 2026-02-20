@@ -33,7 +33,9 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Invincible spirit') filename = '불굴의 의지(Invincible Spirit).png';
   if (name === 'Adrenaline secretion') filename = '아드레날린 분비(Adrenaline Secretion).png';
   if (name === 'Neurotoxicity') filename = '신경성 맹독(Neurotoxicity).png';
+  if (name === 'Neurotoxicity') filename = '신경성 맹독(Neurotoxicity).png';
   if (name === 'Dehydration') filename = '탈수(Dehydration).png';
+  if (name === 'Triple Attack') filename = '삼중공격(Triple Attack).png';
 
   const iconPath = `/assets/conditions/${filename}`;
 
@@ -63,6 +65,8 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
     resolvedDesc = resolvedDesc.replace('{percent}', '20').replace('{dmg}', '15');
   } else if (name === 'Dehydration' && condition.data) {
     resolvedDesc = resolvedDesc.replace('{dmg}', ((condition.data as any).amount || 0).toString());
+  } else if (name === 'Triple Attack') {
+    // No dynamic data needed for now
   }
 
   const countConds = ['Revival', 'Invincible spirit'];

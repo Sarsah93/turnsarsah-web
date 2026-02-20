@@ -199,6 +199,10 @@ export const TRANSLATIONS = {
                 NAME: "신경성 맹독",
                 DESC: "매 턴 15의 고정 독 피해를 입으며, 공격 시 30% 확률로 빗나갑니다. 지속 중 매 턴 시작 시 20% 확률로 1턴 마비가 발생합니다 (최대 1회)."
             },
+            TRIPLE_ATTACK: {
+                NAME: "연속 공격",
+                DESC: "일정 확률로 2회 또는 3회 연속 공격을 가합니다."
+            },
             DEHYDRATION: {
                 NAME: "탈수",
                 DESC: "턴 종료 후 HP가 {dmg} 감소. 보스 클리어 시 다음 스테이지로 이월."
@@ -217,7 +221,17 @@ export const TRANSLATIONS = {
             RULE_HINT: "규칙: ",
             BLIND_1: "룰: 카드 1장 블라인드",
             BLIND_1_BAN_1: "룰: 블라인드 1 + {rank} 금지",
-            PUZZLE_TARGET: "룰: 수수께끼 {target}"
+            PUZZLE_TARGET: "룰: 수수께끼 {target}",
+            REVIVE_50: "룰: 체력 0 도달 시 50% 회복 (1회)",
+            ONE_PAIR_DMG_0: "룰: ONE PAIR 데미지 무효",
+            TWO_PAIR_DMG_0: "룰: TWO PAIR 데미지 무효",
+            NO_DMG_UNDER_50: "룰: 50 미만 데미지 무효",
+            FORCE_SWAP: "룰: 매 턴 카드 강제 교체 (1장)",
+            TRIPLE_ATTACK: "룰: 50% 확률로 2회 공격, 15% 확률로 3회 공격",
+            TWO_TIMES_PARALYZE_50: "룰: 2턴마다 행동 + 50% 확률로 마비",
+            NO_DMG_STRAIGHT_BLIND_1: "룰: STRAIGHT 무효 + 블라인드 1장",
+            RANDOM_BLIND_BAN_1: "룰: 무작위 블라인드 1 + 족보 금지 1",
+            PUZZLE: "룰: 퍼즐 (숫자 합 맞추기)"
         },
         UI: {
             BACK_TO_MAIN: "메인 화면으로",
@@ -460,6 +474,10 @@ export const TRANSLATIONS = {
                 NAME: "Neurotoxicity",
                 DESC: "Takes 15 fixed damage per turn and has a 30% miss chance. Each turn start, has a 20% chance to cause 1-turn paralysis (max once per application)."
             },
+            TRIPLE_ATTACK: {
+                NAME: "Triple Attack",
+                DESC: "Chance to attack 2 or 3 times in a row."
+            },
             DEHYDRATION: {
                 NAME: "Dehydration",
                 DESC: "Loses {dmg} HP at the end of each turn. Delayed if boss is cleared."
@@ -478,7 +496,17 @@ export const TRANSLATIONS = {
             RULE_HINT: "RULE: ",
             BLIND_1: "RULE: BLIND 1",
             BLIND_1_BAN_1: "RULE: BLIND 1 + BANNED {rank}",
-            PUZZLE_TARGET: "RULE: PUZZLE {target}"
+            PUZZLE_TARGET: "RULE: PUZZLE {target}",
+            REVIVE_50: "RULE: REVIVE 50% HP (ONCE)",
+            ONE_PAIR_DMG_0: "RULE: ONE PAIR DMG 0",
+            TWO_PAIR_DMG_0: "RULE: TWO PAIR DMG 0",
+            NO_DMG_UNDER_50: "RULE: NO DMG UNDER 50",
+            FORCE_SWAP: "RULE: FORCE SWAP 1 CARD",
+            TRIPLE_ATTACK: "RULE: CHANCE FOR DOUBLE/TRIPLE ATTACK",
+            TWO_TIMES_PARALYZE_50: "RULE: ACT EVERY 2 TURNS + 50% PARALYZE",
+            NO_DMG_STRAIGHT_BLIND_1: "RULE: STRAIGHT DMG 0 + BLIND 1",
+            RANDOM_BLIND_BAN_1: "RULE: RANDOM BLIND 1 + BAN HAND 1",
+            PUZZLE: "RULE: PUZZLE (SUM MATCH)"
         },
         UI: {
             BACK_TO_MAIN: "BACK TO MAIN PAGE",

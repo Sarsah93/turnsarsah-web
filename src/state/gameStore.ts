@@ -429,6 +429,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         if (drPercent !== undefined) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: drPercent });
         }
+
+        // Stage 6 Triple Attack
+        if (stageId === 6) {
+          applyCondition(botConditions, 'Triple Attack', 9999);
+        }
       }
 
       // Boss stat overrides based on difficulty

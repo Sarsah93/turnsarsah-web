@@ -56,15 +56,24 @@ export const MainMenu: React.FC = () => {
                     triggerTransition(() => initTutorial());
                 }} />
 
-                {/* Debug Button for Testing Chapter 1 -> 2 Transition */}
-                <div style={{ marginTop: '20px' }}>
-                    <BlockButton
-                        text="DEBUG: STAGE 1-10 (EASY)"
-                        onClick={() => {
-                            triggerTransition(() => initGameWithDifficulty('1', 10, Difficulty.EASY));
-                        }}
-                        variant="danger"
-                    />
+                {/* Debug Buttons for Chapter 2A (Stage 1-10) */}
+                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                    <div style={{ color: 'white', fontSize: '1.2rem', fontFamily: 'BebasNeue' }}>DEBUG: CHAPTER 2A</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                        {Array.from({ length: 10 }, (_, i) => i + 1).map((stage) => (
+                            <BlockButton
+                                key={stage}
+                                text={`2A-${stage}`}
+                                onClick={() => {
+                                    triggerTransition(() => initGameWithDifficulty('2A', stage, Difficulty.NORMAL));
+                                }}
+                                variant="danger"
+                                width="90px"
+                                height="50px"
+                                fontSize="1.5rem"
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
 

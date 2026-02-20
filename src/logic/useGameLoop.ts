@@ -80,6 +80,7 @@ export const useGameLoop = () => {
             case 'Adrenaline secretion': file = '아드레날린 분비(Adrenaline secretion).mp3'; break;
             case 'Neurotoxicity': file = '신경성 맹독(Neurotoxicity).mp3'; break;
             case 'Dehydration': file = '탈수(Dehydration).mp3'; break;
+            case 'Triple Attack': file = '버서커(Berserker).mp3'; break;
             default: return;
         }
         // Debilitating doesn't have .mp3 in one request but has in another. User said 'Debilitating' for 4.4. 
@@ -89,7 +90,14 @@ export const useGameLoop = () => {
     };
 
     const getBossAttackSFX = (chapter: string, stage: number) => {
-        if (chapter !== '1') return ''; // No SFX for Chapter 2 per request
+        if (chapter === '2A') {
+            if (stage === 2) return '/assets/audio/combat/chapter 2a desert/02_sand snake.mp3';
+            if (stage === 3) return '/assets/audio/combat/chapter 2a desert/03_chimera snake human.mp3';
+            if (stage === 6) return '/assets/audio/combat/chapter 2a desert/06_desert vultures.wav';
+            return ''; // Other stages might use default or no sound for now
+        }
+
+        if (chapter !== '1') return '';
 
         const map: Record<number, string> = {
             1: '01_sword hit_light.mp3',
@@ -500,17 +508,44 @@ export const useGameLoop = () => {
             return;
         }
 
-        setMessage(t.COMBAT.BOSS_ATTACKS);
-        setBotAnimState('ATTACK');
-        const sfx = getBossAttackSFX(store.chapterNum, stageNum);
-        if (sfx) setTimeout(() => AudioManager.playSFX(sfx), 200);
+        // Determine number of attacks
+        let attackCount = 1;
 
-        // v2.3.2: Chapter 2A Attack Gimmicks
-        if (store.chapterNum === '2A') {
-            // 2A-5: Force Swap
-            if (stageNum === 5) {
+        // v2.3.2: 2A-6 Triple Attack (Strict Condition Check)
+        if (store.chapterNum === '2A' && currentBot.conditions.has('Triple Attack')) {
+            if (Math.random() < 0.5) {
+                attackCount = 2;
+                if (Math.random() < 0.3) {
+                    attackCount = 3;
+                }
+            }
+        } else if (store.chapterNum === '2A' && stageNum === 6) {
+            // Fallback logic
+            if (Math.random() < 0.5) attackCount = Math.random() < 0.3 ? 3 : 2;
+        }
+
+        const sfx = getBossAttackSFX(store.chapterNum, stageNum);
+
+        // Execute Attacks Loop
+        for (let i = 0; i < attackCount; i++) {
+            // Visual & Audio updates
+            if (i === 0) {
+                setMessage(t.COMBAT.BOSS_ATTACKS);
+                setBotAnimState('ATTACK');
+                if (sfx) setTimeout(() => AudioManager.playSFX(sfx), 200);
+            } else {
+                // For Triple Attack, show specific message and play sound again
+                const msg = i === 1 ? t.CONDITIONS.TRIPLE_ATTACK.NAME + " x2!" : t.CONDITIONS.TRIPLE_ATTACK.NAME + " x3!";
+                store.setMessage(msg);
+                playConditionSound('Triple Attack'); // Sound for the skill activation visual
+                if (sfx) AudioManager.playSFX(sfx); // Actual attack impact sound
+                setBotAnimState('ATTACK'); // Re-trigger animation state if possible (might need reset)
+            }
+
+            // 2A-5 Force Swap Logic (Triggered on first attack)
+            if (i === 0 && store.chapterNum === '2A' && stageNum === 5) {
                 const hand = store.playerHand;
-                const indices = hand.map((c, i) => c !== null ? i : -1).filter(i => i !== -1);
+                const indices = hand.map((c, idx) => c !== null ? idx : -1).filter(idx => idx !== -1);
                 if (indices.length > 0) {
                     const targetIdx = indices[Math.floor(Math.random() * indices.length)];
                     store.swapCards([targetIdx]);
@@ -518,33 +553,20 @@ export const useGameLoop = () => {
                     await new Promise(r => setTimeout(r, 500));
                 }
             }
-        }
 
-        await new Promise(r => setTimeout(r, 200));
-        triggerScreenEffect('shake-heavy');
-        setPlayerAnimState('HIT');
-
-        // v2.3.2: 2A-6 Triple Attack
-        const botAttacks = [];
-        botAttacks.push(damage); // First attack always hits
-
-        if (store.chapterNum === '2A' && stageNum === 6) {
-            if (Math.random() < 0.5) botAttacks.push(damage);
-            if (botAttacks.length > 1 && Math.random() < 0.3) botAttacks.push(damage);
-        }
-
-        for (const [idx, dmg] of botAttacks.entries()) {
-            if (idx > 0) {
-                store.setMessage(`${t.COMBAT.BOSS_ATTACKS} (${idx + 1})`);
-                AudioManager.playSFX(sfx);
-                await new Promise(r => setTimeout(r, 600));
-            }
-
-            setPlayerHp(applyDamage(useGameStore.getState().player.hp, dmg));
-            showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
+            await new Promise(r => setTimeout(r, 200));
             triggerScreenEffect('shake-heavy');
             setPlayerAnimState('HIT');
-            await new Promise(r => setTimeout(r, 400));
+
+            // Apply Damage
+            setPlayerHp(applyDamage(useGameStore.getState().player.hp, damage));
+            showDamageText('PLAYER', `-${damage}`, '#e74c3c');
+
+            await new Promise(r => setTimeout(r, i < attackCount - 1 ? 800 : 400)); // Delay between multi-attacks
+
+            // Reset anim for next hit
+            setBotAnimState('NONE');
+            setPlayerAnimState('NONE');
         }
 
         const freshPlayer = useGameStore.getState().player;
