@@ -47,10 +47,14 @@ export const useGameLoop = () => {
     }, [message, setMessage]);
 
     // Helper to add damage text
-    const showDamageText = (target: 'PLAYER' | 'BOT', text: string, color: string) => {
+    const showDamageText = (target: 'PLAYER' | 'BOT' | 'BOSS_LEFT', text: string, color: string) => {
         const id = Date.now() + Math.random();
-        const x = target === 'BOT' ? window.innerWidth * 0.75 : window.innerWidth * 0.25;
-        const y = target === 'BOT' ? 120 : 550;
+        let x = window.innerWidth * 0.5;
+        let y = 300;
+        if (target === 'BOT') { x = window.innerWidth * 0.75; y = 120; }
+        else if (target === 'PLAYER') { x = window.innerWidth * 0.25; y = 550; }
+        else if (target === 'BOSS_LEFT') { x = window.innerWidth * 0.25; y = 200; }
+
         setDamageTexts(prev => [...prev, { id, x, y, text, color }]);
     };
 
@@ -240,14 +244,14 @@ export const useGameLoop = () => {
         // v2.3.2: 2A Hand Nullification Rules (족보 보너스만 0, 카드 숫자 합산은 유지)
         if (store.chapterNum === '2A') {
             const nullifiedHands: Record<number, string> = {
-                2: 'One Pair', 3: 'Two Pair', 6: 'Three of a Kind',
+                1: 'Straight Flush', 2: 'One Pair', 3: 'Two Pair', 6: 'Three of a Kind',
                 7: 'Full House', 8: 'Straight', 9: 'Flush'
             };
             const nullifiedHand = nullifiedHands[stageNum];
             if (nullifiedHand && result.handType === nullifiedHand) {
                 const handBonuses: Record<string, number> = {
                     'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
-                    'Straight': 75, 'Flush': 100, 'Full House': 125,
+                    'Straight': 75, 'Flush': 100, 'Full House': 125, 'Straight Flush': 150
                 };
                 const bonus = handBonuses[result.handType] || 0;
                 // baseDamage = handBonus + sumValues, so remove handBonus then apply multiplier
@@ -258,7 +262,8 @@ export const useGameLoop = () => {
         // v2.3.2: Neurotoxicity Accuracy Penalty (30% Miss)
         if (player.conditions.has('Neurotoxicity') && Math.random() < 0.3) {
             damage = 0;
-            setMessage(t.COMBAT.NEURO_MISSED);
+            setMessage("ATTACK MISSED!");
+            AudioManager.playSFX('/assets/audio/conditions/avoiding.mp3');
         }
 
         // v2.3.2: 2A-4 No damage under 50
@@ -295,10 +300,15 @@ export const useGameLoop = () => {
 
         // v2.3.2: Puzzle Bonus (Sphinx)
         if (store.chapterNum === '2A' && stageNum === 10 && store.puzzleTarget > 0) {
-            const sumOfSelected = selectedCards.reduce((acc, c) => acc + (c.isJoker ? 14 : (RANK_VALUES[c.rank!] || 0)), 0);
+            const sumOfSelected = selectedCards.reduce((acc, c) => {
+                if (c.isJoker) return acc + 14;
+                if (c.rank === 'A') return acc + 1;
+                return acc + (RANK_VALUES[c.rank!] || 0);
+            }, 0);
             if (sumOfSelected === store.puzzleTarget) {
                 damage = Math.floor(damage * 1.5);
                 setMessage(t.COMBAT.PUZZLE_SUCCESS);
+                showDamageText('BOSS_LEFT', 'CORRECT DAMAGE!', '#2ecc71');
                 AudioManager.playSFX('/assets/audio/player/shuffling.mp3'); // Temporary success sound
             }
         }
@@ -425,10 +435,14 @@ export const useGameLoop = () => {
 
         // v2.3.2: 2A-1 Mummy Revive
         if (newBotHp <= 0 && store.chapterNum === '2A' && stageNum === 1) {
-            if (Math.random() < 0.5) {
+            // Apply a Revival condition if not already applied, or process it inline. 
+            // The instructions specify a 50% chance to revive once. Wait, we want it to not trigger stage clear.
+            const revivedBefore = bot.conditions.has('Revived');
+            if (!revivedBefore && Math.random() < 0.5) {
                 newBotHp = Math.floor(bot.maxHp * 0.5);
                 setBotHp(newBotHp);
-                setMessage(t.COMBAT.REVIVE_MSG);
+                store.addBotCondition('Revived', 9999); // Mark as revived
+                setMessage("50% REVIVE!");
                 AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
                 await new Promise(r => setTimeout(r, 1000));
             }
@@ -531,7 +545,12 @@ export const useGameLoop = () => {
             }
         } else if (store.chapterNum === '2A' && stageNum === 6) {
             // Fallback logic
-            if (Math.random() < 0.5) attackCount = Math.random() < 0.3 ? 3 : 2;
+            if (Math.random() < 0.5) {
+                attackCount = 2;
+                if (Math.random() < 0.3) {
+                    attackCount = 3;
+                }
+            }
         }
 
         const sfx = getBossAttackSFX(store.chapterNum, stageNum);
@@ -557,9 +576,10 @@ export const useGameLoop = () => {
                 const hand = store.playerHand;
                 const indices = hand.map((c, idx) => c !== null ? idx : -1).filter(idx => idx !== -1);
                 if (indices.length > 0) {
-                    const targetIdx = indices[Math.floor(Math.random() * indices.length)];
-                    store.swapCards([targetIdx]);
-                    setMessage(t.COMBAT.FORCE_SWAP_MSG);
+                    const shuffleIndices = indices.sort(() => 0.5 - Math.random());
+                    const targets = shuffleIndices.slice(0, 2); // 2 cards swapped without consuming
+                    store.swapCards(targets);
+                    setMessage("FORCE SWAP x2");
                     await new Promise(r => setTimeout(r, 500));
                 }
             }
@@ -608,13 +628,14 @@ export const useGameLoop = () => {
             }
             if (stageNum === 5) {
                 // Neurotoxicity: 3 turns (Applying Blind/Paralyze is handled via applyCondition side effects or here)
-                if (Math.random() < config.neuroProbCh2A) {
+                if (Math.random() < 0.40) {
+                    // Replaced neuroProbCh2A with explicit 40%
                     store.addPlayerCondition('Neurotoxicity', 3);
                 }
             }
             if (stageNum === 7) {
-                // 50% fixed or config-based? User said 50%.
-                if (Math.random() < 0.5) {
+                // Now 40% based on user request (down from 50%)
+                if (Math.random() < 0.4) {
                     store.addPlayerCondition('Paralyzing', 2);
                 }
             }
@@ -767,8 +788,8 @@ export const useGameLoop = () => {
             const data = condData as any;
             const currentP = useGameStore.getState().player;
 
-            // 15% chance to remove debuff early
-            if (removableDebuffs.includes(cond) && Math.random() < 0.15) {
+            // 15% chance to remove debuff early (Neurotoxicity explicitely bypasses this)
+            if (removableDebuffs.includes(cond) && Math.random() < 0.15 && cond !== 'Neurotoxicity') {
                 toRemovePlayer.push(cond);
                 const condKey = cond.toUpperCase().replace(/\s+/g, '_');
                 const condNameLine = (t.CONDITIONS as any)[condKey]?.NAME || cond;
@@ -777,6 +798,21 @@ export const useGameLoop = () => {
             }
 
             if (cond === 'Dehydration') continue; // Handle Dehydration last
+
+            // Neurotoxicity Damage (15) and secondary Paralyze check (20%)
+            if (cond === 'Neurotoxicity') {
+                setMessage("NEUROTOXICITY DMG!");
+                playConditionSound(cond);
+                const amount = 15;
+                const freshHP = useGameStore.getState().player.hp;
+                setPlayerHp(Math.max(0, freshHP - amount));
+                showDamageText('PLAYER', `-${amount}`, '#e74c3c');
+                await new Promise(r => setTimeout(r, 800));
+
+                if (Math.random() < 0.20 && !playerConditions.has('Paralyzing')) {
+                    store.addPlayerCondition('Paralyzing', 1); // 1-turn paralyze
+                }
+            }
 
             if (['Poisoning', 'Bleeding', 'Heavy Bleeding'].includes(cond)) {
                 const toastMsg = cond === 'Poisoning' ? t.COMBAT.PLAYER_POISONING : (cond === 'Heavy Bleeding' ? t.COMBAT.PLAYER_HEAVY_BLEEDING : t.COMBAT.PLAYER_BLEEDING);

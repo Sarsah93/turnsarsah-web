@@ -267,6 +267,33 @@ export const BattleScreen: React.FC = () => {
                 <BossDisplay />
                 <PlayerDisplay />
 
+                {/* Sphinx Puzzle UI */}
+                {store.chapterNum === '2A' && stageNum === 10 && store.puzzleTarget > 0 && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '150px', left: '20px',
+                        color: '#f1c40f', fontSize: '2.5rem', fontFamily: 'BebasNeue',
+                        textShadow: '2px 2px 4px #000',
+                        zIndex: 100
+                    }}>
+                        TARGET: {store.puzzleTarget}
+                        {(() => {
+                            if (selectedCards.length === 0) return null;
+                            const sumOfSelected = selectedCards.map(i => playerHand[i]).filter(c => c !== null).reduce((acc, c) => {
+                                if (c!.isJoker) return acc + 14;
+                                if (c!.rank === 'A') return acc + 1;
+                                const rankVals: Record<string, number> = { 'K': 13, 'Q': 12, 'J': 11 };
+                                if (rankVals[c!.rank!]) return acc + rankVals[c!.rank!];
+                                return acc + (Number(c!.rank) || 0);
+                            }, 0);
+                            if (sumOfSelected === store.puzzleTarget) {
+                                return <span style={{ color: '#2ecc71', marginLeft: '10px' }}>(CORRECT!)</span>;
+                            }
+                            return null;
+                        })()}
+                    </div>
+                )}
+
                 {/* Damage Texts Layer */}
                 {damageTexts.map(dt => (
                     <DamageText

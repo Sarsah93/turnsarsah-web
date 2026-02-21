@@ -246,8 +246,12 @@ export class TurnEngine {
     const playerEffects = processConditionsEndTurn(this.player.conditions);
     playerEffects.forEach(eff => {
       if (eff.type === 'HEAL') {
-        this.player.hp = Math.min(this.player.maxHp, this.player.hp + eff.amount);
+        const cond = this.player.conditions.get('Regenerating');
+        const amountToHeal = (cond?.data as any)?.amount || eff.amount;
+        this.player.hp = Math.min(this.player.maxHp, this.player.hp + amountToHeal);
       } else {
+        // v2.3.2: Prevent Neurotoxicity duplicate damage if it was already resolved in GameLoop. We'll simply let useGameLoop handle player debuffs visually if prefer. 
+        // For turnEngine, we just apply the standard deductions for Bleed/Poison.
         this.player.hp = Math.max(0, this.player.hp - eff.amount);
       }
     });
@@ -256,7 +260,9 @@ export class TurnEngine {
     const botEffects = processConditionsEndTurn(this.bot.conditions);
     botEffects.forEach(eff => {
       if (eff.type === 'HEAL') {
-        this.bot.hp = Math.min(this.bot.maxHp, this.bot.hp + eff.amount);
+        const cond = this.bot.conditions.get('Regenerating');
+        const amountToHeal = (cond?.data as any)?.amount || eff.amount;
+        this.bot.hp = Math.min(this.bot.maxHp, this.bot.hp + amountToHeal);
       } else {
         this.bot.hp = Math.max(0, this.bot.hp - eff.amount);
       }

@@ -25,8 +25,12 @@ function App() {
   useEffect(() => {
     if (fontSize === 'SMALL') {
       document.documentElement.classList.add('font-small-root');
-    } else {
+      document.documentElement.classList.remove('font-normal-root');
+    } else if (fontSize === 'NORMAL') {
+      document.documentElement.classList.add('font-normal-root');
       document.documentElement.classList.remove('font-small-root');
+    } else {
+      document.documentElement.classList.remove('font-small-root', 'font-normal-root');
     }
   }, [fontSize]);
 

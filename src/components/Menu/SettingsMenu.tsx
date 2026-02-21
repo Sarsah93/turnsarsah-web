@@ -83,6 +83,13 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onCl
           <label>{t.FONT_SIZE}</label>
           <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
             <BlockButton
+              text={t.FONT_LARGE}
+              onClick={() => setFontSize('LARGE')}
+              variant={fontSize === 'LARGE' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+            <BlockButton
               text={t.FONT_NORMAL}
               onClick={() => setFontSize('NORMAL')}
               variant={fontSize === 'NORMAL' ? 'primary' : undefined}

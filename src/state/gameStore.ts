@@ -134,8 +134,8 @@ interface GameStoreState {
   setLanguage: (lang: Language) => void;
 
   // Font Size
-  fontSize: 'NORMAL' | 'SMALL';
-  setFontSize: (size: 'NORMAL' | 'SMALL') => void;
+  fontSize: 'LARGE' | 'NORMAL' | 'SMALL';
+  setFontSize: (size: 'LARGE' | 'NORMAL' | 'SMALL') => void;
 
   // v2.3.2: Puzzle Gimmick (Chapter 2A-10)
   puzzleTarget: number;
@@ -150,7 +150,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setGamePhase: (gamePhase) => set({ gamePhase }),
 
   // Font Size
-  fontSize: (localStorage.getItem('turnsarsah_font_size') as 'NORMAL' | 'SMALL') || 'NORMAL',
+  fontSize: (localStorage.getItem('turnsarsah_font_size') as 'LARGE' | 'NORMAL' | 'SMALL') || 'LARGE',
   setFontSize: (fontSize) => {
     set({ fontSize });
     localStorage.setItem('turnsarsah_font_size', fontSize);
@@ -418,16 +418,21 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       } else if (chapterId === '2A') {
         // Chapter 2A Boss Passives
         const avoidStages = { 2: 0.10, 3: 0.08, 6: 0.15 };
-        const drStages = { 4: 15, 5: 20, 7: 30, 8: 10, 9: 10, 10: 40 };
+        const drStages = { 2: 5, 3: 5, 4: 15, 5: 20, 7: 30, 8: 10, 9: 15, 10: 40 };
+        const regenStages = { 2: 5, 3: 10, 4: 10, 5: 15, 8: 10, 9: 15, 10: 15 };
 
         const avoidChance = (avoidStages as any)[stageId];
         const drPercent = (drStages as any)[stageId];
+        const regenAmount = (regenStages as any)[stageId];
 
         if (avoidChance !== undefined) {
           applyCondition(botConditions, 'Avoiding', 9999, '', { chance: avoidChance });
         }
         if (drPercent !== undefined) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: drPercent });
+        }
+        if (regenAmount !== undefined) {
+          applyCondition(botConditions, 'Regenerating', 9999, `At the end of each turn, restores ${regenAmount} HP.`, { amount: regenAmount });
         }
 
         // Stage 6 Triple Attack
@@ -640,26 +645,25 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       }
     } else if (chapterId === '2A') {
       // Chapter 2A Stage Rules
-      const t = TRANSLATIONS[get().language];
+      const t = TRANSLATIONS[get().language] as any;
       if (stageId === 8) {
         // BLIND 1
         const indices = [0, 1, 2, 3, 4, 5, 6, 7];
         const randIdx = Math.floor(Math.random() * indices.length);
         blindIndices.push(indices[randIdx]);
-        set({ stage10RuleText: t.RULES.BLIND_1 });
+        set({ stage10RuleText: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1 });
       } else if (stageId === 9) {
-        // BLIND 1 & BAN 1
+        // BLIND 3
         const indices = [0, 1, 2, 3, 4, 5, 6, 7];
-        const randIdx = Math.floor(Math.random() * indices.length);
-        blindIndices.push(indices[randIdx]);
-
-        const r1 = ranks[Math.floor(Math.random() * ranks.length)];
-        bannedRanks = [r1];
-        set({ stage10RuleText: t.RULES.BLIND_1_BAN_1.replace('{rank}', r1) });
+        for (let i = 0; i < 3; i++) {
+          const randIdx = Math.floor(Math.random() * indices.length);
+          blindIndices.push(indices.splice(randIdx, 1)[0]);
+        }
+        set({ stage10RuleText: t.RULES.FLUSH_DMG_0_BLIND_3 });
       } else if (stageId === 10) {
         // SPHINX PUZZLE
         const target = Math.floor(Math.random() * (100 - 15 + 1)) + 15;
-        set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_TARGET.replace('{target}', target.toString()) });
+        set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN + ` (${t.RULES.PUZZLE_TARGET.replace('{target}', target.toString())})` });
       } else {
         set({ stage10RuleText: '' });
       }
