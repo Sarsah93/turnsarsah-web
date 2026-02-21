@@ -36,6 +36,7 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Neurotoxicity') filename = '신경성 맹독(Neurotoxicity).png';
   if (name === 'Dehydration') filename = '탈수(Dehydration).png';
   if (name === 'Triple Attack') filename = '삼중공격(Triple Attack).png';
+  if (name === 'Revived') filename = '부활(Revival).png';
 
   const iconPath = `/assets/conditions/${filename}`;
 

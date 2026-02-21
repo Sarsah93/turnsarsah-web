@@ -97,10 +97,19 @@ export const useGameLoop = () => {
 
     const getBossAttackSFX = (chapter: string, stage: number) => {
         if (chapter === '2A') {
-            if (stage === 2) return '/assets/audio/combat/chapter 2a desert/02_sand snake.mp3';
-            if (stage === 3) return '/assets/audio/combat/chapter 2a desert/03_chimera snake human.mp3';
-            if (stage === 6) return '/assets/audio/combat/chapter 2a desert/06_desert vultures.wav';
-            return ''; // Other stages might use default or no sound for now
+            const sfxMap: Record<number, string> = {
+                1: '01_mummy.mp3',
+                2: '02_sand snake.mp3',
+                3: '03_chimera snake human.mp3',
+                4: '04_sand niddle lizard.mp3',
+                5: '05_sand scorpion.mp3',
+                7: '07_sand golem.mp3',
+                8: '08_sand wyvern.mp3',
+                9: '09_sand deathwarm.mp3'
+            };
+            const filename = sfxMap[stage];
+            if (filename) return `/assets/audio/combat/chapter 2a desert/${filename}`;
+            return '';
         }
 
         if (chapter !== '1') return '';
@@ -266,10 +275,10 @@ export const useGameLoop = () => {
             AudioManager.playSFX('/assets/audio/conditions/avoiding.mp3');
         }
 
-        // v2.3.2: 2A-4 No damage under 50
-        if (store.chapterNum === '2A' && stageNum === 4 && damage < 50) {
+        // v2.3.2: 2A-4 No damage under 30
+        if (store.chapterNum === '2A' && stageNum === 4 && damage < 30) {
             damage = 0;
-            setMessage(t.COMBAT.NO_DMG_UNDER_50_MSG);
+            setMessage(t.COMBAT.NO_DMG_UNDER_30_MSG);
         }
 
         const reductionCond = bot.conditions.get('Damage Reducing');
@@ -354,7 +363,7 @@ export const useGameLoop = () => {
         setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${result.handType}${wildSuffix}` : `${result.handType}${wildSuffix}`);
 
         // HP Reduction (0.1s after Popup/Shake)
-        await new Promise(r => setTimeout(r, 1000)); // slightly longer wait for effects
+        await new Promise(r => setTimeout(r, 150)); // slightly longer wait for effects
         let newBotHp = Math.max(0, bot.hp - damage);
 
         // v2.3.0: Berserker Lifesteal
@@ -442,7 +451,8 @@ export const useGameLoop = () => {
                 newBotHp = Math.floor(bot.maxHp * 0.5);
                 setBotHp(newBotHp);
                 store.addBotCondition('Revived', 9999); // Mark as revived
-                setMessage("50% REVIVE!");
+                const condName = t.CONDITIONS.REVIVED.NAME;
+                setMessage(`${condName}!`);
                 AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
                 await new Promise(r => setTimeout(r, 1000));
             }
@@ -895,8 +905,17 @@ export const useGameLoop = () => {
                 setMessage(t.COMBAT.BOSS_REGENERATING);
                 playConditionSound('Regenerating');
                 const latestBot = useGameStore.getState().bot;
-                const regenPercent = (data.data as any)?.percent || 0.05;
-                const heal = Math.floor(latestBot.maxHp * regenPercent);
+
+                // v2.3.2: Support flat amount regeneration for Chapter 2A
+                const regenData = data.data as any;
+                let heal = 0;
+                if (regenData?.amount) {
+                    heal = regenData.amount;
+                } else {
+                    const regenPercent = regenData?.percent || 0.05;
+                    heal = Math.floor(latestBot.maxHp * regenPercent);
+                }
+
                 setBotHp(Math.min(latestBot.maxHp, latestBot.hp + heal));
                 showDamageText('BOT', `+${heal}`, '#2ecc71');
                 await new Promise(r => setTimeout(r, 800));

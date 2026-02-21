@@ -167,13 +167,13 @@ export const BossDisplay: React.FC = () => {
                                 1: t.RULES.REVIVE_50,
                                 2: t.RULES.ONE_PAIR_DMG_0,
                                 3: t.RULES.TWO_PAIR_DMG_0,
-                                4: t.RULES.NO_DMG_UNDER_50,
+                                4: t.RULES.UNDER_30_POINTS_NO_DMG,
                                 5: t.RULES.FORCE_SWAP,
-                                6: t.RULES.TRIPLE_ATTACK,
-                                7: t.RULES.TWO_TIMES_PARALYZE_50,
-                                8: t.RULES.NO_DMG_STRAIGHT_BLIND_1,
-                                9: t.RULES.RANDOM_BLIND_BAN_1,
-                                10: t.RULES.PUZZLE,
+                                6: t.RULES.TRIPLE_DMG_0_TRIPLE_ATTACK,
+                                7: t.RULES.FULL_HOUSE_DMG_0_PARALYZE_40,
+                                8: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1,
+                                9: t.RULES.FLUSH_DMG_0_BLIND_3,
+                                10: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN,
                             };
                             return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
                         })()}`

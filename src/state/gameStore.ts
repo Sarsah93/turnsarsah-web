@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { Card, CardFactory } from '../types/Card';
 import { Character, Condition } from '../types/Character';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS, UNLOCKED_DIFFICULTIES_KEY } from '../constants/gameConfig';
+import { RANK_VALUES } from '../constants/cards';
 import { Deck } from '../logic/Deck';
 import { CHAPTERS } from '../constants/stages';
 import { applyCondition, clearConditions } from '../logic/conditions';
@@ -662,7 +663,43 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         set({ stage10RuleText: t.RULES.FLUSH_DMG_0_BLIND_3 });
       } else if (stageId === 10) {
         // SPHINX PUZZLE
-        const target = Math.floor(Math.random() * (100 - 15 + 1)) + 15;
+        // v2.3.2: Target sum of exactly 5 cards from current hand
+        const validCards = state.playerHand.filter(c => c !== null) as Card[];
+        let target = 0;
+
+        if (validCards.length >= 5) {
+          // Find all possible sums of exactly 5 cards
+          const sums: number[] = [];
+          const getCombinations = (start: number, count: number, currentSum: number) => {
+            if (count === 5) {
+              sums.push(currentSum);
+              return;
+            }
+            for (let i = start; i < validCards.length; i++) {
+              const card = validCards[i];
+              let cardVal = 0;
+              if (card.isJoker) {
+                cardVal = 14;
+              } else if (card.rank === 'A') {
+                cardVal = 1;
+              } else if (card.rank) {
+                cardVal = RANK_VALUES[card.rank] || 0;
+              }
+              getCombinations(i + 1, count + 1, currentSum + cardVal);
+            }
+          };
+          getCombinations(0, 0, 0);
+
+          if (sums.length > 0) {
+            target = sums[Math.floor(Math.random() * sums.length)];
+          }
+        }
+
+        // Fallback if not enough cards (should not happen normally)
+        if (target === 0) {
+          target = Math.floor(Math.random() * (100 - 15 + 1)) + 15;
+        }
+
         set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN + ` (${t.RULES.PUZZLE_TARGET.replace('{target}', target.toString())})` });
       } else {
         set({ stage10RuleText: '' });

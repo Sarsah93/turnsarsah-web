@@ -36,7 +36,7 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       1: { name: 'STAGE 1', bossName: 'MUMMY', hp: 180, atk: 15, level: 11, rule: 'REVIVE_50%_STRAIGHT_FLUSH_DMG_0' },
       2: { name: 'STAGE 2', bossName: 'SAND SNAKE', hp: 200, atk: 20, level: 12, rule: 'ONE_PAIR_DMG_0' },
       3: { name: 'STAGE 3', bossName: 'CHIMERA SNAKE HUMAN', hp: 200, atk: 20, level: 13, rule: 'TWO_PAIR_DMG_0' },
-      4: { name: 'STAGE 4', bossName: 'SAND NIDDLE LIZARD', hp: 250, atk: 20, level: 14, rule: 'UNDER_50_POINTS_NO_DMG' },
+      4: { name: 'STAGE 4', bossName: 'SAND NIDDLE LIZARD', hp: 250, atk: 20, level: 14, rule: 'UNDER_30_POINTS_NO_DMG' },
       5: { name: 'STAGE 5', bossName: 'SAND SCORPION', hp: 250, atk: 15, level: 15, rule: 'FORCE_SWAP_2_NEUROTOXIC' },
       6: { name: 'STAGE 6', bossName: 'DESERT VULTURES', hp: 200, atk: 15, level: 16, rule: 'TRIPLE_DMG_0_TRIPLE_ATTACK' },
       7: { name: 'STAGE 7', bossName: 'SAND GOLEM', hp: 320, atk: 35, level: 17, rule: 'FULL_HOUSE_DMG_0_PARALYZE_40%' },

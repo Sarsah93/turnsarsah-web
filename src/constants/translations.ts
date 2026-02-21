@@ -131,7 +131,7 @@ export const TRANSLATIONS = {
             BANNED: "금지됨",
             REVIVE_MSG: "룰: 부활!",
             FORCE_SWAP_MSG: "룰: 강제 교체!",
-            NO_DMG_UNDER_50_MSG: "룰: 50 미만 데미지 무효",
+            NO_DMG_UNDER_30_MSG: "룰: 30 미만 데미지 무효",
             NEURO_MISSED: "공격 실패! (신경성 맹독)",
             PUZZLE_SUCCESS: "퍼즐 성공! 데미지 +50%!",
         },
@@ -207,6 +207,10 @@ export const TRANSLATIONS = {
             DEHYDRATION: {
                 NAME: "탈수",
                 DESC: "턴 종료 후 HP가 {dmg} 감소. 보스 클리어 시 다음 스테이지로 이월."
+            },
+            REVIVED: {
+                NAME: "부활",
+                DESC: "대상이 부활했습니다!"
             }
         },
         RULES: {
@@ -224,7 +228,7 @@ export const TRANSLATIONS = {
             REVIVE_50_STRAIGHT_FLUSH_DMG_0: "룰: 50% 확률 부활 & 스트레이트 플러시 점수 0",
             ONE_PAIR_DMG_0: "룰: 원페어 점수 0",
             TWO_PAIR_DMG_0: "룰: 투페어 점수 0",
-            UNDER_50_POINTS_NO_DMG: "룰: 50점 미만 무효",
+            UNDER_30_POINTS_NO_DMG: "룰: 30점 미만 무효",
             FORCE_SWAP_2_NEUROTOXIC: "룰: 강제 교체 2장 & 신경성 맹독",
             TRIPLE_DMG_0_TRIPLE_ATTACK: "룰: 트리플 (Three of a Kind) 점수 0 & 삼중 공격",
             FULL_HOUSE_DMG_0_PARALYZE_40: "룰: 풀하우스 점수 0 & 마비 40%",
@@ -234,7 +238,7 @@ export const TRANSLATIONS = {
 
             PUZZLE_TARGET: "타겟: {target}",
             REVIVE_50: "룰: 체력 0 도달 시 50% 회복 (1회)",
-            NO_DMG_UNDER_50: "룰: 50 미만 데미지 무효",
+            NO_DMG_UNDER_30: "룰: 30 미만 데미지 무효",
             FORCE_SWAP: "룰: 매 턴 카드 강제 교체 (1장)",
             TRIPLE_ATTACK: "룰: 트리플 데미지 0 + 3연속 공격 (50%/30%)",
             TWO_TIMES_PARALYZE_50: "룰: 풀하우스 데미지 0 + 2턴마다 행동 + 마비 50%",
@@ -415,7 +419,7 @@ export const TRANSLATIONS = {
             BANNED: "BANNED",
             REVIVE_MSG: "RULE: REVIVE!",
             FORCE_SWAP_MSG: "RULE: FORCE SWAP!",
-            NO_DMG_UNDER_50_MSG: "RULE: NO DMG UNDER 50",
+            NO_DMG_UNDER_30_MSG: "RULE: NO DMG UNDER 30",
             NEURO_MISSED: "MISSED! (NEUROTOXICITY)",
             PUZZLE_SUCCESS: "PUZZLE SUCCESS! DMG +50%!",
         },
@@ -491,6 +495,10 @@ export const TRANSLATIONS = {
             DEHYDRATION: {
                 NAME: "Dehydration",
                 DESC: "Loses {dmg} HP at the end of each turn. Delayed if boss is cleared."
+            },
+            REVIVED: {
+                NAME: "Revived",
+                DESC: "The target has revived!"
             }
         },
         RULES: {
@@ -508,7 +516,7 @@ export const TRANSLATIONS = {
             REVIVE_50_STRAIGHT_FLUSH_DMG_0: "RULE: 50% REVIVE & STRAIGHT FLUSH DMG 0",
             ONE_PAIR_DMG_0: "RULE: ONE PAIR DMG 0",
             TWO_PAIR_DMG_0: "RULE: TWO PAIR DMG 0",
-            UNDER_50_POINTS_NO_DMG: "RULE: UNDER 50 POINTS NO DMG",
+            UNDER_30_POINTS_NO_DMG: "RULE: UNDER 30 POINTS NO DMG",
             FORCE_SWAP_2_NEUROTOXIC: "RULE: FORCE SWAP 2 & NEUROTOXIC",
             TRIPLE_DMG_0_TRIPLE_ATTACK: "RULE: TRIPLE DMG 0 & TRIPLE ATTACK",
             FULL_HOUSE_DMG_0_PARALYZE_40: "RULE: FULL HOUSE DMG 0 & PARALYZE 40%",
@@ -518,7 +526,7 @@ export const TRANSLATIONS = {
 
             PUZZLE_TARGET: "TARGET: {target}",
             REVIVE_50: "RULE: REVIVE 50% HP (ONCE)",
-            NO_DMG_UNDER_50: "RULE: NO DMG UNDER 50",
+            NO_DMG_UNDER_30: "RULE: NO DMG UNDER 30",
             FORCE_SWAP: "RULE: FORCE SWAP 1 CARD",
             TRIPLE_ATTACK: "RULE: CHANCE FOR DOUBLE/TRIPLE ATTACK",
             TWO_TIMES_PARALYZE_50: "RULE: ACT EVERY 2 TURNS + 50% PARALYZE",
