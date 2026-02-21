@@ -80,7 +80,9 @@ export const useGameLoop = () => {
             case 'Adrenaline secretion': file = '아드레날린 분비(Adrenaline secretion).mp3'; break;
             case 'Neurotoxicity': file = '신경성 맹독(Neurotoxicity).mp3'; break;
             case 'Dehydration': file = '탈수(Dehydration).mp3'; break;
-            case 'Triple Attack': file = '버서커(Berserker).mp3'; break;
+            case 'Triple Attack':
+                AudioManager.playSFX('/assets/audio/combat/chapter 2a desert/06_desert vultures_2.mp3');
+                return;
             default: return;
         }
         // Debilitating doesn't have .mp3 in one request but has in another. User said 'Debilitating' for 4.4. 
@@ -235,14 +237,22 @@ export const useGameLoop = () => {
         // v2.0.0.14: Damage Reduction - Unified via Conditions
         let damage = Math.floor(result.finalDamage);
 
-        // v2.3.2: 2A Hand Nullification Rules
+        // v2.3.2: 2A Hand Nullification Rules (족보 보너스만 0, 카드 숫자 합산은 유지)
         if (store.chapterNum === '2A') {
-            if (stageNum === 2 && result.handType === 'One Pair') damage = 0;
-            else if (stageNum === 3 && result.handType === 'Two Pair') damage = 0;
-            else if (stageNum === 6 && result.handType === 'Three of a Kind') damage = 0;
-            else if (stageNum === 7 && result.handType === 'Full House') damage = 0;
-            else if (stageNum === 8 && result.handType === 'Straight') damage = 0;
-            else if (stageNum === 9 && result.handType === 'Flush') damage = 0;
+            const nullifiedHands: Record<number, string> = {
+                2: 'One Pair', 3: 'Two Pair', 6: 'Three of a Kind',
+                7: 'Full House', 8: 'Straight', 9: 'Flush'
+            };
+            const nullifiedHand = nullifiedHands[stageNum];
+            if (nullifiedHand && result.handType === nullifiedHand) {
+                const handBonuses: Record<string, number> = {
+                    'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
+                    'Straight': 75, 'Flush': 100, 'Full House': 125,
+                };
+                const bonus = handBonuses[result.handType] || 0;
+                // baseDamage = handBonus + sumValues, so remove handBonus then apply multiplier
+                damage = Math.max(0, Math.floor((result.baseDamage - bonus) * result.multiplier));
+            }
         }
 
         // v2.3.2: Neurotoxicity Accuracy Penalty (30% Miss)

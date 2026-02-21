@@ -850,6 +850,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (bossAvoidChance > 0) {
       applyCondition(botConditions, 'Avoiding', 9999, '', { chance: bossAvoidChance });
     }
+    // Stage 6 Triple Attack
+    if (chapterId === '2A' && stageId === 6) {
+      applyCondition(botConditions, 'Triple Attack', 9999);
+    }
 
     // Player conditions - Chapter-based Passives
     const playerConditions = new Map<string, Condition>();
