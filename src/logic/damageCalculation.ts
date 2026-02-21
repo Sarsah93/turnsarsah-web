@@ -44,7 +44,7 @@ export function calculateBaseDamage(
     const isBannedRank = card.rank && bannedRanks.includes(card.rank);
     const isBannedSuit = card.suit && card.suit === bannedSuit;
 
-    if (isBannedRank || isBannedSuit) return acc + 0;
+    if (isBannedRank || isBannedSuit || card.isBanned) return acc + 0;
 
     if (card.isJoker) return acc + 14; // 조커는 일단 14점 (또는 대체된 카드 점수?)
     return acc + (RANK_VALUES[card.rank!] || 0);

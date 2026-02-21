@@ -133,7 +133,7 @@ export const TRANSLATIONS = {
             FORCE_SWAP_MSG: "룰: 강제 교체!",
             NO_DMG_UNDER_30_MSG: "룰: 30 미만 데미지 무효",
             NEURO_MISSED: "공격 실패! (신경성 맹독)",
-            PUZZLE_SUCCESS: "퍼즐 성공! 데미지 +50%!",
+            PUZZLE_SUCCESS: "퍼즐 성공! (타겟 x 2) + {bonus} 고정 데미지!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -234,7 +234,7 @@ export const TRANSLATIONS = {
             FULL_HOUSE_DMG_0_PARALYZE_40: "룰: 풀하우스 점수 0 & 마비 40%",
             STRAIGHT_DMG_0_BLIND_1_BAN_1: "룰: 스트레이트 점수 0 & 블라인드 1장 & 밴 1장",
             FLUSH_DMG_0_BLIND_3: "룰: 플러시 점수 0 & 블라인드 3장",
-            PUZZLE_DMG_50_BLIND_1_AWAKEN: "룰: 수수께끼 타겟 적중 시 +50% 데미지 & 블라인드 1장 & 각성",
+            PUZZLE_DMG_50_BLIND_1_AWAKEN: "룰: 수수께끼 적중 시 (타겟x2 + 족보보너스) 고정데미지 & 블라인드 1장 & 각성",
 
             PUZZLE_TARGET: "타겟: {target}",
             REVIVE_50: "룰: 체력 0 도달 시 50% 회복 (1회)",
@@ -421,7 +421,7 @@ export const TRANSLATIONS = {
             FORCE_SWAP_MSG: "RULE: FORCE SWAP!",
             NO_DMG_UNDER_30_MSG: "RULE: NO DMG UNDER 30",
             NEURO_MISSED: "MISSED! (NEUROTOXICITY)",
-            PUZZLE_SUCCESS: "PUZZLE SUCCESS! DMG +50%!",
+            PUZZLE_SUCCESS: "PUZZLE SUCCESS! (Target x 2) + {bonus} Fixed Damage!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -522,7 +522,7 @@ export const TRANSLATIONS = {
             FULL_HOUSE_DMG_0_PARALYZE_40: "RULE: FULL HOUSE DMG 0 & PARALYZE 40%",
             STRAIGHT_DMG_0_BLIND_1_BAN_1: "RULE: STRAIGHT DMG 0 & BLIND 1, BAN 1",
             FLUSH_DMG_0_BLIND_3: "RULE: FLUSH DMG 0 & BLIND 3",
-            PUZZLE_DMG_50_BLIND_1_AWAKEN: "RULE: PUZZLE DMG+50% & BLIND 1 & AWAKEN",
+            PUZZLE_DMG_50_BLIND_1_AWAKEN: "RULE: PUZZLE HIT (Targetx2 + Poker Bonus) FIXED DMG & BLIND 1 & AWAKEN",
 
             PUZZLE_TARGET: "TARGET: {target}",
             REVIVE_50: "RULE: REVIVE 50% HP (ONCE)",

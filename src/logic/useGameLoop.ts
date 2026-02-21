@@ -230,7 +230,18 @@ export const useGameLoop = () => {
             return;
         }
 
-        const selectedCards = selectedIndices.map(idx => currentPlayerHand[idx]).filter(Boolean) as Card[];
+        // v2.3.6: Map BANNED state to card objects before calculation (allows selection but sets score to 0)
+        const selectedCards = selectedIndices.map(idx => {
+            const card = currentPlayerHand[idx];
+            if (!card) return null;
+            const isBannedIndex = store.bannedIndices.includes(idx);
+            const isBannedRank = card.rank && store.bannedRanks.includes(card.rank);
+            const isBannedSuit = card.suit && card.suit === store.bannedSuit;
+            return {
+                ...card,
+                isBanned: !!(isBannedIndex || isBannedRank || isBannedSuit)
+            };
+        }).filter(Boolean) as Card[];
 
         // 2. 데미지 계산
         const result = calculatePlayerDamage(
@@ -247,82 +258,99 @@ export const useGameLoop = () => {
             return;
         }
 
-        // v2.0.0.14: Damage Reduction - Unified via Conditions
-        let damage = Math.floor(result.finalDamage);
-
-        // v2.3.2: 2A Hand Nullification Rules (족보 보너스만 0, 카드 숫자 합산은 유지)
-        if (store.chapterNum === '2A') {
-            const nullifiedHands: Record<number, string> = {
-                1: 'Straight Flush', 2: 'One Pair', 3: 'Two Pair', 6: 'Three of a Kind',
-                7: 'Full House', 8: 'Straight', 9: 'Flush'
-            };
-            const nullifiedHand = nullifiedHands[stageNum];
-            if (nullifiedHand && result.handType === nullifiedHand) {
-                const handBonuses: Record<string, number> = {
-                    'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
-                    'Straight': 75, 'Flush': 100, 'Full House': 125, 'Straight Flush': 150
-                };
-                const bonus = handBonuses[result.handType] || 0;
-                // baseDamage = handBonus + sumValues, so remove handBonus then apply multiplier
-                damage = Math.max(0, Math.floor((result.baseDamage - bonus) * result.multiplier));
-            }
-        }
-
-        // v2.3.2: Neurotoxicity Accuracy Penalty (30% Miss)
-        if (player.conditions.has('Neurotoxicity') && Math.random() < 0.3) {
-            damage = 0;
-            setMessage("ATTACK MISSED!");
-            AudioManager.playSFX('/assets/audio/conditions/avoiding.mp3');
-        }
-
-        // v2.3.2: 2A-4 No damage under 30
-        if (store.chapterNum === '2A' && stageNum === 4 && damage < 30) {
-            damage = 0;
-            setMessage(t.COMBAT.NO_DMG_UNDER_30_MSG);
-        }
-
-        const reductionCond = bot.conditions.get('Damage Reducing');
-        if (reductionCond) {
-            const percent = (reductionCond.data as any)?.percent || 0;
-            damage = Math.floor(damage * (1 - percent / 100));
-        }
-
-        // v2.3.0: Damage Recoiling (Player attacking)
-        const recoilingCond = player.conditions.get('Damage recoiling');
-        let recoilTaken = 0;
-        if (recoilingCond && Math.random() < 0.3) { // 30% chance
-            const bonusDmg = 20;
-            const recoilDmg = 10;
-            damage += bonusDmg;
-            recoilTaken = recoilDmg;
-            setMessage(t.CONDITIONS.DAMAGE_RECOILING.NAME + "!");
-        }
-
-        // v2.3.0: Berserker (Player attacking)
-        const berserkerCond = player.conditions.get('Berserker');
-        let lifesteal = 0;
-        if (berserkerCond && player.hp <= player.maxHp * 0.3) {
-            const atkBonus = (berserkerCond.data as any)?.atkBonus || 20;
-            damage += atkBonus;
-            lifesteal = Math.max(1, Math.floor(damage * 0.1));
-        }
-
-        // v2.3.2: Puzzle Bonus (Sphinx)
+        // Sphinx Puzzle Check (v2.3.3)
+        let isPuzzleCorrect = false;
         if (store.chapterNum === '2A' && stageNum === 10 && store.puzzleTarget > 0) {
             const sumOfSelected = selectedCards.reduce((acc, c) => {
                 if (c.isJoker) return acc + 14;
                 if (c.rank === 'A') return acc + 1;
                 return acc + (RANK_VALUES[c.rank!] || 0);
             }, 0);
-            if (sumOfSelected === store.puzzleTarget) {
-                damage = Math.floor(damage * 1.5);
-                setMessage(t.COMBAT.PUZZLE_SUCCESS);
-                showDamageText('BOSS_LEFT', 'CORRECT DAMAGE!', '#2ecc71');
-                AudioManager.playSFX('/assets/audio/player/shuffling.mp3'); // Temporary success sound
+            if (sumOfSelected === store.puzzleTarget && selectedCards.length === 5) {
+                isPuzzleCorrect = true;
+                // v2.3.6: Sphinx Balancing - Give Immune on CORRECT answer if not already immune
+                if (!player.conditions.has('Immune')) {
+                    store.addPlayerCondition('Immune', 3);
+                }
             }
         }
 
-        const isCrit = result.isCritical;
+        // v2.3.2: Neurotoxicity Accuracy Penalty (30% Miss check)
+        const isMissed = player.conditions.has('Neurotoxicity') && Math.random() < 0.3;
+
+        let damage = 0;
+        let recoilTaken = 0;
+        let lifesteal = 0;
+
+        if (isMissed) {
+            damage = 0;
+            setMessage(t.COMBAT.NEURO_MISSED || "ATTACK MISSED!");
+            AudioManager.playSFX('/assets/audio/conditions/avoiding.mp3');
+        } else if (isPuzzleCorrect) {
+            // v2.3.4: Sphinx Riddle Fixed Damage (Target * 2 + Poker Bonus)
+            const handBonuses: Record<string, number> = {
+                'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
+                'Straight': 75, 'Flush': 100, 'Full House': 125, 'Four of a Kind': 150,
+                'Straight Flush': 175, 'Royal Flush': 300
+            };
+            const pokerBonus = handBonuses[result.handType] || 0;
+            damage = (store.puzzleTarget * 2) + pokerBonus;
+
+            setMessage(t.COMBAT.PUZZLE_SUCCESS.replace('{bonus}', pokerBonus.toString()));
+            showDamageText('BOSS_LEFT', 'CORRECT DAMAGE!', '#2ecc71');
+            AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
+            // Puzzle damage is fixed, skips reductions/debilitating/critical
+        } else {
+            // Normal Damage Calculation
+            damage = Math.floor(result.finalDamage);
+
+            // v2.3.2: 2A Hand Nullification Rules (족보 보너스만 0, 카드 숫자 합산은 유지)
+            if (store.chapterNum === '2A') {
+                const nullifiedHands: Record<number, string> = {
+                    1: 'Straight Flush', 2: 'One Pair', 3: 'Two Pair', 6: 'Three of a Kind',
+                    7: 'Full House', 8: 'Straight', 9: 'Flush'
+                };
+                const nullifiedHand = nullifiedHands[stageNum];
+                if (nullifiedHand && result.handType === nullifiedHand) {
+                    const handBonuses: Record<string, number> = {
+                        'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
+                        'Straight': 75, 'Flush': 100, 'Full House': 125, 'Straight Flush': 150
+                    };
+                    const bonus = handBonuses[result.handType] || 0;
+                    damage = Math.max(0, Math.floor((result.baseDamage - bonus) * result.multiplier));
+                }
+            }
+
+            // v2.3.2: 2A-4 No damage under 30
+            if (store.chapterNum === '2A' && stageNum === 4 && damage < 30) {
+                damage = 0;
+                setMessage(t.COMBAT.NO_DMG_UNDER_30_MSG);
+            }
+
+            // Damage Reduction
+            const reductionCond = bot.conditions.get('Damage Reducing');
+            if (reductionCond) {
+                const percent = (reductionCond.data as any)?.percent || 0;
+                damage = Math.floor(damage * (1 - percent / 100));
+            }
+
+            // v2.3.0: Damage Recoiling (Player attacking)
+            const recoilingCond = player.conditions.get('Damage recoiling');
+            if (recoilingCond && Math.random() < 0.3) {
+                damage += 20;
+                recoilTaken = 10;
+                setMessage(t.CONDITIONS.DAMAGE_RECOILING.NAME + "!");
+            }
+
+            // v2.3.0: Berserker (Player attacking)
+            const berserkerCond = player.conditions.get('Berserker');
+            if (berserkerCond && player.hp <= player.maxHp * 0.3) {
+                damage += (berserkerCond.data as any)?.atkBonus || 20;
+                lifesteal = Math.max(1, Math.floor(damage * 0.1));
+            }
+        }
+
+        const isCrit = isPuzzleCorrect ? false : result.isCritical;
         const hasWild = selectedCards.some(c => c.isJoker);
 
         // --- PHASE 1: GATHERING ---
@@ -360,7 +388,9 @@ export const useGameLoop = () => {
         // Damage Popup
         showDamageText('BOT', `-${damage}`, isCrit ? '#c0392b' : '#ecf0f1');
         const wildSuffix = hasWild ? t.UI.WILD : '';
-        setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${result.handType}${wildSuffix}` : `${result.handType}${wildSuffix}`);
+        if (!isPuzzleCorrect) {
+            setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${result.handType}${wildSuffix}` : `${result.handType}${wildSuffix}`);
+        }
 
         // HP Reduction (0.1s after Popup/Shake)
         await new Promise(r => setTimeout(r, 150)); // slightly longer wait for effects
@@ -621,7 +651,7 @@ export const useGameLoop = () => {
 
         // --- Status Effects (v2.3.2: Chapter 2A Adjustments) ---
         if (store.chapterNum === '2A') {
-            if ([1, 2, 3, 5, 6, 8, 9, 10].includes(stageNum)) {
+            if ([1, 2, 3, 6, 8, 9, 10].includes(stageNum)) {
                 if (Math.random() < config.poisonProbCh2A) {
                     store.addPlayerCondition('Poisoning', 3);
                 }
@@ -778,8 +808,8 @@ export const useGameLoop = () => {
             }
         }
 
-        store.applyStageRules(store.chapterNum, stageNum, nextTurn);
         await refillHandSequentially();
+        store.applyStageRules(store.chapterNum, stageNum, nextTurn);
     };
 
     const resolveStatusEffects = async () => {
@@ -820,7 +850,8 @@ export const useGameLoop = () => {
                 await new Promise(r => setTimeout(r, 800));
 
                 if (Math.random() < 0.20 && !playerConditions.has('Paralyzing')) {
-                    store.addPlayerCondition('Paralyzing', 1); // 1-turn paralyze
+                    const { applyCondition: applyC } = await import('./conditions');
+                    applyC(playerConditions, 'Paralyzing', 1);
                 }
             }
 
@@ -839,24 +870,6 @@ export const useGameLoop = () => {
                 const heal = 10;
                 setPlayerHp(Math.min(currentP.maxHp, currentP.hp + heal));
                 showDamageText('PLAYER', `+${heal}`, '#2ecc71');
-                await new Promise(r => setTimeout(r, 800));
-            } else if (cond === 'Neurotoxicity') {
-                const dmg = 15;
-                const freshHP = useGameStore.getState().player.hp;
-                setPlayerHp(Math.max(0, freshHP - dmg));
-                showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
-                playConditionSound('Neurotoxicity');
-
-                // v2.3.2: Once-per-duration 20% Paralysis Check
-                if (!data.data?.paralyzeTriggered && Math.random() < 0.2) {
-                    data.data = { ...data.data, paralyzeTriggered: true };
-                    // Apply 1-turn paralyze
-                    // Note: Paralyze is usually duration 2 (1 turn of effect + 1 turn of clearing). 
-                    // To follow "immediate removal after 1 turn", we add it with duration 2.
-                    useGameStore.getState().addPlayerCondition('Paralyzing', 2);
-                    setMessage(t.COMBAT.PARALYZED);
-                }
-
                 await new Promise(r => setTimeout(r, 800));
             }
 
@@ -1040,12 +1053,25 @@ export const useGameLoop = () => {
     };
 
     const startInitialDraw = async () => {
+        const store = useGameStore.getState();
+        // v2.3.4: If game was loaded, skip initial draw to keep saved hand
+        if (store.isGameLoaded) {
+            store.setIsGameLoaded(false);
+            console.log("Skipping initial draw for loaded game.");
+            return;
+        }
+
         // v2.0.0.21: Skip for tutorial if hand is already pre-set to avoid overwriting guaranteed cards
         if (isTutorial && playerHand.some(c => c !== null)) return;
 
         // v2.0.0.10: Pre-fill with null to maintain slot positions, then refill.
         setPlayerHand(new Array(8).fill(null));
         await refillHandSequentially(1500);
+
+        // v2.3.5: Regenerate Sphinx target after hand is full
+        if (store.chapterNum === '2A' && store.stageNum === 10) {
+            store.applyStageRules(store.chapterNum, store.stageNum, store.currentTurn);
+        }
     };
 
     const handleDefeat = async () => {

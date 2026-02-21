@@ -7,8 +7,8 @@ export class Deck {
   cards: Card[] = [];
   jokerProbability: number;
   // v2.1.0: Pity/Anti-clump tracking
-  private consecutiveJokers = 0;
-  private consecutiveRoyals = 0;
+  consecutiveJokers = 0;
+  consecutiveRoyals = 0;
 
   constructor(jokerProbability: number = JOKER_DRAW_PROBABILITY) {
     this.jokerProbability = jokerProbability;

@@ -159,9 +159,7 @@ export const BossDisplay: React.FC = () => {
             }}>
                 <div>{t.UI.ATK}: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
-                    {stageNum === 3 ? (
-                        `${t.RULES.RULE_HINT}${t.RULES.BLIND_2_CARDS}`
-                    ) : (chapterNum === '2A' ? (
+                    {chapterNum === '2A' ? (
                         `${t.RULES.RULE_HINT}${(() => {
                             const ruleMap: Record<number, string> = {
                                 1: t.RULES.REVIVE_50,
@@ -177,7 +175,9 @@ export const BossDisplay: React.FC = () => {
                             };
                             return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
                         })()}`
-                    ) : stageNum === 10 ? (
+                    ) : (stageNum === 3 ? (
+                        `${t.RULES.RULE_HINT}${t.RULES.BLIND_2_CARDS}`
+                    ) : (stageNum === 10 ? (
                         stage10RuleText
                     ) : (
                         `${t.RULES.RULE_HINT}${(() => {
@@ -195,7 +195,7 @@ export const BossDisplay: React.FC = () => {
                             };
                             return ruleMap[stageNum] || t.RULES.NONE;
                         })()}`
-                    ))}
+                    )))}
                 </div>
             </div>
 

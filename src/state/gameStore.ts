@@ -45,6 +45,7 @@ interface GameStoreState {
   bannedSuit: string | null;
   bannedHand: string | null;
   blindIndices: number[];
+  bannedIndices: number[];
   setBannedRanks: (ranks: string[]) => void;
   setBannedSuit: (suit: string | null) => void;
   setBannedHand: (hand: string | null) => void;
@@ -141,6 +142,8 @@ interface GameStoreState {
   // v2.3.2: Puzzle Gimmick (Chapter 2A-10)
   puzzleTarget: number;
   setPuzzleTarget: (target: number) => void;
+
+  setBannedIndices: (indices: number[]) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -210,6 +213,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   bannedSuit: null,
   bannedHand: null,
   blindIndices: [],
+  bannedIndices: [],
 
   // UI
   isPaused: false,
@@ -222,6 +226,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setBannedSuit: (bannedSuit) => set({ bannedSuit }),
   setBannedHand: (bannedHand) => set({ bannedHand }),
   setBlindIndices: (blindIndices) => set({ blindIndices }),
+  setBannedIndices: (bannedIndices) => set({ bannedIndices }),
 
   // Setters
   setDrawsRemaining: (draws: number) =>
@@ -270,6 +275,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       let newMaxHp = state.player.maxHp;
       if (name === 'Debilitating') {
         newMaxHp = Math.floor((state.player.baseMaxHp || 200) * 0.8);
+      }
+
+      // v2.3.6: If applying Immune, remove all current debuffs
+      if (name === 'Immune') {
+        const debuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Neurotoxicity'];
+        debuffs.forEach(d => newConditions.delete(d));
       }
 
       return {
@@ -468,9 +479,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       // Player conditions - Chapter-based Passives
       const playerConditions = new Map<string, Condition>();
-      if (chapterId === '1' && config.avoidChance > 0) {
+      // v2.3.6: Both Ch 1 and Ch 2A should have Avoiding if chance > 0
+      if ((chapterId === '1' || chapterId === '2A') && config.avoidChance > 0) {
         applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance });
-      } else if (chapterId === '2A') {
+      }
+
+      if (chapterId === '2A') {
         const dehydrationDmg = {
           [Difficulty.EASY]: 1,
           [Difficulty.NORMAL]: 2,
@@ -515,6 +529,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         deck: newDeck,
         isPaused: false,
         stage10RuleText: '',
+        puzzleTarget: 0,
         message: '',
       };
     });
@@ -525,12 +540,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   applyStageRules: (chapterId: string, stageId: number, turn: number) => {
     const state = get();
     const config = DIFFICULTY_CONFIGS[state.difficulty];
-    let { bannedRanks, bannedSuit, bannedHand, blindIndices, bot } = state;
+    let { bannedRanks, bannedSuit, bannedHand, blindIndices, bannedIndices, bot } = state;
 
     bannedRanks = [];
     bannedSuit = null;
     bannedHand = null;
     blindIndices = [];
+    bannedIndices = [];
 
     const suits = ['CLUBS', 'DIAMONDS', 'HEARTS', 'SPADES'];
     const ranks = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
@@ -647,11 +663,35 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     } else if (chapterId === '2A') {
       // Chapter 2A Stage Rules
       const t = TRANSLATIONS[get().language] as any;
-      if (stageId === 8) {
-        // BLIND 1
+
+      // v2.3.2: 2A Regeneration Persistence (handles Load and End Turn renewal)
+      const regenMap: Record<number, number> = { 2: 5, 3: 10, 4: 10, 5: 15, 8: 10, 9: 15, 10: 15 };
+      const isAwakened = bot.conditions.has('Awakening');
+      if (regenMap[stageId] && !bot.conditions.has('Regenerating') && !isAwakened) {
+        state.addBotCondition('Regenerating', 9999, t.CONDITIONS.REGENERATING.DESC, { amount: regenMap[stageId] });
+      }
+
+      if (stageId === 1) {
+        set({ stage10RuleText: t.RULES.REVIVE_50_STRAIGHT_FLUSH_DMG_0 });
+      } else if (stageId === 2) {
+        set({ stage10RuleText: t.RULES.ONE_PAIR_DMG_0 });
+      } else if (stageId === 3) {
+        set({ stage10RuleText: t.RULES.TWO_PAIR_DMG_0 });
+      } else if (stageId === 4) {
+        set({ stage10RuleText: t.RULES.UNDER_30_POINTS_NO_DMG });
+      } else if (stageId === 5) {
+        set({ stage10RuleText: t.RULES.FORCE_SWAP_2_NEUROTOXIC });
+      } else if (stageId === 6) {
+        set({ stage10RuleText: t.RULES.TRIPLE_DMG_0_TRIPLE_ATTACK });
+      } else if (stageId === 7) {
+        set({ stage10RuleText: t.RULES.FULL_HOUSE_DMG_0_PARALYZE_40 });
+      } else if (stageId === 8) {
+        // BLIND 1 + BAN 1 (Independent slots)
         const indices = [0, 1, 2, 3, 4, 5, 6, 7];
-        const randIdx = Math.floor(Math.random() * indices.length);
-        blindIndices.push(indices[randIdx]);
+        const blindIdx = Math.floor(Math.random() * indices.length);
+        blindIndices.push(indices.splice(blindIdx, 1)[0]);
+        const banIdx = Math.floor(Math.random() * indices.length);
+        bannedIndices.push(indices[banIdx]);
         set({ stage10RuleText: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1 });
       } else if (stageId === 9) {
         // BLIND 3
@@ -695,18 +735,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           }
         }
 
-        // Fallback if not enough cards (should not happen normally)
-        if (target === 0) {
-          target = Math.floor(Math.random() * (100 - 15 + 1)) + 15;
+        if (target > 0) {
+          const ruleText = (t.RULES.PUZZLE || "RULE: PUZZLE") + ` (${(t.RULES.PUZZLE_TARGET || "TARGET: {target}").replace('{target}', target.toString())}) + Awakening`;
+          set({ puzzleTarget: target, stage10RuleText: ruleText });
+        } else if (state.puzzleTarget > 0) {
+          // Keep existing target if already set
+          const ruleText = (t.RULES.PUZZLE || "RULE: PUZZLE") + ` (${(t.RULES.PUZZLE_TARGET || "TARGET: {target}").replace('{target}', state.puzzleTarget.toString())}) + Awakening`;
+          set({ stage10RuleText: ruleText });
         }
-
-        set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN + ` (${t.RULES.PUZZLE_TARGET.replace('{target}', target.toString())})` });
-      } else {
-        set({ stage10RuleText: '' });
       }
     }
 
-    set({ bannedRanks, bannedSuit, bannedHand, blindIndices });
+    set({ bannedRanks, bannedSuit, bannedHand, blindIndices, bannedIndices });
   },
 
   resetGame: () =>
@@ -716,6 +756,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       currentTurn: 0,
       playerHand: new Array(8).fill(null),
       deck: new Deck(),
+      blindIndices: [],
+      bannedIndices: [],
       isPaused: false,
       player: {
         name: 'Player',
@@ -736,6 +778,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         conditions: new Map<string, Condition>(),
       },
       message: '',
+      isGameLoaded: false,
     }),
 
   saveGame: (slot: number) => {
@@ -752,6 +795,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       player: state.player,
       bot: state.bot,
       playerHand: state.playerHand,
+      deckState: {
+        cards: state.deck.cards,
+        jokerProbability: state.deck.jokerProbability,
+        consecutiveJokers: state.deck.consecutiveJokers,
+        consecutiveRoyals: state.deck.consecutiveRoyals,
+      },
+      puzzleTarget: state.puzzleTarget,
     });
   },
 
@@ -811,9 +861,19 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         player: gameData.player,
         bot: gameData.bot,
         playerHand: gameData.playerHand as (Card | null)[],
-        deck: new Deck(),
         isGameLoaded: true,
+        puzzleTarget: gameData.puzzleTarget || 0,
       });
+
+      // Restore Deck State
+      if (gameData.deckState) {
+        const restoredDeck = new Deck(gameData.deckState.jokerProbability);
+        restoredDeck.cards = gameData.deckState.cards;
+        restoredDeck.consecutiveJokers = gameData.deckState.consecutiveJokers;
+        restoredDeck.consecutiveRoyals = gameData.deckState.consecutiveRoyals;
+        set({ deck: restoredDeck });
+      }
+
       // Re-apply rules to populate UI states (especially for Stage 10 rule text)
       get().applyStageRules(gameData.chapterNum || '1', gameData.stageNum, gameData.currentTurn);
     }
@@ -898,9 +958,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     // Player conditions - Chapter-based Passives
     const playerConditions = new Map<string, Condition>();
-    if (chapterId === '1' && config.avoidChance > 0) {
+    if ((chapterId === '1' || chapterId === '2A') && config.avoidChance > 0) {
       applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance });
-    } else if (chapterId === '2A') {
+    }
+    if (chapterId === '2A') {
       const dehydrationDmg = {
         [Difficulty.EASY]: 1,
         [Difficulty.NORMAL]: 2,
@@ -922,7 +983,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       bannedSuit: null,
       bannedHand: null,
       blindIndices: [],
+      bannedIndices: [],
       hasStage6Bonus: false,
+      isGameLoaded: false,
       player: {
         name: 'Player',
         hp: config.playerHp,
@@ -945,6 +1008,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       deck: newDeck,
       isPaused: false,
       stage10RuleText: '',
+      puzzleTarget: 0,
       message: '',
     });
     // Immediately apply rules for turn 0

@@ -36,6 +36,7 @@ export const CardHand: React.FC<CardHandProps> = ({
     bannedSuit,
     bannedHand,
     blindIndices,
+    bannedIndices,
     tutorialStep,
     tutorialHighlights,
     language
@@ -87,7 +88,16 @@ export const CardHand: React.FC<CardHandProps> = ({
     }
 
     const result = calculatePlayerDamage(
-      cardsToCalculate,
+      cardsToCalculate.map((c, i) => {
+        const originalIdx = selectedCards[i];
+        const isBannedIndex = bannedIndices && bannedIndices.includes(originalIdx);
+        const isBannedRank = c.rank && bannedRanks.includes(c.rank);
+        const isBannedSuit = c.suit && bannedSuit === c.suit;
+        return {
+          ...c,
+          isBanned: !!(isBannedIndex || isBannedRank || isBannedSuit)
+        };
+      }),
       player.conditions.has('Debilitating'),
       bannedHand,
       bannedRanks,
@@ -99,15 +109,22 @@ export const CardHand: React.FC<CardHandProps> = ({
     const isBanned = result.baseDamage === 0 && handTypeLabel !== 'High Card';
     const wildSuffix = hasWild ? t.UI.WILD : '';
 
+    if (isBanned && !bannedHand) {
+      // If it's BANNED because of cards, show 0 damage with hand name
+      return `${t.COMBAT.DAMAGE}: ${damageLabel} ("${handTypeLabel}")${wildSuffix}`;
+    }
+
     if (isBanned) {
       return `${t.COMBAT.BANNED}: ${handTypeLabel}${wildSuffix}`;
     }
 
     return `${t.COMBAT.DAMAGE}: ${damageLabel} ("${handTypeLabel}")${wildSuffix}`;
-  }, [selectedCards, cards, player.conditions, bannedRanks, bannedSuit, bannedHand, blindIndices, t]);
+  }, [selectedCards, cards, player.conditions, bannedRanks, bannedSuit, bannedHand, bannedIndices, blindIndices, t]);
 
   const handleCardClick = (index: number) => {
     if (!isInteracting || disabled || !cards[index] || isProcessing) return;
+    // Banned check removed in v2.3.6: Player wants to be able to select and attack with banned cards (for 0 score)
+    // if (bannedIndices && bannedIndices.includes(index)) return; 
     onSelectCard(index);
   };
 
@@ -183,7 +200,8 @@ export const CardHand: React.FC<CardHandProps> = ({
           const isBlind = card ? !!blindIndices.includes(idx) : false;
           const isBannedRank = !!(card && card.rank && bannedRanks.includes(card.rank));
           const isBannedSuit = !!(card && card.suit && card.suit === bannedSuit);
-          const isBanned = isBannedRank || isBannedSuit;
+          const isBannedItem = !!(bannedIndices && bannedIndices.includes(idx));
+          const isBanned = isBannedRank || isBannedSuit || isBannedItem;
 
           const selectedIdxInQueue = selectedCards.indexOf(idx);
           const isAttacking = ['GATHERING', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);

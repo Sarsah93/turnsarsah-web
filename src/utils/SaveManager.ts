@@ -12,6 +12,13 @@ interface SaveData {
   player: Character;
   bot: Character;
   playerHand: (Card | null)[];
+  deckState?: {
+    cards: Card[];
+    jokerProbability: number;
+    consecutiveJokers: number;
+    consecutiveRoyals: number;
+  };
+  puzzleTarget?: number;
   timestamp: number;
 }
 
@@ -33,6 +40,7 @@ export class SaveManager {
         ...data.bot,
         conditions: Array.from(data.bot.conditions.entries()),
       },
+      deckState: data.deckState,
       timestamp: Date.now(),
     };
 

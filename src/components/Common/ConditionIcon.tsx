@@ -52,6 +52,9 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   } else if (name === 'Avoiding' && condition.data) {
     const chance = Math.floor(((condition.data as any).chance || 0) * 100);
     resolvedDesc = resolvedDesc.replace('{percent}', chance.toString());
+  } else if (name === 'Regenerating' && condition.data) {
+    const amount = (condition.data as any).amount || 10;
+    resolvedDesc = resolvedDesc.replace('{heal}', amount.toString());
   } else if (name === 'Damage recoiling') {
     resolvedDesc = resolvedDesc.replace('{chance}', '30').replace('{bonus}', '20').replace('{recoil}', '10');
   } else if (name === 'Berserker') {

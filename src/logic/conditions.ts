@@ -42,7 +42,7 @@ export function applyCondition(
   data?: unknown
 ): boolean {
   // 1. 면역(Immune) 상태 체크 (디버프성 효과만 차단)
-  const debuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating'];
+  const debuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Neurotoxicity'];
   if (conditions.has('Immune') && debuffs.includes(name)) {
     return false;
   }
