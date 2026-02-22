@@ -8,8 +8,6 @@ import { ChapterSelect } from './components/ChapterSelect';
 import './App.css';
 import { AudioManager } from './utils/AudioManager';
 
-import { Game } from './components/Game';
-import { GameOverScreen } from './components/GameOverScreen';
 import { FadeOverlay } from './components/Common/FadeOverlay';
 import { TRANSLATIONS } from './constants/translations';
 

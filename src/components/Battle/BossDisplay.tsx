@@ -155,26 +155,32 @@ export const BossDisplay: React.FC = () => {
             <div style={{
                 position: 'absolute', top: '100px', right: '30px',
                 textAlign: 'right', color: '#fff', fontSize: '1.8rem', fontFamily: 'BebasNeue',
-                textShadow: '2px 2px 2px #000'
+                textShadow: '2px 2px 2px #000',
+                whiteSpace: 'pre-line',
+                maxWidth: '280px',
+                lineHeight: '1.2'
             }}>
                 <div>{t.UI.ATK}: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
                     {chapterNum === '2A' ? (
-                        `${t.RULES.RULE_HINT}${(() => {
-                            const ruleMap: Record<number, string> = {
-                                1: t.RULES.REVIVE_50,
-                                2: t.RULES.ONE_PAIR_DMG_0,
-                                3: t.RULES.TWO_PAIR_DMG_0,
-                                4: t.RULES.UNDER_30_POINTS_NO_DMG,
-                                5: t.RULES.FORCE_SWAP,
-                                6: t.RULES.TRIPLE_DMG_0_TRIPLE_ATTACK,
-                                7: t.RULES.FULL_HOUSE_DMG_0_PARALYZE_40,
-                                8: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1,
-                                9: t.RULES.FLUSH_DMG_0_BLIND_3,
-                                10: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN,
-                            };
-                            return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
-                        })()}`
+                        stageNum === 10 ? (
+                            stage10RuleText.includes(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText}`
+                        ) : (
+                            `${t.RULES.RULE_HINT}${(() => {
+                                const ruleMap: Record<number, string> = {
+                                    1: t.RULES.REVIVE_50,
+                                    2: t.RULES.ONE_PAIR_DMG_0,
+                                    3: t.RULES.TWO_PAIR_DMG_0,
+                                    4: t.RULES.UNDER_30_POINTS_NO_DMG,
+                                    5: t.RULES.FORCE_SWAP,
+                                    6: t.RULES.TRIPLE_DMG_0_TRIPLE_ATTACK,
+                                    7: t.RULES.FULL_HOUSE_DMG_0_PARALYZE_40,
+                                    8: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1,
+                                    9: t.RULES.FLUSH_DMG_0_BLIND_3,
+                                };
+                                return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
+                            })()}`
+                        )
                     ) : (stageNum === 3 ? (
                         `${t.RULES.RULE_HINT}${t.RULES.BLIND_2_CARDS}`
                     ) : (stageNum === 10 ? (
