@@ -279,7 +279,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       // v2.3.6: If applying Immune, remove all current debuffs
       if (name === 'Immune') {
-        const debuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Neurotoxicity'];
+        const debuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Neurotoxicity', 'Dehydration'];
         debuffs.forEach(d => newConditions.delete(d));
       }
 
