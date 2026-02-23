@@ -84,6 +84,8 @@ export const useGameLoop = () => {
             case 'Adrenaline secretion': file = '아드레날린 분비(Adrenaline secretion).mp3'; break;
             case 'Neurotoxicity': file = '신경성 맹독(Neurotoxicity).mp3'; break;
             case 'Dehydration': file = '탈수(Dehydration).mp3'; break;
+            case 'Provocation': file = ''; break; // No SFX specified
+            case 'Decreasing accuracy': file = '명중률 저하(Decreasing accuracy).mp3'; break;
             case 'Triple Attack':
                 AudioManager.playSFX('/assets/audio/combat/chapter 2a desert/06_desert vultures_2.mp3');
                 return;
@@ -110,6 +112,22 @@ export const useGameLoop = () => {
             const filename = sfxMap[stage];
             if (filename) return `/assets/audio/combat/chapter 2a desert/${filename}`;
             return '';
+        }
+
+        if (chapter === '2B') {
+            const sfxMap: Record<number, string> = {
+                1: '02_orc_1.mp3',
+                2: '13_orcsavage_1.mp3',
+                3: '11_halforc_1.mp3',
+                4: '02_orc_1.mp3',
+                5: '03_orcchieftan_1.mp3',
+                6: '04_highorc_1.mp3',
+                7: '04_highorc_1.mp3',
+                8: '05_highorc assassin_1.mp3',
+                9: '03_orcchieftan_1.mp3',
+                10: '06_highorc lord_1.mp3'
+            };
+            return sfxMap[stage] ? `/assets/audio/stages/chapter 2B/${sfxMap[stage]}` : null;
         }
 
         if (chapter !== '1') return '';
@@ -243,8 +261,21 @@ export const useGameLoop = () => {
             };
         }).filter(Boolean) as Card[];
 
-        // 2. 데미지 계산
-        const result = calculatePlayerDamage(
+        // v2.3.0: Accuracy Check (Decreasing Accuracy / Neurotoxicity)
+        const accCond = player.conditions.get('Decreasing accuracy');
+        const neuroCond = player.conditions.get('Neurotoxicity');
+        const missChance = (accCond ? ((accCond.data as any)?.percent || 20) / 100 : 0) + (neuroCond ? 0.3 : 0);
+
+        if (missChance > 0 && Math.random() < missChance) {
+            setMessage(t.COMBAT.ACCURACY_MISSED); // 명중률 저하 메시지 활용
+            triggerScreenEffect('shake-small');
+            await new Promise(r => setTimeout(r, 1000));
+            await executeBotTurn();
+            return;
+        }
+
+        // Damage Calculation
+        const { baseDamage, isCritical, finalDamage: rawDamage, handType } = calculatePlayerDamage(
             selectedCards,
             player.conditions.has('Debilitating'),
             store.bannedHand,
@@ -252,8 +283,29 @@ export const useGameLoop = () => {
             store.bannedSuit
         );
 
-        if (result.baseDamage === 0 && result.handType !== 'High Card') {
-            setMessage(`${t.COMBAT.BANNED_HAND}${result.handType}`);
+        // Apply Damage Multipliers (Reduction, Adrenaline)
+        const drCond = bot.conditions.get('Damage Reducing');
+        const adCond = bot.conditions.get('Adrenaline secretion');
+        let finalDamage = rawDamage; // Start with raw damage from calculatePlayerDamage
+
+        // Damage Reduction
+        if (drCond) {
+            const percent = (drCond.data as any)?.percent || 0;
+            finalDamage = Math.floor(finalDamage * (1 - percent / 100));
+        }
+
+        // Adrenaline Secretion (Permanent threshold-based nullification for High Orc)
+        let isAdrenalineNull = false;
+        if (adCond) {
+            const threshold = (adCond.data as any)?.limit || 60;
+            if (finalDamage > 0 && finalDamage <= threshold) {
+                finalDamage = 0;
+                isAdrenalineNull = true;
+            }
+        }
+
+        if (baseDamage === 0 && handType !== 'High Card') {
+            setMessage(`${t.COMBAT.BANNED_HAND}${handType}`);
             triggerScreenEffect('shake');
             return;
         }
@@ -276,16 +328,17 @@ export const useGameLoop = () => {
         }
 
         // v2.3.2: Neurotoxicity Accuracy Penalty (30% Miss check)
-        const isMissed = player.conditions.has('Neurotoxicity') && Math.random() < 0.3;
+        // This was moved to the top as a pre-check. The old `isMissed` variable is no longer needed here.
 
         let damage = 0;
         let recoilTaken = 0;
         let lifesteal = 0;
 
-        if (isMissed) {
+        if (isAdrenalineNull) {
             damage = 0;
-            setMessage(t.COMBAT.NEURO_MISSED || "ATTACK MISSED!");
-            AudioManager.playSFX('/assets/audio/conditions/avoiding.mp3');
+            setMessage(t.CONDITIONS.ADRENALINE_SECRETION.NAME + "!");
+            playConditionSound('Adrenaline secretion');
+            setBotAnimState('HIT'); // Still show hit animation even if damage is 0
         } else if (isPuzzleCorrect) {
             // v2.3.4: Sphinx Riddle Fixed Damage (Target * 2 + Poker Bonus)
             const handBonuses: Record<string, number> = {
@@ -293,7 +346,7 @@ export const useGameLoop = () => {
                 'Straight': 75, 'Flush': 100, 'Full House': 125, 'Four of a Kind': 150,
                 'Straight Flush': 175, 'Royal Flush': 300
             };
-            const pokerBonus = handBonuses[result.handType] || 0;
+            const pokerBonus = handBonuses[handType] || 0;
             damage = (store.puzzleTarget * 2) + pokerBonus;
 
             setMessage(t.COMBAT.PUZZLE_SUCCESS.replace('{bonus}', pokerBonus.toString()));
@@ -302,7 +355,7 @@ export const useGameLoop = () => {
             // Puzzle damage is fixed, skips reductions/debilitating/critical
         } else {
             // Normal Damage Calculation
-            damage = Math.floor(result.finalDamage);
+            damage = Math.floor(finalDamage); // Use finalDamage after modifiers
 
             // v2.3.2: 2A Hand Nullification Rules (족보 보너스만 0, 카드 숫자 합산은 유지)
             if (store.chapterNum === '2A') {
@@ -311,13 +364,13 @@ export const useGameLoop = () => {
                     7: 'Full House', 8: 'Straight', 9: 'Flush'
                 };
                 const nullifiedHand = nullifiedHands[stageNum];
-                if (nullifiedHand && result.handType === nullifiedHand) {
+                if (nullifiedHand && handType === nullifiedHand) {
                     const handBonuses: Record<string, number> = {
                         'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
                         'Straight': 75, 'Flush': 100, 'Full House': 125, 'Straight Flush': 150
                     };
-                    const bonus = handBonuses[result.handType] || 0;
-                    damage = Math.max(0, Math.floor((result.baseDamage - bonus) * result.multiplier));
+                    const bonus = handBonuses[handType] || 0;
+                    damage = Math.max(0, Math.floor((baseDamage - bonus) * (finalDamage / rawDamage))); // Re-calculate based on baseDamage and original multiplier
                 }
             }
 
@@ -327,12 +380,12 @@ export const useGameLoop = () => {
                 setMessage(t.COMBAT.NO_DMG_UNDER_30_MSG);
             }
 
-            // Damage Reduction
-            const reductionCond = bot.conditions.get('Damage Reducing');
-            if (reductionCond) {
-                const percent = (reductionCond.data as any)?.percent || 0;
-                damage = Math.floor(damage * (1 - percent / 100));
-            }
+            // Damage Reduction (already applied via finalDamage)
+            // const reductionCond = bot.conditions.get('Damage Reducing');
+            // if (reductionCond) {
+            //     const percent = (reductionCond.data as any)?.percent || 0;
+            //     damage = Math.floor(damage * (1 - percent / 100));
+            // }
 
             // v2.3.0: Damage Recoiling (Player attacking)
             const recoilingCond = player.conditions.get('Damage recoiling');
@@ -350,7 +403,7 @@ export const useGameLoop = () => {
             }
         }
 
-        const isCrit = isPuzzleCorrect ? false : result.isCritical;
+        const isCrit = isPuzzleCorrect ? false : isCritical;
         const hasWild = selectedCards.some(c => c.isJoker);
 
         // --- PHASE 1: GATHERING ---
@@ -388,8 +441,8 @@ export const useGameLoop = () => {
         // Damage Popup
         showDamageText('BOT', `-${damage}`, isCrit ? '#c0392b' : '#ecf0f1');
         const wildSuffix = hasWild ? t.UI.WILD : '';
-        if (!isPuzzleCorrect) {
-            setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${result.handType}${wildSuffix}` : `${result.handType}${wildSuffix}`);
+        if (!isPuzzleCorrect && !isAdrenalineNull) {
+            setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${handType}${wildSuffix}` : `${handType}${wildSuffix}`);
         }
 
         // HP Reduction (0.1s after Popup/Shake)
@@ -518,6 +571,44 @@ export const useGameLoop = () => {
             }
         }
 
+        // v2.3.0: Chapter 2B Boss Triggers (Invincible Spirit / Berserker)
+        const freshBot = useGameStore.getState().bot;
+        const invincCond = freshBot.conditions.get('Invincible spirit');
+        if (invincCond && freshBot.hp > 0 && freshBot.hp <= (invincCond.data as any)?.threshold) {
+            const heal = (invincCond.data as any)?.heal || 100;
+            const limit = (invincCond.data as any)?.limit || 1;
+            if (limit > 0) {
+                setBotHp(Math.min(freshBot.maxHp, freshBot.hp + heal));
+                setMessage(t.CONDITIONS.INVINCIBLE_SPIRIT.NAME + "!");
+                playConditionSound('Invincible spirit');
+                showDamageText('BOT', `+${heal}`, '#2ecc71');
+
+                const newConds = new Map(freshBot.conditions);
+                const updated = { ...invincCond, data: { ...((invincCond.data as any) || {}), limit: limit - 1 } };
+                if (updated.data.limit <= 0) newConds.delete('Invincible spirit');
+                else newConds.set('Invincible spirit', updated);
+                useGameStore.getState().setBot({ ...freshBot, conditions: newConds });
+
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+
+        // Berserker Check (HP threshold)
+        if (store.chapterNum === '2B') {
+            const bThresholds: Record<number, number> = { 4: 0.2, 7: 0.3, 10: 0.3 };
+            const bAtkBonuses: Record<number, number> = { 4: 15, 7: 20, 10: 25 };
+            const bLifesteals: Record<number, number> = { 4: 10, 7: 10, 10: 15 };
+
+            if (bThresholds[stageNum] && freshBot.hp > 0 && freshBot.hp < (freshBot.maxHp * bThresholds[stageNum])) {
+                if (!freshBot.conditions.has('Berserker')) {
+                    store.addBotCondition('Berserker', 9999, '', { atkBonus: bAtkBonuses[stageNum], lifesteal: bLifesteals[stageNum] });
+                    setMessage(t.CONDITIONS.BERSERKER.NAME + "!");
+                    playConditionSound('Berserker');
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+        }
+
         if (newBotHp <= 0) {
             await handleVictory();
         } else {
@@ -536,7 +627,21 @@ export const useGameLoop = () => {
         const store = useGameStore.getState();
         const currentBot = store.bot;
         const currentPlayer = store.player;
-        const damage = calculateBotDamage(currentBot.atk);
+
+        let baseDmg = currentBot.atk;
+
+        // v2.3.0: Boss Buffs (Berserker / Damage Recoiling)
+        const bCond = currentBot.conditions.get('Berserker');
+        if (bCond) {
+            baseDmg += (bCond.data as any)?.atkBonus || 0;
+        }
+
+        const rCond = currentBot.conditions.get('Damage recoiling');
+        if (rCond) {
+            baseDmg += (rCond.data as any)?.bonus || 0;
+        }
+
+        const damage = calculateBotDamage(baseDmg);
 
         await new Promise(r => setTimeout(r, 1500));
 
@@ -561,12 +666,24 @@ export const useGameLoop = () => {
         const avoidCond = currentPlayer.conditions.get('Avoiding');
         const finalAvoidChance = avoidCond ? ((avoidCond.data as any)?.chance ?? config.avoidChance) : config.avoidChance;
 
-        const isAvoided = !isTutorial && finalAvoidChance > 0 && Math.random() < finalAvoidChance;
+        // v2.3.6: Chapter 2B Environmental Rule - Player Avoiding is DISABLED
+        const isAvoided = !isTutorial && store.chapterNum !== '2B' && finalAvoidChance > 0 && Math.random() < finalAvoidChance;
 
         if (isAvoided) {
             setMessage(t.COMBAT.ATTACK_AVOIDED);
             playConditionSound('Avoiding');
             triggerScreenEffect('flash-red');
+            await new Promise(r => setTimeout(r, 1000));
+            await proceedToEndTurn();
+            return;
+        }
+
+        // v2.3.7: Boss Accuracy Check
+        const botAccuracy = currentBot.accuracy ?? 1.0;
+        if (botAccuracy < 1.0 && Math.random() > botAccuracy) {
+            setMessage(t.COMBAT.BOSS_MISSED);
+            // Play swing sound for miss
+            AudioManager.playSFX('/assets/audio/combat/chapter 1 goblin/06_swing_ weapon.mp3');
             await new Promise(r => setTimeout(r, 1000));
             await proceedToEndTurn();
             return;
@@ -583,13 +700,10 @@ export const useGameLoop = () => {
                     attackCount = 3;
                 }
             }
-        } else if (store.chapterNum === '2A' && stageNum === 6) {
-            // Fallback logic
-            if (Math.random() < 0.5) {
+        } else if (store.chapterNum === '2B' && stageNum === 3) {
+            // Half Orc Double Attack (100% first, 40% second)
+            if (Math.random() < 0.4) {
                 attackCount = 2;
-                if (Math.random() < 0.3) {
-                    attackCount = 3;
-                }
             }
         }
 
@@ -629,8 +743,54 @@ export const useGameLoop = () => {
             setPlayerAnimState('HIT');
 
             // Apply Damage
-            setPlayerHp(applyDamage(useGameStore.getState().player.hp, damage));
-            showDamageText('PLAYER', `-${damage}`, '#e74c3c');
+            const finalDmg = (store.chapterNum === '2B' && stageNum === 8 && Math.random() < 0.25)
+                ? Math.floor(damage * 1.5) // Critical Hit for 2B-8
+                : damage;
+
+            if (finalDmg > damage) {
+                setMessage(t.COMBAT.CRITICAL_HIT);
+                triggerScreenEffect('flash-red');
+            }
+
+            setPlayerHp(applyDamage(useGameStore.getState().player.hp, finalDmg));
+            showDamageText('PLAYER', `-${finalDmg}`, '#e74c3c');
+
+            // v2.3.0: Boss Lifesteal / Recoil / Provocation
+            const freshBotAfterHit = useGameStore.getState().bot;
+            const bCondHit = freshBotAfterHit.conditions.get('Berserker');
+            if (bCondHit) {
+                const heal = Math.floor(finalDmg * ((bCondHit.data as any)?.lifesteal || 10) / 100);
+                if (heal > 0) {
+                    setBotHp(Math.min(freshBotAfterHit.maxHp, freshBotAfterHit.hp + heal));
+                    showDamageText('BOT', `+${heal}`, '#2ecc71');
+                }
+            }
+
+            if (store.chapterNum === '2B' && stageNum === 2 && Math.random() < 0.4) {
+                // Damage Recoiling logi: +10 dmg, 12 recoil
+                // wait, user said "보스 공격 시... 발생 확률 40%". Does it mean it applies a status or just happens once?
+                // "본인에게도 12데미지... 데미지 반동 상태이상 발생" 
+                // I'll apply the status effect 'Damage recoiling' with data if not present, 
+                // and maybe apply the immediate effect too.
+                if (!freshBotAfterHit.conditions.has('Damage recoiling')) {
+                    store.addBotCondition('Damage recoiling', 3, '', { bonus: 10, recoil: 12, chance: 100 });
+                }
+            }
+
+            const pCond = freshBotAfterHit.conditions.get('Provocation');
+            if (pCond && Math.random() < ((pCond.data as any)?.chance / 100 || 0.3)) {
+                // Apply Decreasing Accuracy to Player
+                const accPercent = stageNum === 5 ? 20 : (stageNum === 9 ? 25 : 30);
+                store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: accPercent });
+            }
+
+            // Recoil Damage if Boss has 'Damage recoiling' status
+            const recoCond = freshBotAfterHit.conditions.get('Damage recoiling');
+            if (recoCond) {
+                const recoil = (recoCond.data as any)?.recoil || 12;
+                setBotHp(Math.max(0, freshBotAfterHit.hp - recoil));
+                showDamageText('BOT', `-${recoil}`, '#e74c3c');
+            }
 
             await new Promise(r => setTimeout(r, i < attackCount - 1 ? 800 : 400)); // Delay between multi-attacks
 
@@ -678,6 +838,17 @@ export const useGameLoop = () => {
                 if (Math.random() < 0.4) {
                     store.addPlayerCondition('Paralyzing', 2);
                 }
+            }
+        } else if (store.chapterNum === '2B') {
+            const configB = DIFFICULTY_CONFIGS[store.difficulty];
+            // Standard 2B Status Application logic (placeholder or move to each stage)
+            const bProbMap: Record<number, number> = { 1: 0.1, 2: 0.12, 3: 0.15, 4: 0.12, 6: 0.12, 7: 0.15, 8: 0.17, 9: 0.20, 10: 0.15 };
+            const bleedProb = bProbMap[stageNum] || 0.15;
+            if (Math.random() < bleedProb) {
+                store.addPlayerCondition('Bleeding', 4);
+            }
+            if (stageNum === 8 && Math.random() < 0.25) {
+                store.addPlayerCondition('Poisoning', 4);
             }
         } else if (store.chapterNum === '1') {
             // (existing Chapter 1 status logic would follow here)

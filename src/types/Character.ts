@@ -21,6 +21,7 @@ export interface Character {
   drawsRemaining?: number; // For player card swaps
   activeRules?: [string, unknown][]; // For bot stage rules
   animState?: 'NONE' | 'ATTACK' | 'HIT'; // Player only uses HIT/NONE now, Bot uses all.
+  accuracy?: number; // 0.0 to 1.0 (v2.3.7)
 }
 
 export interface CharacterJSON {
@@ -33,10 +34,11 @@ export interface CharacterJSON {
   baseMaxHp?: number;
   drawsRemaining?: number;
   activeRules?: [string, unknown][];
+  accuracy?: number;
 }
 
 export class CharacterFactory {
-  static create(name: string, maxHp: number, atk: number, level = 1): Character {
+  static create(name: string, maxHp: number, atk: number, level = 1, accuracy = 1.0): Character {
     return {
       name,
       maxHp,
@@ -47,6 +49,7 @@ export class CharacterFactory {
       baseMaxHp: maxHp,
       drawsRemaining: 2,
       activeRules: [],
+      accuracy,
     };
   }
 

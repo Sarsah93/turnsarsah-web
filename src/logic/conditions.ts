@@ -29,6 +29,8 @@ export const CONDITION_PRESETS: Record<string, { duration: number }> = {
   'Adrenaline secretion': { duration: 3 },
   'Neurotoxicity': { duration: 3 },
   'Dehydration': { duration: 9999 },
+  'Provocation': { duration: 9999 },
+  'Decreasing accuracy': { duration: 3 },
 };
 
 /**

@@ -27,15 +27,17 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Frailty') filename = 'Debilitating.png';
   if (name === 'Poison') filename = 'Poisoning.png';
   if (name === 'Awakening') filename = 'Awakening.png';
-  if (name === 'Damage recoiling') filename = '데미지 반동(Damage Recoiling).png';
+  // Standardized filenames matching physical files
+  if (name === 'Damage recoiling') filename = '데미지 반동(Damage recoiling).png';
   if (name === 'Berserker') filename = '버서커(Berserker).png';
   if (name === 'Revival') filename = '부활(Revival).png';
-  if (name === 'Invincible spirit') filename = '불굴의 의지(Invincible Spirit).png';
-  if (name === 'Adrenaline secretion') filename = '아드레날린 분비(Adrenaline Secretion).png';
-  if (name === 'Neurotoxicity') filename = '신경성 맹독(Neurotoxicity).png';
+  if (name === 'Invincible spirit') filename = '불굴의 의지(Invincible spirit).png';
+  if (name === 'Adrenaline secretion') filename = '아드레날린 분비(Adrenaline secretion).png';
   if (name === 'Neurotoxicity') filename = '신경성 맹독(Neurotoxicity).png';
   if (name === 'Dehydration') filename = '탈수(Dehydration).png';
   if (name === 'Triple Attack') filename = '삼중공격(Triple Attack).png';
+  if (name === 'Provocation') filename = '도발(Provocation).png';
+  if (name === 'Decreasing accuracy') filename = '명중률 저하(Decreasing accuracy).png';
   if (name === 'Revived') filename = '부활(Revival).png';
 
   const iconPath = `/assets/conditions/${filename}`;

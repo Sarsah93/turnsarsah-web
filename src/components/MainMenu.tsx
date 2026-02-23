@@ -56,24 +56,22 @@ export const MainMenu: React.FC = () => {
                     triggerTransition(() => initTutorial());
                 }} />
 
-                {/* Debug Buttons for Chapter 2A (Stage 1-10) */}
-                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-                    <div style={{ color: 'white', fontSize: '1.2rem', fontFamily: 'BebasNeue' }}>DEBUG: CHAPTER 2A</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map((stage) => (
-                            <BlockButton
-                                key={stage}
-                                text={`2A-${stage}`}
-                                onClick={() => {
-                                    triggerTransition(() => initGameWithDifficulty('2A', stage, Difficulty.NORMAL));
-                                }}
-                                variant="danger"
-                                width="90px"
-                                height="50px"
-                                fontSize="1.5rem"
-                            />
-                        ))}
-                    </div>
+                {/* Debug Buttons for Chapter 2B */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '20px' }}>
+                    <div style={{ color: '#fff', width: '100%', textAlign: 'center', fontSize: '1.2rem', marginBottom: '5px' }}>DEBUG: CHAPTER 2B</div>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((stage) => (
+                        <BlockButton
+                            key={`2B-${stage}`}
+                            text={`2B-${stage}`}
+                            onClick={() => {
+                                triggerTransition(() => initGameWithDifficulty('2B', stage, Difficulty.NORMAL));
+                            }}
+                            variant="danger"
+                            width="90px"
+                            height="50px"
+                            fontSize="1.5rem"
+                        />
+                    ))}
                 </div>
             </div>
 

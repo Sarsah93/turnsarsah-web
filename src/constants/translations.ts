@@ -108,8 +108,9 @@ export const TRANSLATIONS = {
             CRITICAL_HIT: "크리티컬 히트!",
             AWAKENING: "보스 각성! HP 회복!",
             BOSS_SKIPPED: "보스가 공격을 건너뛰었습니다.",
-            ATTACK_AVOIDED: "공격을 회피했습니다!",
+            ATTACK_AVOIDED: "공격 회피!",
             BOSS_ATTACKS: "보스의 공격!",
+            BOSS_MISSED: "보스의 공격이 빗나갔습니다!",
             ST_AWAKENING: "보스가 각성 중입니다... 턴 종료.",
             TUTORIAL_RESTORED: "튜토리얼: 보스 체력 회복",
             PROCEED_STAGE7: "패배... 스테이지 7로 이동합니다...",
@@ -133,6 +134,7 @@ export const TRANSLATIONS = {
             FORCE_SWAP_MSG: "룰: 강제 교체!",
             NO_DMG_UNDER_30_MSG: "룰: 30 미만 데미지 무효",
             NEURO_MISSED: "공격 실패! (신경성 맹독)",
+            ACCURACY_MISSED: "명중률 저하로 공격 실패!",
             PUZZLE_SUCCESS: "퍼즐 성공! (타겟 x 2) + {bonus} 고정 데미지!",
         },
         CONDITIONS: {
@@ -190,11 +192,11 @@ export const TRANSLATIONS = {
             },
             INVINCIBLE_SPIRIT: {
                 NAME: "불굴의 의지",
-                DESC: "HP {threshold}% 이하 시 조건부 발동. 스테이지 당 1회 체력 {heal} 회복. (잔여 횟수: {count}회)"
+                DESC: "HP가 일정 이하로 떨어지면 즉시 체력을 회복합니다."
             },
             ADRENALINE_SECRETION: {
                 NAME: "아드레날린 분비",
-                DESC: "받는 피해가 {limit} 이하일 때 피해량을 0으로 무효화. (최대 3턴)"
+                DESC: "작은 데미지를 무시할 확률이 생깁니다."
             },
             NEUROTOXICITY: {
                 NAME: "신경성 맹독",
@@ -211,6 +213,14 @@ export const TRANSLATIONS = {
             REVIVED: {
                 NAME: "부활",
                 DESC: "대상이 부활했습니다!"
+            },
+            PROVOCATION: {
+                NAME: "도발",
+                DESC: "공격 시 플레이어의 명중률을 저하시킬 수 있습니다."
+            },
+            DECREASING_ACCURACY: {
+                NAME: "명중률 저하",
+                DESC: "공격이 빗나갈 확률이 발생합니다."
             }
         },
         RULES: {
@@ -244,7 +254,18 @@ export const TRANSLATIONS = {
             TWO_TIMES_PARALYZE_50: "풀하우스 데미지 0 + 2턴마다 행동 + 마비 50%",
             NO_DMG_STRAIGHT_BLIND_1: "스트레이트 데미지 0 + 블라인드 1장",
             RANDOM_BLIND_BAN_1: "플러쉬 데미지 0 + 블라인드 1 + 금지 1",
-            PUZZLE: "퍼즐 (숫자 합 맞추기)"
+            PUZZLE: "퍼즐 (숫자 합 맞추기)",
+
+            // Chapter 2B Rules
+            ORC_SAVAGE_RULE: "데미지 반동 40% (+10 데미지 / 자신 12 피해)",
+            HALF_ORC_RULE: "영악함 (최대 2회 공격)",
+            ORC_WARRIOR_RULE: "버서커 (HP 20% 미만 시 공격력 +15 & 10% 회흡)",
+            ORC_CHIEFTAIN_RULE: "도발 30% & 불굴의 의지 (HP 80 이하 시 100 회복)",
+            HIGH_ORC_RULE: "아드레날린 분비 (60 이하 데미지 무시)",
+            HIGH_ORC_WARRIOR_RULE: "버서커 (HP 30% 미만 시 공격력 +20 & 10% 회흡)",
+            HIGH_ORC_ASSASSIN_RULE: "치명타 25% (공격력 +50%)",
+            HIGH_ORC_CHIEFTAIN_RULE: "도발 35% & 불굴의 의지 (HP 100 이하 시 150 회복)",
+            HIGH_ORC_LORD_RULE: "도발 40% & 버서커 (HP 30% 미만 시 공격력 +25 & 15% 회흡)"
         },
         UI: {
             BACK_TO_MAIN: "메인 화면으로",
@@ -398,6 +419,7 @@ export const TRANSLATIONS = {
             BOSS_SKIPPED: "BOSS SKIPPED ATTACKING",
             ATTACK_AVOIDED: "ATTACK AVOIDED!",
             BOSS_ATTACKS: "BOSS ATTACKS!",
+            BOSS_MISSED: "THE BOSS ATTACK MISSED!",
             ST_AWAKENING: "BOSS IS AWAKENING... TURN SKIPPED.",
             TUTORIAL_RESTORED: "TUTORIAL: BOSS HP RESTORED",
             PROCEED_STAGE7: "DEFEAT... PROCEEDING TO STAGE 7...",
@@ -421,6 +443,7 @@ export const TRANSLATIONS = {
             FORCE_SWAP_MSG: "RULE: FORCE SWAP!",
             NO_DMG_UNDER_30_MSG: "RULE: NO DMG UNDER 30",
             NEURO_MISSED: "MISSED! (NEUROTOXICITY)",
+            ACCURACY_MISSED: "MISSED! (ACCURACY DOWN)",
             PUZZLE_SUCCESS: "PUZZLE SUCCESS! (Target x 2) + {bonus} Fixed Damage!",
         },
         CONDITIONS: {
@@ -470,23 +493,23 @@ export const TRANSLATIONS = {
             },
             BERSERKER: {
                 NAME: "Berserker",
-                DESC: "Triggers below {threshold}% HP. ATK +{atkBonus} and heals 10% of damage dealt. (Max 3 turns)"
+                DESC: "Triggers below 30% HP. ATK +{atkBonus} and heals of damage dealt."
             },
             REVIVAL: {
                 NAME: "Revival",
-                DESC: "Revives with 50% HP when HP reaches 0. (Remaining: {count})"
+                DESC: "Revives with 50% HP when HP reaches 0."
             },
             INVINCIBLE_SPIRIT: {
-                NAME: "Invincible Spirit",
-                DESC: "Conditional heal of {heal} when HP is below {threshold}%. (Remaining: {count})"
+                NAME: "Invincible spirit",
+                DESC: "Instantly restores HP when it falls below a certain threshold."
             },
             ADRENALINE_SECRETION: {
-                NAME: "Adrenaline Secretion",
-                DESC: "Nullifies incoming damage if it is {limit} or less. (Max 3 turns)"
+                NAME: "Adrenaline secretion",
+                DESC: "Chance to nullify incoming small damage."
             },
             NEUROTOXICITY: {
                 NAME: "Neurotoxicity",
-                DESC: "Takes 15 fixed damage per turn and has a 30% miss chance. Each turn start, has a 20% chance to cause 1-turn paralysis (max once per application)."
+                DESC: "Takes 15 fixed damage per turn and has a 30% miss chance."
             },
             TRIPLE_ATTACK: {
                 NAME: "Triple Attack",
@@ -494,11 +517,19 @@ export const TRANSLATIONS = {
             },
             DEHYDRATION: {
                 NAME: "Dehydration",
-                DESC: "Loses {dmg} HP at the end of each turn. Delayed if boss is cleared."
+                DESC: "Loses {dmg} HP at the end of each turn."
             },
             REVIVED: {
                 NAME: "Revived",
                 DESC: "The target has revived!"
+            },
+            PROVOCATION: {
+                NAME: "Provocation",
+                DESC: "Chance to decrease the target's accuracy."
+            },
+            DECREASING_ACCURACY: {
+                NAME: "Decreasing Accuracy",
+                DESC: "Certain chance for attacks to miss."
             }
         },
         RULES: {
@@ -532,7 +563,18 @@ export const TRANSLATIONS = {
             TWO_TIMES_PARALYZE_50: "RULE: ACT EVERY 2 TURNS + 50% PARALYZE",
             NO_DMG_STRAIGHT_BLIND_1: "RULE: STRAIGHT DMG 0 + BLIND 1",
             RANDOM_BLIND_BAN_1: "RULE: RANDOM BLIND 1 + BAN HAND 1",
-            PUZZLE: "RULE: PUZZLE (SUM MATCH)"
+            PUZZLE: "RULE: PUZZLE (SUM MATCH)",
+
+            // Chapter 2B Rules
+            ORC_SAVAGE_RULE: "40% Recoil Damage (+10 damage / 12 recoil)",
+            HALF_ORC_RULE: "Double Attack (Max 2 attacks)",
+            ORC_WARRIOR_RULE: "Berserker (HP < 20%: ATK +15 & 10% Lifesteal)",
+            ORC_CHIEFTAIN_RULE: "Provoke 30% & Invincible Spirit (HP <= 80: Heal 100)",
+            HIGH_ORC_RULE: "Adrenaline Secretion (Ignore dmg <= 60)",
+            HIGH_ORC_WARRIOR_RULE: "Berserker (HP < 30%: ATK +20 & 10% Lifesteal)",
+            HIGH_ORC_ASSASSIN_RULE: "Critical 25% (Atk +50%)",
+            HIGH_ORC_CHIEFTAIN_RULE: "Provoke 35% & Invincible Spirit (HP <= 100: Heal 150)",
+            HIGH_ORC_LORD_RULE: "Provoke 40% & Berserker (HP < 30%: ATK +25 & 15% Lifesteal)"
         },
         UI: {
             BACK_TO_MAIN: "BACK TO MAIN PAGE",

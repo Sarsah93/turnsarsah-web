@@ -493,6 +493,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         }[state.difficulty] || 2;
         applyCondition(playerConditions, 'Dehydration', 9999, '', { amount: dehydrationDmg });
       }
+      if (chapterId === '2B') {
+        const isOnenessWithNature = false; // Placeholder for future skill
+        if (!isOnenessWithNature) {
+          // No Avoiding in Chapter 2B by default
+        } else {
+          applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance });
+        }
+      }
       // Chapter 2B: No Avoiding (Passive from Ch 1 is naturally absent)
 
       return {
@@ -525,6 +533,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           level: stageConfig.level,
           conditions: botConditions,
           activeRules: [],
+          accuracy: stageConfig.accuracy ?? 1.0,
         },
         deck: newDeck,
         isPaused: false,
@@ -743,6 +752,42 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           const ruleText = (t.RULES.PUZZLE || "RULE: PUZZLE") + ` (${(t.RULES.PUZZLE_TARGET || "TARGET: {target}").replace('{target}', state.puzzleTarget.toString())}) + Awakening`;
           set({ stage10RuleText: ruleText });
         }
+      }
+    } else if (chapterId === '2B') {
+      const t = TRANSLATIONS[get().language] as any;
+      const ruleKey = (CHAPTERS['2B'].stages as any)[stageId]?.rule;
+      if (ruleKey && t.RULES[ruleKey]) {
+        // Ensure "RULE: " or "룰: " prefix
+        const prefix = t.RULES.RULE_HINT || "RULE: ";
+        let ruleText = t.RULES[ruleKey];
+        if (!ruleText.startsWith(prefix)) {
+          ruleText = prefix + ruleText;
+        }
+        set({ stage10RuleText: ruleText });
+      }
+
+      // Initial Boss Conditions for 2B
+      const drMap: Record<number, number> = { 1: 8, 2: 10, 3: 13, 4: 15, 5: 14, 6: 15, 7: 20, 8: 15, 9: 18, 10: 30 };
+      const drPercent = drMap[stageId];
+      if (drPercent && !bot.conditions.has('Damage Reducing')) {
+        state.addBotCondition('Damage Reducing', 9999, '', { percent: drPercent });
+      }
+
+      if (stageId === 3 && !bot.conditions.has('Avoiding')) {
+        state.addBotCondition('Avoiding', 9999, '', { chance: 0.20 });
+      }
+      if (stageId === 8 && !bot.conditions.has('Avoiding')) {
+        state.addBotCondition('Avoiding', 9999, '', { chance: 0.25 });
+      }
+
+      // Provocation is applied during attack in useGameLoop, but could be set as initial status if permanent?
+      // User says: "designated target... Permanent" for Provocation and Adrenaline secretion.
+      if ([5, 9, 10].includes(stageId) && !bot.conditions.has('Provocation')) {
+        const prob = stageId === 5 ? 30 : (stageId === 9 ? 35 : 40);
+        state.addBotCondition('Provocation', 9999, '', { chance: prob });
+      }
+      if (stageId === 6 && !bot.conditions.has('Adrenaline secretion')) {
+        state.addBotCondition('Adrenaline secretion', 9999, '', { limit: 60 });
       }
     }
 

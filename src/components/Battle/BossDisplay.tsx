@@ -181,26 +181,10 @@ export const BossDisplay: React.FC = () => {
                                 return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
                             })()}`
                         )
-                    ) : (stageNum === 3 ? (
-                        `${t.RULES.RULE_HINT}${t.RULES.BLIND_2_CARDS}`
                     ) : (stageNum === 10 ? (
-                        stage10RuleText
+                        stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText}`
                     ) : (
-                        `${t.RULES.RULE_HINT}${(() => {
-                            const bannedHand = useGameStore.getState().bannedHand;
-                            const ruleMap: Record<number, string> = {
-                                1: t.RULES.NONE,
-                                2: t.RULES.BANNED_2_CARDS,
-                                3: t.RULES.BLIND_2_CARDS,
-                                4: t.RULES.BANNED_SUIT,
-                                5: t.RULES.POISON,
-                                6: bannedHand ? `${t.RULES.BANNED_HAND}${bannedHand.toUpperCase()}` : t.RULES.BANNED_HAND,
-                                7: t.RULES.ATK_UP,
-                                8: t.RULES.REGEN_REDUCE.replace('{percent}', '10'),
-                                9: t.RULES.ATK_GROWTH.replace('{type}', 'x2').split('+')[0] + '+' + t.RULES.REGEN_REDUCE.replace('{percent}', '10').replace(t.RULES.RULE_HINT, ''),
-                            };
-                            return ruleMap[stageNum] || t.RULES.NONE;
-                        })()}`
+                        stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText.replace(t.RULES.RULE_HINT, '')}`
                     )))}
                 </div>
             </div>
