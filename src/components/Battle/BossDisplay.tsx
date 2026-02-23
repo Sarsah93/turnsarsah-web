@@ -185,7 +185,7 @@ export const BossDisplay: React.FC = () => {
                         stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText}`
                     ) : (
                         stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText.replace(t.RULES.RULE_HINT, '')}`
-                    )))}
+                    ))}
                 </div>
             </div>
 
