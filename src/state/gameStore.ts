@@ -10,6 +10,7 @@ import { CHAPTERS } from '../constants/stages';
 import { applyCondition, clearConditions } from '../logic/conditions';
 import { SaveManager } from '../utils/SaveManager';
 import { Language, TRANSLATIONS } from '../constants/translations';
+import { TrophyDef } from '../constants/altarSystem';
 
 interface GameStoreState {
   // Game Flow
@@ -89,6 +90,14 @@ interface GameStoreState {
   setMessage: (message: string) => void;
   activeMenu: string;
   setActiveMenu: (menu: string) => void;
+
+  // Trophy Popup
+  trophyPopup: TrophyDef | null;
+  setTrophyPopup: (trophy: TrophyDef | null) => void;
+
+  // Altar System
+  equippedAltarSkills: string[];
+  setEquippedAltarSkills: (skills: string[]) => void;
 
   // Game initialization
   initGame: (chapterId: string, stageId: number) => void;
@@ -222,6 +231,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setMessage: (message) => set({ message }),
   activeMenu: 'NONE',
   setActiveMenu: (activeMenu) => set({ activeMenu }),
+  trophyPopup: null,
+  setTrophyPopup: (trophyPopup) => set({ trophyPopup }),
+  equippedAltarSkills: [],
+  setEquippedAltarSkills: (equippedAltarSkills) => set({ equippedAltarSkills }),
   setBannedRanks: (bannedRanks) => set({ bannedRanks }),
   setBannedSuit: (bannedSuit) => set({ bannedSuit }),
   setBannedHand: (bannedHand) => set({ bannedHand }),
@@ -269,8 +282,20 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   // Player Conditions
   addPlayerCondition: (name, duration, desc, data) =>
     set((state) => {
+      // Altar Skill 2B-1 (Hunter): Immune to accuracy debuffs
+      if (state.equippedAltarSkills.includes('2B-1') && name === 'Decreasing accuracy') {
+        return state;
+      }
+
       const newConditions = new Map<string, Condition>(state.player.conditions);
       applyCondition(newConditions, name, duration, desc, data);
+
+      // Altar Skill 2A (Acclimatization) & 2A-2: Regen on debuff
+      const isDebuff = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Decreasing accuracy', 'Neurotoxicity', 'Dehydration'].includes(name);
+      if (isDebuff && state.equippedAltarSkills.includes('2A')) {
+        const healAmount = state.equippedAltarSkills.includes('2A-2') ? 6 : 5; // +20% of 5
+        applyCondition(newConditions, 'Regenerating', 3, '', { amount: healAmount });
+      }
 
       let newMaxHp = state.player.maxHp;
       if (name === 'Debilitating') {
@@ -463,14 +488,44 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       let playerBaseMaxHp: number;
       let playerSwaps: number;
 
-      if (stageId === 1) {
-        // New game - use difficulty config
+      let activeSkills = state.equippedAltarSkills || [];
+
+      if (chapterId === '1' && stageId === 1) {
+        // New game - use difficulty config + fetch Altar skills from local storage
+        try {
+          const raw = localStorage.getItem('turnsarsah_altar_data');
+          if (raw) {
+            const { deobfuscateData } = require('../utils/encryption');
+            const decoded = deobfuscateData(raw);
+            if (decoded) {
+              const data = JSON.parse(decoded);
+              activeSkills = data.equippedSkills || [];
+            }
+          }
+        } catch (e) { console.error(e); }
+
         playerHp = config.playerHp;
         playerMaxHp = config.playerHp;
         playerBaseMaxHp = config.playerHp;
         playerSwaps = config.swapCount;
+
+        // Apply 1A 'Prepper' Bonus on New Game
+        if (activeSkills.includes('1A')) {
+          playerMaxHp += 25;
+          playerHp += 25;
+          playerBaseMaxHp += 25;
+        }
+
+        // Apply 2A-2 'Biorhythm Acceleration' Bonus on New Game
+        if (activeSkills.includes('2A-2')) {
+          const bioBonus = Math.floor(playerBaseMaxHp * 0.20);
+          playerMaxHp += bioBonus;
+          playerHp += bioBonus;
+          playerBaseMaxHp += bioBonus;
+        }
+
       } else {
-        // Stage transition - preserve current HP and max HP
+        // Stage transition - preserve current HP and max HP and skills
         playerHp = state.player.hp;
         playerMaxHp = state.player.maxHp;
         playerBaseMaxHp = state.player.baseMaxHp || config.playerHp;
@@ -515,6 +570,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         bannedHand: null,
         blindIndices: [],
         hasStage6Bonus: (chapterId === '1' && stageId === 1) ? false : state.hasStage6Bonus,
+        equippedAltarSkills: activeSkills,
         player: {
           name: 'Player',
           hp: playerHp,

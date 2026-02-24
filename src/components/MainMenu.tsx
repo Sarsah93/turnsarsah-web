@@ -6,6 +6,7 @@ import { SaveLoadMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import { DifficultyPopup } from './DifficultyPopup';
 import { Difficulty } from '../constants/gameConfig';
 import { TRANSLATIONS } from '../constants/translations';
+import { AltarSystem } from './AltarSystem';
 
 export const MainMenu: React.FC = () => {
     const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language } = useGameStore();
@@ -29,7 +30,7 @@ export const MainMenu: React.FC = () => {
         setActiveMenu('NONE');
     };
 
-    const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT' | 'DIFFICULTY'>('NONE');
+    const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT' | 'DIFFICULTY' | 'ALTAR'>('NONE');
 
     return (
         <div className="menu-screen" onClick={handleInteraction} style={{
@@ -45,34 +46,33 @@ export const MainMenu: React.FC = () => {
             />
 
             {/* Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
                 <BlockButton text={t.UI.NEW_GAME} onClick={() => setActiveMenu('DIFFICULTY')} />
                 <BlockButton text={t.UI.LOAD_GAME} onClick={() => setActiveMenu('LOAD')} />
-                <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} />
-                <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
-
-                {/* v2.0.0.19: Tutorial Button */}
                 <BlockButton text={t.UI.TUTORIAL} onClick={() => {
                     triggerTransition(() => initTutorial());
                 }} />
+                <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} />
+                <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} />
+                <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
+            </div>
 
-                {/* Debug Buttons for Chapter 2B */}
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '20px' }}>
-                    <div style={{ color: '#fff', width: '100%', textAlign: 'center', fontSize: '1.2rem', marginBottom: '5px' }}>DEBUG: CHAPTER 2B</div>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((stage) => (
-                        <BlockButton
-                            key={`2B-${stage}`}
-                            text={`2B-${stage}`}
-                            onClick={() => {
-                                triggerTransition(() => initGameWithDifficulty('2B', stage, Difficulty.NORMAL));
-                            }}
-                            variant="danger"
-                            width="90px"
-                            height="50px"
-                            fontSize="1.5rem"
-                        />
-                    ))}
-                </div>
+            {/* Debug Buttons for Chapter 2B */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '20px', position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
+                <div style={{ color: '#fff', width: '100%', textAlign: 'center', fontSize: '1.2rem', marginBottom: '5px' }}>DEBUG: CHAPTER 2B</div>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((stage) => (
+                    <BlockButton
+                        key={`2B-${stage}`}
+                        text={`2B-${stage}`}
+                        onClick={() => {
+                            triggerTransition(() => initGameWithDifficulty('2B', stage, Difficulty.NORMAL));
+                        }}
+                        variant="danger"
+                        width="90px"
+                        height="50px"
+                        fontSize="1.5rem"
+                    />
+                ))}
             </div>
 
 
@@ -82,6 +82,11 @@ export const MainMenu: React.FC = () => {
                     onClose={() => setActiveMenu('NONE')}
                     onSelect={handleDifficultySelect}
                 />
+            )}
+
+            {/* Altar System Menu */}
+            {activeMenu === 'ALTAR' && (
+                <AltarSystem onClose={() => setActiveMenu('NONE')} />
             )}
 
             {/* Modals using unified components */}

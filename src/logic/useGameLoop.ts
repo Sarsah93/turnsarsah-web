@@ -380,6 +380,11 @@ export const useGameLoop = () => {
                 setMessage(t.COMBAT.NO_DMG_UNDER_30_MSG);
             }
 
+            // Altar Skill 1B: +25 Fixed Damage
+            if (store.equippedAltarSkills.includes('1B')) {
+                damage += 25;
+            }
+
             // Damage Reduction (already applied via finalDamage)
             // const reductionCond = bot.conditions.get('Damage Reducing');
             // if (reductionCond) {
@@ -454,6 +459,20 @@ export const useGameLoop = () => {
             const freshP = useGameStore.getState().player;
             setPlayerHp(Math.min(freshP.maxHp, freshP.hp + lifesteal));
             showDamageText('PLAYER', `+${lifesteal}`, '#2ecc71');
+        }
+
+        // Altar Skill 2A-1 (Utilization): 50% chance to apply Bleed or Poison
+        if (store.equippedAltarSkills.includes('2A-1') && damage > 0 && !isPuzzleCorrect) {
+            if (Math.random() < 0.5) {
+                const freshBotCondition = useGameStore.getState().bot.conditions;
+                if (!freshBotCondition.has('Bleeding') && !freshBotCondition.has('Poisoning')) {
+                    const effect = Math.random() < 0.5 ? 'Bleeding' : 'Poisoning';
+                    store.addBotCondition(effect, 3);
+                    const effectName = Math.random() < 0.5 ? "BLEEDING!" : "POISON!";
+                    // Quick toast for skill proc
+                    showDamageText('BOT', effectName, '#9b59b6');
+                }
+            }
         }
 
         // v2.3.0: Recoil Damage
@@ -664,10 +683,13 @@ export const useGameLoop = () => {
         // v2.1.2: Unified Evasion Check (Passive Skill)
         const config = DIFFICULTY_CONFIGS[store.difficulty];
         const avoidCond = currentPlayer.conditions.get('Avoiding');
-        const finalAvoidChance = avoidCond ? ((avoidCond.data as any)?.chance ?? config.avoidChance) : config.avoidChance;
+        const has2B = store.equippedAltarSkills.includes('2B');
 
-        // v2.3.6: Chapter 2B Environmental Rule - Player Avoiding is DISABLED
-        const isAvoided = !isTutorial && store.chapterNum !== '2B' && finalAvoidChance > 0 && Math.random() < finalAvoidChance;
+        let finalAvoidChance = avoidCond ? ((avoidCond.data as any)?.chance ?? config.avoidChance) : config.avoidChance;
+        if (has2B) finalAvoidChance += 0.05;
+
+        // v2.3.6: Chapter 2B Environmental Rule - Player Avoiding is DISABLED (unless 2B skill is equipped)
+        const isAvoided = !isTutorial && (store.chapterNum !== '2B' || has2B) && finalAvoidChance > 0 && Math.random() < finalAvoidChance;
 
         if (isAvoided) {
             setMessage(t.COMBAT.ATTACK_AVOIDED);
@@ -743,9 +765,14 @@ export const useGameLoop = () => {
             setPlayerAnimState('HIT');
 
             // Apply Damage
-            const finalDmg = (store.chapterNum === '2B' && stageNum === 8 && Math.random() < 0.25)
+            let finalDmg = (store.chapterNum === '2B' && stageNum === 8 && Math.random() < 0.25)
                 ? Math.floor(damage * 1.5) // Critical Hit for 2B-8
                 : damage;
+
+            // Altar Skill 2B-2: Boss Attack Damage -30%
+            if (store.equippedAltarSkills.includes('2B-2')) {
+                finalDmg = Math.floor(finalDmg * 0.7);
+            }
 
             if (finalDmg > damage) {
                 setMessage(t.COMBAT.CRITICAL_HIT);
@@ -1183,7 +1210,32 @@ export const useGameLoop = () => {
             setPlayerHp(newHp);
         }
 
-        // 2. Victory State & Sound
+        // 2. Trophy Check — stage trophy in memory (NOT saved to localStorage yet)
+        const trophyIdMap: Record<string, Record<number, string>> = {
+            '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
+            '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10' },
+            '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10' }
+        };
+        const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
+
+        if (potentialTrophyId) {
+            const { AltarManager } = await import('../utils/AltarManager');
+            // Only stage if not already permanently owned and not already pending
+            if (!AltarManager.hasTrophy(potentialTrophyId)) {
+                const staged = AltarManager.stageTrophy(potentialTrophyId);
+                if (staged) {
+                    const { TROPHIES } = await import('../constants/altarSystem');
+                    store.setTrophyPopup(TROPHIES[potentialTrophyId]);
+                    // Hold here while the popup is visible
+                    while (useGameStore.getState().trophyPopup !== null) {
+                        await new Promise(r => setTimeout(r, 200));
+                    }
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+        }
+
+        // 3. Victory State & Sound
         setGameState(GameState.VICTORY);
         const bonusPercent = Math.floor(config.stage6MaxHpBonus * 100);
         const victoryMsg = (store.chapterNum === '1' && stageNum === 6)
@@ -1192,10 +1244,10 @@ export const useGameLoop = () => {
         setMessage(victoryMsg);
         AudioManager.playSFX('/assets/audio/stages/victory/victory.mp3');
 
-        // 3. Wait for victory.mp3 (approx 5s)
+        // 4. Wait for victory.mp3 (approx 5s)
         await new Promise(r => setTimeout(r, 5000));
 
-        // 4. Transition to next stage or unlock difficulty on final stage clear
+        // 5. Transition to next stage or unlock difficulty on final stage clear
         const nextStage = stageNum + 1;
         if (nextStage > 10) {
             // Unlock next difficulty on game completion

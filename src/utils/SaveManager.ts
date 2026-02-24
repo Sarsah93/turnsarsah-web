@@ -18,6 +18,7 @@ interface SaveData {
     consecutiveJokers: number;
     consecutiveRoyals: number;
   };
+  equippedAltarSkills?: string[];
   puzzleTarget?: number;
   timestamp: number;
 }
@@ -40,6 +41,7 @@ export class SaveManager {
         ...data.bot,
         conditions: Array.from(data.bot.conditions.entries()),
       },
+      equippedAltarSkills: data.equippedAltarSkills || [],
       deckState: data.deckState,
       timestamp: Date.now(),
     };
@@ -85,6 +87,7 @@ export class SaveManager {
           ...parsedData.bot,
           conditions: restoreConditions(parsedData.bot.conditions),
         },
+        equippedAltarSkills: parsedData.equippedAltarSkills || [],
       };
 
       console.log(`게임이 슬롯 ${slot}에서 로드되었습니다.`);

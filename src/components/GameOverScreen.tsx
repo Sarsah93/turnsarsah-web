@@ -19,10 +19,11 @@ export const GameOverScreen: React.FC = () => {
         };
     }, []);
 
-    const handleBackToMenu = () => {
-        // Reset and Go to Menu
+    const handleBackToMenu = async () => {
+        // Commit trophies earned during this game session — defeat is a proper game end
+        const { AltarManager } = await import('../utils/AltarManager');
+        AltarManager.commitPendingTrophies();
         useGameStore.getState().resetGame();
-        // window.location.reload() or internal state reset
         window.location.reload();
     };
 

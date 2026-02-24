@@ -10,6 +10,8 @@ import { useGameStore } from '../../state/gameStore';
 import { GameState } from '../../constants/gameConfig';
 import { TutorialOverlay } from '../Tutorial/TutorialOverlay';
 import { TRANSLATIONS } from '../../constants/translations';
+import { TrophyPopup } from '../TrophyPopup';
+import { ALTAR_SKILLS } from '../../constants/altarSystem';
 
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
 
@@ -234,12 +236,23 @@ export const BattleScreen: React.FC = () => {
         window.location.reload();
     };
 
-    const handleQuit = () => {
+    // Mid-game quit via ESC menu — discard any pending trophies (exploit prevention)
+    const handleMidGameQuit = async () => {
+        const { AltarManager } = await import('../../utils/AltarManager');
+        AltarManager.clearPendingTrophies();
+        window.location.reload();
+    };
+
+    // Proper game end (defeat, final stage clear) — commit pending trophies permanently
+    const handleProperGameEnd = async () => {
+        const { AltarManager } = await import('../../utils/AltarManager');
+        AltarManager.commitPendingTrophies();
         window.location.reload();
     };
 
     return (
         <div className={`battle-screen ${screenEffect}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+            <TrophyPopup />
             {isTutorial && (
                 <TutorialOverlay
                     step={tutorialStep}
@@ -291,6 +304,41 @@ export const BattleScreen: React.FC = () => {
                             }
                             return null;
                         })()}
+                    </div>
+                )}
+
+                {/* Altar In-Game Slots */}
+                {store.equippedAltarSkills && store.equippedAltarSkills.length > 0 && (
+                    <div style={{
+                        position: 'absolute',
+                        right: '2vw',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        zIndex: 50,
+                        background: 'rgba(0,0,0,0.5)',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        border: '2px solid #555'
+                    }}>
+                        {store.equippedAltarSkills.map((skillId, idx) => {
+                            const skill = ALTAR_SKILLS[skillId];
+                            if (!skill) return null;
+                            return (
+                                <div key={idx} style={{
+                                    width: '50px', height: '50px',
+                                    border: '2px solid #3498db',
+                                    borderRadius: '8px',
+                                    background: 'rgba(46, 204, 113, 0.1)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }} title={`${skill.name[language]}\n${skill.desc[language]}`}>
+                                    <img src={`/assets/image/item/${skill.image}`} alt={skill.name[language]} style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }} />
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 
@@ -360,7 +408,7 @@ export const BattleScreen: React.FC = () => {
                     }}>
                         <BlockButton
                             text={t.UI.BACK_TO_MAIN}
-                            onClick={handleQuit}
+                            onClick={handleProperGameEnd}
                             width="300px"
                         />
                     </div>
@@ -417,7 +465,7 @@ export const BattleScreen: React.FC = () => {
             {activeMenu === 'CONFIRM_QUIT' && (
                 <ConfirmationPopup
                     message={t.UI.QUIT_CONFIRM}
-                    onYes={handleQuit}
+                    onYes={handleMidGameQuit}
                     onNo={() => setActiveMenu('PAUSE')}
                 />
             )}
