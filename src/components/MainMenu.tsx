@@ -16,10 +16,6 @@ export const MainMenu: React.FC = () => {
         AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
     }, []);
 
-    const handleInteraction = () => {
-        AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
-    };
-
     const handleDifficultySelect = (difficulty: Difficulty) => {
         setActiveMenu('NONE');
         triggerTransition(() => initGameWithDifficulty('1', 1, difficulty)); // Chapter 1, Stage 1
@@ -33,7 +29,7 @@ export const MainMenu: React.FC = () => {
     const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT' | 'DIFFICULTY' | 'ALTAR'>('NONE');
 
     return (
-        <div className="menu-screen" onClick={handleInteraction} style={{
+        <div className="menu-screen" style={{
             position: 'relative', width: '100%', height: '100%',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
             background: 'transparent'
@@ -120,28 +116,4 @@ export const MainMenu: React.FC = () => {
             )}
         </div>
     );
-};
-
-const modalOverlayStyle: React.CSSProperties = {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    display: 'flex', justifyContent: 'center', alignItems: 'center',
-    zIndex: 100
-};
-
-const modalContentStyle: React.CSSProperties = {
-    backgroundColor: '#2c3e50',
-    padding: '40px',
-    borderRadius: '10px',
-    border: '2px solid #95a5a6',
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    minWidth: '400px',
-    color: '#fff',
-    fontFamily: 'BebasNeue',
-    boxShadow: '0 0 20px rgba(0,0,0,0.8)'
-};
-
-const settingRowStyle: React.CSSProperties = {
-    display: 'flex', flexDirection: 'column', gap: '5px',
-    width: '100%', marginBottom: '20px', fontSize: '1.5rem'
 };

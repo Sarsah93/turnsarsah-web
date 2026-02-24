@@ -129,16 +129,13 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
     const [selectedTreeSkill, setSelectedTreeSkill] = useState<string | null>(null);
     const [selectedAppSlot, setSelectedAppSlot] = useState<number | null>(null);
     const [selectedTrophyId, setSelectedTrophyId] = useState<string | null>(null);
+    const [showUnequipConfirm, setShowUnequipConfirm] = useState<number | null>(null);
 
     const refreshData = () => setAltarData(AltarManager.getAltarData());
 
     const handleUnlock = (skillId: string) => {
         if (AltarManager.unlockSkill(skillId)) {
-            AudioManager.playSFX('/assets/audio/stages/victory/victory.mp3');
             refreshData();
-            if (equippedAltarSkills.length < 4) {
-                setEquippedAltarSkills([...equippedAltarSkills, skillId]);
-            }
         }
     };
 
@@ -147,33 +144,22 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
             setEquippedAltarSkills(equippedAltarSkills.filter(id => id !== skillId));
         }
         AltarManager.returnSkill(skillId);
-        AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
         refreshData();
     };
 
-    const handleEquipArrowClick = () => {
-        if (!selectedTreeSkill) return;
-        if (!altarData.unlockedSkills.includes(selectedTreeSkill)) return;
-        if (equippedAltarSkills.includes(selectedTreeSkill)) return;
+    const handleEquipToSlot = (skillId: string) => {
+        if (equippedAltarSkills.includes(skillId)) return;
         if (equippedAltarSkills.length >= 4) return;
-        setEquippedAltarSkills([...equippedAltarSkills, selectedTreeSkill]);
+        setEquippedAltarSkills([...equippedAltarSkills, skillId]);
         setSelectedTreeSkill(null);
     };
 
-    const handleUnequipArrowClick = () => {
-        if (selectedAppSlot === null) return;
-        const skillId = equippedAltarSkills[selectedAppSlot];
+    const handleUnequipSlot = (index: number) => {
+        const skillId = equippedAltarSkills[index];
         if (!skillId) return;
-        setEquippedAltarSkills(equippedAltarSkills.filter(id => id !== skillId));
-        setSelectedAppSlot(null);
+        setEquippedAltarSkills(equippedAltarSkills.filter((_, i) => i !== index));
+        setShowUnequipConfirm(null);
     };
-
-    const canEquip = selectedTreeSkill !== null &&
-        altarData.unlockedSkills.includes(selectedTreeSkill) &&
-        !equippedAltarSkills.includes(selectedTreeSkill) &&
-        equippedAltarSkills.length < 4;
-
-    const canUnequip = selectedAppSlot !== null && equippedAltarSkills[selectedAppSlot] !== undefined;
 
     return (
         <div style={{
@@ -218,20 +204,22 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                 const isPadlocked = index === 4;
                                 const skillId = !isPadlocked ? equippedAltarSkills[index] : null;
                                 const skill = skillId ? ALTAR_SKILLS[skillId] : null;
-                                const isSelected = selectedAppSlot === index;
 
                                 return (
                                     <div key={`slot-${index}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                        <div onClick={() => { if (!isPadlocked) setSelectedAppSlot(isSelected ? null : index); }}
+                                        <div onClick={() => {
+                                            if (!isPadlocked && skillId) {
+                                                setShowUnequipConfirm(index);
+                                            }
+                                        }}
                                             style={{
                                                 width: '72px', height: '72px',
-                                                border: isSelected ? '3px solid #f1c40f' : '2px solid #7f8c8d',
+                                                border: '2px solid #7f8c8d',
                                                 borderRadius: '8px',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 backgroundColor: isPadlocked ? 'rgba(0,0,0,0.5)' : '#2c3e50',
-                                                cursor: isPadlocked ? 'not-allowed' : 'pointer',
+                                                cursor: (isPadlocked || !skillId) ? 'default' : 'pointer',
                                                 position: 'relative',
-                                                boxShadow: isSelected ? '0 0 10px rgba(241,196,15,0.5)' : 'none'
                                             }}>
                                             <span style={{ position: 'absolute', top: 4, left: 5, color: '#bdc3c7', fontSize: '0.75rem' }}>
                                                 {isPadlocked ? 'SLOT 5' : `SLOT ${index + 1}`}
@@ -255,27 +243,27 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                         </div>
                     </div>
 
-                    {/* ── Middle Arrows ── */}
+                    {/* ── Middle Arrows (Non-clickable decorative) ── */}
                     <div style={{
                         width: '80px', flexShrink: 0,
                         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '40px',
                         borderRight: '2px solid #555', backgroundColor: '#1a1a2e'
                     }}>
-                        <div onClick={handleEquipArrowClick} style={{
+                        <div style={{
                             width: '50px', height: '50px',
-                            backgroundColor: canEquip ? '#2ecc71' : 'transparent',
-                            border: canEquip ? 'none' : '2px solid #555',
-                            color: canEquip ? '#fff' : '#555', fontSize: '2rem',
+                            backgroundColor: 'transparent',
+                            border: '2px solid #555',
+                            color: '#555', fontSize: '2rem',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            borderRadius: '8px', cursor: canEquip ? 'pointer' : 'default', fontWeight: 'bold'
+                            borderRadius: '8px', cursor: 'default', fontWeight: 'bold'
                         }}>&lt;</div>
-                        <div onClick={handleUnequipArrowClick} style={{
+                        <div style={{
                             width: '50px', height: '50px',
-                            backgroundColor: canUnequip ? '#e74c3c' : 'transparent',
-                            border: canUnequip ? 'none' : '2px solid #555',
-                            color: canUnequip ? '#fff' : '#555', fontSize: '2rem',
+                            backgroundColor: 'transparent',
+                            border: '2px solid #555',
+                            color: '#555', fontSize: '2rem',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            borderRadius: '8px', cursor: canUnequip ? 'pointer' : 'default', fontWeight: 'bold'
+                            borderRadius: '8px', cursor: 'default', fontWeight: 'bold'
                         }}>&gt;</div>
                     </div>
 
@@ -452,60 +440,184 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                         style={{
                             position: 'fixed',
                             top: 0, left: 0, right: 0, bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.6)',
                             zIndex: 9999,
-                            pointerEvents: 'none'
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            pointerEvents: 'all'
                         }}
                         onClick={() => setSelectedTreeSkill(null)}
                     >
                         <div
                             style={{
-                                position: 'absolute',
-                                left: rect.left + rect.width / 2,
-                                top: rect.top - 10,
-                                transform: 'translate(-50%, -100%)',
-                                width: '280px',
-                                backgroundColor: '#ecf0f1', border: '2px solid #34495e', borderRadius: '6px',
-                                padding: '12px',
-                                boxShadow: '0 5px 20px rgba(0,0,0,0.7)',
-                                display: 'flex', flexDirection: 'column', gap: '10px',
-                                color: '#2c3e50', fontFamily: 'sans-serif',
-                                fontSize: '0.9rem', pointerEvents: 'all'
+                                width: '420px',
+                                backgroundColor: '#1a1a2e',
+                                border: '3px solid #f1c40f',
+                                borderRadius: '12px',
+                                padding: '24px',
+                                boxShadow: '0 0 40px rgba(0,0,0,0.9), 0 0 20px rgba(241,196,15,0.2)',
+                                display: 'flex', flexDirection: 'column', gap: '16px',
+                                color: '#fff', fontFamily: "'Noto Sans KR', sans-serif",
+                                position: 'relative',
+                                background: 'linear-gradient(145deg, #1a1a2e, #161625)'
                             }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <p style={{ margin: 0, fontWeight: 'bold', lineHeight: 1.3 }}>
-                                {isUnlocked ? '해당 스킬을 활성화 해제 하시겠습니까?' : '해당 스킬을 활성화 하시겠습니까?'}
-                            </p>
-                            {!isUnlocked ? (
-                                <>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                        <span style={{ color: '#e74c3c', fontWeight: 'bold', fontSize: '0.85rem' }}>요구(REQUIRED)</span>
-                                        {skill.cost.map(tid => {
-                                            const tObj = TROPHIES[tid];
-                                            return tObj ? (
-                                                <img key={tid} src={`/assets/trophy/${tObj.image}`} alt="Trophy"
-                                                    style={{ width: '28px', height: '28px', objectFit: 'contain' }}
-                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }} />
-                                            ) : null;
-                                        })}
+                            {/* Skill Detail Header */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{
+                                    width: '80px', height: '80px',
+                                    backgroundColor: '#2c3e50', border: '2px solid #7f8c8d',
+                                    borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: '5px'
+                                }}>
+                                    <img src={`/assets/altar skills/${skill.image}`} alt={skill.name[language]}
+                                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }} />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.8rem', color: '#f1c40f', fontFamily: "'Noto Sans KR', sans-serif" }}>
+                                        {skill.name[language]}
+                                    </h3>
+                                    <div style={{ color: '#bdc3c7', fontSize: '0.9rem', marginTop: '4px' }}>
+                                        {language === 'KR' ? '지속시간: ' : 'Duration: '}
+                                        <span style={{ color: '#2ecc71', fontWeight: 'bold' }}>{skill.duration[language]}</span>
                                     </div>
-                                    <button style={{
-                                        backgroundColor: '#3498db', color: '#fff', border: 'none', padding: '7px',
-                                        fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.1rem',
-                                        cursor: 'pointer', borderRadius: '4px'
-                                    }} onClick={() => { handleUnlock(selectedTreeSkill); setSelectedTreeSkill(null); }}>
-                                        해금하기(ATTRIBUTE)
-                                    </button>
-                                </>
-                            ) : (
+                                </div>
+                            </div>
+
+                            {/* Description Section */}
+                            <div style={{
+                                backgroundColor: 'rgba(0,0,0,0.3)',
+                                padding: '15px', borderRadius: '8px',
+                                borderLeft: '4px solid #f1c40f',
+                                fontSize: '1.05rem', lineHeight: '1.6', color: '#ecf0f1',
+                                minHeight: '80px'
+                            }}>
+                                {skill.desc[language]}
+                            </div>
+
+                            {/* Activation / Cost Section */}
+                            <div style={{ marginTop: '5px' }}>
+                                {!isUnlocked ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <span style={{ color: '#e74c3c', fontWeight: 'bold', fontSize: '1.1rem', fontFamily: "'Bebas Neue', sans-serif" }}>
+                                                REQUIRED TROPHIES
+                                            </span>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                {skill.cost.map(tid => {
+                                                    const tObj = TROPHIES[tid];
+                                                    const hasThis = altarData.ownedTrophies.includes(tid);
+                                                    return tObj ? (
+                                                        <div key={tid} style={{ position: 'relative' }}>
+                                                            <img src={`/assets/trophy/${tObj.image}`} alt="Trophy"
+                                                                style={{
+                                                                    width: '32px', height: '32px', objectFit: 'contain',
+                                                                    filter: hasThis ? 'none' : 'grayscale(1) brightness(0.5)'
+                                                                }}
+                                                                title={tObj.name[language]}
+                                                                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }} />
+                                                            {!hasThis && (
+                                                                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#e74c3c', fontSize: '1.2rem', fontWeight: 'bold' }}>✕</div>
+                                                            )}
+                                                        </div>
+                                                    ) : null;
+                                                })}
+                                            </div>
+                                        </div>
+                                        <button
+                                            disabled={!AltarManager.canUnlockSkill(selectedTreeSkill)}
+                                            style={{
+                                                backgroundColor: AltarManager.canUnlockSkill(selectedTreeSkill) ? '#2ecc71' : '#7f8c8d',
+                                                color: '#fff', border: 'none', padding: '12px',
+                                                fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.4rem',
+                                                cursor: AltarManager.canUnlockSkill(selectedTreeSkill) ? 'pointer' : 'not-allowed',
+                                                borderRadius: '6px',
+                                                transition: 'all 0.2s',
+                                                boxShadow: AltarManager.canUnlockSkill(selectedTreeSkill) ? '0 4px 10px rgba(46,204,113,0.3)' : 'none'
+                                            }}
+                                            onClick={() => { handleUnlock(selectedTreeSkill); }}
+                                        >
+                                            {language === 'KR' ? '활성화 하기 (ACTIVATE)' : 'ACTIVATE SKILL'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ color: '#2ecc71', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span style={{ fontSize: '1.2rem' }}>✓</span> {language === 'KR' ? '현재 활성화 됨' : 'ALREADY ACTIVATED'}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <button
+                                                disabled={equippedAltarSkills.includes(selectedTreeSkill) || equippedAltarSkills.length >= 4}
+                                                style={{
+                                                    flex: 1,
+                                                    backgroundColor: (equippedAltarSkills.includes(selectedTreeSkill) || equippedAltarSkills.length >= 4) ? '#7f8c8d' : '#3498db',
+                                                    color: '#fff', border: 'none', padding: '10px',
+                                                    fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif", fontSize: '1.1rem',
+                                                    cursor: (equippedAltarSkills.includes(selectedTreeSkill) || equippedAltarSkills.length >= 4) ? 'default' : 'pointer',
+                                                    borderRadius: '6px',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onClick={() => handleEquipToSlot(selectedTreeSkill)}
+                                            >
+                                                {language === 'KR' ? (equippedAltarSkills.includes(selectedTreeSkill) ? '이미 장착됨' : '< 슬롯에 적용하기') : '< APPLY TO SLOT'}
+                                            </button>
+                                            <button style={{
+                                                flex: 1,
+                                                backgroundColor: '#e74c3c', color: '#fff', border: 'none', padding: '10px',
+                                                fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif", fontSize: '1.1rem',
+                                                cursor: 'pointer', borderRadius: '6px',
+                                                transition: 'all 0.2s'
+                                            }} onClick={() => { handleReturn(selectedTreeSkill); setSelectedTreeSkill(null); }}>
+                                                {language === 'KR' ? '비활성화 (RETURN)' : 'REFUND / RETURN'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Close hint */}
+                            <div style={{ textAlign: 'center', color: '#7f8c8d', fontSize: '0.8rem', marginTop: '5px' }}>
+                                {language === 'KR' ? '바깥을 클릭하여 닫기' : 'Click outside to close'}
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                );
+            })()}
+
+            {/* v2.3.7: Slot Deactivation Confirmation Popup */}
+            {showUnequipConfirm !== null && (() => {
+                return ReactDOM.createPortal(
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 10001,
+                        display: 'flex', justifyContent: 'center', alignItems: 'center'
+                    }} onClick={() => setShowUnequipConfirm(null)}>
+                        <div style={{
+                            width: '320px', backgroundColor: '#1a1a2e', border: '2px solid #e74c3c', borderRadius: '12px',
+                            padding: '24px', textAlign: 'center', color: '#fff', boxShadow: '0 0 30px rgba(0,0,0,0.8)',
+                            fontFamily: "'Noto Sans KR', sans-serif"
+                        }} onClick={e => e.stopPropagation()}>
+                            <h3 style={{ fontSize: '1.3rem', marginBottom: '20px', whiteSpace: 'pre-line', fontWeight: 'bold' }}>
+                                {language === 'KR' ? '해당 스킬을\n해제 하시겠습니까?' : 'Do you want to\nunequip this skill?'}
+                            </h3>
+                            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
                                 <button style={{
-                                    backgroundColor: '#e74c3c', color: '#fff', border: 'none', padding: '7px',
-                                    fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.1rem',
-                                    cursor: 'pointer', borderRadius: '4px'
-                                }} onClick={() => { handleReturn(selectedTreeSkill); setSelectedTreeSkill(null); }}>
-                                    되돌리기(RETURN)
+                                    width: '100px', padding: '10px', backgroundColor: '#e74c3c', color: '#fff', border: 'none',
+                                    borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer',
+                                    fontFamily: "'Noto Sans KR', sans-serif"
+                                }} onClick={() => handleUnequipSlot(showUnequipConfirm)}>
+                                    YES
                                 </button>
-                            )}
+                                <button style={{
+                                    width: '100px', padding: '10px', backgroundColor: '#7f8c8d', color: '#fff', border: 'none',
+                                    borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer',
+                                    fontFamily: "'Noto Sans KR', sans-serif"
+                                }} onClick={() => setShowUnequipConfirm(null)}>
+                                    NO
+                                </button>
+                            </div>
                         </div>
                     </div>,
                     document.body
@@ -513,54 +625,56 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
             })()}
 
             {/* Portal-rendered Trophy Info popup */}
-            {selectedTrophyId && (() => {
-                const trophy = TROPHIES[selectedTrophyId];
-                if (!trophy) return null;
-                const el = document.querySelector(`[data-trophy-id="${selectedTrophyId}"]`) as HTMLElement;
-                if (!el) return null;
-                const rect = el.getBoundingClientRect();
+            {
+                selectedTrophyId && (() => {
+                    const trophy = TROPHIES[selectedTrophyId];
+                    if (!trophy) return null;
+                    const el = document.querySelector(`[data-trophy-id="${selectedTrophyId}"]`) as HTMLElement;
+                    if (!el) return null;
+                    const rect = el.getBoundingClientRect();
 
-                return ReactDOM.createPortal(
-                    <div
-                        style={{
-                            position: 'fixed',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            zIndex: 9999,
-                            pointerEvents: 'auto'
-                        }}
-                        onClick={() => setSelectedTrophyId(null)}
-                    >
+                    return ReactDOM.createPortal(
                         <div
                             style={{
-                                position: 'absolute',
-                                left: Math.min(rect.left + rect.width / 2, window.innerWidth - 170),
-                                top: rect.top - 10,
-                                transform: 'translate(-50%, -100%)',
-                                width: '280px',
-                                backgroundColor: '#1a1a2e', border: '2px solid #f1c40f', borderRadius: '8px',
-                                padding: '14px',
-                                boxShadow: '0 5px 25px rgba(0,0,0,0.8), 0 0 15px rgba(241,196,15,0.2)',
-                                display: 'flex', flexDirection: 'column', gap: '6px',
-                                color: '#fff', fontFamily: "'Noto Sans KR', sans-serif",
-                                fontSize: '0.9rem', pointerEvents: 'all',
-                                textAlign: 'center'
+                                position: 'fixed',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                zIndex: 9999,
+                                pointerEvents: 'auto'
                             }}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={() => setSelectedTrophyId(null)}
                         >
-                            <p style={{ margin: 0, color: '#95a5a6', fontSize: '0.75rem' }}>
-                                {trophy.chapterInfo}
-                            </p>
-                            <h3 style={{ margin: 0, color: '#f1c40f', fontSize: '1.15rem', fontWeight: 'bold', wordBreak: 'keep-all' }}>
-                                {trophy.name[language]}
-                            </h3>
-                            <p style={{ margin: 0, color: '#bdc3c7', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                                {trophy.desc[language]}
-                            </p>
-                        </div>
-                    </div>,
-                    document.body
-                );
-            })()}
-        </div>
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    left: Math.min(rect.left + rect.width / 2, window.innerWidth - 170),
+                                    top: rect.top - 10,
+                                    transform: 'translate(-50%, -100%)',
+                                    width: '280px',
+                                    backgroundColor: '#1a1a2e', border: '2px solid #f1c40f', borderRadius: '8px',
+                                    padding: '14px',
+                                    boxShadow: '0 5px 25px rgba(0,0,0,0.8), 0 0 15px rgba(241,196,15,0.2)',
+                                    display: 'flex', flexDirection: 'column', gap: '6px',
+                                    color: '#fff', fontFamily: "'Noto Sans KR', sans-serif",
+                                    fontSize: '0.9rem', pointerEvents: 'all',
+                                    textAlign: 'center'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <p style={{ margin: 0, color: '#95a5a6', fontSize: '0.75rem' }}>
+                                    {trophy.chapterInfo}
+                                </p>
+                                <h3 style={{ margin: 0, color: '#f1c40f', fontSize: '1.15rem', fontWeight: 'bold', wordBreak: 'keep-all' }}>
+                                    {trophy.name[language]}
+                                </h3>
+                                <p style={{ margin: 0, color: '#bdc3c7', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                    {trophy.desc[language]}
+                                </p>
+                            </div>
+                        </div>,
+                        document.body
+                    );
+                })()
+            }
+        </div >
     );
 };

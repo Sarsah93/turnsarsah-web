@@ -12,6 +12,7 @@ import { TutorialOverlay } from '../Tutorial/TutorialOverlay';
 import { TRANSLATIONS } from '../../constants/translations';
 import { TrophyPopup } from '../TrophyPopup';
 import { ALTAR_SKILLS } from '../../constants/altarSystem';
+import { AltarSkillSlots } from './AltarSkillSlots';
 
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
 
@@ -307,40 +308,7 @@ export const BattleScreen: React.FC = () => {
                     </div>
                 )}
 
-                {/* Altar In-Game Slots */}
-                {store.equippedAltarSkills && store.equippedAltarSkills.length > 0 && (
-                    <div style={{
-                        position: 'absolute',
-                        right: '2vw',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '10px',
-                        zIndex: 50,
-                        background: 'rgba(0,0,0,0.5)',
-                        padding: '10px',
-                        borderRadius: '10px',
-                        border: '2px solid #555'
-                    }}>
-                        {store.equippedAltarSkills.map((skillId, idx) => {
-                            const skill = ALTAR_SKILLS[skillId];
-                            if (!skill) return null;
-                            return (
-                                <div key={idx} style={{
-                                    width: '50px', height: '50px',
-                                    border: '2px solid #3498db',
-                                    borderRadius: '8px',
-                                    background: 'rgba(46, 204, 113, 0.1)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }} title={`${skill.name[language]}\n${skill.desc[language]}`}>
-                                    <img src={`/assets/image/item/${skill.image}`} alt={skill.name[language]} style={{ width: '40px', height: '40px', objectFit: 'contain' }}
-                                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }} />
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                <AltarSkillSlots />
 
                 {/* Damage Texts Layer */}
                 {damageTexts.map(dt => (

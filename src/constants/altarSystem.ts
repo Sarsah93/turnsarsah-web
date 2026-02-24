@@ -78,8 +78,8 @@ export interface AltarSkillDef {
     image: string;
     name: { KR: string; EN: string };
     desc: { KR: string; EN: string };
+    duration: { KR: string; EN: string };
     cost: string[]; // Trophy IDs required
-    prerequisites?: string[]; // Deprecated for complex logic, but we can just say "requires Tier N-1 > 0" dynamically.
 }
 
 export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
@@ -88,7 +88,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 1,
         image: '1A_생존주의자(Prepper).png',
         name: { KR: '생존주의자', EN: 'Prepper' },
-        desc: { KR: '최대 체력이 +25 증가한 채로 시작합니다.', EN: 'Start with +25 Max HP.' },
+        desc: {
+            KR: '플레이어는 최대 체력이 +25 증가한 채로 시작한다.',
+            EN: 'Player starts with +25 Max HP.'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_1_4']
     },
     '1B': {
@@ -96,7 +100,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 1,
         image: '1B_날카로운 카드(Sharpen Cards).png',
         name: { KR: '날카로운 카드', EN: 'Sharpen Cards' },
-        desc: { KR: '공격 시 추가 고정 데미지 +25.', EN: 'Attacks deal +25 extra fixed damage.' },
+        desc: {
+            KR: '플레이어가 공격 시, 추가 고정 데미지 +25.',
+            EN: 'When attacking, deals +25 additional fixed damage.'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_1_4']
     },
     '2A': {
@@ -104,7 +112,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 2,
         image: '2A_순응(Acclimatization).png',
         name: { KR: '순응', EN: 'Acclimatization' },
-        desc: { KR: '상태이상 피해 시 3턴 동안 턴당 체력 +5 회복(재생 효과).', EN: 'Taking debuff damage grants Regeneration (+5 HP for 3 turns).' },
+        desc: {
+            KR: '플레이어는 상태이상에 대한 피해를 받을 시, 3턴 동안 상태이상 ‘재생(Regeneration)’ 효과를 얻으며, 한 번 회복될 때, +5씩 회복한다.',
+            EN: 'When taking status effect damage, gain "Regeneration" for 3 turns, restoring +5 HP each time.'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_1_5', 'TR_1_10']
     },
     '2B': {
@@ -112,7 +124,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 2,
         image: '2B_물아일체(Oneness with Nature).png',
         name: { KR: '물아일체', EN: 'Oneness with Nature' },
-        desc: { KR: '회피 발동 5% 증가 및 챕터 2B의 회피 제한 무시.', EN: '+5% Evasion. Negates evasion limits in Chapter 2B.' },
+        desc: {
+            KR: '플레이어가 받는 상태이상 ‘회피(Avoiding)’의 발동 확률을 영구적으로 +5% 올려준다. 또한, ‘챕터 2B 깊은 숲’과 같이 환경적 요인으로 플레이어의 회피 효과가 제한되는 로직을 무시하고 우선 적용한다.',
+            EN: '+5% permanent Evasion chance. Negates environmental evasion restrictions (e.g., Chapter 2B).'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_1_5', 'TR_1_10']
     },
     '2A-1': {
@@ -120,7 +136,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 2,
         image: '2A-1_응용(Utilization).png',
         name: { KR: '응용', EN: 'Utilization' },
-        desc: { KR: '공격 시 보스에게 50% 확률로 출혈 또는 중독 부여(중첩 불가).', EN: '50% chance to inflict Bleed or Poison on attack (no overlap).' },
+        desc: {
+            KR: '공격 시 보스에게 ‘출혈(50% 확률)’과 ‘중독(50% 확률)’ 중 하나를 부여한다. 둘이 동시에 부여되진 않으나, 이미 하나가 걸려있을 때 다른 하나를 부가할 수 있다. (동종 중첩 불가, 디버프 종료 후 재부여 가능)',
+            EN: 'Attacks have a 50% chance to inflict Bleed or Poison. Can apply different debuffs incrementally, but same debuffs do not stack.'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2A_5', 'TR_2A_10']
     },
     '2A-2': {
@@ -128,7 +148,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 2,
         image: '2A-2_생체 리듬 가속(Biorhythm Acceleration).png',
         name: { KR: '생체 리듬 가속', EN: 'Biorhythm Acceleration' },
-        desc: { KR: '재생 효과와 최대 체력 증가량을 +20% 증폭.', EN: 'Amplify Regeneration amount and Max HP bonuses by +20%.' },
+        desc: {
+            KR: '플레이어가 받는 상태이상 재생(Regeneration) 효과와 영구적으로 적용되는 최대 체력 증가 효과의 증가량을 +20% 향상하여 적용 받는다.',
+            EN: 'Increases the effectiveness of Regeneration and permanent Max HP bonuses by +20%.'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2A_5', 'TR_2A_10']
     },
     '2B-1': {
@@ -136,7 +160,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 2,
         image: '2B-1_사냥꾼(Hunter).png',
         name: { KR: '사냥꾼', EN: 'Hunter' },
-        desc: { KR: '명중률 감소 디버프 모면.', EN: 'Immune to accuracy reduction debuffs.' },
+        desc: {
+            KR: '플레이어가 명중률 감소 디버프 효과로부터 면역된다. (모든 명중률 저하 로직 무효화)',
+            EN: 'Immune to accuracy reduction debuffs (negates all accuracy drop logic).'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2B_5', 'TR_2B_10']
     },
     '2B-2': {
@@ -144,7 +172,11 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         tier: 2,
         image: '2B-2_보호구 장착(Equipment Gear).png',
         name: { KR: '보호구 장착', EN: 'Equipment Gear' },
-        desc: { KR: '보스로부터 받는 공격 데미지 30% 감소.', EN: 'Reduces boss attack damage by 30%.' },
+        desc: {
+            KR: '보스로부터 받는 공격(상태 이상 피해 제외)을 30% 감소하여 적용 받는다.',
+            EN: 'Reduces damage taken from boss attacks by 30% (excludes status effect damage).'
+        },
+        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2B_5', 'TR_2B_10']
     }
 };

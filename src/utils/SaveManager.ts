@@ -19,6 +19,7 @@ interface SaveData {
     consecutiveRoyals: number;
   };
   equippedAltarSkills?: string[];
+  pendingTrophies?: string[];
   puzzleTarget?: number;
   timestamp: number;
 }
@@ -42,6 +43,7 @@ export class SaveManager {
         conditions: Array.from(data.bot.conditions.entries()),
       },
       equippedAltarSkills: data.equippedAltarSkills || [],
+      pendingTrophies: data.pendingTrophies || [],
       deckState: data.deckState,
       timestamp: Date.now(),
     };
@@ -88,6 +90,7 @@ export class SaveManager {
           conditions: restoreConditions(parsedData.bot.conditions),
         },
         equippedAltarSkills: parsedData.equippedAltarSkills || [],
+        pendingTrophies: parsedData.pendingTrophies || [],
       };
 
       console.log(`게임이 슬롯 ${slot}에서 로드되었습니다.`);

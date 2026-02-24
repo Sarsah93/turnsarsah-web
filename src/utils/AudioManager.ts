@@ -34,7 +34,11 @@ export class AudioManager {
 
     public static playBGM(src: string) {
         if (this.bgmAudio) {
-            if (this.bgmAudio.src.includes(src)) {
+            // v2.3.8: Decode URI to prevent restarts on paths with spaces (e.g., "/audio sounds/")
+            const currentSrc = decodeURI(this.bgmAudio.src);
+            const targetSrc = decodeURI(src);
+
+            if (currentSrc.includes(targetSrc)) {
                 if (this.bgmAudio.paused) {
                     this.bgmAudio.play().catch(e => console.warn("BGM Playback (Resume) failed:", e));
                 }

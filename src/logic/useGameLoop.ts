@@ -16,6 +16,7 @@ export interface DamageTextData {
 }
 
 export const useGameLoop = () => {
+    const store = useGameStore();
     const {
         gameState, setGameState,
         player, setPlayerHp,
@@ -30,7 +31,7 @@ export const useGameLoop = () => {
         triggerTransition,
         isTutorial, tutorialStep, setTutorialStep, gamePhase,
         language
-    } = useGameStore();
+    } = store;
 
     const t = TRANSLATIONS[language];
 
@@ -224,22 +225,25 @@ export const useGameLoop = () => {
         }
 
     };
-
     const executePlayerAttack = async (selectedIndices: number[]) => {
-        if (gameState !== GameState.BATTLE && gameState !== GameState.TUTORIAL) return;
+        const store = useGameStore.getState();
+        if (store.gameState !== GameState.BATTLE && store.gameState !== GameState.TUTORIAL) return;
+
+        // Critical Fix: Prevent UI spamming during animations
+        if (useGameStore.getState().gamePhase !== 'IDLE') return;
+        store.setGamePhase('PLAYER_ATTACK');
 
         // 1. 마비 체크 (Paralyzing)
         if (player.conditions.has('Paralyzing')) {
             setMessage(t.COMBAT.PARALYZED);
             playConditionSound('Paralyzing');
             triggerScreenEffect('flash-red');
-            // Wait a bit before bot turn starts
+            store.setGamePhase('BOT_TURN');
             await new Promise(r => setTimeout(r, 1200));
             await executeBotTurn();
             return;
         }
 
-        const store = useGameStore.getState();
         const currentPlayerHand = store.playerHand;
 
         if (selectedIndices.length === 0) {
@@ -566,7 +570,7 @@ export const useGameLoop = () => {
         await new Promise(r => setTimeout(r, 400));
 
         setBotAnimState('NONE');
-        store.setGamePhase('IDLE');
+        // store.setGamePhase('IDLE'); // Removed to keep UI locked until Boss Turn ends
 
         // v2.0.0.16: Remove cards only AFTER animation ends
         store.removePlayerCards(selectedIndices);
@@ -644,6 +648,7 @@ export const useGameLoop = () => {
 
     const executeBotTurn = async () => {
         const store = useGameStore.getState();
+        store.setGamePhase('BOT_TURN');
         const currentBot = store.bot;
         const currentPlayer = store.player;
 
@@ -723,7 +728,7 @@ export const useGameLoop = () => {
                 }
             }
         } else if (store.chapterNum === '2B' && stageNum === 3) {
-            // Half Orc Double Attack (100% first, 40% second)
+            // Half Orc Double Attack (40% second)
             if (Math.random() < 0.4) {
                 attackCount = 2;
             }
@@ -807,8 +812,14 @@ export const useGameLoop = () => {
             const pCond = freshBotAfterHit.conditions.get('Provocation');
             if (pCond && Math.random() < ((pCond.data as any)?.chance / 100 || 0.3)) {
                 // Apply Decreasing Accuracy to Player
-                const accPercent = stageNum === 5 ? 20 : (stageNum === 9 ? 25 : 30);
-                store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: accPercent });
+                // Altar Skill 2B-1 (Hunter): Immune to accuracy reduction
+                if (store.equippedAltarSkills.includes('2B-1')) {
+                    setMessage("HUNTER IMMUNITY!");
+                } else {
+                    // 2B-5: 20%, 2B-9: 25%, 2B-10: 30%
+                    const accPercent = stageNum === 5 ? 20 : (stageNum === 9 ? 25 : 30);
+                    store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: accPercent });
+                }
             }
 
             // Recoil Damage if Boss has 'Damage recoiling' status
@@ -867,18 +878,18 @@ export const useGameLoop = () => {
                 }
             }
         } else if (store.chapterNum === '2B') {
-            const configB = DIFFICULTY_CONFIGS[store.difficulty];
-            // Standard 2B Status Application logic (placeholder or move to each stage)
-            const bProbMap: Record<number, number> = { 1: 0.1, 2: 0.12, 3: 0.15, 4: 0.12, 6: 0.12, 7: 0.15, 8: 0.17, 9: 0.20, 10: 0.15 };
-            const bleedProb = bProbMap[stageNum] || 0.15;
-            if (Math.random() < bleedProb) {
+            // Standard 2B Status Application logic
+            const bleedMap: Record<number, number> = { 1: 0.10, 2: 0.12, 3: 0.15, 4: 0.12, 5: 0, 6: 0.12, 7: 0.15, 8: 0.17, 9: 0.20, 10: 0.15 };
+            const bProb = bleedMap[stageNum] || 0.15;
+            if (bProb > 0 && Math.random() < bProb) {
                 store.addPlayerCondition('Bleeding', 4);
             }
             if (stageNum === 8 && Math.random() < 0.25) {
                 store.addPlayerCondition('Poisoning', 4);
             }
         } else if (store.chapterNum === '1') {
-            // (existing Chapter 1 status logic would follow here)
+            // v2.3.7: Restore Chapter 1 Status Application Mechanics
+            applyBotStageMechanics();
         }
 
         await new Promise(r => setTimeout(r, 300));
@@ -1007,7 +1018,9 @@ export const useGameLoop = () => {
         }
 
         await refillHandSequentially();
-        store.applyStageRules(store.chapterNum, stageNum, nextTurn);
+        const finalStore = useGameStore.getState();
+        finalStore.applyStageRules(finalStore.chapterNum, stageNum, nextTurn);
+        finalStore.setGamePhase('IDLE'); // UI re-enabled only after all turn processing
     };
 
     const resolveStatusEffects = async () => {
@@ -1045,6 +1058,15 @@ export const useGameLoop = () => {
                 const freshHP = useGameStore.getState().player.hp;
                 setPlayerHp(Math.max(0, freshHP - amount));
                 showDamageText('PLAYER', `-${amount}`, '#e74c3c');
+
+                // Altar Skill 2A (Acclimatization): Regen on status damage
+                if (store.equippedAltarSkills.includes('2A')) {
+                    if (!playerConditions.has('Regenerating')) {
+                        store.addPlayerCondition('Regenerating', 3, '', { amount: 5 });
+                        setMessage("ACCLIMATIZATION!");
+                    }
+                }
+
                 await new Promise(r => setTimeout(r, 800));
 
                 if (Math.random() < 0.20 && !playerConditions.has('Paralyzing')) {
@@ -1061,11 +1083,26 @@ export const useGameLoop = () => {
                 const freshHP = useGameStore.getState().player.hp;
                 setPlayerHp(Math.max(0, freshHP - amount));
                 showDamageText('PLAYER', `-${amount}`, '#e74c3c');
+
+                // Altar Skill 2A (Acclimatization): Regen on status damage
+                if (store.equippedAltarSkills.includes('2A')) {
+                    if (!playerConditions.has('Regenerating')) {
+                        store.addPlayerCondition('Regenerating', 3, '', { amount: 5 });
+                        setMessage("ACCLIMATIZATION!");
+                    }
+                }
+
                 await new Promise(r => setTimeout(r, 800));
             } else if (cond === 'Regenerating') {
                 setMessage(t.COMBAT.PLAYER_REGEN);
                 playConditionSound('Regenerating');
-                const heal = 10;
+
+                let heal = data.data?.amount || 10;
+                // Altar Skill 2A-2 (Biorhythm Acceleration): +20% Regen
+                if (store.equippedAltarSkills.includes('2A-2')) {
+                    heal = Math.floor(heal * 1.2);
+                }
+
                 setPlayerHp(Math.min(currentP.maxHp, currentP.hp + heal));
                 showDamageText('PLAYER', `+${heal}`, '#2ecc71');
                 await new Promise(r => setTimeout(r, 800));
@@ -1088,6 +1125,15 @@ export const useGameLoop = () => {
                 showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
                 setMessage(t.CONDITIONS.DEHYDRATION.NAME + "!");
                 playConditionSound('Dehydration');
+
+                // Altar Skill 2A (Acclimatization): Regen on status damage
+                if (store.equippedAltarSkills.includes('2A')) {
+                    if (!playerConditions.has('Regenerating')) {
+                        store.addPlayerCondition('Regenerating', 3, '', { amount: 5 });
+                        setMessage("ACCLIMATIZATION!");
+                    }
+                }
+
                 await new Promise(r => setTimeout(r, 1000));
             }
             condData.elapsed += 1;
@@ -1159,7 +1205,12 @@ export const useGameLoop = () => {
         useGameStore.getState().setBot({ ...freshBot, conditions: botConditions });
     };
 
+
     const executeCardSwap = (selectedIndices: number[]) => {
+        // Critical Fix: Prevent UI spamming during animations
+        if (useGameStore.getState().gamePhase !== 'IDLE') return;
+        useGameStore.getState().setGamePhase('SWAPPING');
+
         if (selectedIndices.length === 0) {
             setMessage(t.COMBAT.SELECT_CARDS);
             triggerScreenEffect('shake-small');
@@ -1180,6 +1231,7 @@ export const useGameLoop = () => {
             setMessage(t.COMBAT.NO_SWAPS);
             triggerScreenEffect('shake-small');
         }
+        useGameStore.getState().setGamePhase('IDLE');
     };
 
     const handleVictory = async () => {
@@ -1208,6 +1260,15 @@ export const useGameLoop = () => {
             }
             const newHp = Math.min(maxHp, currentHp + healAmount);
             setPlayerHp(newHp);
+        }
+
+        // v2.3.7: Chapter Transition Reward (120 HP heal when moving from Ch1 to Ch2)
+        if (store.chapterNum === '1' && stageNum === 10) {
+            const freshPlayer = useGameStore.getState().player;
+            const transitionHeal = 120;
+            setPlayerHp(Math.min(freshPlayer.maxHp, freshPlayer.hp + transitionHeal));
+            showDamageText('PLAYER', `+${transitionHeal}`, '#2ecc71');
+            setMessage(t.COMBAT.VICTORY + " (+120 HP)");
         }
 
         // 2. Trophy Check — stage trophy in memory (NOT saved to localStorage yet)
@@ -1295,6 +1356,7 @@ export const useGameLoop = () => {
         if (store.chapterNum === '2A' && store.stageNum === 10) {
             store.applyStageRules(store.chapterNum, store.stageNum, store.currentTurn);
         }
+        store.setGamePhase('IDLE');
     };
 
     const handleDefeat = async () => {

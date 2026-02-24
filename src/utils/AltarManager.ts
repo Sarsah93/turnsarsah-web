@@ -6,11 +6,13 @@ const ALTAR_STORAGE_KEY = 'turnsarsah_altar_data';
 export interface AltarData {
     ownedTrophies: string[]; // List of trophy IDs or names acquired
     unlockedSkills: string[]; // List of skill IDs unlocked in the Altar
+    equippedSkills: string[]; // v2.3.7: List of currently equipped skill IDs (Max 4 active slots)
 }
 
 const DEFAULT_ALTAR_DATA: AltarData = {
     ownedTrophies: [],
-    unlockedSkills: []
+    unlockedSkills: [],
+    equippedSkills: []
 };
 
 export class AltarManager {
@@ -91,6 +93,13 @@ export class AltarManager {
     }
 
     /**
+     * Restores pending trophies from a saved state.
+     */
+    static setPendingTrophies(trophies: string[]): void {
+        this.pendingTrophies = [...trophies];
+    }
+
+    /**
      * Returns the list of currently pending (staged but not yet committed) trophies.
      */
     static getPendingTrophies(): string[] {
@@ -131,6 +140,27 @@ export class AltarManager {
      * Unlocks an Altar skill if all prerequisite trophies are available.
      * Only returns true if successful.
      */
+    static canUnlockSkill(skillId: string): boolean {
+        const data = this.getAltarData();
+        if (data.unlockedSkills.includes(skillId)) return false;
+
+        const skill = ALTAR_SKILLS[skillId];
+        if (!skill) return false;
+
+        // Check tier requirement (requires at least one skill from tier - 1 if tier > 1)
+        if (skill.tier > 1) {
+            const requiredTier = skill.tier - 1;
+            const hasPrevTier = data.unlockedSkills.some(id => {
+                const s = ALTAR_SKILLS[id];
+                return s && s.tier === requiredTier;
+            });
+            if (!hasPrevTier) return false;
+        }
+
+        // Check if all required trophies are available
+        return skill.cost.every(trophyId => this.isTrophyAvailable(trophyId));
+    }
+
     static unlockSkill(skillId: string): boolean {
         const data = this.getAltarData();
         if (data.unlockedSkills.includes(skillId)) return false; // Already unlocked
@@ -154,6 +184,9 @@ export class AltarManager {
     static returnSkill(skillId: string): void {
         const data = this.getAltarData();
         if (!data.unlockedSkills.includes(skillId)) return;
+
+        // v2.3.7: Also remove from equipped skills if present
+        data.equippedSkills = data.equippedSkills.filter(id => id !== skillId);
 
         const skillToReturn = ALTAR_SKILLS[skillId];
         if (!skillToReturn) return;
@@ -201,6 +234,8 @@ export class AltarManager {
                     if (!activeByTier[requiredTier] || activeByTier[requiredTier] === 0) {
                         // Cascade return this skill
                         targetUnlocks = targetUnlocks.filter(id => id !== s.id);
+                        // v2.3.7: Also remove from equipped if cascaded
+                        data.equippedSkills = data.equippedSkills.filter(id => id !== s.id);
                         tierValid = false; // Need to re-evaluate after modifying
                         break;
                     }
@@ -209,6 +244,15 @@ export class AltarManager {
         } while (!tierValid);
 
         data.unlockedSkills = targetUnlocks;
+        this.saveAltarData(data);
+    }
+
+    /**
+     * v2.3.7: Updates the list of equipped skills in permanent storage.
+     */
+    static saveEquippedSkills(skills: string[]): void {
+        const data = this.getAltarData();
+        data.equippedSkills = [...skills];
         this.saveAltarData(data);
     }
 }
