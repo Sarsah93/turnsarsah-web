@@ -1506,7 +1506,8 @@ export const useGameLoop = () => {
             targetStage = 11; // Special Stage
         }
 
-        if (targetStage > 10 && targetStage !== 11) {
+        // v2.3.8: Fix chapter transition for Chapter 1 (Standard nextStage is 11, which failed the !== 11 check)
+    if ((targetStage > 10 && targetStage !== 11) || (store.chapterNum === '1' && stageNum === 10)) {
             // Unlock next difficulty on game completion
             if (store.difficulty === Difficulty.NORMAL) {
                 store.unlockDifficulty(Difficulty.HARD);

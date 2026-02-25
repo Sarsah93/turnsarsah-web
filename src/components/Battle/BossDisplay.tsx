@@ -29,18 +29,18 @@ export const BossDisplay: React.FC = () => {
         if (isTutorial) return '/assets/boss_goblin/tutorial_bot.png';
         if (chapter === '1') {
             const mapping: Record<number, string> = {
-                1: 're_Goblin_01.png',
-                2: 're_Goblin Skirmisher_02.png',
-                3: 're_Goblin Rider_03.png',
-                4: 're_HobGoblin_04.png',
-                5: 're_Goblin Shaman_05.png',
-                6: 're_Golden Goblin_06.png',
-                7: 're_Elite Goblin_07.png',
-                8: 're_Troll_08.png',
-                9: 're_Giant Goblin_09.png',
-                10: 're_Goblin Lord_10.png'
+                1: '01_goblin.png',
+                2: '02_goblin skirmisher.png',
+                3: '03_goblin rider.png',
+                4: '04_hobgoblin.png',
+                5: '05_goblin shaman.png',
+                6: '06_golden goblin.png',
+                7: '07_elite goblin.png',
+                8: '08_troll.png',
+                9: '09_giant goblin.png',
+                10: '10_goblin lord.png'
             };
-            const filename = mapping[stage] || 're_Goblin_01.png';
+            const filename = mapping[stage] || '01_goblin.png';
             return `/assets/boss_goblin/${filename}`;
         }
         if (chapter === '2A') {
@@ -77,7 +77,7 @@ export const BossDisplay: React.FC = () => {
             const filename = mapping[stage] || '01_orc.png';
             return `/assets/boss_orc/${filename}`;
         }
-        return '/assets/boss_goblin/re_Goblin_01.png';
+        return '/assets/boss_goblin/01_goblin.png';
     };
 
     return (
@@ -127,8 +127,8 @@ export const BossDisplay: React.FC = () => {
                     top: (stageNum === 11) ? '2%' : '0%',
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: (chapterNum === '2A' && stageNum === 11) ? '320px' : (chapterNum === '2B' && stageNum === 11) ? '380px' : chapterNum === '2B' ? '300px' : '220px',
-                    height: (chapterNum === '2A' && stageNum === 11) ? '320px' : (chapterNum === '2B' && stageNum === 11) ? '380px' : chapterNum === '2B' ? '300px' : '220px',
+                    width: '380px',
+                    height: '380px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',

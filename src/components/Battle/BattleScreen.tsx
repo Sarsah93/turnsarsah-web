@@ -368,7 +368,7 @@ export const BattleScreen: React.FC = () => {
                 )}
 
                 {/* Game Over / Final Victory Buttons (Centrally Layered and Active) */}
-                {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
+                {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10)) && (
                     <div style={{
                         position: 'absolute', top: '70%', left: '50%', transform: 'translateX(-50%)',
                         display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 2000,
