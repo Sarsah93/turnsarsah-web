@@ -202,6 +202,18 @@ interface GameStoreState {
   setPuzzleTarget: (target: number) => void;
 
   setBannedIndices: (indices: number[]) => void;
+
+  // Hidden Scenario
+  ch1PerfectCount: number;
+  specialQualify: boolean;
+  ch2PerfectCount: number;
+  ch2SpecialQualify: boolean;
+  setHiddenState: (update: Partial<{
+    ch1PerfectCount: number,
+    specialQualify: boolean,
+    ch2PerfectCount: number,
+    ch2SpecialQualify: boolean
+  }>) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -229,6 +241,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setCurrentTurn: (currentTurn) => set({ currentTurn }),
   stage10RuleText: '',
   setStage10RuleText: (stage10RuleText) => set({ stage10RuleText }),
+  // Hidden Scenario
+  ch1PerfectCount: 0,
+  specialQualify: false,
+  ch2PerfectCount: 0,
+  ch2SpecialQualify: false,
+  setHiddenState: (update) => set((state) => ({ ...state, ...update })),
+
   // Tutorial System
   isTutorial: false,
   tutorialStep: 0,
@@ -525,9 +544,20 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           applyCondition(botConditions, 'Regenerating', 9999, `At the end of each turn, restores ${regenAmount} HP.`, { amount: regenAmount });
         }
 
-        // Stage 6 Triple Attack
         if (stageId === 6) {
           applyCondition(botConditions, 'Triple Attack', 9999);
+        }
+        // Stage 11: SAND DRAGON (Pre-awakening Passives)
+        if (stageId === 11) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 30 });
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 10 });
+          applyCondition(botConditions, 'Triple Attack', 9999);
+        }
+      } else if (chapterId === '2B') {
+        // ... (existing logic might need a check for Stage 11 Reflection)
+        if (stageId === 11) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+          applyCondition(botConditions, 'Reflection', 9999, '', { chance: 30, percent: 10 });
         }
       }
 
@@ -720,10 +750,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         blindIndices = []; // Clear for other steps
       }
     } else if (chapterId === '2A') {
-      // Chapter 2A Stage Rules
       const t = TRANSLATIONS[get().language] as any;
-
-      // v2.3.2: 2A Regeneration Persistence (handles Load and End Turn renewal)
       const regenMap: Record<number, number> = { 2: 5, 3: 10, 4: 10, 5: 15, 8: 10, 9: 15, 10: 15 };
       const isAwakened = bot.conditions.has('Awakening');
       if (regenMap[stageId] && !bot.conditions.has('Regenerating') && !isAwakened) {
@@ -745,7 +772,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       } else if (stageId === 7) {
         set({ stage10RuleText: t.RULES.TWO_TIMES_PARALYZE_50 });
       } else if (stageId === 8) {
-        // BLIND 1 + BAN 1 (Independent slots)
         const indices = [0, 1, 2, 3, 4, 5, 6, 7];
         const blindIdx = Math.floor(Math.random() * indices.length);
         blindIndices.push(indices.splice(blindIdx, 1)[0]);
@@ -753,7 +779,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         bannedIndices.push(indices[banIdx]);
         set({ stage10RuleText: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1 });
       } else if (stageId === 9) {
-        // BLIND 3
         const indices = [0, 1, 2, 3, 4, 5, 6, 7];
         for (let i = 0; i < 3; i++) {
           const randIdx = Math.floor(Math.random() * indices.length);
@@ -761,57 +786,54 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         }
         set({ stage10RuleText: t.RULES.FLUSH_DMG_0_BLIND_3 });
       } else if (stageId === 10) {
-        // SPHINX PUZZLE
-        // v2.3.2: Target sum of exactly 5 cards from current hand
         const validCards = state.playerHand.filter(c => c !== null) as Card[];
         let target = 0;
-
         if (validCards.length >= 5) {
-          // Find all possible sums of exactly 5 cards
           const sums: number[] = [];
           const getCombinations = (start: number, count: number, currentSum: number) => {
-            if (count === 5) {
-              sums.push(currentSum);
-              return;
-            }
+            if (count === 5) { sums.push(currentSum); return; }
             for (let i = start; i < validCards.length; i++) {
               const card = validCards[i];
               let cardVal = 0;
-              if (card.isJoker) {
-                cardVal = 14;
-              } else if (card.rank === 'A') {
-                cardVal = 1;
-              } else if (card.rank) {
-                cardVal = RANK_VALUES[card.rank] || 0;
-              }
+              if (card.isJoker) cardVal = 14;
+              else if (card.rank === 'A') cardVal = 1;
+              else if (card.rank) cardVal = RANK_VALUES[card.rank] || 0;
               getCombinations(i + 1, count + 1, currentSum + cardVal);
             }
           };
           getCombinations(0, 0, 0);
-
-          if (sums.length > 0) {
-            target = sums[Math.floor(Math.random() * sums.length)];
-          }
+          if (sums.length > 0) target = sums[Math.floor(Math.random() * sums.length)];
         }
-
         if (target > 0) {
-          const ruleText = (t.RULES.PUZZLE || "Puzzle + Awakening");
-          set({ puzzleTarget: target, stage10RuleText: ruleText });
+          set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN });
         } else if (state.puzzleTarget > 0) {
-          // Keep existing target if already set
-          const ruleText = (t.RULES.PUZZLE || "Puzzle + Awakening");
-          set({ stage10RuleText: ruleText });
+          set({ stage10RuleText: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN });
+        }
+        // Always Blind 1 for SPHINX
+        if (blindIndices.length === 0) {
+          blindIndices.push(Math.floor(Math.random() * 8));
+        }
+      } else if (stageId === 11) {
+        // Special: SAND DRAGON
+        set({ stage10RuleText: t.RULES.SAND_STORM_TRIPLE_AWAKEN });
+        if (!bot.conditions.has('Awakening')) {
+          if (!bot.conditions.has('Damage Reducing')) {
+            state.addBotCondition('Damage Reducing', 9999, '', { percent: 20 });
+          }
+          if (!bot.conditions.has('Regenerating')) {
+            state.addBotCondition('Regenerating', 9999, '', { amount: 20 });
+          }
+          if (!bot.conditions.has('Triple Attack')) {
+            state.addBotCondition('Triple Attack', 9999);
+          }
         }
       }
     } else if (chapterId === '2B') {
       const ruleKey = (CHAPTERS['2B'].stages as any)[stageId]?.rule;
       if (ruleKey && t.RULES[ruleKey]) {
-        // Ensure "RULE: " or "룰: " prefix
         const prefix = t.RULES.RULE_HINT || "RULE: ";
         let ruleText = t.RULES[ruleKey];
-        if (!ruleText.startsWith(prefix)) {
-          ruleText = prefix + ruleText;
-        }
+        if (!ruleText.startsWith(prefix)) ruleText = prefix + ruleText;
         set({ stage10RuleText: ruleText });
       }
 
@@ -821,22 +843,35 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       if (drPercent && !bot.conditions.has('Damage Reducing')) {
         state.addBotCondition('Damage Reducing', 9999, '', { percent: drPercent });
       }
-
       if (stageId === 3 && !bot.conditions.has('Avoiding')) {
         state.addBotCondition('Avoiding', 9999, '', { chance: 0.20 });
       }
       if (stageId === 8 && !bot.conditions.has('Avoiding')) {
         state.addBotCondition('Avoiding', 9999, '', { chance: 0.25 });
       }
-
-      // Provocation is applied during attack in useGameLoop, but could be set as initial status if permanent?
-      // User says: "designated target... Permanent" for Provocation and Adrenaline secretion.
       if ([5, 9, 10].includes(stageId) && !bot.conditions.has('Provocation')) {
         const prob = stageId === 5 ? 30 : (stageId === 9 ? 35 : 40);
         state.addBotCondition('Provocation', 9999, '', { chance: prob });
       }
       if (stageId === 6 && !bot.conditions.has('Adrenaline secretion')) {
         state.addBotCondition('Adrenaline secretion', 9999, '', { limit: 60 });
+      }
+      if (stageId === 11) {
+        // Special: HIGH ORC SHAMAN
+        const isAwakened = bot.conditions.has('Awakening');
+        if (!isAwakened) {
+          const indices = [0, 1, 2, 3, 4, 5, 6, 7];
+          const b1 = Math.floor(Math.random() * indices.length);
+          blindIndices.push(indices.splice(b1, 1)[0]);
+          const b2 = Math.floor(Math.random() * indices.length);
+          blindIndices.push(indices.splice(b2, 1)[0]);
+          const banIdx = Math.floor(Math.random() * indices.length);
+          bannedIndices.push(indices[banIdx]);
+        }
+        if (!isAwakened && !bot.conditions.has('Reflection')) {
+          state.addBotCondition('Reflection', 9999, '', { chance: 0.3, percent: 10 });
+        }
+        set({ stage10RuleText: t.RULES.BLIND_BAN_REFLECTION_AWAKEN });
       }
     }
 
@@ -873,11 +908,15 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       },
       message: '',
       isGameLoaded: false,
+      // Hidden Scenario Reset
+      ch1PerfectCount: 0,
+      specialQualify: false,
+      ch2PerfectCount: 0,
+      ch2SpecialQualify: false,
     }),
 
   saveGame: (slot: number) => {
     const state = get();
-    const { AltarManager } = require('../utils/AltarManager');
     if (state.isTutorial) {
       console.log("Saving is blocked during tutorial.");
       return;
@@ -896,8 +935,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         consecutiveJokers: state.deck.consecutiveJokers,
         consecutiveRoyals: state.deck.consecutiveRoyals,
       },
+      equippedAltarSkills: state.equippedAltarSkills,
       pendingTrophies: AltarManager.getPendingTrophies(),
       puzzleTarget: state.puzzleTarget,
+      // Hidden Scenario
+      ch1PerfectCount: state.ch1PerfectCount,
+      specialQualify: state.specialQualify,
+      ch2PerfectCount: state.ch2PerfectCount,
+      ch2SpecialQualify: state.ch2SpecialQualify,
     });
   },
 
@@ -947,7 +992,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   loadGame: (slot: number) => {
     const gameData = SaveManager.loadGame(slot);
-    const { AltarManager } = require('../utils/AltarManager');
     if (gameData) {
       set({
         chapterNum: gameData.chapterNum || '1',
@@ -960,6 +1004,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         playerHand: gameData.playerHand as (Card | null)[],
         isGameLoaded: true,
         puzzleTarget: gameData.puzzleTarget || 0,
+        // Hidden Scenario
+        ch1PerfectCount: gameData.ch1PerfectCount ?? 0,
+        specialQualify: gameData.specialQualify ?? false,
+        ch2PerfectCount: gameData.ch2PerfectCount ?? 0,
+        ch2SpecialQualify: gameData.ch2SpecialQualify ?? false,
       });
 
       // Restore Deck State

@@ -3,7 +3,7 @@
 import { Condition } from '../types/Character';
 
 export interface ConditionEffect {
-  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'POISON_DMG' | 'HEAVY_BLEED' | 'AVOIDED' | 'PARALYZED' | 'DEBILITATING' | 'FRAILTY' | 'CONDITION_APPLIED' | 'DEHYDRATION_DMG' | 'NEUROTOXICITY_DMG' | 'ADRENALINE_NULL' | 'RECOIL_DMG' | 'LIFESTEAL';
+  type: 'HEAL' | 'DAMAGE' | 'BLEED' | 'POISON' | 'POISON_DMG' | 'HEAVY_BLEED' | 'AVOIDED' | 'PARALYZED' | 'DEBILITATING' | 'FRAILTY' | 'CONDITION_APPLIED' | 'DEHYDRATION_DMG' | 'NEUROTOXICITY_DMG' | 'ADRENALINE_NULL' | 'RECOIL_DMG' | 'LIFESTEAL' | 'BURN' | 'DECAY' | 'REFLECT';
   amount: number;
   data?: any; // For flexible payload in CONDITION_APPLIED
 }
@@ -31,6 +31,9 @@ export const CONDITION_PRESETS: Record<string, { duration: number }> = {
   'Dehydration': { duration: 9999 },
   'Provocation': { duration: 9999 },
   'Decreasing accuracy': { duration: 3 },
+  'Burn': { duration: 3 },
+  'Decay': { duration: 4 },
+  'Reflection': { duration: 9999 },
 };
 
 /**
@@ -44,7 +47,7 @@ export function applyCondition(
   data?: unknown
 ): boolean {
   // 1. 면역(Immune) 상태 체크 (디버프성 효과만 차단)
-  const debuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Neurotoxicity', 'Dehydration'];
+  const debuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Neurotoxicity', 'Dehydration', 'Burn', 'Decay'];
   if (conditions.has('Immune') && debuffs.includes(name)) {
     return false;
   }
@@ -105,6 +108,7 @@ export function processConditionsEndTurn(
 
   for (const [name, condition] of conditions.entries()) {
     // 1. 확률적 제거 체크 (15%)
+    const removableDebuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Burn', 'Decay'];
     if (removableDebuffs.includes(name) && Math.random() < 0.15) {
       toRemove.push(name);
       continue;
@@ -129,6 +133,10 @@ export function processConditionsEndTurn(
       if (dmg > 0) {
         effects.push({ type: 'DEHYDRATION_DMG', amount: dmg });
       }
+    } else if (name === 'Burn') {
+      effects.push({ type: 'BURN', amount: 0 }); // Damage calculation handled in useGameLoop based on maxHp
+    } else if (name === 'Decay') {
+      effects.push({ type: 'DECAY', amount: 0 }); // Damage calculation handled in useGameLoop
     }
 
     // 3. 경과 시간

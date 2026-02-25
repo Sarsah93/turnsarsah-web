@@ -71,12 +71,16 @@ export const useGameLoop = () => {
     const playConditionSound = (condition: string) => {
         let file = '';
         switch (condition) {
+            case 'Awakening': file = 'Awakening.mp3'; break;
+            case 'Burn': file = '화상(burn).mp3'; break;
+            case 'Decay': file = '부패(decay).mp3'; break;
+            case 'Reflection': file = '데미지 반사(Damage reflection).mp3'; break;
             case 'Bleeding': file = 'Bleeding.mp3'; break;
             case 'Heavy Bleeding': file = 'Heavy Bleeding.mp3'; break;
             case 'Poisoning': file = 'poisoning.mp3'; break;
             case 'Regenerating': file = 'Regenerating.mp3'; break;
             case 'Paralyzing': file = 'paralyzing.mp3'; break;
-            case 'Debilitating': file = 'Debilitating.mp3'; break; // Fixed name logic if needed
+            case 'Debilitating': file = 'Debilitating.mp3'; break;
             case 'Avoiding': file = 'avoiding.mp3'; break;
             case 'Damage recoiling': file = '데미지 반동(Damage recoiling).mp3'; break;
             case 'Berserker': file = '버서커(Berserker).mp3'; break;
@@ -85,17 +89,13 @@ export const useGameLoop = () => {
             case 'Adrenaline secretion': file = '아드레날린 분비(Adrenaline secretion).mp3'; break;
             case 'Neurotoxicity': file = '신경성 맹독(Neurotoxicity).mp3'; break;
             case 'Dehydration': file = '탈수(Dehydration).mp3'; break;
-            case 'Provocation': file = ''; break; // No SFX specified
             case 'Decreasing accuracy': file = '명중률 저하(Decreasing accuracy).mp3'; break;
             case 'Triple Attack':
                 AudioManager.playSFX('/assets/audio/combat/chapter 2a desert/06_desert vultures_2.mp3');
                 return;
             default: return;
         }
-        // Debilitating doesn't have .mp3 in one request but has in another. User said 'Debilitating' for 4.4. 
-        // I will assume it follows the pattern unless specified otherwise.
-        const path = condition === 'Debilitating' ? `/assets/audio/conditions/Debilitating.mp3` : `/assets/audio/conditions/${file}`;
-        AudioManager.playSFX(path);
+        AudioManager.playSFX(`/assets/audio/conditions/${file}`);
     };
 
     const getBossAttackSFX = (chapter: string, stage: number) => {
@@ -108,26 +108,30 @@ export const useGameLoop = () => {
                 5: '05_sand scorpion.mp3',
                 7: '07_sand golem.mp3',
                 8: '08_sand wyvern.mp3',
-                9: '09_sand deathwarm.mp3'
+                9: '09_sand deathwarm.mp3',
+                11: '2A_SAND DRAGON.mp3'
             };
             const filename = sfxMap[stage];
+            if (stage === 11) return `/assets/audio/combat/chapter 2a desert/${filename}`;
             if (filename) return `/assets/audio/combat/chapter 2a desert/${filename}`;
             return '';
         }
 
         if (chapter === '2B') {
             const sfxMap: Record<number, string> = {
-                1: '02_orc_1.mp3',
-                2: '13_orcsavage_1.mp3',
-                3: '11_halforc_1.mp3',
-                4: '02_orc_1.mp3',
-                5: '03_orcchieftan_1.mp3',
-                6: '04_highorc_1.mp3',
-                7: '04_highorc_1.mp3',
-                8: '05_highorc assassin_1.mp3',
-                9: '03_orcchieftan_1.mp3',
-                10: '06_highorc lord_1.mp3'
+                1: '01_orc.mp3',
+                2: '02_orc savage.mp3',
+                3: '03_half orc.mp3',
+                4: '04_orc warrior.mp3',
+                5: '05_orc chieftain.mp3',
+                6: '06_high orc.mp3',
+                7: '07_high orc warrior.mp3',
+                8: '08_high orc assassin.mp3',
+                9: '09_high orc chieftain.mp3',
+                10: '10_high orc lord.mp3',
+                11: '2B_HIGH ORC SHAMAN.mp3'
             };
+            if (stage === 11) return `/assets/audio/combat/chapter 2b deep forest/${sfxMap[stage]}`;
             return sfxMap[stage] ? `/assets/audio/stages/chapter 2B/${sfxMap[stage]}` : null;
         }
 
@@ -163,7 +167,7 @@ export const useGameLoop = () => {
                 conditionApplied = 'Bleeding';
             } else if (stageNum === 5 && rand < config.poisonProbStage5) {
                 conditionApplied = 'Poisoning';
-            } else if (stageNum === 7 && rand < config.paralyzeProbStage7) {
+            } else if (stageNum === 8 && rand < config.paralyzeProbStage8) {
                 conditionApplied = 'Paralyzing';
             }
         }
@@ -249,6 +253,7 @@ export const useGameLoop = () => {
         if (selectedIndices.length === 0) {
             setMessage(t.COMBAT.SELECT_CARDS);
             triggerScreenEffect('shake-small');
+            store.setGamePhase('IDLE');
             return;
         }
 
@@ -274,6 +279,7 @@ export const useGameLoop = () => {
             setMessage(t.COMBAT.ACCURACY_MISSED); // 명중률 저하 메시지 활용
             triggerScreenEffect('shake-small');
             await new Promise(r => setTimeout(r, 1000));
+            store.setGamePhase('IDLE');
             await executeBotTurn();
             return;
         }
@@ -311,6 +317,7 @@ export const useGameLoop = () => {
         if (baseDamage === 0 && handType !== 'High Card') {
             setMessage(`${t.COMBAT.BANNED_HAND}${handType}`);
             triggerScreenEffect('shake');
+            store.setGamePhase('IDLE');
             return;
         }
 
@@ -409,6 +416,23 @@ export const useGameLoop = () => {
             if (berserkerCond && player.hp <= player.maxHp * 0.3) {
                 damage += (berserkerCond.data as any)?.atkBonus || 20;
                 lifesteal = Math.max(1, Math.floor(damage * 0.1));
+            }
+
+            // v2.3.9: Boss Reflection check
+            const reflectionCond = bot.conditions.get('Reflection');
+            if (reflectionCond) {
+                const chance = (reflectionCond.data as any)?.chance || 0.3;
+                const percent = (reflectionCond.data as any)?.percent || 10;
+                if (Math.random() < chance) {
+                    const rDmg = Math.floor(damage * (percent / 100));
+                    if (rDmg > 0) {
+                        setPlayerHp(Math.max(0, player.hp - rDmg));
+                        showDamageText('PLAYER', `-${rDmg}`, '#e74c3c');
+                        setMessage("REFLECTION!");
+                        playConditionSound('Reflection');
+                        triggerScreenEffect('shake');
+                    }
+                }
             }
         }
 
@@ -544,6 +568,22 @@ export const useGameLoop = () => {
             });
             setMessage(t.COMBAT.AWAKENING);
             AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
+        } else if (store.chapterNum === '2B' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
+            // HIGH ORC LORD Awakening
+            newBotHp = bot.maxHp;
+            awakeningTriggered = true;
+            const atkBonus = 25;
+            const newAtk = bot.atk + atkBonus;
+            const newConditions = new Map(currentBotState.conditions);
+            newConditions.delete('Damage Reducing');
+            newConditions.delete('Reflection');
+
+            import('../logic/conditions').then(({ applyCondition }) => {
+                applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
+                store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
+            });
+            setMessage(t.COMBAT.AWAKENING);
+            AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
         } else {
             setBotHp(newBotHp);
         }
@@ -652,6 +692,50 @@ export const useGameLoop = () => {
         const currentBot = store.bot;
         const currentPlayer = store.player;
 
+        // --- Special Boss Awakening Logic ---
+        if (store.chapterNum === '2A' && stageNum === 11) {
+            if (currentBot.hp <= currentBot.maxHp * 0.5 && !currentBot.conditions.has('Awakening')) {
+                setMessage(t.COMBAT.AWAKENING || "BOSS AWAKENING!");
+                playConditionSound('Awakening');
+                // Remove DR and Regen as per plan
+                const newBotConds = new Map(currentBot.conditions);
+                newBotConds.delete('Damage Reducing');
+                newBotConds.delete('Regenerating');
+                newBotConds.delete('Triple Attack');
+                store.setBot({
+                    ...currentBot,
+                    hp: currentBot.maxHp,
+                    atk: currentBot.atk + 20,
+                    conditions: newBotConds
+                });
+                store.addBotCondition('Awakening', 9999);
+
+                await new Promise(r => setTimeout(r, 1200));
+                await proceedToEndTurn();
+                return;
+            }
+        } else if (store.chapterNum === '2B' && stageNum === 11) {
+            if (currentBot.hp <= currentBot.maxHp * 0.5 && !currentBot.conditions.has('Awakening')) {
+                setMessage(t.COMBAT.AWAKENING || "BOSS AWAKENING!");
+                playConditionSound('Awakening');
+                // Remove DR and Reflection
+                const newBotConds = new Map(currentBot.conditions);
+                newBotConds.delete('Damage Reducing');
+                newBotConds.delete('Reflection');
+                store.setBot({
+                    ...currentBot,
+                    hp: currentBot.maxHp,
+                    atk: currentBot.atk + 8,
+                    conditions: newBotConds
+                });
+                store.addBotCondition('Awakening', 9999);
+
+                await new Promise(r => setTimeout(r, 1200));
+                await proceedToEndTurn();
+                return;
+            }
+        }
+
         let baseDmg = currentBot.atk;
 
         // v2.3.0: Boss Buffs (Berserker / Damage Recoiling)
@@ -683,6 +767,65 @@ export const useGameLoop = () => {
             await new Promise(r => setTimeout(r, 1000));
             await proceedToEndTurn();
             return;
+        }
+
+        // --- Special Boss Special Attacks ---
+        if (store.chapterNum === '2A' && stageNum === 11) {
+            const cycleTurn = (store.currentTurn % 3);
+            if (cycleTurn === 1) {
+                // Turn 2 of 3 (indices 1, 4, 7...): Skip/Setup
+                setMessage("’특수 공격: 모래폭풍’을 준비 중입니다…");
+                await new Promise(r => setTimeout(r, 1200));
+                await proceedToEndTurn();
+                return;
+            } else if (cycleTurn === 2) {
+                // Turn 3 of 3 (indices 2, 5, 8...): Special Attack
+                setMessage("모래 폭풍 피해를 받습니다!");
+                setBotAnimState('ATTACK');
+                AudioManager.playSFX('/assets/audio/combat/chapter 2a desert/2A_SAND DRAGON_SAND STORM.mp3');
+                const dmgString = "70";
+                const dmg = 70;
+                setPlayerHp(Math.max(0, currentPlayer.hp - dmg));
+                showDamageText('PLAYER', `-${dmgString}`, '#e74c3c');
+                if (Math.random() < 0.4) {
+                    store.addPlayerCondition('Burn', 3);
+                    playConditionSound('Burn');
+                }
+                await new Promise(r => setTimeout(r, 1200));
+                await proceedToEndTurn();
+                return;
+            }
+            // Turn 1 of 3 (indices 0, 3, 6...): Proceed to Normal Attack
+        } else if (store.chapterNum === '2B' && stageNum === 11) {
+            const isAwakened = currentBot.conditions.has('Awakening');
+            if (isAwakened) {
+                const awakenCond = currentBot.conditions.get('Awakening');
+                const awakenTurn = awakenCond?.elapsed || 0;
+                const cycleTurn = (awakenTurn % 4);
+                if (cycleTurn === 2) {
+                    // Skip turn before special
+                    setMessage("’특수 공격: 부패 폭발’을 준비 중입니다…");
+                    await new Promise(r => setTimeout(r, 1200));
+                    await proceedToEndTurn();
+                    return;
+                } else if (cycleTurn === 3) {
+                    // Special Attack
+                    setMessage("부패 폭발 피해를 받습니다!");
+                    setBotAnimState('ATTACK');
+                    AudioManager.playSFX('/assets/audio/combat/chapter 2b deep forest/2B_HIGH ORC SHAMAN_DECAY EXPLOSION.mp3');
+                    const dmgString = "30";
+                    const dmg = 30;
+                    setPlayerHp(Math.max(0, currentPlayer.hp - dmg));
+                    showDamageText('PLAYER', `-${dmgString}`, '#e74c3c');
+                    if (Math.random() < 0.8) {
+                        store.addPlayerCondition('Decay', 4);
+                        playConditionSound('Decay');
+                    }
+                    await new Promise(r => setTimeout(r, 1200));
+                    await proceedToEndTurn();
+                    return;
+                }
+            }
         }
 
         // v2.1.2: Unified Evasion Check (Passive Skill)
@@ -1031,7 +1174,7 @@ export const useGameLoop = () => {
         const toRemoveBot: string[] = [];
 
         // Debuffs that can be randomly removed (15% chance per turn)
-        const removableDebuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating'];
+        const removableDebuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Burn', 'Decay'];
 
         // Player Phase
         for (const [condName, condData] of Array.from(playerConditions.entries())) {
@@ -1053,7 +1196,7 @@ export const useGameLoop = () => {
             // Neurotoxicity Damage (15) and secondary Paralyze check (20%)
             if (cond === 'Neurotoxicity') {
                 setMessage("NEUROTOXICITY DMG!");
-                playConditionSound(cond);
+                playConditionSound('Neurotoxicity');
                 const amount = 15;
                 const freshHP = useGameStore.getState().player.hp;
                 setPlayerHp(Math.max(0, freshHP - amount));
@@ -1092,6 +1235,24 @@ export const useGameLoop = () => {
                     }
                 }
 
+                await new Promise(r => setTimeout(r, 800));
+            } else if (cond === 'Burn') {
+                setMessage(t.COMBAT.PLAYER_BURN || "PLAYER BURNED!");
+                playConditionSound('Burn');
+                const amount = Math.floor(currentP.maxHp * 0.03);
+                const freshHP = useGameStore.getState().player.hp;
+                setPlayerHp(Math.max(0, freshHP - amount));
+                showDamageText('PLAYER', `-${amount}`, '#e67e22');
+                await new Promise(r => setTimeout(r, 800));
+            } else if (cond === 'Decay') {
+                setMessage(t.COMBAT.PLAYER_DECAY || "PLAYER DECAYED!");
+                playConditionSound('Decay');
+                const rates = [0.03, 0.05, 0.08, 0.10];
+                const rate = rates[data.elapsed] || 0.10;
+                const amount = Math.floor(currentP.maxHp * rate);
+                const freshHP = useGameStore.getState().player.hp;
+                setPlayerHp(Math.max(0, freshHP - amount));
+                showDamageText('PLAYER', `-${amount}`, '#8e44ad');
                 await new Promise(r => setTimeout(r, 800));
             } else if (cond === 'Regenerating') {
                 setMessage(t.COMBAT.PLAYER_REGEN);
@@ -1214,11 +1375,13 @@ export const useGameLoop = () => {
         if (selectedIndices.length === 0) {
             setMessage(t.COMBAT.SELECT_CARDS);
             triggerScreenEffect('shake-small');
+            useGameStore.getState().setGamePhase('IDLE');
             return;
         }
         if (selectedIndices.length > 2) {
             setMessage(t.COMBAT.MAX_SWAP);
             triggerScreenEffect('shake-small');
+            useGameStore.getState().setGamePhase('IDLE');
             return;
         }
 
@@ -1262,6 +1425,32 @@ export const useGameLoop = () => {
             setPlayerHp(newHp);
         }
 
+        // Hidden Scenario: Perfect Clear Tracking
+        const currentHpPercent = currentHp / maxHp;
+        const isPerfect = currentHpPercent >= 0.5;
+
+        if (store.chapterNum === '1') {
+            if (stageNum >= 1 && stageNum <= 9) {
+                if (isPerfect) {
+                    const nextCount = store.ch1PerfectCount + 1;
+                    store.setHiddenState({ ch1PerfectCount: nextCount });
+                    if (nextCount >= 9) {
+                        store.setHiddenState({ specialQualify: true });
+                    }
+                }
+            }
+        } else if ((store.chapterNum === '2A' || store.chapterNum === '2B') && store.specialQualify) {
+            if (stageNum >= 1 && stageNum <= 5) {
+                if (isPerfect) {
+                    const nextCount = store.ch2PerfectCount + 1;
+                    store.setHiddenState({ ch2PerfectCount: nextCount });
+                    if (nextCount >= 5) {
+                        store.setHiddenState({ ch2SpecialQualify: true });
+                    }
+                }
+            }
+        }
+
         // v2.3.7: Chapter Transition Reward (120 HP heal when moving from Ch1 to Ch2)
         if (store.chapterNum === '1' && stageNum === 10) {
             const freshPlayer = useGameStore.getState().player;
@@ -1274,8 +1463,8 @@ export const useGameLoop = () => {
         // 2. Trophy Check — stage trophy in memory (NOT saved to localStorage yet)
         const trophyIdMap: Record<string, Record<number, string>> = {
             '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
-            '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10' },
-            '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10' }
+            '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
+            '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' }
         };
         const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
 
@@ -1310,7 +1499,14 @@ export const useGameLoop = () => {
 
         // 5. Transition to next stage or unlock difficulty on final stage clear
         const nextStage = stageNum + 1;
-        if (nextStage > 10) {
+
+        // Hidden Scenario Stage Redirection
+        let targetStage = nextStage;
+        if (stageNum === 9 && store.specialQualify && store.ch2SpecialQualify) {
+            targetStage = 11; // Special Stage
+        }
+
+        if (targetStage > 10 && targetStage !== 11) {
             // Unlock next difficulty on game completion
             if (store.difficulty === Difficulty.NORMAL) {
                 store.unlockDifficulty(Difficulty.HARD);
@@ -1329,7 +1525,7 @@ export const useGameLoop = () => {
         } else {
             triggerTransition(() => {
                 setMessage(""); // CLEAR MESSAGE FIRST to avoid overlap!
-                initGame(store.chapterNum, nextStage);
+                initGame(store.chapterNum, targetStage);
                 setGameState(GameState.BATTLE);
                 startInitialDraw();
             });

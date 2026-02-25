@@ -54,7 +54,8 @@ export const BossDisplay: React.FC = () => {
                 7: '07_sand golem.png',
                 8: '08_wyvern.png',
                 9: '09_sand deathwarm.png',
-                10: '10_sphinx.png'
+                10: '10_sphinx.png',
+                11: '2A_sand dragon.png'
             };
             const filename = mapping[stage] || '01_mummy.png';
             return `/assets/boss_desert/${filename}`;
@@ -70,10 +71,11 @@ export const BossDisplay: React.FC = () => {
                 7: '07_high orc warrior.png',
                 8: '08_high orc assassin.png',
                 9: '09_high orc chieftain.png',
-                10: '10_hight orc lord.png'
+                10: '10_high orc lord.png',
+                11: '2B_high orc shaman.png'
             };
             const filename = mapping[stage] || '01_orc.png';
-            return `/assets/boss_ork/${filename}`;
+            return `/assets/boss_orc/${filename}`;
         }
         return '/assets/boss_goblin/re_Goblin_01.png';
     };
@@ -122,11 +124,11 @@ export const BossDisplay: React.FC = () => {
             <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`}
                 style={{
                     position: 'absolute',
-                    top: '0%',
+                    top: (stageNum === 11) ? '2%' : '0%',
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: chapterNum === '2B' ? '300px' : '220px',
-                    height: chapterNum === '2B' ? '300px' : '220px',
+                    width: (chapterNum === '2A' && stageNum === 11) ? '320px' : (chapterNum === '2B' && stageNum === 11) ? '380px' : chapterNum === '2B' ? '300px' : '220px',
+                    height: (chapterNum === '2A' && stageNum === 11) ? '320px' : (chapterNum === '2B' && stageNum === 11) ? '380px' : chapterNum === '2B' ? '300px' : '220px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -137,15 +139,15 @@ export const BossDisplay: React.FC = () => {
                 <img
                     src={getBossImage(chapterNum, stageNum)}
                     alt={bot.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    style={{ width: '100%', height: 'auto', maxHeight: '100%', objectFit: 'contain' }}
                 />
                 {/* Boss Name - BELOW boss image */}
                 <div style={{
-                    fontSize: '1.8rem',
+                    fontSize: '1.6rem',
                     fontFamily: "'Bebas Neue', sans-serif",
                     color: '#f1c40f',
                     textShadow: '2px 2px 4px #000, 0 0 10px rgba(241, 196, 15, 0.5)',
-                    marginTop: '-10px'
+                    marginTop: '-5px'
                 }}>
                     {bot.name.toUpperCase()}
                 </div>
@@ -163,7 +165,7 @@ export const BossDisplay: React.FC = () => {
                 <div>{t.UI.ATK}: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
                     {chapterNum === '2A' ? (
-                        stageNum === 10 ? (
+                        stageNum >= 10 ? (
                             stage10RuleText.includes(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText}`
                         ) : (
                             `${t.RULES.RULE_HINT}${(() => {
@@ -181,7 +183,7 @@ export const BossDisplay: React.FC = () => {
                                 return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
                             })()}`
                         )
-                    ) : (stageNum === 10 ? (
+                    ) : (stageNum >= 10 ? (
                         stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText}`
                     ) : (
                         stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText.replace(t.RULES.RULE_HINT, '')}`

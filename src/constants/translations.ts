@@ -136,6 +136,8 @@ export const TRANSLATIONS = {
             NEURO_MISSED: "공격 실패! (신경성 맹독)",
             ACCURACY_MISSED: "명중률 저하로 공격 실패!",
             PUZZLE_SUCCESS: "퍼즐 성공! (타겟 x 2) + {bonus} 고정 데미지!",
+            PLAYER_BURN: "플레이어 화상 피해!",
+            PLAYER_DECAY: "플레이어 부패 피해!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -240,7 +242,7 @@ export const TRANSLATIONS = {
             CH1_RULE_3: "턴 마다 블라인드 (2장)",
             CH1_RULE_4: "턴 마다 무작위 문양 금지",
             CH1_RULE_5: "중독 (확률적)",
-            CH1_RULE_6: "보너스 (승리 시 최대 체력 증가)",
+            CH1_RULE_6: "보너스(최대체력증가) + 족보 금지(매 턴 변경)",
             CH1_RULE_7: "공격력 증가",
             CH1_RULE_8: "2턴 마다 공격",
             CH1_RULE_9: "공격력 배수 증가",
@@ -278,7 +280,9 @@ export const TRANSLATIONS = {
             HIGH_ORC_WARRIOR_RULE: "강력한 버서커",
             HIGH_ORC_ASSASSIN_RULE: "치명타 25% (공격력 +50%)",
             HIGH_ORC_CHIEFTAIN_RULE: "불굴의 의지 및 도발",
-            HIGH_ORC_LORD_RULE: "강력한 버서커 및 도발"
+            HIGH_ORC_LORD_RULE: "강력한 버서커 및 도발",
+            SAND_STORM_TRIPLE_AWAKEN: "규칙: 모래폭풍+삼중공격+각성",
+            BLIND_BAN_REFLECTION_AWAKEN: "규칙: BLIND/BAN+데미지반사+각성(부패 폭발)",
         },
         UI: {
             BACK_TO_MAIN: "메인 화면으로",
@@ -459,6 +463,8 @@ export const TRANSLATIONS = {
             NEURO_MISSED: "MISSED! (NEUROTOXICITY)",
             ACCURACY_MISSED: "MISSED! (ACCURACY DOWN)",
             PUZZLE_SUCCESS: "PUZZLE SUCCESS! (Target x 2) + {bonus} Fixed Damage!",
+            PLAYER_BURN: "PLAYER BURN DAMAGE!",
+            PLAYER_DECAY: "PLAYER DECAY DAMAGE!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -563,7 +569,7 @@ export const TRANSLATIONS = {
             CH1_RULE_3: "Blind Cards (2) Every Turn",
             CH1_RULE_4: "Banned Suit Every Turn",
             CH1_RULE_5: "Poison (Probabilistic)",
-            CH1_RULE_6: "Bonus (Max HP Up on Victory)",
+            CH1_RULE_6: "Bonus (Max HP Up) + Banned Hand (Changes every turn)",
             CH1_RULE_7: "ATK Growth (+10)",
             CH1_RULE_8: "Attack Every 2 Turns",
             CH1_RULE_9: "ATK Double Growth",
@@ -601,7 +607,9 @@ export const TRANSLATIONS = {
             HIGH_ORC_WARRIOR_RULE: "Heavy Berserker",
             HIGH_ORC_ASSASSIN_RULE: "Critical 25% (Atk +50%)",
             HIGH_ORC_CHIEFTAIN_RULE: "Unyielding Spirit & Provoke",
-            HIGH_ORC_LORD_RULE: "Heavy Berserker & Provoke"
+            HIGH_ORC_LORD_RULE: "Heavy Berserker & Provoke",
+            SAND_STORM_TRIPLE_AWAKEN: "RULE: SAND STORM + TRIPLE ATK + AWAKEN",
+            BLIND_BAN_REFLECTION_AWAKEN: "RULE: BLIND/BAN + REFLECT + AWAKEN (DECAY)",
         },
         UI: {
             BACK_TO_MAIN: "BACK TO MAIN PAGE",

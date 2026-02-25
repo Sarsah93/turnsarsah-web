@@ -26,7 +26,9 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Heavy Bleeding') filename = 'Heavy Bleeding.png';
   if (name === 'Frailty') filename = 'Debilitating.png';
   if (name === 'Poison') filename = 'Poisoning.png';
-  if (name === 'Awakening') filename = 'Awakening.png';
+  if (name === 'Reflection') filename = '데미지 반사(Damage reflection).png';
+  if (name === 'Burn') filename = '화상(Burned).png';
+  if (name === 'Decay') filename = '부패(decay).png';
   // Standardized filenames matching physical files
   if (name === 'Damage recoiling') filename = '데미지 반동(Damage recoiling).png';
   if (name === 'Berserker') filename = '버서커(Berserker).png';

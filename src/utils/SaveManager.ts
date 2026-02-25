@@ -21,6 +21,11 @@ interface SaveData {
   equippedAltarSkills?: string[];
   pendingTrophies?: string[];
   puzzleTarget?: number;
+  // Hidden Scenario
+  ch1PerfectCount?: number;
+  specialQualify?: boolean;
+  ch2PerfectCount?: number;
+  ch2SpecialQualify?: boolean;
   timestamp: number;
 }
 
