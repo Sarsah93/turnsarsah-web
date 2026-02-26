@@ -227,6 +227,14 @@ export const TRANSLATIONS = {
             REFLECTION: {
                 NAME: "데미지 반사",
                 DESC: "대상이 일반 공격 피해를 받을 경우, 받은 피해량의 일부를 상대에게 되돌려준다."
+            },
+            BURN: {
+                NAME: "화상",
+                DESC: "매 턴 최대 HP의 3%에 해당하는 화염 피해를 입습니다. (3턴 지속)"
+            },
+            DECAY: {
+                NAME: "부패",
+                DESC: "턴이 지날수록 증가하는 부패 피해를 입습니다. (최대 HP의 3% → 5% → 8% → 10%, 4턴 지속)"
             }
         },
         RULES: {
@@ -558,6 +566,14 @@ export const TRANSLATIONS = {
             REFLECTION: {
                 NAME: "Reflection",
                 DESC: "When the target takes normal attack damage, reflects a portion of it back to the attacker."
+            },
+            BURN: {
+                NAME: "Burn",
+                DESC: "Takes fire damage equal to 3% of max HP each turn. (Lasts 3 turns)"
+            },
+            DECAY: {
+                NAME: "Decay",
+                DESC: "Takes escalating decay damage each turn. (3% → 5% → 8% → 10% of max HP, lasts 4 turns)"
             }
         },
         RULES: {

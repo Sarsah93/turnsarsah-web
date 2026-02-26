@@ -24,7 +24,19 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
 
   const refreshSlots = () => {
     const slotData = [0, 1, 2].map((i) => SaveManager.getSaveInfo(i));
-    setSlots(slotData.map((info) => (info ? { stage: `${t.UI.STAGE_NUM} ${info.stage}`, date: info.date } : null)));
+    setSlots(slotData.map((info) => {
+      if (!info) return null;
+      let diffText: string = info.difficulty;
+      if (info.difficulty === 'EASY') diffText = language === 'KR' ? '쉬움' : 'EASY';
+      else if (info.difficulty === 'NORMAL') diffText = language === 'KR' ? '보통' : 'NORMAL';
+      else if (info.difficulty === 'HARD') diffText = language === 'KR' ? '어려움' : 'HARD';
+      else if (info.difficulty === 'HELL') diffText = language === 'KR' ? '지옥' : 'HELL';
+
+      return {
+        stage: `[${diffText}] CH${info.chapter} - ST${info.stage}`,
+        date: info.date
+      };
+    }));
   };
 
   useEffect(() => {

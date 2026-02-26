@@ -1509,11 +1509,11 @@ export const useGameLoop = () => {
         };
         const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
 
-        if (potentialTrophyId) {
+        if (potentialTrophyId && store.difficulty !== Difficulty.EASY) {
             const { AltarManager } = await import('../utils/AltarManager');
             // Only stage if not already permanently owned and not already pending
-            if (!AltarManager.hasTrophy(potentialTrophyId)) {
-                const staged = AltarManager.stageTrophy(potentialTrophyId);
+            if (!AltarManager.hasTrophy(potentialTrophyId, store.difficulty)) {
+                const staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
                 if (staged) {
                     const { TROPHIES } = await import('../constants/altarSystem');
                     store.setTrophyPopup(TROPHIES[potentialTrophyId]);

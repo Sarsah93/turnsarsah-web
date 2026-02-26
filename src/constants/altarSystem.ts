@@ -161,8 +161,8 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         image: '2B-1_사냥꾼(Hunter).png',
         name: { KR: '사냥꾼', EN: 'Hunter' },
         desc: {
-            KR: '플레이어가 명중률 감소 디버프 효과로부터 면역된다. (모든 명중률 저하 로직 무효화)',
-            EN: 'Immune to accuracy reduction debuffs (negates all accuracy drop logic).'
+            KR: '플레이어가 명중률 감소 디버프 효과 및 마비 효과로부터 면역된다. (모든 명중률 저하 및 마비 효과 기믹 무효화)',
+            EN: 'Immune to accuracy reduction debuffs and paralysis effects (negates all accuracy drop and paralysis logic).'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2B_5', 'TR_2B_10']

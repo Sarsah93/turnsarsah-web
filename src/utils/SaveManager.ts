@@ -4,6 +4,9 @@ import { Character } from '../types/Character';
 import { Card } from '../types/Card';
 import { Difficulty } from '../constants/gameConfig';
 
+export const SAVE_VERSION = 'v2.4.0';
+const VERSION_KEY = 'turnsarsah_save_version';
+
 interface SaveData {
   chapterNum: string;
   stageNum: number;
@@ -30,8 +33,31 @@ interface SaveData {
 }
 
 const SAVE_KEY_PREFIX = 'turnsarsah_save_';
+const ALTAR_STORAGE_KEY = 'turnsarsah_altar_data';
 
 export class SaveManager {
+  /**
+   * 버전 체크 및 마이그레이션
+   * 저장된 버전이 현재 버전과 다르면 모든 세이브+제단 데이터를 삭제.
+   * @returns true if data was wiped (so App can show notification)
+   */
+  static checkAndMigrateVersion(): boolean {
+    try {
+      const storedVersion = localStorage.getItem(VERSION_KEY);
+      if (storedVersion === SAVE_VERSION) return false;
+
+      // Version mismatch — wipe all save data and altar data
+      this.deleteAllSaves();
+      localStorage.removeItem(ALTAR_STORAGE_KEY);
+      localStorage.setItem(VERSION_KEY, SAVE_VERSION);
+      console.log(`[SaveManager] Version mismatch (${storedVersion} → ${SAVE_VERSION}). All data cleared.`);
+      return true;
+    } catch (e) {
+      console.error('[SaveManager] Version check failed:', e);
+      return false;
+    }
+  }
+
   /**
    * 게임 저장
    */
@@ -74,12 +100,11 @@ export class SaveManager {
       const parsedData = JSON.parse(data);
 
       // Restore Map from serialized data
-      // Handle legacy saves (where conditions might be {}) or new saves (Array)
       const restoreConditions = (cond: any) => {
         if (Array.isArray(cond)) {
           return new Map(cond);
         } else if (typeof cond === 'object' && cond !== null) {
-          return new Map(Object.entries(cond)); // Initial simple object support
+          return new Map(Object.entries(cond));
         }
         return new Map();
       };

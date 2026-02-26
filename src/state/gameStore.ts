@@ -301,11 +301,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setActiveMenu: (activeMenu) => set({ activeMenu }),
   trophyPopup: null,
   setTrophyPopup: (trophyPopup) => set({ trophyPopup }),
-  equippedAltarSkills: AltarManager.getAltarData().equippedSkills || [],
+  equippedAltarSkills: AltarManager.getAltarData().normal?.equippedSkills || [],
   setEquippedAltarSkills: (equippedAltarSkills) => {
     set({ equippedAltarSkills });
     // v2.3.7: Persist equipped skills to localStorage
-    AltarManager.saveEquippedSkills(equippedAltarSkills);
+    AltarManager.saveEquippedSkills(equippedAltarSkills, get().difficulty);
   },
   setBannedRanks: (bannedRanks) => set({ bannedRanks }),
   setBannedSuit: (bannedSuit) => set({ bannedSuit }),
@@ -354,8 +354,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   // Player Conditions
   addPlayerCondition: (name, duration, desc, data) =>
     set((state) => {
-      // Altar Skill 2B-1 (Hunter): Immune to accuracy debuffs
-      if (state.equippedAltarSkills.includes('2B-1') && name === 'Decreasing accuracy') {
+      // Altar Skill 2B-1 (Hunter): Immune to accuracy debuffs and paralysis
+      if (state.equippedAltarSkills.includes('2B-1') && (name === 'Decreasing accuracy' || name === 'Paralyzing')) {
         return state;
       }
 
@@ -566,6 +566,16 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const bossAtk = bossOverride.atk ?? Math.floor(stageConfig.atk * config.atkScale);
 
       let activeSkills = state.equippedAltarSkills || [];
+      // v2.4.0: Fetch specific difficulty altar data
+      const altarData = AltarManager.getAltarData();
+      if (state.difficulty === Difficulty.HARD) {
+        activeSkills = altarData.hard?.equippedSkills || [];
+      } else if (state.difficulty === Difficulty.HELL) {
+        activeSkills = altarData.hell?.equippedSkills || [];
+      } else {
+        activeSkills = altarData.normal?.equippedSkills || [];
+      }
+
       let player: Character;
 
       if (stageId === 1) {
@@ -1111,8 +1121,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       applyCondition(botConditions, 'Triple Attack', 9999);
     }
 
-    const activeSkills = get().equippedAltarSkills || [];
-    const player = calculateInitialPlayer(config, activeSkills, chapterId, diff);
+    // v2.4.0: Fetch specific difficulty altar data on game start
+    const altarData = AltarManager.getAltarData();
+    let currentEquippedSkills: string[] = [];
+    if (diff === Difficulty.HARD) {
+      currentEquippedSkills = altarData.hard?.equippedSkills || [];
+    } else if (diff === Difficulty.HELL) {
+      currentEquippedSkills = altarData.hell?.equippedSkills || [];
+    } else {
+      currentEquippedSkills = altarData.normal?.equippedSkills || [];
+    }
+
+    const player = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff);
 
     set({
       chapterNum: chapterId,
@@ -1129,7 +1149,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       bannedIndices: [],
       hasStage6Bonus: false,
       isGameLoaded: false,
-      equippedAltarSkills: activeSkills,
+      equippedAltarSkills: currentEquippedSkills,
       player: player,
       bot: {
         name: stageConfig.bossName,

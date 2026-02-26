@@ -53,26 +53,7 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
             </div>
 
-            {/* Debug Buttons for Special Stages */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '20px', position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
-                <div style={{ color: '#fff', width: '100%', textAlign: 'center', fontSize: '1.2rem', marginBottom: '5px' }}>DEBUG: SPECIAL STAGES</div>
-                <BlockButton
-                    text="2A-11 (SAND DRAGON)"
-                    onClick={() => triggerTransition(() => initGameWithDifficulty('2A', 11, Difficulty.NORMAL))}
-                    variant="danger"
-                    width="200px"
-                    height="50px"
-                    fontSize="1.2rem"
-                />
-                <BlockButton
-                    text="2B-11 (SHAMAN)"
-                    onClick={() => triggerTransition(() => initGameWithDifficulty('2B', 11, Difficulty.NORMAL))}
-                    variant="danger"
-                    width="200px"
-                    height="50px"
-                    fontSize="1.2rem"
-                />
-            </div>
+
 
 
             {/* Difficulty Popup */}
