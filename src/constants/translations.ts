@@ -223,6 +223,10 @@ export const TRANSLATIONS = {
             DECREASING_ACCURACY: {
                 NAME: "명중률 저하",
                 DESC: "공격이 빗나갈 확률이 발생합니다."
+            },
+            REFLECTION: {
+                NAME: "데미지 반사",
+                DESC: "대상이 일반 공격 피해를 받을 경우, 받은 피해량의 일부를 상대에게 되돌려준다."
             }
         },
         RULES: {
@@ -550,6 +554,10 @@ export const TRANSLATIONS = {
             DECREASING_ACCURACY: {
                 NAME: "Decreasing Accuracy",
                 DESC: "Certain chance for attacks to miss."
+            },
+            REFLECTION: {
+                NAME: "Reflection",
+                DESC: "When the target takes normal attack damage, reflects a portion of it back to the attacker."
             }
         },
         RULES: {

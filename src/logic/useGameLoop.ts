@@ -155,7 +155,31 @@ export const useGameLoop = () => {
 
     const applyBotStageMechanics = () => {
         const store = useGameStore.getState();
-        if (store.chapterNum !== '1') return; // Skip in Chapter 2 (Vanilla)
+
+        // v2.3.9: Chapter 2B Special Stage (Stage 11) - 100% Status Application
+        if (store.chapterNum === '2B') {
+            const currentBot = store.bot;
+            if (stageNum === 11 && !currentBot.conditions.has('Awakening')) {
+                const freshP = useGameStore.getState().player;
+                if (!freshP.conditions.has('Bleeding')) {
+                    store.addPlayerCondition('Bleeding', 4);
+                    playConditionSound('Bleeding');
+                    setMessage(t.CONDITIONS.BLEEDING.NAME + "!");
+                } else {
+                    // Randomly apply Poisoning or Debilitating
+                    const effect = Math.random() < 0.5 ? 'Poisoning' : 'Debilitating';
+                    store.addPlayerCondition(effect, 4);
+                    playConditionSound(effect);
+                    const condKey = effect.toUpperCase();
+                    const condName = (t.CONDITIONS as any)[condKey]?.NAME || effect;
+                    setMessage(condName + "!");
+                }
+                triggerScreenEffect('flash-red');
+                return;
+            }
+        }
+
+        if (store.chapterNum !== '1') return; // Skip other Chapter 2 stages for now
 
         const config = DIFFICULTY_CONFIGS[store.difficulty];
         const rand = Math.random();
@@ -418,270 +442,269 @@ export const useGameLoop = () => {
                 lifesteal = Math.max(1, Math.floor(damage * 0.1));
             }
 
-            // v2.3.9: Boss Reflection check
+            const isCrit = isPuzzleCorrect ? false : isCritical;
+            const hasWild = selectedCards.some(c => c.isJoker);
+
+            // --- PHASE 1: GATHERING ---
+            // Dynamic duration based on number of cards (0.2s per card + 0.5s base animation)
+            store.setGamePhase('GATHERING');
+            AudioManager.playSFX('/assets/audio/combat/gathering.mp3');
+
+            // Shuffling SFX (Gathering start + 0.2s) - as Gathering sound effect
+            setTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
+
+            // Wait for all cards to gather: 0.2s delay per card + 0.5s for animation
+            const gatheringDuration = (selectedCards.length * 200) + 500;
+            await new Promise(r => setTimeout(r, gatheringDuration));
+
+            // --- PHASE 2: CHARGING (0.8s) ---
+            store.setGamePhase('CHARGING');
+            await new Promise(r => setTimeout(r, 800));
+
+            // --- PHASE 3: THRUSTING ---
+            store.setGamePhase('THRUSTING');
+            await new Promise(r => setTimeout(r, 67));
+
+            // Whipping SFX (Thrust End + 0.13s)
+            await new Promise(r => setTimeout(r, 133));
+            AudioManager.playSFX('/assets/audio/player/whipping.mp3');
+
+            // Boss Shake (Impact + 0.2s)
+            await new Promise(r => setTimeout(r, 100));
+            triggerScreenEffect('shake');
+            setBotAnimState('HIT');
+
+            // Damage Popup
+            showDamageText('BOT', `-${damage}`, isCrit ? '#c0392b' : '#ecf0f1');
+            const wildSuffix = hasWild ? t.UI.WILD : '';
+            if (!isPuzzleCorrect && !isAdrenalineNull) {
+                setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${handType}${wildSuffix}` : `${handType}${wildSuffix}`);
+            }
+
+            // v2.3.9: Boss HP reduction
+            await new Promise(r => setTimeout(r, 150));
+            let newBotHp = Math.max(0, bot.hp - damage);
+            setBotHp(newBotHp);
+
+            // v2.3.9: Boss Reflection check (Moved after boss HP reduction)
             const reflectionCond = bot.conditions.get('Reflection');
-            if (reflectionCond) {
+            if (reflectionCond && !isAdrenalineNull && !isPuzzleCorrect && damage > 0) {
                 const chance = (reflectionCond.data as any)?.chance || 0.3;
                 const percent = (reflectionCond.data as any)?.percent || 10;
                 if (Math.random() < chance) {
                     const rDmg = Math.floor(damage * (percent / 100));
                     if (rDmg > 0) {
-                        setPlayerHp(Math.max(0, player.hp - rDmg));
+                        await new Promise(r => setTimeout(r, 600)); // Delay for reflection effect
+                        const freshP = useGameStore.getState().player;
+                        setPlayerHp(Math.max(0, freshP.hp - rDmg));
                         showDamageText('PLAYER', `-${rDmg}`, '#e74c3c');
                         setMessage("REFLECTION!");
                         playConditionSound('Reflection');
                         triggerScreenEffect('shake');
+                        await new Promise(r => setTimeout(r, 800)); // Wait for reflection feedback
                     }
                 }
             }
-        }
 
-        const isCrit = isPuzzleCorrect ? false : isCritical;
-        const hasWild = selectedCards.some(c => c.isJoker);
+            // v2.3.0: Berserker Lifesteal
+            if (lifesteal > 0) {
+                const freshP = useGameStore.getState().player;
+                setPlayerHp(Math.min(freshP.maxHp, freshP.hp + lifesteal));
+                showDamageText('PLAYER', `+${lifesteal}`, '#2ecc71');
+            }
 
-        // --- PHASE 1: GATHERING ---
-        // Dynamic duration based on number of cards (0.2s per card + 0.5s base animation)
-        store.setGamePhase('GATHERING');
-        AudioManager.playSFX('/assets/audio/combat/gathering.mp3');
-
-        // Shuffling SFX (Gathering start + 0.2s) - as Gathering sound effect
-        setTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
-
-        // Wait for all cards to gather: 0.2s delay per card + 0.5s for animation
-        const gatheringDuration = (selectedCards.length * 200) + 500;
-        await new Promise(r => setTimeout(r, gatheringDuration));
-
-        // --- PHASE 2: CHARGING (0.8s) ---
-        store.setGamePhase('CHARGING');
-        // Loop charge sound?
-        await new Promise(r => setTimeout(r, 800));
-
-        // --- PHASE 3: THRUSTING ---
-        // Made 1.5x faster: reduced timing
-        store.setGamePhase('THRUSTING');
-        // Removed 03_spear_thrust.mp3 per user request - only whipping.mp3 should play
-        await new Promise(r => setTimeout(r, 67)); // 1.5x faster (100ms -> 67ms)
-
-        // Whipping SFX (Thrust End + 0.13s) - faster
-        await new Promise(r => setTimeout(r, 133)); // 1.5x faster (200ms -> 133ms)
-        AudioManager.playSFX('/assets/audio/player/whipping.mp3');
-
-        // Boss Shake (Impact + 0.2s)
-        await new Promise(r => setTimeout(r, 100));
-        triggerScreenEffect('shake');
-        setBotAnimState('HIT');
-
-        // Damage Popup
-        showDamageText('BOT', `-${damage}`, isCrit ? '#c0392b' : '#ecf0f1');
-        const wildSuffix = hasWild ? t.UI.WILD : '';
-        if (!isPuzzleCorrect && !isAdrenalineNull) {
-            setMessage(isCrit ? `${t.COMBAT.CRITICAL_HIT} ${handType}${wildSuffix}` : `${handType}${wildSuffix}`);
-        }
-
-        // HP Reduction (0.1s after Popup/Shake)
-        await new Promise(r => setTimeout(r, 150)); // slightly longer wait for effects
-        let newBotHp = Math.max(0, bot.hp - damage);
-
-        // v2.3.0: Berserker Lifesteal
-        if (lifesteal > 0) {
-            const freshP = useGameStore.getState().player;
-            setPlayerHp(Math.min(freshP.maxHp, freshP.hp + lifesteal));
-            showDamageText('PLAYER', `+${lifesteal}`, '#2ecc71');
-        }
-
-        // Altar Skill 2A-1 (Utilization): 50% chance to apply Bleed or Poison
-        if (store.equippedAltarSkills.includes('2A-1') && damage > 0 && !isPuzzleCorrect) {
-            if (Math.random() < 0.5) {
-                const freshBotCondition = useGameStore.getState().bot.conditions;
-                if (!freshBotCondition.has('Bleeding') && !freshBotCondition.has('Poisoning')) {
-                    const effect = Math.random() < 0.5 ? 'Bleeding' : 'Poisoning';
-                    store.addBotCondition(effect, 3);
-                    const effectName = Math.random() < 0.5 ? "BLEEDING!" : "POISON!";
-                    // Quick toast for skill proc
-                    showDamageText('BOT', effectName, '#9b59b6');
+            // Altar Skill 2A-1 (Utilization): 50% chance to apply Bleed or Poison
+            if (store.equippedAltarSkills.includes('2A-1') && damage > 0 && !isPuzzleCorrect) {
+                if (Math.random() < 0.5) {
+                    const freshBotCondition = useGameStore.getState().bot.conditions;
+                    if (!freshBotCondition.has('Bleeding') && !freshBotCondition.has('Poisoning')) {
+                        const effect = Math.random() < 0.5 ? 'Bleeding' : 'Poisoning';
+                        store.addBotCondition(effect, 3);
+                        const effectName = Math.random() < 0.5 ? "BLEEDING!" : "POISON!";
+                        showDamageText('BOT', effectName, '#9b59b6');
+                    }
                 }
             }
-        }
 
-        // v2.3.0: Recoil Damage
-        if (recoilTaken > 0) {
-            const freshP = useGameStore.getState().player;
-            const hpAfterRecoil = Math.max(0, freshP.hp - recoilTaken);
-            setPlayerHp(hpAfterRecoil);
-            showDamageText('PLAYER', `-${recoilTaken}`, '#e74c3c');
-            if (hpAfterRecoil <= 0) {
-                // Check for revival/invincible if recoil killed player
-                await checkPlayerSurvival();
+            // v2.3.0: Recoil Damage
+            if (recoilTaken > 0) {
+                const freshP = useGameStore.getState().player;
+                const hpAfterRecoil = Math.max(0, freshP.hp - recoilTaken);
+                setPlayerHp(hpAfterRecoil);
+                showDamageText('PLAYER', `-${recoilTaken}`, '#e74c3c');
+                if (hpAfterRecoil <= 0) {
+                    await checkPlayerSurvival();
+                }
             }
-        }
 
-        // v2.0.0.21: Tutorial safety - restore HP if below 300
-        if (store.isTutorial && newBotHp < 300) {
-            newBotHp = 1000;
-            store.setMessage(t.COMBAT.TUTORIAL_RESTORED);
-        }
+            // v2.0.0.21: Tutorial safety - restore HP if below 300
+            if (store.isTutorial && newBotHp < 300) {
+                newBotHp = 1000;
+                store.setMessage(t.COMBAT.TUTORIAL_RESTORED);
+            }
 
-        // v2.1.0: Stage 10 Boss Phase 2 - Awakening (Chapter 1 Only)
-        const currentBotState = useGameStore.getState().bot;
-        let awakeningTriggered = false;
+            // v2.1.0: Stage 10 Boss Phase 2 - Awakening (Chapter 1 Only)
+            const currentBotState = useGameStore.getState().bot;
+            let awakeningTriggered = false;
 
-        if (store.chapterNum === '1' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
-            newBotHp = bot.maxHp; // FULL RESTORE
-            awakeningTriggered = true;
+            if (store.chapterNum === '1' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
+                newBotHp = bot.maxHp; // FULL RESTORE
+                awakeningTriggered = true;
 
-            const atkBonus = {
-                [Difficulty.EASY]: 20,
-                [Difficulty.NORMAL]: 30,
-                [Difficulty.HARD]: 40,
-                [Difficulty.HELL]: 50
-            }[store.difficulty] || 30;
+                const atkBonus = {
+                    [Difficulty.EASY]: 20,
+                    [Difficulty.NORMAL]: 30,
+                    [Difficulty.HARD]: 40,
+                    [Difficulty.HELL]: 50
+                }[store.difficulty] || 30;
 
-            const maxAtkCap = 100;
-            const newAtk = Math.min(maxAtkCap, bot.atk + atkBonus);
+                const maxAtkCap = 100;
+                const newAtk = Math.min(maxAtkCap, bot.atk + atkBonus);
 
-            const newConditions = new Map(currentBotState.conditions);
+                const newConditions = new Map(currentBotState.conditions);
 
-            // v2.2.0: Balancing - Remove 'Damage Reducing' and 'Regenerating' upon Awakening
-            newConditions.delete('Damage Reducing');
-            newConditions.delete('Regenerating');
+                // v2.2.0: Balancing - Remove 'Damage Reducing' and 'Regenerating' upon Awakening
+                newConditions.delete('Damage Reducing');
+                newConditions.delete('Regenerating');
 
-            import('../logic/conditions').then(({ applyCondition }) => {
-                applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
-                store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
-            });
+                import('../logic/conditions').then(({ applyCondition }) => {
+                    applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
+                    store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
+                });
 
-            store.setMessage(t.COMBAT.AWAKENING);
-            AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
-        } else if (store.chapterNum === '2A' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
-            // SPHINX Awakening (Copy logic from Chapter 1)
-            newBotHp = bot.maxHp;
-            awakeningTriggered = true;
-            const atkBonus = 20;
-            const newAtk = bot.atk + atkBonus;
-            const newConditions = new Map(currentBotState.conditions);
-            newConditions.delete('Damage Reducing');
-            newConditions.delete('Regenerating');
+                store.setMessage(t.COMBAT.AWAKENING);
+                AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
+            } else if (store.chapterNum === '2A' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
+                // SPHINX Awakening (Copy logic from Chapter 1)
+                newBotHp = bot.maxHp;
+                awakeningTriggered = true;
+                const atkBonus = 20;
+                const newAtk = bot.atk + atkBonus;
+                const newConditions = new Map(currentBotState.conditions);
+                newConditions.delete('Damage Reducing');
+                newConditions.delete('Regenerating');
 
-            import('../logic/conditions').then(({ applyCondition }) => {
-                applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
-                store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
-            });
-            setMessage(t.COMBAT.AWAKENING);
-            AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
-        } else if (store.chapterNum === '2B' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
-            // HIGH ORC LORD Awakening
-            newBotHp = bot.maxHp;
-            awakeningTriggered = true;
-            const atkBonus = 25;
-            const newAtk = bot.atk + atkBonus;
-            const newConditions = new Map(currentBotState.conditions);
-            newConditions.delete('Damage Reducing');
-            newConditions.delete('Reflection');
+                import('../logic/conditions').then(({ applyCondition }) => {
+                    applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
+                    store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
+                });
+                setMessage(t.COMBAT.AWAKENING);
+                AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
+            } else if (store.chapterNum === '2B' && stageNum === 10 && newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
+                // HIGH ORC LORD Awakening
+                newBotHp = bot.maxHp;
+                awakeningTriggered = true;
+                const atkBonus = 25;
+                const newAtk = bot.atk + atkBonus;
+                const newConditions = new Map(currentBotState.conditions);
+                newConditions.delete('Damage Reducing');
+                newConditions.delete('Reflection');
 
-            import('../logic/conditions').then(({ applyCondition }) => {
-                applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
-                store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
-            });
-            setMessage(t.COMBAT.AWAKENING);
-            AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
-        } else {
-            setBotHp(newBotHp);
-        }
-
-        // v2.3.2: 2A-1 Mummy Revive
-        if (newBotHp <= 0 && store.chapterNum === '2A' && stageNum === 1) {
-            // Apply a Revival condition if not already applied, or process it inline. 
-            // The instructions specify a 50% chance to revive once. Wait, we want it to not trigger stage clear.
-            const revivedBefore = bot.conditions.has('Revived');
-            if (!revivedBefore && Math.random() < 0.5) {
-                newBotHp = Math.floor(bot.maxHp * 0.5);
+                import('../logic/conditions').then(({ applyCondition }) => {
+                    applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
+                    store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
+                });
+                setMessage(t.COMBAT.AWAKENING);
+                AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
+            } else {
                 setBotHp(newBotHp);
-                store.addBotCondition('Revived', 9999); // Mark as revived
-                const condName = t.CONDITIONS.REVIVED.NAME;
-                setMessage(`${condName}!`);
-                AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
-                await new Promise(r => setTimeout(r, 1000));
             }
-        }
 
-
-        // --- PHASE 5: SCATTERED (0.4s) ---
-        store.setGamePhase('SCATTERED');
-        await new Promise(r => setTimeout(r, 400));
-
-        setBotAnimState('NONE');
-        // store.setGamePhase('IDLE'); // Removed to keep UI locked until Boss Turn ends
-
-        // v2.0.0.16: Remove cards only AFTER animation ends
-        store.removePlayerCards(selectedIndices);
-
-        // Regen logic - Difficulty-aware
-        const config = DIFFICULTY_CONFIGS[store.difficulty];
-        const stagesWithRegen = [6, 8, 10];
-        if (config.stage9HasRegen) stagesWithRegen.push(9);
-
-        // v2.2.0: Balancing - Boss cannot regenerate if Awakened
-        const isBotAwakened = useGameStore.getState().bot.conditions.has('Awakening');
-
-        if (store.chapterNum === '1' && stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating') && !isBotAwakened) {
-            // Stage 6 has HP threshold
-            if (stageNum === 6 && newBotHp <= bot.maxHp * 0.5) {
-                store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
-                playConditionSound('Regenerating');
-            } else if (stageNum !== 6) {
-                store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
-                playConditionSound('Regenerating');
-            }
-        }
-
-        // v2.3.0: Chapter 2B Boss Triggers (Invincible Spirit / Berserker)
-        const freshBot = useGameStore.getState().bot;
-        const invincCond = freshBot.conditions.get('Invincible spirit');
-        if (invincCond && freshBot.hp > 0 && freshBot.hp <= (invincCond.data as any)?.threshold) {
-            const heal = (invincCond.data as any)?.heal || 100;
-            const limit = (invincCond.data as any)?.limit || 1;
-            if (limit > 0) {
-                setBotHp(Math.min(freshBot.maxHp, freshBot.hp + heal));
-                setMessage(t.CONDITIONS.INVINCIBLE_SPIRIT.NAME + "!");
-                playConditionSound('Invincible spirit');
-                showDamageText('BOT', `+${heal}`, '#2ecc71');
-
-                const newConds = new Map(freshBot.conditions);
-                const updated = { ...invincCond, data: { ...((invincCond.data as any) || {}), limit: limit - 1 } };
-                if (updated.data.limit <= 0) newConds.delete('Invincible spirit');
-                else newConds.set('Invincible spirit', updated);
-                useGameStore.getState().setBot({ ...freshBot, conditions: newConds });
-
-                await new Promise(r => setTimeout(r, 1000));
-            }
-        }
-
-        // Berserker Check (HP threshold)
-        if (store.chapterNum === '2B') {
-            const bThresholds: Record<number, number> = { 4: 0.2, 7: 0.3, 10: 0.3 };
-            const bAtkBonuses: Record<number, number> = { 4: 15, 7: 20, 10: 25 };
-            const bLifesteals: Record<number, number> = { 4: 10, 7: 10, 10: 15 };
-
-            if (bThresholds[stageNum] && freshBot.hp > 0 && freshBot.hp < (freshBot.maxHp * bThresholds[stageNum])) {
-                if (!freshBot.conditions.has('Berserker')) {
-                    store.addBotCondition('Berserker', 9999, '', { atkBonus: bAtkBonuses[stageNum], lifesteal: bLifesteals[stageNum] });
-                    setMessage(t.CONDITIONS.BERSERKER.NAME + "!");
-                    playConditionSound('Berserker');
+            // v2.3.2: 2A-1 Mummy Revive
+            if (newBotHp <= 0 && store.chapterNum === '2A' && stageNum === 1) {
+                // Apply a Revival condition if not already applied, or process it inline. 
+                // The instructions specify a 50% chance to revive once. Wait, we want it to not trigger stage clear.
+                const revivedBefore = bot.conditions.has('Revived');
+                if (!revivedBefore && Math.random() < 0.5) {
+                    newBotHp = Math.floor(bot.maxHp * 0.5);
+                    setBotHp(newBotHp);
+                    store.addBotCondition('Revived', 9999); // Mark as revived
+                    const condName = t.CONDITIONS.REVIVED.NAME;
+                    setMessage(`${condName}!`);
+                    AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
                     await new Promise(r => setTimeout(r, 1000));
                 }
             }
-        }
 
-        if (newBotHp <= 0) {
-            await handleVictory();
-        } else {
-            // v2.1.0: If awakening triggered, boss skips its turn
-            if (awakeningTriggered) {
-                setMessage(t.COMBAT.ST_AWAKENING);
-                await new Promise(r => setTimeout(r, 1200));
-                await proceedToEndTurn();
+
+            // --- PHASE 5: SCATTERED (0.4s) ---
+            store.setGamePhase('SCATTERED');
+            await new Promise(r => setTimeout(r, 400));
+
+            setBotAnimState('NONE');
+            // store.setGamePhase('IDLE'); // Removed to keep UI locked until Boss Turn ends
+
+            // v2.0.0.16: Remove cards only AFTER animation ends
+            store.removePlayerCards(selectedIndices);
+
+            // Regen logic - Difficulty-aware
+            const config = DIFFICULTY_CONFIGS[store.difficulty];
+            const stagesWithRegen = [6, 8, 10];
+            if (config.stage9HasRegen) stagesWithRegen.push(9);
+
+            // v2.2.0: Balancing - Boss cannot regenerate if Awakened
+            const isBotAwakened = useGameStore.getState().bot.conditions.has('Awakening');
+
+            if (store.chapterNum === '1' && stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating') && !isBotAwakened) {
+                // Stage 6 has HP threshold
+                if (stageNum === 6 && newBotHp <= bot.maxHp * 0.5) {
+                    store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
+                    playConditionSound('Regenerating');
+                } else if (stageNum !== 6) {
+                    store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
+                    playConditionSound('Regenerating');
+                }
+            }
+
+            // v2.3.0: Chapter 2B Boss Triggers (Invincible Spirit / Berserker)
+            const freshBot = useGameStore.getState().bot;
+            const invincCond = freshBot.conditions.get('Invincible spirit');
+            if (invincCond && freshBot.hp > 0 && freshBot.hp <= (invincCond.data as any)?.threshold) {
+                const heal = (invincCond.data as any)?.heal || 100;
+                const limit = (invincCond.data as any)?.limit || 1;
+                if (limit > 0) {
+                    setBotHp(Math.min(freshBot.maxHp, freshBot.hp + heal));
+                    setMessage(t.CONDITIONS.INVINCIBLE_SPIRIT.NAME + "!");
+                    playConditionSound('Invincible spirit');
+                    showDamageText('BOT', `+${heal}`, '#2ecc71');
+
+                    const newConds = new Map(freshBot.conditions);
+                    const updated = { ...invincCond, data: { ...((invincCond.data as any) || {}), limit: limit - 1 } };
+                    if (updated.data.limit <= 0) newConds.delete('Invincible spirit');
+                    else newConds.set('Invincible spirit', updated);
+                    useGameStore.getState().setBot({ ...freshBot, conditions: newConds });
+
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+
+            // Berserker Check (HP threshold)
+            if (store.chapterNum === '2B') {
+                const bThresholds: Record<number, number> = { 4: 0.2, 7: 0.3, 10: 0.3 };
+                const bAtkBonuses: Record<number, number> = { 4: 15, 7: 20, 10: 25 };
+                const bLifesteals: Record<number, number> = { 4: 10, 7: 10, 10: 15 };
+
+                if (bThresholds[stageNum] && freshBot.hp > 0 && freshBot.hp < (freshBot.maxHp * bThresholds[stageNum])) {
+                    if (!freshBot.conditions.has('Berserker')) {
+                        store.addBotCondition('Berserker', 9999, '', { atkBonus: bAtkBonuses[stageNum], lifesteal: bLifesteals[stageNum] });
+                        setMessage(t.CONDITIONS.BERSERKER.NAME + "!");
+                        playConditionSound('Berserker');
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                }
+            }
+
+            if (newBotHp <= 0) {
+                await handleVictory();
             } else {
-                await executeBotTurn();
+                // v2.1.0: If awakening triggered, boss skips its turn
+                if (awakeningTriggered) {
+                    setMessage(t.COMBAT.ST_AWAKENING);
+                    await new Promise(r => setTimeout(r, 1200));
+                    await proceedToEndTurn();
+                } else {
+                    await executeBotTurn();
+                }
             }
         }
     };
@@ -1021,14 +1044,32 @@ export const useGameLoop = () => {
                 }
             }
         } else if (store.chapterNum === '2B') {
-            // Standard 2B Status Application logic
-            const bleedMap: Record<number, number> = { 1: 0.10, 2: 0.12, 3: 0.15, 4: 0.12, 5: 0, 6: 0.12, 7: 0.15, 8: 0.17, 9: 0.20, 10: 0.15 };
-            const bProb = bleedMap[stageNum] || 0.15;
-            if (bProb > 0 && Math.random() < bProb) {
-                store.addPlayerCondition('Bleeding', 4);
-            }
-            if (stageNum === 8 && Math.random() < 0.25) {
-                store.addPlayerCondition('Poisoning', 4);
+            // v2.3.9: Chapter 2B Special Stage (Stage 11) - 100% Status Application
+            if (stageNum === 11 && !currentBot.conditions.has('Awakening')) {
+                const freshP = useGameStore.getState().player;
+                if (!freshP.conditions.has('Bleeding')) {
+                    store.addPlayerCondition('Bleeding', 4);
+                    playConditionSound('Bleeding');
+                    setMessage(t.CONDITIONS.BLEEDING.NAME + "!");
+                } else {
+                    const effect = Math.random() < 0.5 ? 'Poisoning' : 'Debilitating';
+                    store.addPlayerCondition(effect, 4);
+                    playConditionSound(effect);
+                    const condKey = effect.toUpperCase();
+                    const condName = (t.CONDITIONS as any)[condKey]?.NAME || effect;
+                    setMessage(condName + "!");
+                }
+                triggerScreenEffect('flash-red');
+            } else {
+                // Standard 2B Status Application logic
+                const bleedMap: Record<number, number> = { 1: 0.10, 2: 0.12, 3: 0.15, 4: 0.12, 5: 0, 6: 0.12, 7: 0.15, 8: 0.17, 9: 0.20, 10: 0.15 };
+                const bProb = bleedMap[stageNum] || 0.15;
+                if (bProb > 0 && Math.random() < bProb) {
+                    store.addPlayerCondition('Bleeding', 4);
+                }
+                if (stageNum === 8 && Math.random() < 0.25) {
+                    store.addPlayerCondition('Poisoning', 4);
+                }
             }
         } else if (store.chapterNum === '1') {
             // v2.3.7: Restore Chapter 1 Status Application Mechanics
@@ -1507,7 +1548,7 @@ export const useGameLoop = () => {
         }
 
         // v2.3.8: Fix chapter transition for Chapter 1 (Standard nextStage is 11, which failed the !== 11 check)
-    if ((targetStage > 10 && targetStage !== 11) || (store.chapterNum === '1' && stageNum === 10)) {
+        if ((targetStage > 10 && targetStage !== 11) || (store.chapterNum === '1' && stageNum === 10)) {
             // Unlock next difficulty on game completion
             if (store.difficulty === Difficulty.NORMAL) {
                 store.unlockDifficulty(Difficulty.HARD);
