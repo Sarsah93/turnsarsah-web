@@ -263,7 +263,7 @@ export const BattleScreen: React.FC = () => {
                 />
             )}
             {/* Defeat or Final Victory Dimming Overlay */}
-            {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum === 10 && chapterNum !== '1')) && (
+            {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
                 <div style={{
                     position: 'fixed',
                     top: 0, left: 0, width: '100%', height: '100%',
@@ -368,7 +368,7 @@ export const BattleScreen: React.FC = () => {
                 )}
 
                 {/* Game Over / Final Victory Buttons (Centrally Layered and Active) */}
-                {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10)) && (
+                {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
                     <div style={{
                         position: 'absolute', top: '70%', left: '50%', transform: 'translateX(-50%)',
                         display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 2000,
