@@ -30,41 +30,47 @@ export const DifficultyPopup: React.FC<DifficultyPopupProps> = ({ onClose, onSel
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', alignItems: 'center' }}>
                     {difficulties.map(({ key, label, color }) => {
                         const isUnlocked = unlockedDifficulties.includes(key);
+                        const isImplemented = key === Difficulty.EASY || key === Difficulty.NORMAL;
+                        const displayLabel = isImplemented
+                            ? (isUnlocked ? label : `🔒 ${label}`)
+                            : `${label} (${t.UI.UNDER_PREPARATION})`;
+                        const canClick = isUnlocked && isImplemented;
+
                         return (
                             <button
                                 key={key}
-                                onClick={() => isUnlocked && onSelect(key)}
-                                disabled={!isUnlocked}
+                                onClick={() => canClick && onSelect(key)}
+                                disabled={!canClick}
                                 className="difficulty-btn"
                                 style={{
                                     fontFamily: 'BebasNeue',
                                     fontSize: '1.8rem',
                                     padding: '12px 40px',
-                                    border: `2px solid ${isUnlocked ? color : '#7f8c8d'}`,
+                                    border: `2px solid ${canClick ? color : '#7f8c8d'}`,
                                     borderRadius: '8px',
-                                    backgroundColor: isUnlocked ? 'rgba(0,0,0,0.3)' : 'rgba(50,50,50,0.5)',
-                                    color: isUnlocked ? color : '#7f8c8d',
-                                    cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                                    opacity: isUnlocked ? 1 : 0.5,
-                                    width: '300px',
+                                    backgroundColor: canClick ? 'rgba(0,0,0,0.3)' : 'rgba(50,50,50,0.5)',
+                                    color: canClick ? color : '#7f8c8d',
+                                    cursor: canClick ? 'pointer' : 'not-allowed',
+                                    opacity: canClick ? 1 : 0.5,
+                                    width: '350px', // v2.4.1: Adjusted width for longer text
                                     textTransform: 'uppercase',
                                     letterSpacing: '2px',
                                     transition: 'all 0.2s ease',
                                 }}
                                 onMouseEnter={(e) => {
-                                    if (isUnlocked) {
+                                    if (canClick) {
                                         e.currentTarget.style.backgroundColor = color;
                                         e.currentTarget.style.color = '#000';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
-                                    if (isUnlocked) {
+                                    if (canClick) {
                                         e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.3)';
                                         e.currentTarget.style.color = color;
                                     }
                                 }}
                             >
-                                {isUnlocked ? label : `🔒 ${label}`}
+                                {displayLabel}
                             </button>
                         );
                     })}

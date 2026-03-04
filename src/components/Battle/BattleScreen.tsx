@@ -13,6 +13,7 @@ import { TRANSLATIONS } from '../../constants/translations';
 import { TrophyPopup } from '../TrophyPopup';
 import { ALTAR_SKILLS } from '../../constants/altarSystem';
 import { AltarSkillSlots } from './AltarSkillSlots';
+import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
 
@@ -23,7 +24,7 @@ export const BattleScreen: React.FC = () => {
     } = useGameLoop();
     const store = useGameStore();
     const { playerHand, gamePhase, isTutorial, tutorialStep, setTutorialStep, stageNum, chapterNum, language } = store;
-    const t = TRANSLATIONS[language];
+    const t = (TRANSLATIONS as any)[language];
 
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
 
@@ -254,6 +255,7 @@ export const BattleScreen: React.FC = () => {
     return (
         <div className={`battle-screen ${screenEffect}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
             <TrophyPopup />
+            <ClearCongratulationsPopup />
             {isTutorial && (
                 <TutorialOverlay
                     step={tutorialStep}
@@ -263,7 +265,7 @@ export const BattleScreen: React.FC = () => {
                 />
             )}
             {/* Defeat or Final Victory Dimming Overlay */}
-            {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum === 10 && chapterNum !== '1')) && (
+            {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
                 <div style={{
                     position: 'fixed',
                     top: 0, left: 0, width: '100%', height: '100%',
@@ -323,7 +325,7 @@ export const BattleScreen: React.FC = () => {
                 ))}
 
                 {/* Victory / Defeat Overlay */}
-                {message === t.COMBAT.VICTORY && (
+                {message && (message.endsWith('정화 완료!') || message.endsWith('Area Purified!')) && (
                     <div style={{
                         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                         color: '#f1c40f', fontSize: '5rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
@@ -348,7 +350,7 @@ export const BattleScreen: React.FC = () => {
 
                 {/* Generic Toast Area */}
                 {message && message !== t.COMBAT.VICTORY && message !== t.COMBAT.DEFEAT && (
-                    <div style={{
+                    <div className="battle-toast" style={{
                         position: 'absolute',
                         top: '40%', left: '50%',
                         transform: 'translate(-50%, -50%)',
@@ -368,7 +370,7 @@ export const BattleScreen: React.FC = () => {
                 )}
 
                 {/* Game Over / Final Victory Buttons (Centrally Layered and Active) */}
-                {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum === 10 && chapterNum !== '1')) && (
+                {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
                     <div style={{
                         position: 'absolute', top: '70%', left: '50%', transform: 'translateX(-50%)',
                         display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 2000,
@@ -391,6 +393,34 @@ export const BattleScreen: React.FC = () => {
                     gamePhase={gamePhase}
                     disabled={gamePhase !== 'IDLE'}
                 />
+
+                {/* 인게임 메뉴 버튼 ('三') */}
+                <button
+                    className="mobile-menu-btn"
+                    onClick={() => setActiveMenu('PAUSE')}
+                    style={{
+                        position: 'absolute',
+                        bottom: '30px',
+                        right: '30px',
+                        zIndex: 5000, // 최상단에 배치
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        color: '#f1c40f',
+                        border: '2px solid #f1c40f',
+                        borderRadius: '12px',
+                        width: '60px',
+                        height: '60px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '32px',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        boxShadow: '0 0 15px rgba(0,0,0,0.5)',
+                        fontFamily: 'BebasNeue, Arial'
+                    }}
+                >
+                    三
+                </button>
             </div>
 
             {/* High-Fidelity Menu Components Restoration */}

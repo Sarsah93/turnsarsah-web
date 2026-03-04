@@ -28,7 +28,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content"
-        style={{ width, height }}
+        style={{ '--modal-width': `${width}px`, '--modal-height': `${height}px` } as React.CSSProperties}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

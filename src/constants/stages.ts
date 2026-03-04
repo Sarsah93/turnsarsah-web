@@ -44,6 +44,7 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       8: { name: 'STAGE 8', bossName: 'SAND WYVERN', hp: 300, atk: 20, level: 18, rule: 'STRAIGHT_DMG_0_BLIND_1_BAN_1', accuracy: 1.0 },
       9: { name: 'STAGE 9', bossName: 'SAND DEATHWARM', hp: 340, atk: 20, level: 19, rule: 'FLUSH_DMG_0_BLIND_3', accuracy: 1.0 },
       10: { name: 'STAGE 10', bossName: 'SPHINX', hp: 300, atk: 40, level: 20, rule: 'PUZZLE_DMG+50%_BLIND_1_AWAKEN', accuracy: 1.0 },
+      11: { name: 'SPECIAL STAGE', bossName: 'SAND DRAGON', hp: 400, atk: 15, level: 21, rule: 'SAND_STORM_AWAKEN_BURN', accuracy: 1.0 },
     }
   },
   '2B': {
@@ -59,6 +60,7 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       8: { name: 'STAGE 8', bossName: 'HIGH ORC ASSASSIN', hp: 290, atk: 30, level: 18, rule: 'HIGH_ORC_ASSASSIN_RULE', accuracy: 0.80 },
       9: { name: 'STAGE 9', bossName: 'HIGH ORC CHIEFTAIN', hp: 330, atk: 35, level: 19, rule: 'HIGH_ORC_CHIEFTAIN_RULE', accuracy: 0.85 },
       10: { name: 'STAGE 10', bossName: 'HIGH ORC LORD', hp: 370, atk: 40, level: 20, rule: 'HIGH_ORC_LORD_RULE', accuracy: 0.95 },
+      11: { name: 'SPECIAL STAGE', bossName: 'HIGH ORC SHAMAN', hp: 350, atk: 12, level: 21, rule: 'BLIND_BAN_REFLECTION_AWAKEN', accuracy: 1.0 },
     }
   }
 };

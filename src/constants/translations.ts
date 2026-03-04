@@ -97,7 +97,7 @@ export const TRANSLATIONS = {
             EXIT: "메인 화면으로"
         },
         COMBAT: {
-            VICTORY: "승리!",
+            VICTORY: "노드 정화 완료!",
             DEFEAT: "패배...",
             SELECT_CARDS: "카드를 선택하세요!",
             MAX_SWAP: "최대 2장까지만 교환 가능합니다!",
@@ -136,6 +136,9 @@ export const TRANSLATIONS = {
             NEURO_MISSED: "공격 실패! (신경성 맹독)",
             ACCURACY_MISSED: "명중률 저하로 공격 실패!",
             PUZZLE_SUCCESS: "퍼즐 성공! (타겟 x 2) + {bonus} 고정 데미지!",
+            PLAYER_BURN: "플레이어 화상 피해!",
+            PLAYER_DECAY: "플레이어 부패 피해!",
+            AREA_CLEARED: "{area} 구역 정화 완료!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -221,6 +224,18 @@ export const TRANSLATIONS = {
             DECREASING_ACCURACY: {
                 NAME: "명중률 저하",
                 DESC: "공격이 빗나갈 확률이 발생합니다."
+            },
+            REFLECTION: {
+                NAME: "데미지 반사",
+                DESC: "대상이 일반 공격 피해를 받을 경우, 받은 피해량의 일부를 상대에게 되돌려준다."
+            },
+            BURN: {
+                NAME: "화상",
+                DESC: "매 턴 최대 HP의 3%에 해당하는 화염 피해를 입습니다. (3턴 지속)"
+            },
+            DECAY: {
+                NAME: "부패",
+                DESC: "턴이 지날수록 증가하는 부패 피해를 입습니다. (최대 HP의 3% → 5% → 8% → 10%, 4턴 지속)"
             }
         },
         RULES: {
@@ -240,7 +255,7 @@ export const TRANSLATIONS = {
             CH1_RULE_3: "턴 마다 블라인드 (2장)",
             CH1_RULE_4: "턴 마다 무작위 문양 금지",
             CH1_RULE_5: "중독 (확률적)",
-            CH1_RULE_6: "보너스 (승리 시 최대 체력 증가)",
+            CH1_RULE_6: "보너스(최대체력증가) + 족보 금지(매 턴 변경)",
             CH1_RULE_7: "공격력 증가",
             CH1_RULE_8: "2턴 마다 공격",
             CH1_RULE_9: "공격력 배수 증가",
@@ -278,14 +293,18 @@ export const TRANSLATIONS = {
             HIGH_ORC_WARRIOR_RULE: "강력한 버서커",
             HIGH_ORC_ASSASSIN_RULE: "치명타 25% (공격력 +50%)",
             HIGH_ORC_CHIEFTAIN_RULE: "불굴의 의지 및 도발",
-            HIGH_ORC_LORD_RULE: "강력한 버서커 및 도발"
+            HIGH_ORC_LORD_RULE: "강력한 버서커 및 도발",
+            SAND_STORM_TRIPLE_AWAKEN: "규칙: 모래폭풍+삼중공격+각성",
+            BLIND_BAN_REFLECTION_AWAKEN: "규칙: BLIND/BAN+데미지반사+각성(부패 폭발)",
         },
         UI: {
+            CHAPTER_SELECT_TITLE: "들판 구역 안정화 완료",
+            CHAPTER_SELECT_SUBTITLE: "다음 확장 구역을 선택하세요.",
             BACK_TO_MAIN: "메인 화면으로",
             ATTACK: "공격",
             SWAP: "교체",
-            BOSS: "보스",
-            PLAYER: "플레이어",
+            BOSS: "코어 안정도",
+            PLAYER: "플레이어 코어",
             ATK: "공격력",
             HP: "체력",
             QUIT_CONFIRM: "메인 화면으로 돌아가시겠습니까?",
@@ -324,7 +343,12 @@ export const TRANSLATIONS = {
             LOAD_GAME: "불러오기",
             SLOT: "슬롯",
             DELETE_CONFIRM: "해당 저장 데이터를 삭제하시겠습니까?",
-            OVERWRITE_CONFIRM: "해당 슬롯에 덮어씌우시겠습니까?"
+            OVERWRITE_CONFIRM: "해당 슬롯에 덮어씌우시겠습니까?",
+            CLEAR_CONGRATS: "축하합니다!",
+            CLEAR_EASY_BODY: "쉬움 난이도의 모든 스테이지를 클리어 하셨습니다!\n이제부터 보통 난이도를 플레이할 수 있으며,\n보스들로부터 전리품을 얻고, 제단 스킬을 활성화하여,\n더 다양한 챕터들을 클리어 해 보세요!",
+            CLEAR_NORMAL_BODY: "보통 난이도의 모든 스테이지를 클리어 하셨습니다!\n이제부터 어려움 난이도를 플레이할 수 있으며,\n보스들로부터 전리품을 얻고, 제단 스킬을 활성화하여,\n더 다양한 챕터들을 클리어 해 보세요!",
+            BACK_TO_MAIN_MENU: "메인 화면으로 돌아가기",
+            UNDER_PREPARATION: "현재 준비중입니다."
         }
     },
     EN: {
@@ -459,6 +483,9 @@ export const TRANSLATIONS = {
             NEURO_MISSED: "MISSED! (NEUROTOXICITY)",
             ACCURACY_MISSED: "MISSED! (ACCURACY DOWN)",
             PUZZLE_SUCCESS: "PUZZLE SUCCESS! (Target x 2) + {bonus} Fixed Damage!",
+            PLAYER_BURN: "PLAYER BURN DAMAGE!",
+            PLAYER_DECAY: "PLAYER DECAY DAMAGE!",
+            AREA_CLEARED: "{area} Area Purified!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -544,6 +571,18 @@ export const TRANSLATIONS = {
             DECREASING_ACCURACY: {
                 NAME: "Decreasing Accuracy",
                 DESC: "Certain chance for attacks to miss."
+            },
+            REFLECTION: {
+                NAME: "Reflection",
+                DESC: "When the target takes normal attack damage, reflects a portion of it back to the attacker."
+            },
+            BURN: {
+                NAME: "Burn",
+                DESC: "Takes fire damage equal to 3% of max HP each turn. (Lasts 3 turns)"
+            },
+            DECAY: {
+                NAME: "Decay",
+                DESC: "Takes escalating decay damage each turn. (3% → 5% → 8% → 10% of max HP, lasts 4 turns)"
             }
         },
         RULES: {
@@ -563,7 +602,7 @@ export const TRANSLATIONS = {
             CH1_RULE_3: "Blind Cards (2) Every Turn",
             CH1_RULE_4: "Banned Suit Every Turn",
             CH1_RULE_5: "Poison (Probabilistic)",
-            CH1_RULE_6: "Bonus (Max HP Up on Victory)",
+            CH1_RULE_6: "Bonus (Max HP Up) + Banned Hand (Changes every turn)",
             CH1_RULE_7: "ATK Growth (+10)",
             CH1_RULE_8: "Attack Every 2 Turns",
             CH1_RULE_9: "ATK Double Growth",
@@ -601,14 +640,18 @@ export const TRANSLATIONS = {
             HIGH_ORC_WARRIOR_RULE: "Heavy Berserker",
             HIGH_ORC_ASSASSIN_RULE: "Critical 25% (Atk +50%)",
             HIGH_ORC_CHIEFTAIN_RULE: "Unyielding Spirit & Provoke",
-            HIGH_ORC_LORD_RULE: "Heavy Berserker & Provoke"
+            HIGH_ORC_LORD_RULE: "Heavy Berserker & Provoke",
+            SAND_STORM_TRIPLE_AWAKEN: "RULE: SAND STORM + TRIPLE ATK + AWAKEN",
+            BLIND_BAN_REFLECTION_AWAKEN: "RULE: BLIND/BAN + REFLECT + AWAKEN (DECAY)",
         },
         UI: {
+            CHAPTER_SELECT_TITLE: "Field Area Stabilized",
+            CHAPTER_SELECT_SUBTITLE: "Select Next Expansion Area",
             BACK_TO_MAIN: "BACK TO MAIN PAGE",
             ATTACK: "ATTACK",
             SWAP: "SWAP",
-            BOSS: "BOSS",
-            PLAYER: "PLAYER",
+            BOSS: "Core Stability",
+            PLAYER: "Player Core",
             ATK: "ATK",
             HP: "HP",
             QUIT_CONFIRM: "DO YOU WANT TO GO BACK TO MAIN PAGE?",
@@ -646,7 +689,12 @@ export const TRANSLATIONS = {
             LOAD_GAME: "LOAD GAME",
             SLOT: "SLOT",
             DELETE_CONFIRM: "DO YOU AGREE WITH DELETING THIS SAVED DATA?",
-            OVERWRITE_CONFIRM: "REALLY WANT TO OVERWRITE THIS SAVED DATA SLOT?"
+            OVERWRITE_CONFIRM: "REALLY WANT TO OVERWRITE THIS SAVED DATA SLOT?",
+            CLEAR_CONGRATS: "Congratulations!",
+            CLEAR_EASY_BODY: "You have cleared all stages of EASY difficulty!\nNow you can play NORMAL difficulty, obtain loot from bosses,\nactivate Altar skills, and clear even more diverse chapters!",
+            CLEAR_NORMAL_BODY: "You have cleared all stages of NORMAL difficulty!\nNow you can play HARD difficulty, obtain loot from bosses,\nactivate Altar skills, and clear even more diverse chapters!",
+            BACK_TO_MAIN_MENU: "Back to Main Menu",
+            UNDER_PREPARATION: "Under Preparation."
         }
     }
 };

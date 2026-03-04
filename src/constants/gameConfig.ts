@@ -48,7 +48,7 @@ export interface DifficultyConfig {
   bleedProbStage1to4: number;
   bleedProbStage7: number;
   poisonProbStage5: number;
-  paralyzeProbStage7: number;
+  paralyzeProbStage8: number;
   // v2.1.0: Global stat scaling factors
   hpScale: number;
   atkScale: number;
@@ -80,7 +80,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage1to4: 0.2,
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.3,
-    paralyzeProbStage7: 0.2,
+    paralyzeProbStage8: 0.2,
     hpScale: 0.8,
     atkScale: 0.8,
     bleedProbCh2A: 0.2,
@@ -110,7 +110,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage1to4: 0.4,
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.5,
-    paralyzeProbStage7: 0.35,
+    paralyzeProbStage8: 0.35,
     hpScale: 1.0,
     atkScale: 1.0,
     bleedProbCh2A: 0.3,
@@ -140,7 +140,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage1to4: 0.4,
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.5,
-    paralyzeProbStage7: 0.2,
+    paralyzeProbStage8: 0.2,
     hpScale: 1.2,
     atkScale: 1.2,
     bleedProbCh2A: 0.4,
@@ -178,7 +178,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     bleedProbStage1to4: 0.4,
     bleedProbStage7: 0.3,
     poisonProbStage5: 0.5,
-    paralyzeProbStage7: 0.2,
+    paralyzeProbStage8: 0.2,
     hpScale: 1.5,
     atkScale: 2.0,
     bleedProbCh2A: 0.5,

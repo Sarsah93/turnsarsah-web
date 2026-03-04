@@ -1,0 +1,43 @@
+/* styles/MobileMenuButton.css */
+
+.mobile-menu-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2500;
+
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(241, 196, 15, 0.7);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+
+  color: #f1c40f;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  text-align: center;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* subtle glow */
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.15),
+              inset 0 0 6px rgba(241, 196, 15, 0.08);
+}
+
+.mobile-menu-btn:hover,
+.mobile-menu-btn:active {
+  background: rgba(241, 196, 15, 0.2);
+  border-color: #f1c40f;
+  box-shadow: 0 0 18px rgba(241, 196, 15, 0.35);
+  transform: scale(1.08);
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.95);
+}

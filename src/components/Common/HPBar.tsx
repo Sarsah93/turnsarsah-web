@@ -2,6 +2,7 @@
 
 import React from 'react';
 import '../styles/HPBar.css';
+import { HpBarMasked } from './HpBarMasked';
 
 interface HPBarProps {
   hp: number;
@@ -23,51 +24,33 @@ export const HPBar: React.FC<HPBarProps> = ({
   const percentage = Math.max(0, Math.min(100, (hp / maxHp) * 100));
   const displayHp = Math.max(0, Math.ceil(hp));
 
-  // Determine which specific PNG image to use
   const imgPath = color === 'red'
     ? '/assets/etc images/HP BAR_RED_IMAGE.png'
     : '/assets/etc images/HP BAR_BLUE_IMAGE.png';
 
-  // v2.0.0.5: Drains from right to left for both player and boss
-  // So we clip the right side as percentage decreases.
-  const clipPath = `inset(0% ${100 - percentage}% 0% 0%)`;
-
-  // v2.0.0.5: Normalize font size and shift HP text slightly right
   return (
     <div className={`hp-bar-container hp-bar-align-${align}`}>
-      <div className={`hp-bar hp-bar-${color}`}>
-        <div className="hp-bar-track">
-          {/* Background 'Normal' version */}
-          <img src={imgPath} alt="HP Bar Track" className="hp-bar-image hp-bar-image-bg" />
-
-          {/* Dimming layer - stays behind longer */}
-          <img
+      <div className="hp-bar" style={{ position: 'relative', width: '400px', height: '100px' }}>
+        <div className="hp-bar-track" style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
+          <HpBarMasked
             src={imgPath}
-            alt="HP Bar Dim"
-            className="hp-bar-image hp-bar-image-dim"
-            style={{
-              clipPath,
-              transition: 'clip-path 1.2s ease-out',
-              opacity: 0.5,
-              position: 'absolute',
-              top: 0,
-              left: 0
-            }}
-          />
-
-          {/* Foreground 'Fill' version */}
-          <img
-            src={imgPath}
-            alt="HP Bar Fill"
-            className="hp-bar-image hp-bar-image-fill"
-            style={{ clipPath, transition: 'clip-path 0.3s ease-out' }}
+            variant={color === 'red' ? 'boss' : 'player'}
+            hp01={percentage / 100}
           />
         </div>
 
         <div className="hp-bar-text" style={{
-          fontSize: `calc(${fontSize} * 0.5)`, // Half the size
+          position: 'relative',
+          zIndex: 3,
+          fontSize: `calc(${fontSize} * 0.45)`,
           fontFamily: "'Bebas Neue', sans-serif",
-          paddingLeft: '40px' // Shifted right
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%',
+          paddingLeft: '5%', // Slight bias to the right to match CYL center
+          pointerEvents: 'none'
         }}>
           {label}: {displayHp}/{maxHp}
         </div>

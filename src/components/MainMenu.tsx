@@ -36,6 +36,7 @@ export const MainMenu: React.FC = () => {
         }}>
             {/* Logo */}
             <img
+                className="main-menu-logo"
                 src="/assets/etc images/turnsarsah_logo_image.png"
                 alt="Turn Sarsah"
                 style={{ width: '600px', maxWidth: '90%', marginBottom: '50px', filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.5))' }}
@@ -53,23 +54,7 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
             </div>
 
-            {/* Debug Buttons for Chapter 2B */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '20px', position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
-                <div style={{ color: '#fff', width: '100%', textAlign: 'center', fontSize: '1.2rem', marginBottom: '5px' }}>DEBUG: CHAPTER 2B</div>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((stage) => (
-                    <BlockButton
-                        key={`2B-${stage}`}
-                        text={`2B-${stage}`}
-                        onClick={() => {
-                            triggerTransition(() => initGameWithDifficulty('2B', stage, Difficulty.NORMAL));
-                        }}
-                        variant="danger"
-                        width="90px"
-                        height="50px"
-                        fontSize="1.5rem"
-                    />
-                ))}
-            </div>
+
 
 
             {/* Difficulty Popup */}

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useGameStore } from '../state/gameStore';
 import { BlockButton } from './BlockButton';
+import { TRANSLATIONS } from '../constants/translations';
 
 export const ChapterSelect: React.FC = () => {
-    const { initGame, triggerTransition, setChapterNum } = useGameStore();
+    const { initGame, triggerTransition, setChapterNum, language } = useGameStore();
+    const t = TRANSLATIONS[language] as any;
 
     const handleSelectChapter = (chapterId: string) => {
         triggerTransition(() => {
@@ -25,15 +27,15 @@ export const ChapterSelect: React.FC = () => {
             fontFamily: "'Bebas Neue', sans-serif"
         }}>
             <h1 style={{ fontSize: '4rem', color: '#f1c40f', marginBottom: '20px', textShadow: '0 0 20px rgba(241,196,15,0.5)' }}>
-                SELECT NEXT CHAPTER
+                {t.UI.CHAPTER_SELECT_TITLE}
             </h1>
             <p style={{ fontSize: '1.5rem', marginBottom: '50px', letterSpacing: '2px' }}>
-                당신의 다음 여정을 선택하세요.
+                {t.UI.CHAPTER_SELECT_SUBTITLE}
             </p>
 
-            <div style={{ display: 'flex', gap: '40px' }}>
+            <div className="chapter-select-grid" style={{ display: 'flex', gap: '40px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                    <div style={{
+                    <div className="chapter-card" style={{
                         width: '300px', height: '150px',
                         background: 'linear-gradient(45deg, #e67e22, #f39c12)',
                         borderRadius: '15px',
@@ -52,7 +54,7 @@ export const ChapterSelect: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                    <div style={{
+                    <div className="chapter-card" style={{
                         width: '300px', height: '150px',
                         background: 'linear-gradient(45deg, #27ae60, #2ecc71)',
                         borderRadius: '15px',

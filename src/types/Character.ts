@@ -22,6 +22,7 @@ export interface Character {
   activeRules?: [string, unknown][]; // For bot stage rules
   animState?: 'NONE' | 'ATTACK' | 'HIT'; // Player only uses HIT/NONE now, Bot uses all.
   accuracy?: number; // 0.0 to 1.0 (v2.3.7)
+  isBossVisible?: boolean; // v2.4.3: Toggle rendering (for death FX)
 }
 
 export interface CharacterJSON {
@@ -35,6 +36,7 @@ export interface CharacterJSON {
   drawsRemaining?: number;
   activeRules?: [string, unknown][];
   accuracy?: number;
+  isBossVisible?: boolean;
 }
 
 export class CharacterFactory {
@@ -50,6 +52,7 @@ export class CharacterFactory {
       drawsRemaining: 2,
       activeRules: [],
       accuracy,
+      isBossVisible: true,
     };
   }
 
@@ -68,6 +71,7 @@ export class CharacterFactory {
       baseMaxHp: char.baseMaxHp,
       drawsRemaining: char.drawsRemaining,
       activeRules: char.activeRules,
+      isBossVisible: char.isBossVisible,
     };
   }
 
@@ -86,6 +90,7 @@ export class CharacterFactory {
       baseMaxHp: data.baseMaxHp,
       drawsRemaining: data.drawsRemaining,
       activeRules: data.activeRules,
+      isBossVisible: data.isBossVisible ?? true,
     };
   }
 }

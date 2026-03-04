@@ -1,0 +1,7 @@
+# AI Agent Interaction Rules
+
+- **Language**: Always respond and document in **Korean**.
+- **Code Integrity**: NEVER revert to older code versions or over-write recent features (e.g., Altar system) without explicit confirmation.
+- **Verification**: Always verify the current file content and git status before making changes.
+- **Accuracy**: Avoid typos, duplicates, and omissions at all costs.
+- **Pre-flight**: Read `AGENT_GUIDELINES.md` before starting any task.

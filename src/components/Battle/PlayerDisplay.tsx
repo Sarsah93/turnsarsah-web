@@ -26,7 +26,7 @@ export const PlayerDisplay: React.FC = () => {
             />
 
             {/* Condition Icons (Above HP Bar) */}
-            <div style={{ display: 'flex', gap: '8px', position: 'absolute', bottom: '110px', left: '10px', zIndex: 100 }}>
+            <div className="player-conditions-row" style={{ display: 'flex', gap: '8px', position: 'absolute', bottom: '110px', left: '10px', zIndex: 100 }}>
                 {Array.from(player.conditions.entries()).map(([name, condition]) => (
                     <ConditionIcon key={name} name={name} condition={condition} popupDirection="top-right" />
                 ))}

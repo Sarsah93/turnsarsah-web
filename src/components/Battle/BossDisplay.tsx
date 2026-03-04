@@ -29,18 +29,18 @@ export const BossDisplay: React.FC = () => {
         if (isTutorial) return '/assets/boss_goblin/tutorial_bot.png';
         if (chapter === '1') {
             const mapping: Record<number, string> = {
-                1: 're_Goblin_01.png',
-                2: 're_Goblin Skirmisher_02.png',
-                3: 're_Goblin Rider_03.png',
-                4: 're_HobGoblin_04.png',
-                5: 're_Goblin Shaman_05.png',
-                6: 're_Golden Goblin_06.png',
-                7: 're_Elite Goblin_07.png',
-                8: 're_Troll_08.png',
-                9: 're_Giant Goblin_09.png',
-                10: 're_Goblin Lord_10.png'
+                1: '01_goblin.png',
+                2: '02_goblin skirmisher.png',
+                3: '03_goblin rider.png',
+                4: '04_hobgoblin.png',
+                5: '05_goblin shaman.png',
+                6: '06_golden goblin.png',
+                7: '07_elite goblin.png',
+                8: '08_troll.png',
+                9: '09_giant goblin.png',
+                10: '10_goblin lord.png'
             };
-            const filename = mapping[stage] || 're_Goblin_01.png';
+            const filename = mapping[stage] || '01_goblin.png';
             return `/assets/boss_goblin/${filename}`;
         }
         if (chapter === '2A') {
@@ -54,7 +54,8 @@ export const BossDisplay: React.FC = () => {
                 7: '07_sand golem.png',
                 8: '08_wyvern.png',
                 9: '09_sand deathwarm.png',
-                10: '10_sphinx.png'
+                10: '10_sphinx.png',
+                11: '2A_sand dragon.png'
             };
             const filename = mapping[stage] || '01_mummy.png';
             return `/assets/boss_desert/${filename}`;
@@ -70,12 +71,13 @@ export const BossDisplay: React.FC = () => {
                 7: '07_high orc warrior.png',
                 8: '08_high orc assassin.png',
                 9: '09_high orc chieftain.png',
-                10: '10_hight orc lord.png'
+                10: '10_high orc lord.png',
+                11: '2B_high orc shaman.png'
             };
             const filename = mapping[stage] || '01_orc.png';
-            return `/assets/boss_ork/${filename}`;
+            return `/assets/boss_orc/${filename}`;
         }
-        return '/assets/boss_goblin/re_Goblin_01.png';
+        return '/assets/boss_goblin/01_goblin.png';
     };
 
     return (
@@ -85,7 +87,7 @@ export const BossDisplay: React.FC = () => {
             pointerEvents: 'none' // Let clicks pass through to background if needed
         }}>
             {/* Top Right HP Bar */}
-            <div style={{
+            <div className="boss-hp-wrapper" style={{
                 position: 'absolute',
                 top: '0px',
                 right: '0px',
@@ -106,7 +108,7 @@ export const BossDisplay: React.FC = () => {
             </div>
 
             {/* Stage Info (Top Left) */}
-            <div style={{
+            <div className="boss-stage-info" style={{
                 position: 'absolute', top: '10px', left: '10px',
                 fontFamily: "'Bebas Neue', sans-serif", color: '#fff',
                 textShadow: '2px 2px 4px #000',
@@ -122,11 +124,11 @@ export const BossDisplay: React.FC = () => {
             <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`}
                 style={{
                     position: 'absolute',
-                    top: '0%',
+                    top: (stageNum === 11) ? '2%' : '0%',
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: chapterNum === '2B' ? '300px' : '220px',
-                    height: chapterNum === '2B' ? '300px' : '220px',
+                    width: '380px',
+                    height: '380px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -134,21 +136,25 @@ export const BossDisplay: React.FC = () => {
                     zIndex: 50
                 }}
             >
-                <img
-                    src={getBossImage(chapterNum, stageNum)}
-                    alt={bot.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
-                {/* Boss Name - BELOW boss image */}
-                <div style={{
-                    fontSize: '1.8rem',
-                    fontFamily: "'Bebas Neue', sans-serif",
-                    color: '#f1c40f',
-                    textShadow: '2px 2px 4px #000, 0 0 10px rgba(241, 196, 15, 0.5)',
-                    marginTop: '-10px'
-                }}>
-                    {bot.name.toUpperCase()}
-                </div>
+                {bot.isBossVisible !== false && (
+                    <>
+                        <img
+                            src={getBossImage(chapterNum, stageNum)}
+                            alt={bot.name}
+                            style={{ width: '100%', height: 'auto', maxHeight: '100%', objectFit: 'contain' }}
+                        />
+                        {/* Boss Name - BELOW boss image */}
+                        <div className="boss-name-label" style={{
+                            fontSize: '1.6rem',
+                            fontFamily: "'Bebas Neue', sans-serif",
+                            color: '#f1c40f',
+                            textShadow: '2px 2px 4px #000, 0 0 10px rgba(241, 196, 15, 0.5)',
+                            marginTop: '-5px'
+                        }}>
+                            {bot.name.toUpperCase()}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Right Side Stats/Rules */}
@@ -163,7 +169,7 @@ export const BossDisplay: React.FC = () => {
                 <div>{t.UI.ATK}: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
                     {chapterNum === '2A' ? (
-                        stageNum === 10 ? (
+                        stageNum >= 10 ? (
                             stage10RuleText.includes(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText}`
                         ) : (
                             `${t.RULES.RULE_HINT}${(() => {
@@ -181,7 +187,7 @@ export const BossDisplay: React.FC = () => {
                                 return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
                             })()}`
                         )
-                    ) : (stageNum === 10 ? (
+                    ) : (stageNum >= 10 ? (
                         stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText}`
                     ) : (
                         stage10RuleText.startsWith(t.RULES.RULE_HINT) ? stage10RuleText : `${t.RULES.RULE_HINT}${stage10RuleText.replace(t.RULES.RULE_HINT, '')}`
@@ -190,7 +196,7 @@ export const BossDisplay: React.FC = () => {
             </div>
 
             {/* BOSS Conditions Icons (Below RULE text, right to left) */}
-            <div style={{
+            <div className="boss-conditions-row" style={{
                 position: 'absolute',
                 top: '200px', // Lowered to avoid overlap with multi-line rules
                 right: '30px',

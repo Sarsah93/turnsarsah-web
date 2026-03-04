@@ -33,20 +33,20 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
   // Map boss names to image filenames per v2.0.0.5 requirements
   const getBossImagePath = (bossName: string): string => {
     const nameMap: Record<string, string> = {
-      'Goblin': 're_Goblin_01.png',
-      'Goblin Skirmisher': 're_Goblin Skirmisher_02.png',
-      'Goblin Rider': 're_Goblin Rider_03.png',
-      'Hobgoblin': 're_HobGoblin_04.png',
-      'Goblin Shaman': 're_Goblin Shaman_05.png',
-      'Golden Goblin': 're_Golden Goblin_06.png',
-      'Elite Goblin': 're_Elite Goblin_07.png',
-      'Troll': 're_Troll_08.png',
-      'Giant Goblin': 're_Giant Goblin_09.png',
-      'Goblin Lord': 're_Goblin Lord_10.png',
+      'Goblin': '01_goblin.png',
+      'Goblin Skirmisher': '02_goblin skirmisher.png',
+      'Goblin Rider': '03_goblin rider.png',
+      'Hobgoblin': '04_hobgoblin.png',
+      'Goblin Shaman': '05_goblin shaman.png',
+      'Golden Goblin': '06_golden goblin.png',
+      'Elite Goblin': '07_elite goblin.png',
+      'Troll': '08_troll.png',
+      'Giant Goblin': '09_giant goblin.png',
+      'Goblin Lord': '10_goblin lord.png',
       'Tutorial Bot': 'tutorial_bot.png',
     };
     const pathPrefix = '/assets/boss_goblin/';
-    return `${pathPrefix}${nameMap[bossName] || 're_Goblin_01.png'}`;
+    return `${pathPrefix}${nameMap[bossName] || '01_goblin.png'}`;
   };
 
   // Measure positions and report to parent (relative to container)
