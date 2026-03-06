@@ -267,7 +267,7 @@ export const BattleScreen: React.FC = () => {
             {/* Defeat or Final Victory Dimming Overlay */}
             {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
                 <div style={{
-                    position: 'fixed',
+                    position: 'absolute', // Fixed -> Absolute
                     top: 0, left: 0, width: '100%', height: '100%',
                     backgroundColor: 'rgba(0,0,0,0.6)',
                     zIndex: 1500,

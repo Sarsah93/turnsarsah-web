@@ -51,11 +51,11 @@ export const useGameLoop = () => {
     // Helper to add damage text
     const showDamageText = (target: 'PLAYER' | 'BOT' | 'BOSS_LEFT', text: string, color: string) => {
         const id = Date.now() + Math.random();
-        let x = window.innerWidth * 0.5;
+        let x = 800; // 1600 * 0.5
         let y = 300;
-        if (target === 'BOT') { x = window.innerWidth * 0.75; y = 120; }
-        else if (target === 'PLAYER') { x = window.innerWidth * 0.25; y = 550; }
-        else if (target === 'BOSS_LEFT') { x = window.innerWidth * 0.25; y = 200; }
+        if (target === 'BOT') { x = 1200; y = 120; }
+        else if (target === 'PLAYER') { x = 400; y = 550; }
+        else if (target === 'BOSS_LEFT') { x = 400; y = 200; }
 
         setDamageTexts(prev => [...prev, { id, x, y, text, color }]);
     };

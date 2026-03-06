@@ -416,9 +416,9 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                 if (!skill) return null;
                 const isUnlocked = currentData.unlockedSkills.includes(selectedTreeSkill);
 
-                return ReactDOM.createPortal(
+                return (
                     <div style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                         backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center'
                     }} onClick={() => setSelectedTreeSkill(null)}>
                         <div style={{
@@ -499,15 +499,14 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                             </div>
                             <div style={{ textAlign: 'center', color: '#7f8c8d', fontSize: '0.8rem', marginTop: '5px' }}>{language === 'KR' ? '바깥을 클릭하여 닫기' : 'Click outside to close'}</div>
                         </div>
-                    </div>,
-                    document.body
+                    </div>
                 );
             })()}
 
             {/* Unequip Confirm */}
             {showUnequipConfirm !== null && (() => {
-                return ReactDOM.createPortal(
-                    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 10001, display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setShowUnequipConfirm(null)}>
+                return (
+                    <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 10001, display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setShowUnequipConfirm(null)}>
                         <div style={{ width: '320px', backgroundColor: '#1a1a2e', border: '2px solid #e74c3c', borderRadius: '12px', padding: '24px', textAlign: 'center', color: '#fff', fontFamily: "'Noto Sans KR', sans-serif" }} onClick={e => e.stopPropagation()}>
                             <h3 style={{ fontSize: '1.3rem', marginBottom: '20px', whiteSpace: 'pre-line', fontWeight: 'bold' }}>{language === 'KR' ? '해당 스킬을\n해제 하시겠습니까?' : 'Do you want to\nunequip this skill?'}</h3>
                             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
@@ -515,8 +514,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                 <button style={{ width: '100px', padding: '10px', backgroundColor: '#7f8c8d', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => setShowUnequipConfirm(null)}>NO</button>
                             </div>
                         </div>
-                    </div>,
-                    document.body
+                    </div>
                 );
             })()}
 
@@ -527,10 +525,10 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                 const el = document.querySelector(`[data-trophy-id="${selectedTrophyId}"]`) as HTMLElement;
                 if (!el) return null;
                 const rect = el.getBoundingClientRect();
-                return ReactDOM.createPortal(
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }} onClick={() => setSelectedTrophyId(null)}>
+                return (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 9999 }} onClick={() => setSelectedTrophyId(null)}>
                         <div style={{
-                            position: 'absolute', left: Math.min(rect.left + rect.width / 2, window.innerWidth - 170), top: rect.top - 10, transform: 'translate(-50%, -100%)',
+                            position: 'absolute', left: Math.min(rect.left + rect.width / 2, 1600 - 170), top: rect.top - 10, transform: 'translate(-50%, -100%)',
                             width: '280px', backgroundColor: '#1a1a2e', border: '2px solid #f1c40f', borderRadius: '8px', padding: '14px',
                             boxShadow: '0 5px 25px rgba(0,0,0,0.8), 0 0 15px rgba(241,196,15,0.2)', display: 'flex', flexDirection: 'column', gap: '6px',
                             color: '#fff', fontFamily: "'Noto Sans KR', sans-serif", fontSize: '0.9rem', textAlign: 'center'
@@ -539,8 +537,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                             <h3 style={{ margin: 0, color: '#f1c40f', fontSize: '1.15rem', fontWeight: 'bold', wordBreak: 'keep-all' }}>{trophy.name[language]}</h3>
                             <p style={{ margin: 0, color: '#bdc3c7', fontSize: '0.8rem', fontStyle: 'italic' }}>{trophy.desc[language]}</p>
                         </div>
-                    </div>,
-                    document.body
+                    </div>
                 );
             })()}
         </div>

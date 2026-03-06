@@ -213,52 +213,48 @@ export const CardHand: React.FC<CardHandProps> = ({
           const deckX = 480;
           const offsetX = deckX - slotX;
 
-          // Calculate viewport center for Portal-rendered cards
-          const viewportCenterX = typeof window !== 'undefined' ? window.innerWidth / 2 : 640;
-          const viewportCenterY = typeof window !== 'undefined' ? window.innerHeight / 2 : 360;
+          // Calculate canvas center (1600/2, 900/2)
+          const canvasCenterX = 800;
+          const canvasCenterY = 450;
 
-          // Determine phase-specific styles for Portal cards
+          // Determine phase-specific styles for attacking cards
           let portalStyle: React.CSSProperties = {};
           if (shouldRenderInPortal) {
             const baseStyle: React.CSSProperties = {
-              position: 'fixed',
+              position: 'absolute', // Changed from fixed to absolute
               width: '80px',
               height: '110px',
               zIndex: 1000 + selectedIdxInQueue,
-              left: `${viewportCenterX}px`,
+              left: `${canvasCenterX}px`,
               transform: 'translateX(-50%)',
               transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-              transitionDelay: `${selectedIdxInQueue * 0.2}s`, // Changed to 0.2s interval
+              transitionDelay: `${selectedIdxInQueue * 0.2}s`,
+              pointerEvents: 'none'
             };
 
             if (gamePhase === 'GATHERING') {
-              // Calculate original card position (where the card slot is)
-              // Cards are centered horizontally, each slot is 80px + 10px margin = 90px apart
-              // With 8 cards total, center offset calculation
-              const cardSlotOffset = (idx - 3.5) * 90; // Distance from center for this card slot
-              const originalX = viewportCenterX + cardSlotOffset;
-              const originalBottom = 120 + 110; // cards-area bottom (120px from bottom) + approx card height offset
+              const cardSlotOffset = (idx - 3.5) * 90;
+              const originalX = canvasCenterX + cardSlotOffset;
+              const originalBottom = 120 + 110;
 
               if (!gatheringStarted) {
-                // Phase 1: Render at original position (no transition initially)
                 portalStyle = {
                   ...baseStyle,
                   left: `${originalX}px`,
                   bottom: `${originalBottom}px`,
                   top: 'auto',
                   transform: 'translateX(-50%) rotate(0deg)',
-                  transition: 'none', // No transition for initial position
+                  transition: 'none',
                 };
               } else {
-                // Phase 2: Animate to center with staggered delay
                 portalStyle = {
                   ...baseStyle,
-                  left: `${viewportCenterX}px`,
+                  left: `${canvasCenterX}px`,
                   bottom: '30%',
                   top: 'auto',
-                  transform: 'translateX(-50%) rotate(720deg)', // Rotation during flight
+                  transform: 'translateX(-50%) rotate(720deg)',
                   transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  transitionDelay: `${selectedIdxInQueue * 0.2}s`, // 0.2s staggered delay per card
+                  transitionDelay: `${selectedIdxInQueue * 0.2}s`,
                 };
               }
             } else if (gamePhase === 'CHARGING') {
@@ -268,7 +264,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                 bottom: 'auto',
                 transform: 'translate(-50%, -50%) scale(1.1) rotate(-5deg)',
                 transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                transitionDelay: '0s', // No delay for charging - all cards move together
+                transitionDelay: '0s',
                 filter: 'brightness(1.4) drop-shadow(0 0 15px #f1c40f)',
               };
             } else if (gamePhase === 'THRUSTING') {
@@ -277,12 +273,11 @@ export const CardHand: React.FC<CardHandProps> = ({
                 top: '15%',
                 bottom: 'auto',
                 transform: 'translate(-50%, -50%) scale(0.8) rotate(10deg)',
-                transition: 'all 0.067s cubic-bezier(0.32, 0, 0.67, 0)', // 1.5x faster (0.1s -> 0.067s)
+                transition: 'all 0.067s cubic-bezier(0.32, 0, 0.67, 0)',
                 transitionDelay: '0s',
               };
             } else if (gamePhase === 'SCATTERED') {
-              // Shatter effect: random explosion direction per card
-              const shatterAngle = (selectedIdxInQueue * 60) - 90; // Different angle per card
+              const shatterAngle = (selectedIdxInQueue * 60) - 90;
               const shatterDistance = 150 + (selectedIdxInQueue * 30);
               const shatterX = Math.cos(shatterAngle * Math.PI / 180) * shatterDistance;
               const shatterY = Math.sin(shatterAngle * Math.PI / 180) * shatterDistance;
@@ -295,34 +290,30 @@ export const CardHand: React.FC<CardHandProps> = ({
                 opacity: 0,
                 filter: 'brightness(2) contrast(150%)',
                 transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                transitionDelay: `${selectedIdxInQueue * 0.05}s`, // Slight stagger for explosion
-                clipPath: 'polygon(0% 0%, 25% 10%, 50% 0%, 75% 15%, 100% 0%, 90% 25%, 100% 50%, 85% 75%, 100% 100%, 70% 90%, 50% 100%, 30% 85%, 0% 100%, 15% 70%, 0% 50%, 10% 25%)', // Jagged edges
+                transitionDelay: `${selectedIdxInQueue * 0.05}s`,
+                clipPath: 'polygon(0% 0%, 25% 10%, 50% 0%, 75% 15%, 100% 0%, 90% 25%, 100% 50%, 85% 75%, 100% 100%, 70% 90%, 50% 100%, 30% 85%, 0% 100%, 15% 70%, 0% 50%, 10% 25%)',
               };
             }
           }
 
-          // Render attacking cards via Portal to document.body
+          // Render attacking cards locally within the container (No Portal to body)
           if (shouldRenderInPortal && card) {
             return (
               <React.Fragment key={`slot-${idx}`}>
-                {/* Empty slot placeholder */}
                 <div className="card-slot" style={{
                   width: '80px',
                   height: '110px',
                   margin: '0 5px',
                   position: 'relative'
                 }} />
-                {/* Card rendered via Portal */}
-                {createPortal(
-                  <div style={portalStyle}>
-                    <CardComponent
-                      card={{ ...card, isBlind, isBanned }}
-                      selected={false}
-                      onClick={() => { }}
-                    />
-                  </div>,
-                  document.body
-                )}
+                {/* Attacking card overlay (Local, within 1600x900 flow) */}
+                <div style={portalStyle}>
+                  <CardComponent
+                    card={{ ...card, isBlind, isBanned }}
+                    selected={false}
+                    onClick={() => { }}
+                  />
+                </div>
               </React.Fragment>
             );
           }
