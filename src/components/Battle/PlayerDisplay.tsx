@@ -12,8 +12,8 @@ export const PlayerDisplay: React.FC = () => {
         <div className="player-display" style={{
             position: 'absolute',
             bottom: '0px', left: '0px',
-            width: '400px',
-            height: '100px',
+            width: '500px',
+            height: '125px',
             pointerEvents: 'none',
             zIndex: 100
         }}>
@@ -26,7 +26,13 @@ export const PlayerDisplay: React.FC = () => {
             />
 
             {/* Condition Icons (Above HP Bar) */}
-            <div className="player-conditions-row" style={{ display: 'flex', gap: '8px', position: 'absolute', bottom: '110px', left: '10px', zIndex: 100 }}>
+            <div className="player-conditions-row" style={{
+                display: 'flex', gap: '8px',
+                position: 'absolute',
+                bottom: '135px',
+                left: '20px',
+                zIndex: 100
+            }}>
                 {Array.from(player.conditions.entries()).map(([name, condition]) => (
                     <ConditionIcon key={name} name={name} condition={condition} popupDirection="top-right" />
                 ))}

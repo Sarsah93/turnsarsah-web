@@ -45,7 +45,7 @@ export const DamageText: React.FC<DamageTextProps> = ({ x, y, text, color = '#e7
             fontFamily: 'BebasNeue',
             textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
             opacity: opacity,
-            zIndex: 100,
+            zIndex: 3000,
             pointerEvents: 'none',
             whiteSpace: 'nowrap'
         }}>

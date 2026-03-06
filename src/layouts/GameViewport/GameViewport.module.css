@@ -12,27 +12,13 @@
     touch-action: none;
 }
 
-/* Base container for all screens, scaled to fit the device */
+/*
+   Desktop Canvas: 1280x720 base resolution.
+   This will be scaled by CSS transform to fit the viewport.
+*/
 .desktopCanvas {
-    position: relative;
-    width: 1600px;
-    height: 900px;
-    background-color: transparent;
-    transform-origin: center center;
-    flex-shrink: 0;
-    /* Ensure content inside doesn't overflow the canvas */
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.screenContainer {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    transform-origin: center center;
     overflow: hidden;
 }
 

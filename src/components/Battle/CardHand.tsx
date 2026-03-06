@@ -18,6 +18,10 @@ interface CardHandProps {
   disabled?: boolean;
   isProcessing?: boolean;
   blindIndices?: number[];
+  bossCenterX?: number;
+  bossCenterY?: number;
+  scorePreviewPos?: { x: number; y: number };
+  onMeasureCards?: (data: { topCenterX: number; topCenterY: number }) => void;
 }
 
 export const CardHand: React.FC<CardHandProps> = ({
@@ -28,7 +32,11 @@ export const CardHand: React.FC<CardHandProps> = ({
   onSwap,
   gamePhase = '',
   disabled = false,
-  isProcessing = false
+  isProcessing = false,
+  bossCenterX = 800,
+  bossCenterY = 285,
+  scorePreviewPos = { x: 800, y: 380 },
+  onMeasureCards
 }) => {
   const {
     player,
@@ -47,6 +55,48 @@ export const CardHand: React.FC<CardHandProps> = ({
   // Track if gathering animation has started (for two-phase animation)
   const [gatheringStarted, setGatheringStarted] = useState(false);
   const prevGamePhase = useRef(gamePhase);
+  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // v2.4.7: Scale-Aware Measurement (Point B in Logical Units)
+  const lastMeasuredB = useRef({ topCenterX: 0, topCenterY: 0 });
+  const measureCards = React.useCallback(() => {
+    if (!onMeasureCards) return;
+
+    // Indices 3 and 4 are 4th and 5th cards
+    const slot4 = slotRefs.current[3];
+    const slot5 = slotRefs.current[4];
+    const container = document.querySelector('.battle-screen');
+
+    if (slot4 && slot5 && container) {
+      const cRect = container.getBoundingClientRect();
+      const currentScale = cRect.width / 1600;
+      const r4 = slot4.getBoundingClientRect();
+      const r5 = slot5.getBoundingClientRect();
+
+      // Viewport relative points
+      const v4x = (r4.left - cRect.left) + (r4.width / 2);
+      const v4y = (r4.top - cRect.top);
+      const v5x = (r5.left - cRect.left) + (r5.width / 2);
+      const v5y = (r5.top - cRect.top);
+
+      // Logical Midpoint B
+      const topCenterX = ((v4x + v5x) / 2) / currentScale;
+      const topCenterY = ((v4y + v5y) / 2) / currentScale;
+
+      // Only report if changed significantly (logical pixels)
+      if (Math.abs(lastMeasuredB.current.topCenterX - topCenterX) > 0.1 ||
+        Math.abs(lastMeasuredB.current.topCenterY - topCenterY) > 0.1) {
+        lastMeasuredB.current = { topCenterX, topCenterY };
+        onMeasureCards({ topCenterX, topCenterY });
+      }
+    }
+  }, [onMeasureCards]);
+
+  useEffect(() => {
+    measureCards();
+    window.addEventListener('resize', measureCards);
+    return () => window.removeEventListener('resize', measureCards);
+  }, [measureCards]);
 
   // Trigger gathering animation after a frame to allow initial position render
   useEffect(() => {
@@ -167,10 +217,23 @@ export const CardHand: React.FC<CardHandProps> = ({
 
   return (
     <div className="card-hand-container">
-      {comboPreview && isInteracting && (
-        <div className="combo-preview" style={{ color: comboPreview.startsWith('BANNED') ? '#e74c3c' : '#f1c40f' }}>
-          {comboPreview}
-        </div>
+      {comboPreview && isInteracting && document.getElementById('battle-portal-root') && (
+        createPortal(
+          <div
+            className="combo-preview"
+            style={{
+              position: 'absolute',
+              top: `${scorePreviewPos.y}px`,
+              left: `${scorePreviewPos.x}px`,
+              transform: 'translate(-50%, -50%)',
+              color: comboPreview.includes(t.COMBAT.BANNED) ? '#e74c3c' : '#f1c40f',
+              zIndex: 3000 // Ensure it's above cards/boss
+            }}
+          >
+            {comboPreview}
+          </div>,
+          document.getElementById('battle-portal-root')!
+        )
       )}
 
       {/* Action Buttons */}
@@ -209,8 +272,8 @@ export const CardHand: React.FC<CardHandProps> = ({
 
           // Deal logic
           const showDealAnim = !isAttacking;
-          const slotX = (idx - 3.5) * 95;
-          const deckX = 480;
+          const slotX = (idx - 3.5) * 150;
+          const deckX = 750;
           const offsetX = deckX - slotX;
 
           // Calculate canvas center (1600/2, 900/2)
@@ -222,8 +285,8 @@ export const CardHand: React.FC<CardHandProps> = ({
           if (shouldRenderInPortal) {
             const baseStyle: React.CSSProperties = {
               position: 'absolute', // Changed from fixed to absolute
-              width: '80px',
-              height: '110px',
+              width: '120px',
+              height: '168px',
               zIndex: 1000 + selectedIdxInQueue,
               left: `${canvasCenterX}px`,
               transform: 'translateX(-50%)',
@@ -233,9 +296,9 @@ export const CardHand: React.FC<CardHandProps> = ({
             };
 
             if (gamePhase === 'GATHERING') {
-              const cardSlotOffset = (idx - 3.5) * 90;
+              const cardSlotOffset = (idx - 3.5) * 150;
               const originalX = canvasCenterX + cardSlotOffset;
-              const originalBottom = 120 + 110;
+              const originalBottom = 100 + 168;
 
               if (!gatheringStarted) {
                 portalStyle = {
@@ -270,7 +333,8 @@ export const CardHand: React.FC<CardHandProps> = ({
             } else if (gamePhase === 'THRUSTING') {
               portalStyle = {
                 ...baseStyle,
-                top: '15%',
+                left: `${bossCenterX}px`,
+                top: `${bossCenterY}px`, // Precise target center
                 bottom: 'auto',
                 transform: 'translate(-50%, -50%) scale(0.8) rotate(10deg)',
                 transition: 'all 0.067s cubic-bezier(0.32, 0, 0.67, 0)',
@@ -284,7 +348,8 @@ export const CardHand: React.FC<CardHandProps> = ({
 
               portalStyle = {
                 ...baseStyle,
-                top: '15%',
+                left: `${bossCenterX}px`,
+                top: `${bossCenterY}px`, // Precise target center
                 bottom: 'auto',
                 transform: `translate(calc(-50% + ${shatterX}px), calc(-50% + ${shatterY}px)) scale(0.3) rotate(${shatterAngle * 2}deg)`,
                 opacity: 0,
@@ -296,36 +361,38 @@ export const CardHand: React.FC<CardHandProps> = ({
             }
           }
 
-          // Render attacking cards locally within the container (No Portal to body)
+          // Render attacking cards into the root portal (v2.4.3)
           if (shouldRenderInPortal && card) {
-            return (
-              <React.Fragment key={`slot-${idx}`}>
-                <div className="card-slot" style={{
-                  width: '80px',
-                  height: '110px',
-                  margin: '0 5px',
-                  position: 'relative'
-                }} />
-                {/* Attacking card overlay (Local, within 1600x900 flow) */}
-                <div style={portalStyle}>
-                  <CardComponent
-                    card={{ ...card, isBlind, isBanned }}
-                    selected={false}
-                    onClick={() => { }}
-                  />
-                </div>
-              </React.Fragment>
-            );
+            const portalRoot = document.getElementById('battle-portal-root');
+            if (portalRoot) {
+              return (
+                <React.Fragment key={`slot-${idx}`}>
+                  <div className="card-slot" style={{ width: '120px', height: '168px', margin: '0 10px', position: 'relative' }} />
+                  {createPortal(
+                    <div style={portalStyle}>
+                      <CardComponent
+                        card={{ ...card, isBlind, isBanned }}
+                        selected={false}
+                        onClick={() => { }}
+                      />
+                    </div>,
+                    portalRoot
+                  )}
+                </React.Fragment>
+              );
+            }
           }
 
-          // Normal card rendering (not attacking)
           return (
-            <div key={`slot-${idx}`} className="card-slot" style={{
-              width: '80px',
-              height: '110px',
-              margin: '0 5px',
-              position: 'relative'
-            }}>
+            <div key={`slot-${idx}`}
+              ref={el => { slotRefs.current[idx] = el; }}
+              className="card-slot"
+              style={{
+                width: '120px',
+                height: '168px',
+                margin: '0 10px',
+                position: 'relative'
+              }}>
               {card && (
                 <div key={card.id}
                   className={showDealAnim ? 'card-deal' : ''}

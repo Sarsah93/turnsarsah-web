@@ -54,10 +54,10 @@ export const Tooltip: React.FC<TooltipProps> = ({ name, condition, children }) =
               fontFamily: "'Bebas Neue', sans-serif",
               backgroundColor: 'rgba(20, 20, 20, 0.98)',
               border: '2px solid #f1c40f',
-              padding: '12px 18px',
+              padding: '15px 22px',
               borderRadius: '2px',
               boxShadow: '0 10px 40px rgba(0,0,0,0.9)',
-              minWidth: '280px',
+              minWidth: '420px',
               zIndex: 30000,
               color: '#fff',
               textAlign: 'left',
@@ -68,10 +68,10 @@ export const Tooltip: React.FC<TooltipProps> = ({ name, condition, children }) =
               pointerEvents: 'auto'
             }}
           >
-            <div style={{ color: '#f1c40f', fontSize: '1.8rem', marginBottom: '8px', borderBottom: '1px solid #444', paddingBottom: '4px' }}>
+            <div style={{ color: '#f1c40f', fontSize: '2.8rem', marginBottom: '8px', borderBottom: '1px solid #444', paddingBottom: '4px' }}>
               {displayTitle}: {turnsLeft} TURNS LEFT
             </div>
-            <div style={{ fontSize: '1.3rem', color: '#fff', textTransform: 'uppercase', lineHeight: '1.4' }}>{displayDesc}</div>
+            <div style={{ fontSize: '2.0rem', color: '#fff', textTransform: 'uppercase', lineHeight: '1.4' }}>{displayDesc}</div>
           </div>
         </>
       )}

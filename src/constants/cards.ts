@@ -18,9 +18,9 @@ export const RANK_VALUES: Record<string, number> = {
   '2': 2,
 };
 
-export const CARD_WIDTH = 75;
-export const CARD_HEIGHT = 105;
-export const CARD_SPACING = 12;
+export const CARD_WIDTH = 120;
+export const CARD_HEIGHT = 168;
+export const CARD_SPACING = 15;
 
 // Poker Hand Bonuses
 export const HAND_BONUSES = {

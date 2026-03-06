@@ -6,7 +6,7 @@ import { MainMenu } from './components/MainMenu';
 import { BattleScreen } from './components/Battle/BattleScreen';
 import { ChapterSelect } from './components/ChapterSelect';
 import './App.css';
-import './responsive.css';
+// import './responsive.css';
 import './styles/safe-area.css';
 import { AudioManager } from './utils/AudioManager';
 import { SaveManager, SAVE_VERSION } from './utils/SaveManager';

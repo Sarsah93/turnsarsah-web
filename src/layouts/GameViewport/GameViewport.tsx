@@ -67,22 +67,24 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
         lockOrientation();
     }, [lockOrientation]);
 
-    // Apply scale and translation to center the canvas
+    // Apply scale and center the fixed 1600x900 canvas
     const canvasStyle: React.CSSProperties = {
-        transform: `scale(${scale})`,
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: `translate(-50%, -50%) scale(${scale})`,
         width: `${BASE_W}px`,
-        height: `${BASE_H}px`
+        height: `${BASE_H}px`,
+        transformOrigin: 'center center'
     };
 
     return (
-        <div className={`${styles.viewport} safe-area-padding`}>
+        <div className={styles.viewport}>
             {!isLandscape && <OrientationWarning language={language} />}
 
             {/* 4. Desktop Canvas: The 1600x900 container that scales to fit */}
             <div className={styles.desktopCanvas} style={canvasStyle}>
-                <div className={styles.screenContainer}>
-                    {children}
-                </div>
+                {children}
             </div>
 
             {/* Global Fullscreen Button */}

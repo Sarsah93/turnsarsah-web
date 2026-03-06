@@ -2,7 +2,7 @@
 
 .card-hand-container {
   position: absolute;
-  bottom: 0px;
+  bottom: 2px;
   left: 0;
   right: 0;
   width: 100%;
@@ -37,11 +37,11 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  height: 220px;
+  height: 280px;
   width: 100%;
   position: absolute;
-  bottom: 120px;
-  /* Shifted higher up */
+  bottom: 100px;
+  /* Shifted slightly lower for larger cards */
 }
 
 /* Attack Animations */
@@ -124,13 +124,17 @@
 
 .combo-preview {
   color: #f1c40f;
-  font-size: 2.2rem;
+  font-size: 2.8rem;
   font-family: 'Bebas Neue', 'Arial Black', sans-serif;
   text-shadow: 2px 2px 2px #000;
-  margin-bottom: 20px;
   text-align: center;
-  position: absolute;
-  bottom: 350px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px 30px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* Tutorial Highlights */

@@ -3,10 +3,21 @@ import { HPBar } from '../Common/HPBar';
 import { ConditionIcon } from '../Common/ConditionIcon';
 import { Difficulty, DIFFICULTY_CONFIGS } from '../../constants/gameConfig';
 import { TRANSLATIONS } from '../../constants/translations';
+import { CHAPTERS } from '../../constants/stages';
 
 export const BossDisplay: React.FC = () => {
     const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep, language } = useGameStore();
     const t = TRANSLATIONS[language];
+
+    // Get max stages for the current chapter (v2.4.3)
+    const chapterConfig = CHAPTERS[chapterNum];
+    const maxStages = chapterConfig ? Object.keys(chapterConfig.stages).length : 10;
+    const isSpecialStage = stageNum > 10;
+    const stageInfoText = isTutorial
+        ? `TUTORIAL ${t.UI.STAGE_NUM}`
+        : isSpecialStage
+            ? `${t.UI.CHAPTER_NUM} ${chapterNum} (SPECIAL)`
+            : `${t.UI.CHAPTER_NUM} ${chapterNum} (${stageNum}/${maxStages})`;
 
     // Map difficulty to display text
     const getDifficultyText = (diff: Difficulty) => {
@@ -91,8 +102,8 @@ export const BossDisplay: React.FC = () => {
                 position: 'absolute',
                 top: '0px',
                 right: '0px',
-                width: '400px',
-                height: '100px',
+                width: '500px',
+                height: '125px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -109,13 +120,13 @@ export const BossDisplay: React.FC = () => {
 
             {/* Stage Info (Top Left) */}
             <div className="boss-stage-info" style={{
-                position: 'absolute', top: '10px', left: '10px',
+                position: 'absolute', top: '10px', left: '20px',
                 fontFamily: "'Bebas Neue', sans-serif", color: '#fff',
                 textShadow: '2px 2px 4px #000',
                 display: 'flex', flexDirection: 'column', alignItems: 'flex-start'
             }}>
-                <span style={{ fontSize: '2.5rem' }}>{isTutorial ? `TUTORIAL ${t.UI.STAGE_NUM}` : `${t.UI.CHAPTER_NUM} ${chapterNum}-${stageNum}`}</span>
-                <span style={{ fontSize: '2.4rem', color: isTutorial ? '#f1c40f' : diffInfo.color, marginTop: '-5px' }}>
+                <span style={{ fontSize: '2.8rem' }}>{stageInfoText}</span>
+                <span style={{ fontSize: '2.6rem', color: isTutorial ? '#f1c40f' : diffInfo.color, marginTop: '-5px' }}>
                     [{isTutorial ? "TUTORIAL" : diffInfo.text}]
                 </span>
             </div>
@@ -124,11 +135,11 @@ export const BossDisplay: React.FC = () => {
             <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`}
                 style={{
                     position: 'absolute',
-                    top: (stageNum === 11) ? '2%' : '0%',
+                    top: '60px', // Even higher to maximize combat area
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: '380px',
-                    height: '380px',
+                    width: '450px',
+                    height: '450px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -138,33 +149,38 @@ export const BossDisplay: React.FC = () => {
             >
                 {bot.isBossVisible !== false && (
                     <>
+                        {/* Boss Name - NOW ABOVE boss image, centered at top */}
+                        <div className="boss-name-label" style={{
+                            position: 'fixed',
+                            top: '5px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            fontSize: '4.0rem',
+                            fontFamily: "'Bebas Neue', sans-serif",
+                            color: '#f1c40f',
+                            textShadow: '0 0 10px rgba(0,0,0,1), 2px 2px 4px #000, 0 0 20px rgba(241, 196, 15, 0.4)',
+                            zIndex: 110,
+                            whiteSpace: 'nowrap'
+                        }}>
+                            {bot.name.toUpperCase()}
+                        </div>
                         <img
                             src={getBossImage(chapterNum, stageNum)}
                             alt={bot.name}
                             style={{ width: '100%', height: 'auto', maxHeight: '100%', objectFit: 'contain' }}
                         />
-                        {/* Boss Name - BELOW boss image */}
-                        <div className="boss-name-label" style={{
-                            fontSize: '1.6rem',
-                            fontFamily: "'Bebas Neue', sans-serif",
-                            color: '#f1c40f',
-                            textShadow: '2px 2px 4px #000, 0 0 10px rgba(241, 196, 15, 0.5)',
-                            marginTop: '-5px'
-                        }}>
-                            {bot.name.toUpperCase()}
-                        </div>
                     </>
                 )}
             </div>
 
             {/* Right Side Stats/Rules */}
             <div style={{
-                position: 'absolute', top: '100px', right: '30px',
-                textAlign: 'right', color: '#fff', fontSize: '1.8rem', fontFamily: 'BebasNeue',
+                position: 'absolute', top: '140px', right: '30px',
+                textAlign: 'right', color: '#fff', fontSize: '2.45rem', fontFamily: 'BebasNeue',
                 textShadow: '2px 2px 2px #000',
                 whiteSpace: 'pre-line',
-                maxWidth: '280px',
-                lineHeight: '1.2'
+                maxWidth: '400px',
+                lineHeight: '1.0'
             }}>
                 <div>{t.UI.ATK}: {bot.atk}</div>
                 <div style={{ color: '#f1c40f' }}>
@@ -198,7 +214,7 @@ export const BossDisplay: React.FC = () => {
             {/* BOSS Conditions Icons (Below RULE text, right to left) */}
             <div className="boss-conditions-row" style={{
                 position: 'absolute',
-                top: '200px', // Lowered to avoid overlap with multi-line rules
+                top: '250px', // Lowered further for larger HP bar and rules
                 right: '30px',
                 display: 'flex',
                 flexDirection: 'row-reverse', // Grow from right to left

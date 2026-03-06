@@ -24,7 +24,8 @@ export const useOrientation = () => {
                 await (screen.orientation as any).lock('landscape');
             }
         } catch (e) {
-            console.warn('Orientation lock failed:', e);
+            // Silently fail or log once to avoid console spam
+            // console.warn('Orientation lock failed:', e);
         }
     };
 

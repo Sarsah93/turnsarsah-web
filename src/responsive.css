@@ -22,10 +22,7 @@
     }
 
     /* ===== Boss Display ===== */
-    .boss-display {
-        /* Ensure it doesn't block clicks if needed */
-    }
-
+    
     .boss-avatar-wrapper {
         width: 40vw !important;
         max-width: 180px !important;

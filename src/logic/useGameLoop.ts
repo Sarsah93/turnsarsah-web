@@ -53,7 +53,7 @@ export const useGameLoop = () => {
         const id = Date.now() + Math.random();
         let x = 800; // 1600 * 0.5
         let y = 300;
-        if (target === 'BOT') { x = 1200; y = 120; }
+        if (target === 'BOT') { x = 800; y = 280; } // Rollback: Floating damage should be on boss chest area
         else if (target === 'PLAYER') { x = 400; y = 550; }
         else if (target === 'BOSS_LEFT') { x = 400; y = 200; }
 

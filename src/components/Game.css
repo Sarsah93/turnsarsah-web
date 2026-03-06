@@ -53,3 +53,61 @@
   height: 250px;
   z-index: 20;
 }
+
+/* Layout State variables for BattleScreen */
+.game-stage {
+  --boss-top: 50px;
+  --boss-size: 480px;
+  --boss-name-size: 1.5rem;
+  --boss-name-mt: 2px;
+
+  --boss-hp-top: 0px;
+  --boss-hp-right: 0px;
+
+  --boss-stats-top: 160px;
+  --boss-stats-right: 30px;
+  --boss-stats-font: 1.8rem;
+  --boss-stats-maxw: 280px;
+
+  --boss-cond-top: 230px;
+  --boss-cond-right: 30px;
+
+  /* Custom for stage 11 etc */
+  --boss-top-stage11: 1%;
+}
+
+.game-stage[data-layout="portraitSmall"] {
+  --boss-top: -20px;
+  --boss-size: 220px;
+  --boss-name-size: 1rem;
+  --boss-name-mt: -8px;
+
+  --boss-hp-top: 5px;
+  --boss-hp-right: 5px;
+
+  --boss-stats-top: 10px;
+  --boss-stats-right: 5px;
+  --boss-stats-font: 1.2rem;
+  --boss-stats-maxw: 120px;
+
+  --boss-cond-top: 90px;
+  --boss-cond-right: 5px;
+}
+
+.game-stage[data-layout="portrait"] {
+  --boss-top: -25px;
+  --boss-size: 250px;
+  --boss-name-size: 1.2rem;
+  --boss-name-mt: -5px;
+
+  --boss-hp-top: 10px;
+  --boss-hp-right: 10px;
+
+  --boss-stats-top: 15px;
+  --boss-stats-right: 10px;
+  --boss-stats-font: 1.4rem;
+  --boss-stats-maxw: 150px;
+
+  --boss-cond-top: 110px;
+  --boss-cond-right: 10px;
+}

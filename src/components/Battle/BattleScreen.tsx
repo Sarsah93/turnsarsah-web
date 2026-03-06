@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { CardHand } from './CardHand';
 import { BossDisplay } from './BossDisplay';
 import { PlayerDisplay } from './PlayerDisplay';
@@ -16,6 +16,7 @@ import { AltarSkillSlots } from './AltarSkillSlots';
 import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
+import { BattleField } from './BattleField';
 
 export const BattleScreen: React.FC = () => {
     const {
@@ -23,10 +24,16 @@ export const BattleScreen: React.FC = () => {
         executePlayerAttack, executeCardSwap, startInitialDraw
     } = useGameLoop();
     const store = useGameStore();
-    const { playerHand, gamePhase, isTutorial, tutorialStep, setTutorialStep, stageNum, chapterNum, language } = store;
+    const {
+        player, bot, playerHand, gamePhase, isTutorial, tutorialStep,
+        setTutorialStep, stageNum, chapterNum, language
+    } = store;
     const t = (TRANSLATIONS as any)[language];
 
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
+    const [bossPos, setBossPos] = useState({ centerX: 800, centerY: 285, bottom: 510 });
+    const [cardsPos, setCardsPos] = useState({ topCenterX: 800, topCenterY: 700 });
+    const handRef = React.useRef<HTMLDivElement | null>(null);
 
     // Trigger Initial Draw
     useEffect(() => {
@@ -77,7 +84,6 @@ export const BattleScreen: React.FC = () => {
 
     const handleAttack = () => {
         if (selectedCards.length === 0) return;
-
         if (isTutorial) {
             if (tutorialStep === 13) {
                 store.setMessage(t.COMBAT.SWAP_GUIDE);
@@ -94,46 +100,68 @@ export const BattleScreen: React.FC = () => {
                     return;
                 }
                 setTutorialStep(6);
-            } else if (tutorialStep === 7 || tutorialStep === -7) {
-                // Joker attack: Overlay is already hidden or will hide.
-                // Do NOT set Step 8 here; wait for turn to end in useGameLoop.
-            } else if (tutorialStep === 10 || tutorialStep === -10) {
-                // Advance to step 11 after first bleed turn attack
+            } else if (Math.abs(tutorialStep) === 7) {
+                // Joker logic handled in loop
+            } else if (Math.abs(tutorialStep) === 10) {
                 setTutorialStep(11);
-            } else if (tutorialStep === 11) {
-                // Move to BOSS RULE (Step 14) now handled in useGameLoop.ts (proceedToEndTurn)
-            } else if (tutorialStep === 16 || tutorialStep === -16) {
-                // BOSS RULE PRACTICE (BLIND) - 1st turn
+            } else if (Math.abs(tutorialStep) === 16) {
                 setTutorialStep(17);
-            } else if (tutorialStep === 17 || tutorialStep === -17) {
-                // BOSS RULE PRACTICE (BLIND) - 2nd turn
-                setTutorialStep(12); // END
+            } else if (tutorialStep === 17) {
+                setTutorialStep(12);
             }
         }
-
         executePlayerAttack(selectedCards);
     };
 
     const handleSwap = () => {
-        if (isTutorial) {
-            // Block SWAP only in early fixed tutorial steps (0 to 5)
-            if (tutorialStep >= 0 && tutorialStep <= 5) {
-                store.setMessage(t.COMBAT.ONE_PAIR_REQ);
-                return;
-            }
-            if (tutorialStep === 13) {
-                if (selectedCards.length === 0) {
-                    store.setMessage(t.COMBAT.SELECT_SWAP_CARDS);
-                    return;
-                }
-                executeCardSwap(selectedCards);
-                setTutorialStep(-1); // Finish SWAP guide and return to freedom
-                return;
-            }
+        if (isTutorial && tutorialStep >= 0 && tutorialStep <= 5) {
+            store.setMessage(t.COMBAT.ONE_PAIR_REQ);
+            return;
         }
-        if (selectedCards.length === 0) return;
+        if (isTutorial && tutorialStep === 13) {
+            if (selectedCards.length === 0) {
+                store.setMessage(t.COMBAT.SELECT_SWAP_CARDS);
+                return;
+            }
+            executeCardSwap(selectedCards);
+            setTutorialStep(-1);
+            return;
+        }
         executeCardSwap(selectedCards);
     };
+
+    // v2.4.6: Memoized measurement callbacks to fix infinite loop
+    const handleMeasureBoss = useCallback((data: { centerX: number; centerY: number; bottom: number }) => {
+        setBossPos(prev => {
+            if (Math.abs(prev.centerX - data.centerX) < 0.5 &&
+                Math.abs(prev.centerY - data.centerY) < 0.5 &&
+                Math.abs(prev.bottom - data.bottom) < 0.5) return prev;
+            return data;
+        });
+    }, []);
+
+    const handleMeasureCards = useCallback((data: { topCenterX: number; topCenterY: number }) => {
+        setCardsPos(prev => {
+            if (Math.abs(prev.topCenterX - data.topCenterX) < 0.5 &&
+                Math.abs(prev.topCenterY - data.topCenterY) < 0.5) return prev;
+            return data;
+        });
+    }, []);
+
+    // v2.4.7: Calculate Anchor Point (Point A and B are now logical units)
+    useEffect(() => {
+        // Midpoint calculation (using logical pixels from measurements)
+        const anchorX = (bossPos.centerX + cardsPos.topCenterX) / 2;
+        const anchorY = (bossPos.bottom + cardsPos.topCenterY) / 2;
+
+        const newPos = { x: anchorX, y: anchorY };
+
+        // Prevent infinite loop by checking if value actually changed (logical pixels)
+        if (Math.abs(store.scorePreviewHUDPos.x - newPos.x) > 0.5 ||
+            Math.abs(store.scorePreviewHUDPos.y - newPos.y) > 0.5) {
+            store.setScorePreviewHUDPos(newPos);
+        }
+    }, [bossPos, cardsPos, store.scorePreviewHUDPos.x, store.scorePreviewHUDPos.y]);
 
     const handleSaveGame = (slot: number) => {
         store.saveGame(slot);
@@ -146,15 +174,8 @@ export const BattleScreen: React.FC = () => {
         setActiveMenu('NONE');
     };
 
-    const handleTutorialNext = () => {
-        setTutorialStep(tutorialStep + 1);
-    };
-
-    const handleTutorialPrev = () => {
-        if (tutorialStep > 0) {
-            setTutorialStep(tutorialStep - 1);
-        }
-    };
+    const handleTutorialNext = () => setTutorialStep(tutorialStep + 1);
+    const handleTutorialPrev = () => tutorialStep > 0 && setTutorialStep(tutorialStep - 1);
 
     // v2.0.0.21: Tutorial Highlights Orchestration
     useEffect(() => {
@@ -162,19 +183,8 @@ export const BattleScreen: React.FC = () => {
             store.setTutorialHighlights([]);
             return;
         }
-
         const isAlreadySelected = (idx: number) => selectedCards.includes(idx);
-
         if (tutorialStep === 5) {
-            // One Pair - Find top pair dynamically
-            const highlights: number[] = [];
-
-            // Helper to get rank value
-            const getRankValue = (rank: string) => {
-                const values: Record<string, number> = { 'A': 14, 'K': 13, 'Q': 12, 'J': 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
-                return values[rank] || 0;
-            };
-
             const rankCounts: Record<string, number[]> = {};
             playerHand.forEach((card, idx) => {
                 if (card && !card.isJoker && typeof card.rank === 'string') {
@@ -182,46 +192,26 @@ export const BattleScreen: React.FC = () => {
                     rankCounts[card.rank].push(idx);
                 }
             });
-
-            // Find highest value pair
             let bestRank = '';
             let bestValue = -1;
+            const values: Record<string, number> = { 'A': 14, 'K': 13, 'Q': 12, 'J': 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
             Object.entries(rankCounts).forEach(([rank, indices]) => {
                 if (indices.length >= 2) {
-                    const val = getRankValue(rank);
-                    if (val > bestValue) {
-                        bestValue = val;
-                        bestRank = rank;
-                    }
+                    const val = values[rank] || 0;
+                    if (val > bestValue) { bestValue = val; bestRank = rank; }
                 }
             });
-
             if (bestRank) {
                 const pairIndices = rankCounts[bestRank].slice(0, 2);
-                pairIndices.forEach(idx => {
-                    if (!isAlreadySelected(idx)) highlights.push(idx);
-                });
+                store.setTutorialHighlights(pairIndices.filter(idx => !isAlreadySelected(idx)));
             }
-
-            store.setTutorialHighlights(highlights);
         } else if (Math.abs(tutorialStep) === 7) {
-            // Joker - dynamically find the card index
             const jokerIdx = playerHand.findIndex(c => c?.isJoker);
-            if (jokerIdx !== -1) {
-                store.setTutorialHighlights(isAlreadySelected(jokerIdx) ? [] : [jokerIdx]);
-            } else {
-                store.setTutorialHighlights([]);
-            }
+            store.setTutorialHighlights(jokerIdx !== -1 && !isAlreadySelected(jokerIdx) ? [jokerIdx] : []);
         } else if (tutorialStep === 13) {
-            // Swap - Pick 2 random (e.g., 0, 1)
-            const highlights: number[] = [];
-            if (!isAlreadySelected(0)) highlights.push(0);
-            if (!isAlreadySelected(1)) highlights.push(1);
-            store.setTutorialHighlights(highlights);
+            store.setTutorialHighlights([0, 1].filter(idx => !isAlreadySelected(idx)));
         } else if ([15, 16, 17, -15, -16, -17].includes(tutorialStep)) {
-            // Blind Practice (including explanation Step 15)
-            const highlights = store.blindIndices.filter(idx => !isAlreadySelected(idx));
-            store.setTutorialHighlights(highlights);
+            store.setTutorialHighlights(store.blindIndices.filter(idx => !isAlreadySelected(idx)));
         } else {
             store.setTutorialHighlights([]);
         }
@@ -246,73 +236,99 @@ export const BattleScreen: React.FC = () => {
     };
 
     // Proper game end (defeat, final stage clear) — commit pending trophies permanently
-    const handleProperGameEnd = async () => {
-        const { AltarManager } = await import('../../utils/AltarManager');
-        AltarManager.commitPendingTrophies();
-        window.location.reload();
-    };
+    const handleProperGameEnd = () => window.location.reload();
 
     return (
         <div className={`battle-screen ${screenEffect}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
             <TrophyPopup />
             <ClearCongratulationsPopup />
-            {isTutorial && (
-                <TutorialOverlay
-                    step={tutorialStep}
-                    onNext={handleTutorialNext}
-                    onPrev={handleTutorialPrev}
-                    onExit={handleTutorialExit}
+
+            {/* Entity Layer */}
+            <div className={`battle-field-container ${isTutorial && tutorialStep < 10 ? 'tutorial-dim' : ''}`}>
+                <BattleField
+                    player={player}
+                    bot={bot}
+                    stageNum={stageNum}
+                    onMeasureBoss={handleMeasureBoss}
                 />
-            )}
-            {/* Defeat or Final Victory Dimming Overlay */}
-            {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
+            </div>
+
+            {/* HUD Layer */}
+            <PlayerDisplay />
+            <BossDisplay />
+            <AltarSkillSlots />
+
+            {/* v2.4.4: Damage Texts moved after BossDisplay but before Card Layer,
+                ideally in the portal or high z-index area */}
+
+            {message && (message.endsWith('정화 완료!') || message.endsWith('Area Purified!')) && (
                 <div style={{
-                    position: 'absolute', // Fixed -> Absolute
-                    top: 0, left: 0, width: '100%', height: '100%',
-                    backgroundColor: 'rgba(0,0,0,0.6)',
-                    zIndex: 1500,
-                    pointerEvents: 'auto'
-                }} />
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    color: '#f1c40f', fontSize: '7.5rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
+                    textShadow: '0 0 30px #f39c12, 4px 4px 0 #000',
+                    zIndex: 1000, textAlign: 'center'
+                }}>
+                    {t.COMBAT.VICTORY}<br />
+                    <span style={{ fontSize: '3.5rem' }}>{t.COMBAT.CLEARED_INFO.replace('{chapter}', chapterNum).replace('{stage}', stageNum.toString())}</span>
+                </div>
             )}
 
-            <div style={{
+            {message === t.COMBAT.DEFEAT && (
+                <div style={{
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    color: '#c0392b', fontSize: '10rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
+                    textShadow: '0 0 30px #e74c3c, 4px 4px 0 #000',
+                    zIndex: 1000, textAlign: 'center'
+                }}>
+                    {t.COMBAT.DEFEAT}
+                </div>
+            )}
+
+            {message && message !== t.COMBAT.VICTORY && message !== t.COMBAT.DEFEAT && (
+                <div className="battle-toast" style={{
+                    position: 'absolute',
+                    top: '40%', left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'rgba(0,0,0,0.85)',
+                    padding: '16px 32px',
+                    borderRadius: '12px',
+                    color: '#f1c40f',
+                    fontSize: '2.5rem',
+                    fontFamily: 'BebasNeue',
+                    pointerEvents: 'none',
+                    zIndex: 1005,
+                    boxShadow: '0 0 20px rgba(0,0,0,0.6)',
+                    border: '2px solid rgba(241, 196, 15, 0.4)'
+                }}>
+                    {message}
+                </div>
+            )}
+
+            <div className="card-hand-container" ref={handRef}>
+                <CardHand
+                    cards={playerHand}
+                    selectedCards={selectedCards}
+                    onSelectCard={handleCardSelect}
+                    onAttack={handleAttack}
+                    onSwap={handleSwap}
+                    gamePhase={gamePhase}
+                    disabled={gamePhase !== 'IDLE' || activeMenu !== 'NONE'}
+                    bossCenterX={bossPos.centerX}
+                    bossCenterY={bossPos.centerY}
+                    scorePreviewPos={store.scorePreviewHUDPos}
+                    onMeasureCards={handleMeasureCards}
+                />
+            </div>
+
+            <div id="battle-portal-root" style={{
+                position: 'absolute',
+                top: 0, left: 0,
                 width: '100%', height: '100%',
-                pointerEvents: (activeMenu !== 'NONE' || gamePhase !== 'IDLE' || store.gameState === GameState.GAMEOVER) ? 'none' : 'auto',
-                filter: activeMenu !== 'NONE' ? 'blur(5px)' : 'none'
+                zIndex: 2500,
+                pointerEvents: 'none',
+                overflow: 'hidden'
             }}>
-                <BossDisplay />
-                <PlayerDisplay />
-
-                {/* Sphinx Puzzle UI */}
-                {store.chapterNum === '2A' && stageNum === 10 && store.puzzleTarget > 0 && (
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '150px', left: '20px',
-                        color: '#f1c40f', fontSize: '2.5rem', fontFamily: 'BebasNeue',
-                        textShadow: '2px 2px 4px #000',
-                        zIndex: 100
-                    }}>
-                        TARGET: {store.puzzleTarget}
-                        {(() => {
-                            if (selectedCards.length === 0) return null;
-                            const sumOfSelected = selectedCards.map(i => playerHand[i]).filter(c => c !== null).reduce((acc, c) => {
-                                if (c!.isJoker) return acc + 14;
-                                if (c!.rank === 'A') return acc + 1;
-                                const rankVals: Record<string, number> = { 'K': 13, 'Q': 12, 'J': 11 };
-                                if (rankVals[c!.rank!]) return acc + rankVals[c!.rank!];
-                                return acc + (Number(c!.rank) || 0);
-                            }, 0);
-                            if (sumOfSelected === store.puzzleTarget) {
-                                return <span style={{ color: '#2ecc71', marginLeft: '10px' }}>(CORRECT!)</span>;
-                            }
-                            return null;
-                        })()}
-                    </div>
-                )}
-
-                <AltarSkillSlots />
-
-                {/* Damage Texts Layer */}
+                {/* v2.4.4: Damage Texts moved into Portal for consistent layering and coordinate system */}
                 {damageTexts.map(dt => (
                     <DamageText
                         key={dt.id}
@@ -323,149 +339,102 @@ export const BattleScreen: React.FC = () => {
                         onComplete={() => onDamageTextComplete(dt.id)}
                     />
                 ))}
+            </div>
 
-                {/* Victory / Defeat Overlay */}
-                {message && (message.endsWith('정화 완료!') || message.endsWith('Area Purified!')) && (
-                    <div style={{
-                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                        color: '#f1c40f', fontSize: '5rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
-                        textShadow: '0 0 20px #f39c12, 4px 4px 0 #000',
-                        zIndex: 1000, textAlign: 'center'
-                    }}>
-                        {t.COMBAT.VICTORY}<br />
-                        <span style={{ fontSize: '3rem' }}>{t.COMBAT.CLEARED_INFO.replace('{chapter}', store.chapterNum).replace('{stage}', store.stageNum.toString())}</span>
-                    </div>
-                )}
-
-                {message === t.COMBAT.DEFEAT && (
-                    <div style={{
-                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                        color: '#c0392b', fontSize: '6rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
-                        textShadow: '0 0 20px #e74c3c, 4px 4px 0 #000',
-                        zIndex: 1000, textAlign: 'center'
-                    }}>
-                        {t.COMBAT.DEFEAT}
-                    </div>
-                )}
-
-                {/* Generic Toast Area */}
-                {message && message !== t.COMBAT.VICTORY && message !== t.COMBAT.DEFEAT && (
-                    <div className="battle-toast" style={{
-                        position: 'absolute',
-                        top: '40%', left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        background: 'rgba(0,0,0,0.8)',
-                        padding: '10px 20px',
-                        borderRadius: '10px',
-                        color: '#f1c40f',
-                        fontSize: '1.5rem',
-                        fontFamily: 'BebasNeue',
-                        pointerEvents: 'none',
-                        zIndex: 1000,
-                        boxShadow: '0 0 15px rgba(0,0,0,0.5)',
-                        border: '1px solid rgba(241, 196, 15, 0.3)'
-                    }}>
-                        {message}
-                    </div>
-                )}
-
-                {/* Game Over / Final Victory Buttons (Centrally Layered and Active) */}
-                {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
-                    <div style={{
-                        position: 'absolute', top: '70%', left: '50%', transform: 'translateX(-50%)',
-                        display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 2000,
-                        pointerEvents: 'auto', alignItems: 'center'
-                    }}>
+            {/* Final Game Over Buttons Layer */}
+            {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
+                <div className="game-end-overlay" style={{
+                    position: 'fixed', inset: 0,
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    zIndex: 1500,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                }}>
+                    <div style={{ marginTop: '200px' }}>
                         <BlockButton
                             text={t.UI.BACK_TO_MAIN}
                             onClick={handleProperGameEnd}
-                            width="300px"
+                            width="400px"
                         />
                     </div>
-                )}
+                </div>
+            )}
 
-                <CardHand
-                    cards={playerHand}
-                    selectedCards={selectedCards}
-                    onSelectCard={handleCardSelect}
-                    onAttack={handleAttack}
-                    onSwap={handleSwap}
-                    gamePhase={gamePhase}
-                    disabled={gamePhase !== 'IDLE'}
-                />
+            {/* Interaction Overlays */}
+            <button
+                className="mobile-menu-btn"
+                onClick={() => setActiveMenu('PAUSE')}
+                style={{
+                    position: 'absolute', bottom: '40px', right: '40px',
+                    zIndex: 5000, backgroundColor: 'rgba(0,0,0,0.85)',
+                    color: '#f1c40f', border: '3px solid #f1c40f',
+                    borderRadius: '16px', width: '80px', height: '80px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '42px', cursor: 'pointer',
+                    boxShadow: '0 0 25px rgba(0,0,0,0.7)',
+                    fontFamily: 'BebasNeue, Arial'
+                }}
+            >
+                三
+            </button>
 
-                {/* 인게임 메뉴 버튼 ('三') */}
-                <button
-                    className="mobile-menu-btn"
-                    onClick={() => setActiveMenu('PAUSE')}
-                    style={{
-                        position: 'absolute',
-                        bottom: '30px',
-                        right: '30px',
-                        zIndex: 5000, // 최상단에 배치
-                        backgroundColor: 'rgba(0,0,0,0.8)',
-                        color: '#f1c40f',
-                        border: '2px solid #f1c40f',
-                        borderRadius: '12px',
-                        width: '60px',
-                        height: '60px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '32px',
-                        cursor: 'pointer',
-                        pointerEvents: 'auto',
-                        boxShadow: '0 0 15px rgba(0,0,0,0.5)',
-                        fontFamily: 'BebasNeue, Arial'
-                    }}
-                >
-                    三
-                </button>
-            </div>
-
-            {/* High-Fidelity Menu Components Restoration */}
-            {activeMenu === 'PAUSE' && (
-                <PauseMenu
-                    isOpen={true}
-                    onResume={() => setActiveMenu('NONE')}
-                    onSave={() => setActiveMenu('SAVE')}
-                    onSettings={() => setActiveMenu('SETTINGS')}
-                    onQuit={() => setActiveMenu('CONFIRM_QUIT')}
+            {isTutorial && (
+                <TutorialOverlay
+                    step={tutorialStep}
+                    onNext={handleTutorialNext}
+                    onPrev={handleTutorialPrev}
+                    onExit={handleTutorialExit}
                 />
             )}
 
-            {activeMenu === 'SAVE' && (
-                <SaveLoadMenu
-                    mode="SAVE"
-                    onAction={handleSaveGame}
-                    onClose={() => setActiveMenu('PAUSE')}
-                />
-            )}
-
-            {activeMenu === 'LOAD' && ( // Added for completion though not in original pause
-                <SaveLoadMenu
-                    mode="LOAD"
-                    onAction={handleLoadGame}
-                    onClose={() => setActiveMenu('PAUSE')}
-                />
-            )}
-
-            {activeMenu === 'SETTINGS' && (
-                <SettingsMenu
-                    onClose={() => setActiveMenu('PAUSE')}
-                    onVolumeChange={(type, vol) => {
-                        if (type === 'bgm') AudioManager.setBGMVolume(vol);
-                        else AudioManager.setSFXVolume(vol);
-                    }}
-                />
-            )}
-
-            {activeMenu === 'CONFIRM_QUIT' && (
-                <ConfirmationPopup
-                    message={t.UI.QUIT_CONFIRM}
-                    onYes={handleMidGameQuit}
-                    onNo={() => setActiveMenu('PAUSE')}
-                />
+            {/* Modals */}
+            {activeMenu !== 'NONE' && (
+                <div style={{
+                    position: 'fixed', inset: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 10000, pointerEvents: 'auto',
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    {activeMenu === 'PAUSE' && (
+                        <PauseMenu
+                            isOpen={true}
+                            onResume={() => setActiveMenu('NONE')}
+                            onSave={() => setActiveMenu('SAVE')}
+                            onSettings={() => setActiveMenu('SETTINGS')}
+                            onQuit={() => setActiveMenu('CONFIRM_QUIT')}
+                        />
+                    )}
+                    {activeMenu === 'SAVE' && (
+                        <SaveLoadMenu
+                            mode="SAVE"
+                            onAction={handleSaveGame}
+                            onClose={() => setActiveMenu('PAUSE')}
+                        />
+                    )}
+                    {activeMenu === 'LOAD' && (
+                        <SaveLoadMenu
+                            mode="LOAD"
+                            onAction={handleLoadGame}
+                            onClose={() => setActiveMenu('PAUSE')}
+                        />
+                    )}
+                    {activeMenu === 'SETTINGS' && (
+                        <SettingsMenu
+                            onClose={() => setActiveMenu('PAUSE')}
+                            onVolumeChange={(type, vol) => {
+                                if (type === 'bgm') AudioManager.setBGMVolume(vol);
+                                else AudioManager.setSFXVolume(vol);
+                            }}
+                        />
+                    )}
+                    {activeMenu === 'CONFIRM_QUIT' && (
+                        <ConfirmationPopup
+                            message={t.UI.QUIT_CONFIRM}
+                            onYes={handleMidGameQuit}
+                            onNo={() => setActiveMenu('PAUSE')}
+                        />
+                    )}
+                </div>
             )}
         </div>
     );

@@ -30,7 +30,7 @@ export const HPBar: React.FC<HPBarProps> = ({
 
   return (
     <div className={`hp-bar-container hp-bar-align-${align}`}>
-      <div className="hp-bar" style={{ position: 'relative', width: '400px', height: '100px' }}>
+      <div className="hp-bar" style={{ position: 'relative', width: '500px', height: '125px' }}>
         <div className="hp-bar-track" style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0 }}>
           <HpBarMasked
             src={imgPath}
@@ -42,7 +42,7 @@ export const HPBar: React.FC<HPBarProps> = ({
         <div className="hp-bar-text" style={{
           position: 'relative',
           zIndex: 3,
-          fontSize: `calc(${fontSize} * 0.45)`,
+          fontSize: fontSize,
           fontFamily: "'Bebas Neue', sans-serif",
           display: 'flex',
           justifyContent: 'center',

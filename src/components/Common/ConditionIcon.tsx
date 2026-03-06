@@ -106,7 +106,7 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
         <img
           src={iconPath}
           alt={name}
-          style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+          style={{ width: '55px', height: '55px', objectFit: 'contain' }}
           onError={(e) => {
             console.warn(`Condition icon failed to load: ${iconPath}`);
             e.currentTarget.style.display = 'none';
@@ -124,9 +124,9 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
             border: '2px solid #f1c40f',
             borderRadius: '8px',
             padding: '12px',
-            width: '260px',
+            width: '400px',
             color: '#fff',
-            fontSize: '1rem',
+            fontSize: '1.6rem',
             fontFamily: "'Bebas Neue', sans-serif",
             boxShadow: '0 0 20px rgba(0,0,0,0.8)',
             pointerEvents: 'none',

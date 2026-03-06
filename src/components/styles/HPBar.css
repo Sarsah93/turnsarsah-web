@@ -1,7 +1,7 @@
 /* styles/HPBar.css */
 
 .hp-bar-container {
-  width: 400px;
+  width: 500px;
   display: flex;
   margin: 0;
   /* Flush alignment */
@@ -17,8 +17,8 @@
 
 .hp-bar {
   position: relative;
-  width: 400px;
-  height: 100px;
+  width: 500px;
+  height: 125px;
   overflow: visible;
   display: flex;
   align-items: center;
@@ -55,7 +55,7 @@
   position: relative;
   z-index: 3;
   font-family: 'Bebas Neue', 'Arial Black', sans-serif;
-  font-size: 26px;
+  font-size: 38px;
   font-weight: bold;
   color: #fff;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 1), 0 0 10px rgba(0, 0, 0, 0.5);

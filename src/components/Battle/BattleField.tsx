@@ -12,6 +12,7 @@ interface BattleFieldProps {
   popups?: DamagePopupState[];
   onRemovePopup?: (id: string) => void;
   onMeasure?: (positions: { player: { x: number; y: number; w: number; h: number } | null; bot: { x: number; y: number; w: number; h: number } | null; scale: number }) => void;
+  onMeasureBoss?: (data: { centerX: number; centerY: number; bottom: number }) => void;
   screenShake?: boolean;
 }
 
@@ -24,11 +25,14 @@ interface DamagePopupState {
   isHeal: boolean;
 }
 
-export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum = 1, popups = [], onRemovePopup, onMeasure }) => {
+export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum = 1, popups = [], onRemovePopup, onMeasure, onMeasureBoss }) => {
   // Refs to measure element positions for popup placement
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const bossRef = React.useRef<HTMLDivElement | null>(null);
+  const bossAvatarRef = React.useRef<HTMLDivElement | null>(null);
   const playerRef = React.useRef<HTMLDivElement | null>(null);
+  const lastBossData = React.useRef({ centerX: 0, centerY: 0, bottom: 0 });
+  const lastMeasureData = React.useRef<string>('');
 
   // Map boss names to image filenames per v2.0.0.5 requirements
   const getBossImagePath = (bossName: string): string => {
@@ -54,21 +58,50 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
     const container = containerRef.current;
     if (!container) return;
     const cRect = container.getBoundingClientRect();
+    const currentScale = cRect.width / 1600; // v2.4.7: Scale normalization
 
     const botRect = bossRef.current?.getBoundingClientRect() ?? null;
     const playerRect = playerRef.current?.getBoundingClientRect() ?? null;
 
-    const scale = window.devicePixelRatio || 1;
-
     const bot = botRect
-      ? { x: botRect.left - cRect.left + botRect.width / 2, y: botRect.top - cRect.top + botRect.height / 2 + 50, w: botRect.width, h: botRect.height }
+      ? {
+        x: (botRect.left - cRect.left + botRect.width / 2) / currentScale,
+        y: (botRect.top - cRect.top + botRect.height / 2 + 50) / currentScale,
+        w: botRect.width / currentScale,
+        h: botRect.height / currentScale
+      }
       : null;
     const playerPos = playerRect
-      ? { x: playerRect.left - cRect.left + playerRect.width / 2, y: playerRect.top - cRect.top - 20, w: playerRect.width, h: playerRect.height }
+      ? {
+        x: (playerRect.left - cRect.left + playerRect.width / 2) / currentScale,
+        y: (playerRect.top - cRect.top - 20) / currentScale,
+        w: playerRect.width / currentScale,
+        h: playerRect.height / currentScale
+      }
       : null;
 
-    onMeasure?.({ player: playerPos, bot, scale });
-  }, [onMeasure]);
+    const stringified = JSON.stringify({ playerPos, bot, scale: currentScale });
+    if (stringified !== lastMeasureData.current) {
+      lastMeasureData.current = stringified;
+      onMeasure?.({ player: playerPos, bot, scale: currentScale });
+    }
+
+    // Precise Boss Center Y reporting (v2.4.3) - Converted to logical pixels (v2.4.7)
+    const bossAvatar = bossAvatarRef.current;
+    if (bossAvatar && container) {
+      const bRect = bossAvatar.getBoundingClientRect();
+      const centerX = ((bRect.left - cRect.left) + (bRect.width / 2)) / currentScale;
+      const centerY = ((bRect.top - cRect.top) + (bRect.height / 2)) / currentScale;
+      const bottom = (bRect.bottom - cRect.top) / currentScale;
+
+      if (Math.abs(lastBossData.current.centerX - centerX) > 0.1 ||
+        Math.abs(lastBossData.current.centerY - centerY) > 0.1 ||
+        Math.abs(lastBossData.current.bottom - bottom) > 0.1) {
+        lastBossData.current = { centerX, centerY, bottom };
+        onMeasureBoss?.({ centerX, centerY, bottom });
+      }
+    }
+  }, [onMeasure, onMeasureBoss, stageNum]);
 
   React.useEffect(() => {
     measure();
@@ -78,91 +111,6 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
 
   return (
     <div className="battlefield">
-      {/* Boss HP Bar & Conditions (New grouping for better alignment) */}
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: '5px',
-        zIndex: 60
-      }}>
-        <HPBar
-          hp={bot.hp}
-          maxHp={bot.maxHp}
-          label="BOSS"
-          color="red"
-          align="right"
-          fontSize="2.2rem"
-        />
-        <div className="boss-conditions" style={{ display: 'flex', gap: '5px', justifyContent: 'flex-end', paddingRight: '10px', zIndex: 2000, position: 'relative', pointerEvents: 'auto' }}>
-          {Array.from(bot.conditions.entries()).map(([name, condition]) => (
-            <ConditionIcon key={name} name={name} condition={condition} popupDirection="bottom-left" />
-          ))}
-        </div>
-      </div>
-
-      {/* Boss Stats Overlay - Just Stats/Rules now */}
-      <div className="boss-stats-overlay" style={{
-        position: 'absolute',
-        top: '120px', // Shifted down slightly to avoid conditions
-        right: '25px',
-        width: '300px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: '5px',
-        zIndex: 50
-      }}>
-        <div style={{
-          color: '#fff',
-          fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: '2.2rem',
-          textShadow: '2px 2px 2px #000',
-          textAlign: 'right'
-        }}>
-          <div style={{ color: '#fff' }}>ATK: {bot.atk}</div>
-          <div style={{ color: '#f1c40f' }}>
-            RULE: {bot.activeRules && bot.activeRules.length > 0 ? (bot.activeRules[0] as any).desc || (bot.activeRules[0] as any)[0] : 'NONE'}
-          </div>
-        </div>
-      </div>
-
-      {/* Stage Number - Top Left */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        color: '#fff',
-        fontFamily: "'Bebas Neue', sans-serif",
-        fontSize: '2.5rem',
-        textShadow: '2px 2px 4px #000',
-        zIndex: 100
-      }}>
-        STAGE {stageNum}
-      </div>
-
-      {/* Boss Portrait - Centered but higher and smaller (v2.0.0.5) */}
-      <div style={{
-        position: 'absolute',
-        top: '2%',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        pointerEvents: 'none'
-      }}>
-        <div className={`boss-portrait ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`} ref={bossRef} style={{ width: '260px', height: '260px', margin: 0 }}>
-          <img src={getBossImagePath(bot.name)} alt={bot.name} className="boss-image" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-        </div>
-        <div className="boss-name" style={{ fontSize: '2.2rem', color: '#f1c40f', marginTop: '0px', fontFamily: "'Bebas Neue', sans-serif" }}>
-          {bot.name.toUpperCase()}
-        </div>
-      </div>
-
       {/* Damage Popups Area */}
       <div className="popups-container" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         {popups.map((popup) => (
@@ -178,40 +126,44 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
         ))}
       </div>
 
-      {/* Player Section - Bottom Left */}
-      <div className={`player-section ${player.animState === 'HIT' ? 'animate-hit-shake' : ''}`} ref={playerRef} style={{
-        position: 'absolute',
-        bottom: '10px',
-        left: '10px',
-        width: '420px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: '10px'
-      }}>
-        <div className="player-conditions" style={{
-          paddingLeft: '10px',
-          display: 'flex',
-          gap: '8px',
-          justifyContent: 'flex-start',
-          marginBottom: '5px',
-          minHeight: '40px', // Ensure space for icons
-          zIndex: 200,
-          position: 'relative'
-        }}>
-          {Array.from(player.conditions.entries()).map(([name, condition]) => (
-            <ConditionIcon key={name} name={name} condition={condition} popupDirection="top-right" />
-          ))}
-        </div>
-        <HPBar
-          hp={player.hp}
-          maxHp={player.maxHp}
-          label="PLAYER"
-          color="blue"
-          align="left"
-          fontSize="2.2rem"
-        />
-      </div>
+      {/* Invisible anchors for Damage Popups (referenced by onMeasure) */}
+      <div
+        ref={bossRef}
+        style={{
+          position: 'absolute',
+          top: '25%',
+          left: '50%',
+          width: '1px',
+          height: '1px',
+          pointerEvents: 'none'
+        }}
+      />
+
+      {/* Actual Boss Visual Target Ref */}
+      <div
+        ref={bossAvatarRef}
+        style={{
+          position: 'absolute',
+          top: '60px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '450px',
+          height: '450px',
+          pointerEvents: 'none'
+        }}
+      />
+
+      <div
+        ref={playerRef}
+        style={{
+          position: 'absolute',
+          bottom: '20%',
+          left: '25%',
+          width: '1px',
+          height: '1px',
+          pointerEvents: 'none'
+        }}
+      />
     </div>
   );
 };
