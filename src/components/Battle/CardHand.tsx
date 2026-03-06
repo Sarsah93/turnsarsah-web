@@ -290,8 +290,7 @@ export const CardHand: React.FC<CardHandProps> = ({
               zIndex: 1000 + selectedIdxInQueue,
               left: `${canvasCenterX}px`,
               transform: 'translateX(-50%)',
-              transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-              transitionDelay: `${selectedIdxInQueue * 0.2}s`,
+              transition: `all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${selectedIdxInQueue * 0.2}s`,
               pointerEvents: 'none'
             };
 
@@ -316,8 +315,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                   bottom: '30%',
                   top: 'auto',
                   transform: 'translateX(-50%) rotate(720deg)',
-                  transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                  transitionDelay: `${selectedIdxInQueue * 0.2}s`,
+                  transition: `all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${selectedIdxInQueue * 0.2}s`,
                 };
               }
             } else if (gamePhase === 'CHARGING') {
@@ -326,8 +324,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                 top: '65%',
                 bottom: 'auto',
                 transform: 'translate(-50%, -50%) scale(1.1) rotate(-5deg)',
-                transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-                transitionDelay: '0s',
+                transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0s',
                 filter: 'brightness(1.4) drop-shadow(0 0 15px #f1c40f)',
               };
             } else if (gamePhase === 'THRUSTING') {
@@ -337,8 +334,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                 top: `${bossCenterY}px`, // Precise target center
                 bottom: 'auto',
                 transform: 'translate(-50%, -50%) scale(0.8) rotate(10deg)',
-                transition: 'all 0.067s cubic-bezier(0.32, 0, 0.67, 0)',
-                transitionDelay: '0s',
+                transition: 'all 0.067s cubic-bezier(0.32, 0, 0.67, 0) 0s',
               };
             } else if (gamePhase === 'SCATTERED') {
               const shatterAngle = (selectedIdxInQueue * 60) - 90;
@@ -354,8 +350,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                 transform: `translate(calc(-50% + ${shatterX}px), calc(-50% + ${shatterY}px)) scale(0.3) rotate(${shatterAngle * 2}deg)`,
                 opacity: 0,
                 filter: 'brightness(2) contrast(150%)',
-                transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                transitionDelay: `${selectedIdxInQueue * 0.05}s`,
+                transition: `all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${selectedIdxInQueue * 0.05}s`,
                 clipPath: 'polygon(0% 0%, 25% 10%, 50% 0%, 75% 15%, 100% 0%, 90% 25%, 100% 50%, 85% 75%, 100% 100%, 70% 90%, 50% 100%, 30% 85%, 0% 100%, 15% 70%, 0% 50%, 10% 25%)',
               };
             }
