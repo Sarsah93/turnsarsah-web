@@ -20,7 +20,8 @@ const calculateInitialPlayer = (
   config: DifficultyConfig,
   activeSkills: string[],
   chapterId: string,
-  difficulty: Difficulty
+  difficulty: Difficulty,
+  haveStage6Bonus: boolean = false
 ): Character => {
   let initialHpBonus = 0;
 
@@ -34,7 +35,15 @@ const calculateInitialPlayer = (
     initialHpBonus += bonus;
   }
 
-  // (Removed old 2A-2 logic that was duplicated or wrong)
+  // v2.0.0.14: Stage 6 Reward (Chapter 1 Only: 20% MAX HP bonus)
+  // If moving to Chapter 2, we carry this over via haveStage6Bonus
+  if (haveStage6Bonus) {
+    let bonus = Math.floor(config.playerHp * 0.2); // config.stage6MaxHpBonus is typically 0.2
+    if (activeSkills.includes('2A-1')) {
+      bonus = Math.floor(bonus * 1.2);
+    }
+    initialHpBonus += bonus;
+  }
 
   const totalMaxHp = config.playerHp + initialHpBonus;
   const playerConditions = new Map<string, Condition>();
@@ -626,7 +635,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       if (stageId === 1) {
         // Start of Chapter/Game - Reset Stats + Apply Altar Bonuses
-        player = calculateInitialPlayer(config, activeSkills, chapterId, state.difficulty);
+        player = calculateInitialPlayer(config, activeSkills, chapterId, state.difficulty, state.hasStage6Bonus);
       } else {
         // Stage transition - preserve current HP and max HP
         player = {
@@ -1055,6 +1064,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       isTutorial: true,
       tutorialStep: 0,
       tutorialHighlights: [],
+      chapterNum: '1', // v2.4.9: Ensure Tutorial uses Chapter 1 assets
       stageNum: 0,
       currentTurn: 0,
       player: {
@@ -1227,7 +1237,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       currentEquippedSkills = altarData.normal?.equippedSkills || [];
     }
 
-    const player = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff);
+    const player = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff, false); // New game starts without bonus
 
     set({
       chapterNum: chapterId,

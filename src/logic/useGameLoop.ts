@@ -1598,6 +1598,7 @@ export const useGameLoop = () => {
             // Only stage if not already permanently owned and not already pending
             if (!AltarManager.hasTrophy(potentialTrophyId, store.difficulty)) {
                 const staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
+                AltarManager.commitPendingTrophies(); // v2.4.9: Commit immediately for better persistence
                 if (staged) {
                     const { TROPHIES } = await import('../constants/altarSystem');
                     store.setTrophyPopup(TROPHIES[potentialTrophyId]);

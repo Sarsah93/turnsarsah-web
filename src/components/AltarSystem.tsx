@@ -149,11 +149,12 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
             fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif"
         }}>
             <div style={{
-                width: '95%', height: '95%',
+                width: '95%', height: '92%', // Slightly shorter to avoid bottom cut
                 backgroundColor: '#1a1a2e',
                 border: '2px solid #555',
                 display: 'flex', flexDirection: 'column',
                 boxShadow: '0 0 30px rgba(0,0,0,0.8)',
+                marginBottom: 'env(safe-area-inset-bottom)', // Safe area support
             }}>
                 {/* Header with Tabs */}
                 <div style={{
@@ -162,7 +163,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                     backgroundColor: '#161625'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        <h1 style={{ color: '#fff', fontSize: '2.5rem', margin: 0, marginRight: '20px' }}>ALTAR SYSTEM</h1>
+                        <h1 style={{ color: '#fff', fontSize: '3rem', margin: 0, marginRight: '20px' }}>ALTAR SYSTEM</h1>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button
                                 onClick={() => { setActiveTab(Difficulty.NORMAL); setSelectedTreeSkill(null); }}
@@ -343,7 +344,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                                     <span style={{ fontSize: '0.7rem', color: '#7f8c8d', position: 'relative', zIndex: 3 }}>{node.id}</span>
                                                 )}
                                             </div>
-                                            <span style={{ color: '#ecf0f1', fontSize: '1rem', marginTop: '4px', textAlign: 'center', fontFamily: 'sans-serif', lineHeight: 1.2, maxWidth: `${CELL}px`, wordBreak: 'keep-all' }}>
+                                            <span style={{ color: '#ecf0f1', fontSize: '1.2rem', marginTop: '6px', textAlign: 'center', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif", lineHeight: 1.1, maxWidth: `${CELL}px`, wordBreak: 'keep-all' }}>
                                                 {isImplemented ? skill.name[language] : `Skill ${node.id}`}
                                             </span>
                                         </div>
@@ -358,9 +359,9 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                 <div style={{
                     height: '130px', borderTop: '2px solid #555', backgroundColor: '#161625',
                     padding: '10px 20px', display: 'flex', alignItems: 'center', overflowX: 'auto', gap: '12px', flexShrink: 0,
-                    position: 'relative'
+                    position: 'relative', paddingBottom: `calc(10px + env(safe-area-inset-bottom))`
                 }}>
-                    <div style={{ width: '120px', color: '#fff', fontSize: '2rem', fontWeight: 'bold', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <div style={{ width: '120px', color: '#fff', fontSize: '2.2rem', fontWeight: 'bold', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                         <span>TROPHY</span>
                         <span>INVENTORY</span>
                     </div>
@@ -422,25 +423,25 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                         backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center'
                     }} onClick={() => setSelectedTreeSkill(null)}>
                         <div style={{
-                            width: '420px', backgroundColor: '#1a1a2e', border: '3px solid #f1c40f', borderRadius: '12px', padding: '24px',
-                            boxShadow: '0 0 40px rgba(0,0,0,0.9), 0 0 20px rgba(241,196,15,0.2)', display: 'flex', flexDirection: 'column', gap: '16px',
+                            width: '620px', backgroundColor: '#1a1a2e', border: '3px solid #f1c40f', borderRadius: '12px', padding: '36px',
+                            boxShadow: '0 0 40px rgba(0,0,0,0.9), 0 0 20px rgba(241,196,15,0.2)', display: 'flex', flexDirection: 'column', gap: '22px',
                             color: '#fff', fontFamily: "'Noto Sans KR', sans-serif"
                         }} onClick={(e) => e.stopPropagation()}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                <div style={{ width: '80px', height: '80px', backgroundColor: '#2c3e50', border: '2px solid #7f8c8d', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px' }}>
+                                <div style={{ width: '120px', height: '120px', backgroundColor: '#2c3e50', border: '2px solid #7f8c8d', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px' }}>
                                     <img src={`/assets/altar skills/${skill.image}`} alt={skill.name[language]} style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }} />
                                 </div>
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '1.8rem', color: '#f1c40f', fontFamily: "'Noto Sans KR', sans-serif" }}>{skill.name[language]}</h3>
-                                    <div style={{ color: '#bdc3c7', fontSize: '0.9rem', marginTop: '4px' }}>{language === 'KR' ? '지속시간: ' : 'Duration: '}<span style={{ color: '#2ecc71', fontWeight: 'bold' }}>{skill.duration[language]}</span></div>
+                                    <h3 style={{ margin: 0, fontSize: '2.4rem', color: '#f1c40f', fontFamily: "'Noto Sans KR', sans-serif" }}>{skill.name[language]}</h3>
+                                    <div style={{ color: '#bdc3c7', fontSize: '1.3rem', marginTop: '4px' }}>{language === 'KR' ? '지속시간: ' : 'Duration: '}<span style={{ color: '#2ecc71', fontWeight: 'bold' }}>{skill.duration[language]}</span></div>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '12px 15px', borderRadius: '8px', borderLeft: '4px solid #95a5a6', fontSize: '0.95rem', lineHeight: '1.5', color: '#bdc3c7', fontStyle: 'italic' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: '18px 22px', borderRadius: '8px', borderLeft: '4px solid #95a5a6', fontSize: '1.25rem', lineHeight: '1.65', color: '#bdc3c7', fontStyle: 'italic' }}>
                                     {skill.desc[language]}
                                 </div>
-                                <div style={{ backgroundColor: 'rgba(46, 204, 113, 0.1)', padding: '12px 15px', borderRadius: '8px', borderLeft: '4px solid #2ecc71', fontSize: '1.05rem', lineHeight: '1.6', color: '#fff' }}>
-                                    <strong style={{ color: '#2ecc71', display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>{language === 'KR' ? '■ 효과 (EFFECT)' : '■ EFFECT'}</strong>
+                                <div style={{ backgroundColor: 'rgba(46, 204, 113, 0.1)', padding: '18px 22px', borderRadius: '8px', borderLeft: '4px solid #2ecc71', fontSize: '1.35rem', lineHeight: '1.7', color: '#fff' }}>
+                                    <strong style={{ color: '#2ecc71', display: 'block', marginBottom: '6px', fontSize: '1.3rem' }}>{language === 'KR' ? '■ 효과 (EFFECT)' : '■ EFFECT'}</strong>
                                     {skill.effect[language].split('\n').map((line, i) => <div key={i}>{line}</div>)}
                                 </div>
                             </div>

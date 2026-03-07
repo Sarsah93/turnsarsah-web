@@ -202,7 +202,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
             backgroundColor: (step === 12) ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.2)',
             zIndex: 1000,
             display: 'flex', justifyContent: 'center', alignItems: 'center',
-            pointerEvents: 'none' // Allow interaction with the game behind
+            pointerEvents: 'none'
         }}>
             <div style={{
                 background: 'rgba(0,0,0,0.95)',
@@ -214,10 +214,12 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
                 boxShadow: '0 0 30px rgba(0,0,0,0.9)',
                 color: '#fff',
                 fontFamily: "'Bebas Neue', sans-serif",
-                pointerEvents: 'auto', // Re-enable for the exit/next buttons
+                pointerEvents: 'auto',
                 display: 'flex',
                 flexDirection: 'column',
-                minHeight: '300px'
+                minHeight: '300px',
+                position: 'relative',
+                top: '-64px'
             }}>
                 <h2 style={{ color: '#f1c40f', fontSize: '2.5rem', marginBottom: '20px' }}>{content.title}</h2>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

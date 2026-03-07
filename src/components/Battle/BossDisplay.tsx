@@ -151,8 +151,8 @@ export const BossDisplay: React.FC = () => {
                     <>
                         {/* Boss Name - NOW ABOVE boss image, centered at top */}
                         <div className="boss-name-label" style={{
-                            position: 'fixed',
-                            top: '5px',
+                            position: 'absolute',
+                            top: '-55px',
                             left: '50%',
                             transform: 'translateX(-50%)',
                             fontSize: '4.0rem',
