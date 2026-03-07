@@ -69,6 +69,21 @@ export const useGameLoop = () => {
         setTimeout(() => setScreenEffect(''), 500);
     };
 
+    // 4B-2: Node Interference Helper (Generic Special Attack Reflection)
+    const applyNodeInterference = (incomingDmg: number): number => {
+        const store = useGameStore.getState();
+        if (store.equippedAltarSkills.includes('4B-2')) {
+            const reflected = Math.floor(incomingDmg * 0.5);
+            const remaining = incomingDmg - reflected;
+            setBotHp(Math.max(0, useGameStore.getState().bot.hp - reflected));
+            showDamageText('BOT', `-${reflected}`, '#f39c12');
+            setMessage(language === 'KR' ? '노드간섭!' : "NODE INTERFERENCE!");
+            AudioManager.playSFX('/assets/audio/conditions/데미지 반사(Damage reflection).mp3');
+            return remaining;
+        }
+        return incomingDmg;
+    };
+
     const playConditionSound = (condition: string) => {
         let file = '';
         switch (condition) {
@@ -303,6 +318,10 @@ export const useGameLoop = () => {
         if (missChance > 0 && Math.random() < missChance) {
             setMessage(t.COMBAT.ACCURACY_MISSED); // 명중률 저하 메시지 활용
             triggerScreenEffect('shake-small');
+            // 6A-1: Adaptive Calculation - Reset stacks on miss
+            if (store.equippedAltarSkills.includes('6A-1')) {
+                store.setAltarSkillUse('6A-1_stacks', 0);
+            }
             await new Promise(r => setTimeout(r, 1000));
             store.setGamePhase('IDLE');
             await executeBotTurn();
@@ -315,8 +334,19 @@ export const useGameLoop = () => {
             player.conditions.has('Debilitating'),
             store.bannedHand,
             store.bannedRanks,
-            store.bannedSuit
+            store.bannedSuit,
+            store.difficulty,
+            store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 2
         );
+
+        // 4A-1: Dyschromatopsia - If active, consume a use
+        if (store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 2) {
+            store.incrementDyschromatopsiaUses();
+            // If uses reach 2, auto-deactivate
+            if (store.dyschromatopsiaUses + 1 >= 2) {
+                store.setDyschromatopsiaActive(false);
+            }
+        }
 
         // Apply Damage Multipliers (Reduction, Adrenaline)
         const drCond = bot.conditions.get('Damage Reducing');
@@ -412,8 +442,8 @@ export const useGameLoop = () => {
             // 1B: Sharpen Cards (+25 fixed damage)
             if (store.equippedAltarSkills.includes('1B')) damage += 25;
 
-            // 4A-1: Pattern Disruption (20% chance to use one tier higher hand bonus)
-            if (store.equippedAltarSkills.includes('4A-1') && Math.random() < 0.20) {
+            // 5A-1: Pattern Disruption (20% chance to use one tier higher hand bonus)
+            if (store.equippedAltarSkills.includes('5A-1') && Math.random() < 0.20) {
                 const handTiers = ['High Card', 'One Pair', 'Two Pair', 'Three of a Kind', 'Straight', 'Flush', 'Full House', 'Four of a Kind', 'Straight Flush', 'Royal Flush'];
                 const handBonusesAll: Record<string, number> = {
                     'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
@@ -429,8 +459,8 @@ export const useGameLoop = () => {
                 }
             }
 
-            // 4A-2: Overloaded (same hand consecutively → +10% per stack, max 3)
-            if (store.equippedAltarSkills.includes('4A-2')) {
+            // 5A-2: Overloaded (same hand consecutively → +10% per stack, max 3)
+            if (store.equippedAltarSkills.includes('5A-2')) {
                 if (store.consecutiveHandType === handType) {
                     const newStacks = Math.min(3, store.consecutiveHandStacks + 1);
                     store.setConsecutiveHand(handType, newStacks);
@@ -440,8 +470,8 @@ export const useGameLoop = () => {
                 }
             }
 
-            // 4A-3: Instability Resonance (bonus damage when boss HP is low)
-            if (store.equippedAltarSkills.includes('4A-3')) {
+            // 5A-3: Instability Resonance (bonus damage when boss HP is low)
+            if (store.equippedAltarSkills.includes('5A-3')) {
                 const bossHpRatio = bot.hp / bot.maxHp;
                 if (bossHpRatio <= 0.25) {
                     damage = Math.floor(damage * 1.10);
@@ -450,29 +480,33 @@ export const useGameLoop = () => {
                 }
             }
 
-            // 5A-1: Adaptive Calculation (+5% per successful attack, max 10 stacks)
-            if (store.equippedAltarSkills.includes('5A-1') && damage > 0) {
-                const currentStacks = store.altarSkillUses['5A-1_stacks'] || 0;
+            // 6A-1: Adaptive Calculation (+5% per successful attack, max 10 stacks)
+            if (store.equippedAltarSkills.includes('6A-1') && damage > 0) {
+                const currentStacks = store.altarSkillUses['6A-1_stacks'] || 0;
                 if (currentStacks > 0) {
                     damage = Math.floor(damage * (1 + currentStacks * 0.05));
                 }
                 const newStacks = Math.min(10, currentStacks + 1);
-                store.setAltarSkillUse('5A-1_stacks', newStacks);
+                store.setAltarSkillUse('6A-1_stacks', newStacks);
             }
 
-            // 5B-1: Core Resonance (+15% damage when boss HP <= 50%)
-            if (store.equippedAltarSkills.includes('5B-1') && bot.hp <= bot.maxHp * 0.5) {
+            // 6B-1: Core Resonance (+15% damage when boss HP <= 50%)
+            if (store.equippedAltarSkills.includes('6B-1') && bot.hp <= bot.maxHp * 0.5) {
                 damage = Math.floor(damage * 1.15);
             }
 
-            // 4B-2: Node Collapse (+60 fixed damage when boss has 2+ debuffs, once per stage)
-            if (store.equippedAltarSkills.includes('4B-2') && !store.stageSkillsTriggered.includes('4B-2')) {
-                const bossDebuffs = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Burn', 'Decay'];
-                const activeDebuffs = bossDebuffs.filter(d => bot.conditions.has(d));
-                if (activeDebuffs.length >= 2) {
-                    damage += 60;
-                    store.setStageSkillTriggered('4B-2');
+            // 5B-2: Node Collapse (Bonus fixed damage based on player HP percentage)
+            if (store.equippedAltarSkills.includes('5B-2')) {
+                const coreStability = (player.hp / player.maxHp) * 100;
+                let nodeCollapseBonus = 0;
+                if (coreStability <= 30) {
+                    nodeCollapseBonus = 30;
+                } else if (coreStability <= 50) {
+                    nodeCollapseBonus = 20;
+                } else if (coreStability <= 80) {
+                    nodeCollapseBonus = 10;
                 }
+                damage += nodeCollapseBonus;
             }
 
             // 6A: Causality Rearrangement (8% chance for double attack)
@@ -563,31 +597,42 @@ export const useGameLoop = () => {
         if (store.equippedAltarSkills.includes('2A') && damage > 0 && !isPuzzleCorrect) {
             if (Math.random() < 0.5) {
                 const freshBotCondition = useGameStore.getState().bot.conditions;
-                if (!freshBotCondition.has('Bleeding') && !freshBotCondition.has('Poisoning')) {
+                const hasBleed = freshBotCondition.has('Bleeding') || freshBotCondition.has('Heavy Bleeding');
+                const hasPoison = freshBotCondition.has('Poisoning');
+
+                if (!hasBleed && !hasPoison) {
                     const effect = Math.random() < 0.5 ? 'Bleeding' : 'Poisoning';
                     store.addBotCondition(effect, 3);
                     showDamageText('BOT', effect === 'Bleeding' ? "BLEEDING!" : "POISON!", '#9b59b6');
-                } else if (freshBotCondition.has('Bleeding') && !freshBotCondition.has('Poisoning')) {
+                } else if (hasBleed && !hasPoison) {
                     store.addBotCondition('Poisoning', 3);
                     showDamageText('BOT', "POISON!", '#9b59b6');
-                } else if (!freshBotCondition.has('Bleeding') && freshBotCondition.has('Poisoning')) {
+                } else if (!hasBleed && hasPoison) {
                     store.addBotCondition('Bleeding', 3);
                     showDamageText('BOT', "BLEEDING!", '#9b59b6');
                 }
             }
         }
 
-        // 6A: Causality Rearrangement (8% chance to apply attack twice)
-        if (store.equippedAltarSkills.includes('6A') && damage > 0 && !isPuzzleCorrect && !isAdrenalineNull) {
+        // 4B-3: Symbiotic Relationship (re-implemented as health sync when boss heals)
+        // Handled in bot hp update logic or via sub-effect
+
+        // 7A: Causality Rearrangement (8% chance to apply attack twice)
+        if (store.equippedAltarSkills.includes('7A') && damage > 0 && !isPuzzleCorrect && !isAdrenalineNull) {
             if (Math.random() < 0.08) {
                 await new Promise(r => setTimeout(r, 600));
-                const freshBot6A = useGameStore.getState().bot;
-                const newBotHpDouble = Math.max(0, freshBot6A.hp - damage);
+                setMessage(language === 'KR' ? '인과재배열!' : 'CAUSALITY REARRANGEMENT!');
+                triggerScreenEffect('shake');
+                playConditionSound('Triple Attack'); // Use same impactful sound
+                const freshBot7A = useGameStore.getState().bot;
+                const newBotHpDouble = Math.max(0, freshBot7A.hp - damage);
                 setBotHp(newBotHpDouble);
                 showDamageText('BOT', `-${damage}`, '#f39c12');
-                setMessage('CAUSALITY REARRANGEMENT!');
-                triggerScreenEffect('shake');
                 await new Promise(r => setTimeout(r, 600));
+                if (newBotHpDouble <= 0) {
+                    await handleVictory();
+                    return;
+                }
             }
         }
 
@@ -802,10 +847,13 @@ export const useGameLoop = () => {
                 setMessage("모래 폭풍 피해를 받습니다!");
                 setBotAnimState('ATTACK');
                 AudioManager.playSFX('/assets/audio/combat/chapter 2a desert/2A_SAND DRAGON_SAND STORM.mp3');
-                const dmgString = "70";
-                const dmg = 70;
+                let dmg = 70;
+
+                // 4B-2: Node Interference (Reduce 50% & Reflect)
+                dmg = applyNodeInterference(dmg);
+
                 setPlayerHp(Math.max(0, currentPlayer.hp - dmg));
-                showDamageText('PLAYER', `-${dmgString}`, '#e74c3c');
+                showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
                 if (Math.random() < 0.4) {
                     store.addPlayerCondition('Burn', 3);
                     playConditionSound('Burn');
@@ -832,10 +880,13 @@ export const useGameLoop = () => {
                     setMessage("부패 폭발 피해를 받습니다!");
                     setBotAnimState('ATTACK');
                     AudioManager.playSFX('/assets/audio/combat/chapter 2b deep forest/2B_HIGH ORC SHAMAN_DECAY EXPLOSION.mp3');
-                    const dmgString = "30";
-                    const dmg = 30;
+                    let dmg = 30;
+
+                    // 4B-2: Node Interference (Reduce 50% & Reflect)
+                    dmg = applyNodeInterference(dmg);
+
                     setPlayerHp(Math.max(0, currentPlayer.hp - dmg));
-                    showDamageText('PLAYER', `-${dmgString}`, '#e74c3c');
+                    showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
                     if (Math.random() < 0.8) {
                         store.addPlayerCondition('Decay', 4);
                         playConditionSound('Decay');
@@ -851,11 +902,12 @@ export const useGameLoop = () => {
         const config = DIFFICULTY_CONFIGS[store.difficulty];
         const avoidCond = currentPlayer.conditions.get('Avoiding');
         const has2B = store.equippedAltarSkills.includes('2B');
-
-        // 4B-1: Threat Prediction (100% evasion on first attack in boss stages 10/SP)
         const isBossStage = stageNum >= 10;
-        if (store.equippedAltarSkills.includes('4B-1') && isBossStage && store.currentTurn === 0 && !store.stageSkillsTriggered.includes('4B-1')) {
-            store.setStageSkillTriggered('4B-1');
+
+        // 5B-1: Threat Prediction (100% evasion on first attack in boss stages 10/SP)
+        const isFirstBossAttack = isBossStage && store.currentTurn === 0 && !store.stageSkillsTriggered.includes('5B-1');
+        if (store.equippedAltarSkills.includes('5B-1') && isFirstBossAttack) {
+            store.setStageSkillTriggered('5B-1');
             setMessage('THREAT PREDICTION!');
             playConditionSound('Avoiding');
             triggerScreenEffect('flash-red');
@@ -948,8 +1000,8 @@ export const useGameLoop = () => {
                 ? Math.floor(damage * 1.5) // Critical Hit for 2B-8
                 : damage;
 
-            // 2B-1: Equipment Gear (Boss Attack Damage -30%)
-            if (store.equippedAltarSkills.includes('2B-1')) {
+            // 3B-1: Equipment Gear (Boss Attack Damage -30%)
+            if (store.equippedAltarSkills.includes('3B-1')) {
                 finalDmg = Math.floor(finalDmg * 0.7);
             }
 
@@ -1193,17 +1245,17 @@ export const useGameLoop = () => {
         const nextTurn = store.currentTurn + 1;
         store.setCurrentTurn(nextTurn);
 
-        // 7: System Overload (5% chance to convert all cards to Jokers, once per stage)
-        if (store.equippedAltarSkills.includes('7') && !store.stageSkillsTriggered.includes('7')) {
+        // 8: System Overload (5% chance to convert all cards to Jokers, once per stage)
+        if (store.equippedAltarSkills.includes('8') && !store.stageSkillsTriggered.includes('8')) {
             if (Math.random() < 0.05) {
-                store.setStageSkillTriggered('7');
+                store.setStageSkillTriggered('8');
                 const currentHand = store.playerHand;
                 const jokerHand = currentHand.map((c: any) => {
                     if (!c) return null;
                     return { rank: null, suit: null, isJoker: true, isBanned: false, color: 'wild' } as any;
                 });
                 store.setPlayerHand(jokerHand);
-                setMessage(store.language === 'KR' ? '연산 오류 감지! 카드 패턴이 붕괴되었습니다!' : 'Calculation error detected! Card patterns have collapsed!');
+                setMessage(store.language === 'KR' ? '시스템 과부하!' : 'SYSTEM OVERLOAD!');
                 AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
                 await new Promise(r => setTimeout(r, 1500));
             }
@@ -1287,11 +1339,11 @@ export const useGameLoop = () => {
                 setPlayerHp(Math.max(0, freshHP - amount));
                 showDamageText('PLAYER', `-${amount}`, '#e74c3c');
 
-                // 2B-2: Acclimatization (Regen on status damage)
-                if (store.equippedAltarSkills.includes('2B-2')) {
+                // 3B-2: Acclimatization (Regen on status damage)
+                if (store.equippedAltarSkills.includes('3B-2')) {
                     if (!playerConditions.has('Regenerating')) {
                         let healAmt = 5;
-                        if (store.equippedAltarSkills.includes('2A-1')) healAmt = Math.floor(healAmt * 1.2);
+                        if (store.equippedAltarSkills.includes('3A-1')) healAmt = Math.floor(healAmt * 1.2);
                         store.addPlayerCondition('Regenerating', 3, '', { amount: healAmt });
                         setMessage("ACCLIMATIZATION!");
                     }
@@ -1348,8 +1400,8 @@ export const useGameLoop = () => {
                 playConditionSound('Regenerating');
 
                 let heal = data.data?.amount || 10;
-                // 2A-1: Biorhythm Acceleration (+20% Regen)
-                if (store.equippedAltarSkills.includes('2A-1')) {
+                // 3A-1: Biorhythm Acceleration (+20% Regen)
+                if (store.equippedAltarSkills.includes('3A-1')) {
                     heal = Math.floor(heal * 1.2);
                 }
 
@@ -1428,13 +1480,14 @@ export const useGameLoop = () => {
                 setBotHp(Math.min(latestBot.maxHp, latestBot.hp + heal));
                 showDamageText('BOT', `+${heal}`, '#2ecc71');
 
-                // 3B-3: Symbiotic Relationship (Player also heals when boss regens)
-                if (store.equippedAltarSkills.includes('3B-3') && heal > 0) {
+                // 4B-3: Symbiotic Relationship (Player also heals when boss regens)
+                if (store.equippedAltarSkills.includes('4B-3') && heal > 0) {
                     const freshPSymbiotic = useGameStore.getState().player;
                     let playerHeal = heal;
-                    if (store.equippedAltarSkills.includes('2A-1')) playerHeal = Math.floor(playerHeal * 1.2);
+                    if (store.equippedAltarSkills.includes('3A-1')) playerHeal = Math.floor(playerHeal * 1.2);
                     setPlayerHp(Math.min(freshPSymbiotic.maxHp, freshPSymbiotic.hp + playerHeal));
                     showDamageText('PLAYER', `+${playerHeal}`, '#2ecc71');
+                    AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');
                 }
 
                 await new Promise(r => setTimeout(r, 800));
@@ -1489,10 +1542,13 @@ export const useGameLoop = () => {
         const store = useGameStore.getState();
         const p = store.player;
 
-        // 4B-3: Fragments Recovery (+2 extra swaps when HP <= 25%)
+        // 5B-3: Fragments Recovery (+2 extra swaps when HP <= 25%, once per stage)
         let bonusDraws = 0;
-        if (store.equippedAltarSkills.includes('4B-3') && p.hp <= p.maxHp * 0.25) {
+        if (store.equippedAltarSkills.includes('5B-3') && p.hp <= p.maxHp * 0.25 && !store.stageSkillsTriggered.includes('5B-3')) {
             bonusDraws = 2;
+            store.setStageSkillTriggered('5B-3');
+            setMessage(store.language === 'KR' ? '파편회수!' : 'FRAGMENTS RECOVERY!');
+            AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
         }
 
         const totalDraws = (p.drawsRemaining ?? 0) + bonusDraws;
@@ -1503,10 +1559,10 @@ export const useGameLoop = () => {
             useGameStore.getState().setDrawsRemaining(newDraws);
             setMessage(t.COMBAT.CARDS_SWAPPED);
 
-            // 3A-3: Probability Distortion (25% chance for +1 extra swap)
-            if (store.equippedAltarSkills.includes('3A-3') && Math.random() < 0.25) {
+            // 4A-3: Probability Distortion (25% chance for +1 extra swap)
+            if (store.equippedAltarSkills.includes('4A-3') && Math.random() < 0.25) {
                 useGameStore.getState().setDrawsRemaining(newDraws + 1);
-                setMessage('Draws +1');
+                setMessage(store.language === 'KR' ? '확률왜곡 +1' : 'Probability Distortion +1');
             }
         } else {
             setMessage(t.COMBAT.NO_SWAPS);
@@ -1700,6 +1756,25 @@ export const useGameLoop = () => {
         if (store.chapterNum === '2A' && store.stageNum === 10) {
             store.applyStageRules(store.chapterNum, store.stageNum, store.currentTurn);
         }
+        // 8: System Overload (5% chance to convert all to Jokers at turn end, once per stage)
+        if (store.equippedAltarSkills.includes('8') && !store.stageSkillsTriggered.includes('8')) {
+            if (Math.random() < 0.05) {
+                const fullHandIndices = store.playerHand.map((c, idx) => c !== null ? idx : -1).filter(idx => idx !== -1);
+                if (fullHandIndices.length > 0) {
+                    const jokerHand = [...store.playerHand];
+                    fullHandIndices.forEach(idx => {
+                        jokerHand[idx] = CardFactory.create(null, null, true);
+                    });
+                    useGameStore.setState({ playerHand: jokerHand });
+                    store.setStageSkillTriggered('8');
+                    setMessage("연산 오류 감지! 카드 패턴이 붕괴되었습니다!");
+                    triggerScreenEffect('flash-red');
+                    AudioManager.playSFX('/assets/audio/common/UI_ALTAR_UPGRADE.mp3');
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+            }
+        }
+
         store.setGamePhase('IDLE');
     };
 

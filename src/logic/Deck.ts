@@ -36,16 +36,35 @@ export class Deck {
     this.shuffle();
   }
 
-  draw(count: number, heldCards: (Card | null)[] = []): Card[] {
+  draw(count: number, heldCards: (Card | null)[] = [], options?: { majoritySuit?: string | null, forceSameRank?: boolean }): Card[] {
     const drawn: Card[] = [];
+
+    // 6B-2: Calculation Stabilization (40% chance of same rank for 2+ cards)
+    let forcedRankIdx: number | null = null;
+    let targetRank: string | null = null;
+
+    if (count >= 2 && options?.forceSameRank && Math.random() < 0.40) {
+      // Pick two random positions to share a rank
+      const idx1 = Math.floor(Math.random() * count);
+      let idx2 = Math.floor(Math.random() * count);
+      while (idx1 === idx2) idx2 = Math.floor(Math.random() * count);
+      forcedRankIdx = idx2; // We'll set the rank after drawing the first card at idx1
+    }
+
     for (let i = 0; i < count; i++) {
+      // 6A-2: Probability Alignment (Guarantee 1 card is majority suit)
+      let targetSuit: string | null = null;
+      if (i === 0 && options?.majoritySuit) {
+        targetSuit = options.majoritySuit;
+      }
+
       // Anti-clumping for Jokers
       let effectiveJokerProb = this.jokerProbability;
       if (this.consecutiveJokers >= 2) effectiveJokerProb *= 0.1; // Drastically reduce if already got 2
 
       const isJoker = Math.random() < effectiveJokerProb;
 
-      if (isJoker) {
+      if (isJoker && !targetRank && !targetSuit) {
         drawn.push(CardFactory.create(null, null, true));
         this.consecutiveJokers++;
         this.consecutiveRoyals = 0;
@@ -57,7 +76,30 @@ export class Deck {
         }
 
         if (this.cards.length > 0) {
-          const card = this.cards.shift()!;
+          let cardIdx = 0;
+
+          if (targetRank) {
+            // Try to find same rank
+            const foundIdx = this.cards.findIndex(c => c.rank === targetRank);
+            if (foundIdx !== -1) cardIdx = foundIdx;
+          } else if (targetSuit) {
+            // Try to find majority suit
+            const foundIdx = this.cards.findIndex(c => c.suit === targetSuit);
+            if (foundIdx !== -1) cardIdx = foundIdx;
+          }
+
+          const card = this.cards.splice(cardIdx, 1)[0];
+
+          // If this is the "source" card for a forced rank pair
+          if (forcedRankIdx !== null && !targetRank && !card.isJoker) {
+            targetRank = card.rank;
+          }
+
+          // If this is the "target" card, it should already be handled by the targetRank check above
+          // But clear targetRank if we just used it
+          if (targetRank && i === forcedRankIdx) {
+            // targetRank was used
+          }
 
           // Anti-clumping for Royals (JQK)
           const isRoyal = ['J', 'Q', 'K'].includes(card.rank || '');

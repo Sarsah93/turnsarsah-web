@@ -1,5 +1,5 @@
 import { obfuscateData, deobfuscateData } from './encryption';
-import { ALTAR_SKILLS } from '../constants/altarSystem';
+import { ALTAR_SKILLS, ALTAR_PATHS } from '../constants/altarSystem';
 import { Difficulty } from '../constants/gameConfig';
 
 const ALTAR_STORAGE_KEY = 'turnsarsah_altar_data';
@@ -170,14 +170,28 @@ export class AltarManager {
         if (slot.unlockedSkills.includes(skillId)) return false;
         const skill = ALTAR_SKILLS[skillId];
         if (!skill) return false;
+
+        // Requirement 1: Only one skill per tier
+        const isTierAlreadyUnlocked = slot.unlockedSkills.some(id => {
+            const s = ALTAR_SKILLS[id];
+            return s && s.tier === skill.tier;
+        });
+        if (isTierAlreadyUnlocked) return false;
+
+        // Requirement 2: Directional Build (Path Dependency)
         if (skill.tier > 1) {
-            const requiredTier = skill.tier - 1;
-            const hasPrevTier = slot.unlockedSkills.some(id => {
-                const s = ALTAR_SKILLS[id];
-                return s && s.tier === requiredTier;
-            });
-            if (!hasPrevTier) return false;
+            // Must have a parent in ALTAR_PATHS already unlocked
+            const parents = ALTAR_PATHS.filter(p => p.to === skillId).map(p => p.from);
+            const hasPrevInPath = parents.some(pid => slot.unlockedSkills.includes(pid));
+
+            if (!hasPrevInPath) return false;
         }
+
+        // Requirement 3: Locked Skills (No cost defined for Lvl 4~8)
+        if (skill.tier >= 4 && skill.cost.length === 0) {
+            return false;
+        }
+
         return skill.cost.every(tid => this.isTrophyAvailable(tid, difficulty));
     }
 

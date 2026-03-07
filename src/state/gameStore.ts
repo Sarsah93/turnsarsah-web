@@ -28,8 +28,8 @@ const calculateInitialPlayer = (
   // 1A: Prepper (+25 Max HP)
   if (activeSkills.includes('1A')) {
     let bonus = 25;
-    // 2A-1: Biorhythm Acceleration (+20% bonus to permanent HP increases)
-    if (activeSkills.includes('2A-1')) {
+    // 3A-1: Biorhythm Acceleration (+20% bonus to permanent HP increases)
+    if (activeSkills.includes('3A-1')) {
       bonus = Math.floor(bonus * 1.2);
     }
     initialHpBonus += bonus;
@@ -39,7 +39,7 @@ const calculateInitialPlayer = (
   // If moving to Chapter 2, we carry this over via haveStage6Bonus
   if (haveStage6Bonus) {
     let bonus = Math.floor(config.playerHp * 0.2); // config.stage6MaxHpBonus is typically 0.2
-    if (activeSkills.includes('2A-1')) {
+    if (activeSkills.includes('3A-1')) {
       bonus = Math.floor(bonus * 1.2);
     }
     initialHpBonus += bonus;
@@ -50,8 +50,8 @@ const calculateInitialPlayer = (
 
   // Evasion (Avoiding) - 2B Oneness with Nature (+5% Evasion, ignore env)
   const isOnenessWithNature = activeSkills.includes('2B');
-  if ((chapterId === '1' || chapterId === '2A' || (chapterId === '2B' && isOnenessWithNature)) && config.avoidChance > 0) {
-    const bonus = isOnenessWithNature ? 0.05 : 0;
+  const bonus = isOnenessWithNature ? 0.05 : 0;
+  if ((chapterId === '1' || chapterId === '2A' || (chapterId === '2B' && isOnenessWithNature)) && (config.avoidChance + bonus) > 0) {
     applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance + bonus });
   }
 
@@ -173,6 +173,12 @@ interface GameStoreState {
   stageSkillsTriggered: string[]; // for once-per-stage skills like 7
   setStageSkillTriggered: (skillId: string) => void;
 
+  // v2.4.4: Skill specific states
+  dyschromatopsiaUses: number; // 0/2
+  isDyschromatopsiaActive: boolean;
+  setDyschromatopsiaActive: (active: boolean) => void;
+  incrementDyschromatopsiaUses: () => void;
+
   // Game initialization
   initGame: (chapterId: string, stageId: number) => void;
   applyStageRules: (chapterId: string, stageId: number, turn: number) => void;
@@ -281,6 +287,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   ch2PerfectCount: 0,
   ch2SpecialQualify: false,
   setHiddenState: (update) => set((state) => ({ ...state, ...update })),
+  stageSkillsTriggered: [],
 
   // Tutorial System
   isTutorial: false,
@@ -357,10 +364,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     sessionSkillsTriggered: [...state.sessionSkillsTriggered, skillId]
   })),
 
-  stageSkillsTriggered: [],
   setStageSkillTriggered: (skillId) => set((state) => ({
     stageSkillsTriggered: [...state.stageSkillsTriggered, skillId]
   })),
+
+  dyschromatopsiaUses: 0,
+  isDyschromatopsiaActive: false,
+  setDyschromatopsiaActive: (isDyschromatopsiaActive) => set({ isDyschromatopsiaActive }),
+  incrementDyschromatopsiaUses: () => set((state) => ({ dyschromatopsiaUses: Math.min(2, state.dyschromatopsiaUses + 1) })),
 
   setBannedRanks: (bannedRanks) => set({ bannedRanks }),
   setBannedSuit: (bannedSuit) => set({ bannedSuit }),
@@ -375,10 +386,26 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     set((state) => ({ bot: { ...state.bot, activeRules: rules } })),
 
   // Health
-  setPlayerHp: (hp) =>
-    set((state) => ({
-      player: { ...state.player, hp: Math.max(0, Math.min(hp, state.player.maxHp)) },
-    })),
+  setPlayerHp: (hp) => set((state) => {
+    // 4B-1: Phase Transition (Resurrection 1 time per stage)
+    if (hp <= 0 && state.equippedAltarSkills.includes('4B-1') && !state.stageSkillsTriggered.includes('4B-1')) {
+      const newHand = [...state.playerHand];
+      // Convert random card to Joker
+      const validIndices = newHand.map((c, i) => c !== null ? i : -1).filter(i => i !== -1);
+      if (validIndices.length > 0) {
+        const targetIdx = validIndices[Math.floor(Math.random() * validIndices.length)];
+        newHand[targetIdx] = CardFactory.create(null, null, true);
+      }
+
+      return {
+        player: { ...state.player, hp: 1 },
+        playerHand: newHand,
+        stageSkillsTriggered: [...state.stageSkillsTriggered, '4B-1'],
+        message: 'PHASE TRANSITION!'
+      };
+    }
+    return { player: { ...state.player, hp: Math.max(0, Math.min(state.player.maxHp, hp)) } };
+  }),
   setBotHp: (hp) =>
     set((state) => ({
       bot: { ...state.bot, hp: Math.max(0, Math.min(hp, state.bot.maxHp)) },
@@ -409,8 +436,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   // Player Conditions
   addPlayerCondition: (name, duration, desc, data) =>
     set((state) => {
-      // 2A-2: Hunter (Immune to accuracy debuffs and paralysis)
-      if (state.equippedAltarSkills.includes('2A-2') && (name === 'Decreasing accuracy' || name === 'Paralyzing')) {
+      // 3A-2: Hunter (Immune to accuracy debuffs and paralysis)
+      if (state.equippedAltarSkills.includes('3A-2') && (name === 'Decreasing accuracy' || name === 'Paralyzing')) {
         return state;
       }
 
@@ -422,12 +449,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const newConditions = new Map<string, Condition>(state.player.conditions);
       applyCondition(newConditions, name, duration, desc, data);
 
-      // 2B-2: Acclimatization (Regen on debuff damage / debuff application)
+      // 3B-2: Acclimatization (Regen on debuff damage / debuff application)
       const isDebuff = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Decreasing accuracy', 'Neurotoxicity', 'Dehydration'].includes(name);
-      if (isDebuff && state.equippedAltarSkills.includes('2B-2')) {
+      if (isDebuff && state.equippedAltarSkills.includes('3B-2')) {
         let healAmount = 5;
-        // 2A-1: Biorhythm Acceleration (+20% Regen/HP efficiency)
-        if (state.equippedAltarSkills.includes('2A-1')) {
+        // 3A-1: Biorhythm Acceleration (+20% Regen/HP efficiency)
+        if (state.equippedAltarSkills.includes('3A-1')) {
           healAmount = Math.floor(healAmount * 1.2); // 5 -> 6
         }
         applyCondition(newConditions, 'Regenerating', 3, '', { amount: healAmount });
@@ -549,14 +576,51 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setPuzzleTarget: (target) => set({ puzzleTarget: target }),
 
   swapCards: (indices) => set((state) => {
+    // 6A-2: Probability Alignment (Get majority suit)
+    let majoritySuit: string | null = null;
+    if (state.equippedAltarSkills.includes('6A-2')) {
+      const suits: Record<string, number> = {};
+      state.playerHand.forEach(c => {
+        if (c && !c.isJoker && c.suit) {
+          suits[c.suit] = (suits[c.suit] || 0) + 1;
+        }
+      });
+      let maxCount = 0;
+      for (const s in suits) {
+        if (suits[s] > maxCount) {
+          maxCount = suits[s];
+          majoritySuit = s;
+        }
+      }
+    }
+
     const newHand = [...state.playerHand];
-    const newCards = state.deck.draw(indices.length, state.playerHand);
+    let drawsToConsume = 1;
+
+    // 4A-3: Probability Distortion (25% chance to not consume a swap chance)
+    if (state.equippedAltarSkills.includes('4A-3') && Math.random() < 0.25) {
+      drawsToConsume = 0;
+      set({ message: 'PROBABILITY DISTORTION +1' });
+    }
+
+    const newCards = state.deck.draw(indices.length, state.playerHand, {
+      majoritySuit,
+      forceSameRank: state.equippedAltarSkills.includes('6B-2')
+    });
+
     indices.forEach((idx, i) => {
       if (idx >= 0 && idx < 8) {
         newHand[idx] = newCards[i];
       }
     });
-    return { playerHand: newHand };
+
+    return {
+      playerHand: newHand,
+      player: {
+        ...state.player,
+        drawsRemaining: (state.player.drawsRemaining ?? 0) - drawsToConsume
+      }
+    };
   }),
   // Deck
   setDeck: (deck) => set({ deck }),
@@ -657,8 +721,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         }
       }
 
-      // 3A-2: Bottom Deal (+5% Joker probability)
-      const bonusJoker = activeSkills.includes('3A-2') ? 0.05 : 0;
+      // 4A-2: Bottom Deal (+5% Joker probability)
+      const bonusJoker = activeSkills.includes('4A-2') ? 0.05 : 0;
       const newDeck = new Deck(config.jokerProbability + bonusJoker);
 
       const initialHand = new Array(8).fill(null);
@@ -670,7 +734,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       // RESET STAGE-BASED SKILL USES
       const newSkillUses = { ...state.altarSkillUses };
-      if (activeSkills.includes('3A-1')) newSkillUses['3A-1'] = 2; // Dyschromatopsia: 2 uses per stage
 
       return {
         chapterNum: chapterId,
@@ -707,6 +770,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         stage10RuleText: '',
         puzzleTarget: 0,
         message: '',
+        dyschromatopsiaUses: 0,
+        isDyschromatopsiaActive: false,
       };
     });
     // Immediately apply rules for turn 0
@@ -728,8 +793,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     blindIndices = [];
     bannedIndices = [];
 
-    // 6B: Entropy Control — Immune to BLIND and BANNED; skip all ban/blind logic
-    const has6B = state.equippedAltarSkills.includes('6B');
+    // 7B: Entropy Control — Immune to BLIND and BANNED; skip all ban/blind logic
+    const has7B = state.equippedAltarSkills.includes('7B');
 
     const suits = ['CLUBS', 'DIAMONDS', 'HEARTS', 'SPADES'];
     const ranks = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
@@ -754,7 +819,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           pickedRules.push(pick);
 
           if (pick === 'BLIND') {
-            if (!has6B) {
+            if (!has7B) {
               activeStageIds.push(3); // BLIND is now Stage 3
               const indices = [0, 1, 2, 3, 4, 5, 6, 7].filter(idx => !blindIndices.includes(idx));
               for (let j = 0; j < 2 && indices.length > 0; j++) {
@@ -764,7 +829,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
               ruleDescs.push('BLIND_2 CARDS');
             }
           } else if (pick === 'BAN_RANK') {
-            if (!has6B) {
+            if (!has7B) { // Changed from has6B to has7B
               activeStageIds.push(2); // BAN_RANK is now Stage 2
               const r1 = ranks[Math.floor(Math.random() * ranks.length)];
               let r2 = ranks[Math.floor(Math.random() * ranks.length)];
@@ -773,13 +838,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
               ruleDescs.push(`BANNED_${bannedRanks.join('/')}`);
             }
           } else if (pick === 'BAN_SUIT') {
-            if (!has6B) {
+            if (!has7B) {
               activeStageIds.push(4);
               bannedSuit = suits[Math.floor(Math.random() * suits.length)];
               ruleDescs.push(`BANNED_${bannedSuit}`);
             }
           } else if (pick === 'BAN_HAND') {
-            if (!has6B) {
+            if (!has7B) {
               activeStageIds.push(6);
               bannedHand = hands[Math.floor(Math.random() * hands.length)];
               ruleDescs.push(`BANNED_${bannedHand}`);
@@ -809,25 +874,32 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         set({ stage10RuleText: t.RULES[ch1RuleKey] || '' });
 
         if (stageId === 2) {
-          // BAN_RANK (swapped from Stage 3)
-          const r1 = ranks[Math.floor(Math.random() * ranks.length)];
-          let r2 = ranks[Math.floor(Math.random() * ranks.length)];
-          while (r1 === r2) r2 = ranks[Math.floor(Math.random() * ranks.length)];
-          bannedRanks = [r1, r2];
+          if (!has7B) {
+            const r1 = ranks[Math.floor(Math.random() * ranks.length)];
+            let r2 = ranks[Math.floor(Math.random() * ranks.length)];
+            while (r1 === r2) r2 = ranks[Math.floor(Math.random() * ranks.length)];
+            bannedRanks = [r1, r2];
+          }
         } else if (stageId === 3) {
-          // BLIND (swapped from Stage 2)
-          const indices = [0, 1, 2, 3, 4, 5, 6, 7];
-          for (let i = 0; i < 2; i++) {
-            const randIdx = Math.floor(Math.random() * indices.length);
-            blindIndices.push(indices.splice(randIdx, 1)[0]);
+          if (!has7B) {
+            const indices = [0, 1, 2, 3, 4, 5, 6, 7];
+            for (let i = 0; i < 2; i++) {
+              const randIdx = Math.floor(Math.random() * indices.length);
+              blindIndices.push(indices.splice(randIdx, 1)[0]);
+            }
           }
         } else if (stageId === 4) {
-          bannedSuit = suits[Math.floor(Math.random() * suits.length)];
+          if (!has7B) {
+            bannedSuit = suits[Math.floor(Math.random() * suits.length)];
+          }
         } else if (stageId === 5 && (state.difficulty === Difficulty.HARD || state.difficulty === Difficulty.HELL)) {
-          // HARD/HELL: Stage 5 also has BAN_HAND
-          bannedHand = hands[Math.floor(Math.random() * hands.length)];
+          if (!has7B) {
+            bannedHand = hands[Math.floor(Math.random() * hands.length)];
+          }
         } else if (stageId === 6) {
-          bannedHand = hands[Math.floor(Math.random() * hands.length)];
+          if (!has7B) {
+            bannedHand = hands[Math.floor(Math.random() * hands.length)];
+          }
         } else if (stageId === 7 && turn > 0) {
           // Scaling moved to executeBotTurn (conditional on hit)
         } else if (stageId === 9 && turn > 0) {

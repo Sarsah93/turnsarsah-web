@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useGameStore } from '../state/gameStore';
 import { BlockButton } from './BlockButton';
-import { TROPHIES, ALTAR_SKILLS } from '../constants/altarSystem';
+import { TROPHIES, ALTAR_SKILLS, ALTAR_PATHS } from '../constants/altarSystem';
 import { AltarManager } from '../utils/AltarManager';
 import { Difficulty } from '../constants/gameConfig';
 
@@ -11,63 +11,50 @@ interface AltarSystemProps {
 }
 
 const TREE_NODES = [
-    { id: '1A', col: 1, row: 3 },
-    { id: '2A', col: 2, row: 3 },
-    { id: '2A-1', col: 3, row: 2 },
-    { id: '2A-2', col: 3, row: 4 },
-    { id: '3A-1', col: 4, row: 1 },
-    { id: '3A-2', col: 4, row: 3 },
-    { id: '3A-3', col: 4, row: 5 },
-    { id: '4A-1', col: 5, row: 1 },
-    { id: '4A-2', col: 5, row: 3 },
-    { id: '4A-3', col: 5, row: 5 },
-    { id: '5A-1', col: 6, row: 2 },
-    { id: '5A-2', col: 6, row: 4 },
-    { id: '6A', col: 7, row: 3 },
+    { id: '1A', col: 1, row: 5 },
+    { id: '1B', col: 1, row: 7 },
 
-    { id: '1B', col: 1, row: 9 },
-    { id: '2B', col: 2, row: 9 },
-    { id: '2B-1', col: 3, row: 8 },
-    { id: '2B-2', col: 3, row: 10 },
-    { id: '3B-1', col: 4, row: 7 },
-    { id: '3B-2', col: 4, row: 9 },
-    { id: '3B-3', col: 4, row: 11 },
-    { id: '4B-1', col: 5, row: 7 },
-    { id: '4B-2', col: 5, row: 9 },
-    { id: '4B-3', col: 5, row: 11 },
-    { id: '5B-1', col: 6, row: 8 },
-    { id: '5B-2', col: 6, row: 10 },
-    { id: '6B', col: 7, row: 9 },
+    { id: '2A', col: 2, row: 5 },
+    { id: '2B', col: 2, row: 7 },
 
-    { id: '7', col: 8, row: 6 }
+    { id: '3A-1', col: 3, row: 2 },
+    { id: '3A-2', col: 3, row: 5 }, // 사냥꾼
+    { id: '3B-1', col: 3, row: 7 }, // 보호구 장착
+    { id: '3B-2', col: 3, row: 10 },
+
+    { id: '4A-1', col: 4, row: 1 },
+    { id: '4A-2', col: 4, row: 3 },
+    { id: '4A-3', col: 4, row: 5 }, // 확률왜곡
+    { id: '4B-1', col: 4, row: 7 }, // 위상전이
+    { id: '4B-2', col: 4, row: 9 },
+    { id: '4B-3', col: 4, row: 11 },
+
+    { id: '5A-1', col: 5, row: 1 },
+    { id: '5A-2', col: 5, row: 3 },
+    { id: '5A-3', col: 5, row: 5 },
+    { id: '5B-1', col: 5, row: 7 },
+    { id: '5B-2', col: 5, row: 9 },
+    { id: '5B-3', col: 5, row: 11 },
+
+    { id: '6A-1', col: 6, row: 2 },
+    { id: '6A-2', col: 6, row: 4 },
+    { id: '6B-1', col: 6, row: 8 },
+    { id: '6B-2', col: 6, row: 10 },
+
+    { id: '7A', col: 7, row: 3 },
+    { id: '7B', col: 7, row: 9 },
+
+    { id: '8', col: 8, row: 6 }
 ];
 
-const PATHS = [
-    { from: '1A', to: '2A' }, { from: '2A', to: '2A-1' }, { from: '2A', to: '2A-2' },
-    { from: '2A-1', to: '3A-1' }, { from: '2A-1', to: '3A-2' },
-    { from: '2A-2', to: '3A-3' }, { from: '2A-2', to: '3B-1' },
-    { from: '3A-1', to: '4A-1' }, { from: '3A-1', to: '4A-2' },
-    { from: '3A-2', to: '4A-1' }, { from: '3A-2', to: '4A-2' },
-    { from: '3A-3', to: '4A-3' }, { from: '3A-3', to: '4B-1' },
-    { from: '4A-1', to: '5A-1' }, { from: '4A-2', to: '5A-1' }, { from: '4A-2', to: '5A-2' }, { from: '4A-3', to: '5A-2' },
-    { from: '5A-1', to: '6A' }, { from: '5A-2', to: '6A' }, { from: '6A', to: '7' },
-    { from: '1B', to: '2B' }, { from: '2B', to: '2B-1' }, { from: '2B', to: '2B-2' },
-    { from: '2B-1', to: '3A-3' }, { from: '2B-1', to: '3B-1' },
-    { from: '2B-2', to: '3B-2' }, { from: '2B-2', to: '3B-3' },
-    { from: '3B-1', to: '4A-3' }, { from: '3B-1', to: '4B-1' },
-    { from: '3B-2', to: '4B-2' }, { from: '3B-2', to: '4B-3' },
-    { from: '3B-3', to: '4B-2' }, { from: '3B-3', to: '4B-3' },
-    { from: '4B-1', to: '5B-1' }, { from: '4B-2', to: '5B-1' }, { from: '4B-2', to: '5B-2' }, { from: '4B-3', to: '5B-2' },
-    { from: '5B-1', to: '6B' }, { from: '5B-2', to: '6B' }, { from: '6B', to: '7' },
-    { from: '1A', to: '1B' },
-];
+const PATHS = ALTAR_PATHS;
 
-const CELL = 90;
-const COL_GAP = 15;
-const ROW_GAP = 10;
+const CELL = 80;
+const COL_GAP = 12;
+const ROW_GAP = 12;
 const PAD = 10;
-const SVG_W = PAD + 8 * CELL + 7 * COL_GAP + PAD; // 845px
-const SVG_H = PAD + 12 * CELL + 11 * ROW_GAP + PAD; // 1210px
+const SVG_W = PAD + 8 * CELL + 7 * COL_GAP + PAD; // 744px
+const SVG_H = PAD + 11 * CELL + 10 * ROW_GAP + PAD; // (11*80) + (10*12) + 20 = 1020px
 
 const getNodeXY = (nodeId: string) => {
     const node = TREE_NODES.find(n => n.id === nodeId);
@@ -80,6 +67,7 @@ const getNodeXY = (nodeId: string) => {
 
 export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
     const { language } = useGameStore();
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // 탭 상태: NORMAL, HARD, HELL
     const [activeTab, setActiveTab] = useState<Difficulty>(Difficulty.NORMAL);
@@ -141,13 +129,15 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
     };
 
     return (
-        <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            zIndex: 1000,
-            fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif"
-        }}>
+        <div
+            ref={containerRef}
+            style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.85)',
+                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                zIndex: 1000,
+                fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif"
+            }}>
             <div style={{
                 width: '95%', height: '92%', // Slightly shorter to avoid bottom cut
                 backgroundColor: '#1a1a2e',
@@ -302,7 +292,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                             </svg>
                             <div style={{
                                 position: 'absolute', top: 0, left: 0, display: 'grid',
-                                gridTemplateColumns: `repeat(8, ${CELL}px)`, gridTemplateRows: `repeat(12, ${CELL}px)`,
+                                gridTemplateColumns: `repeat(8, ${CELL}px)`, gridTemplateRows: `repeat(11, ${CELL}px)`,
                                 gap: `${ROW_GAP}px ${COL_GAP}px`, padding: `${PAD}px`, width: SVG_W, height: SVG_H, zIndex: 5
                             }}>
                                 {TREE_NODES.map(node => {
@@ -526,17 +516,52 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                 const el = document.querySelector(`[data-trophy-id="${selectedTrophyId}"]`) as HTMLElement;
                 if (!el) return null;
                 const rect = el.getBoundingClientRect();
+
+                // Calculate relative position based on 1600x900 logical coordinate system
+                const container = containerRef.current;
+                if (!container) return null;
+                const cRect = container.getBoundingClientRect();
+                const scale = cRect.width / 1600;
+
+                const logicalX = (rect.left - cRect.left + rect.width / 2) / scale;
+                const logicalY = (rect.top - cRect.top) / scale;
+
+                const popupWidth = 420;
+                const halfWidth = popupWidth / 2;
+                // Clamp horizontal position to keep popup within screen bounds
+                const finalX = Math.max(halfWidth + 20, Math.min(logicalX, 1600 - halfWidth - 20));
+
                 return (
                     <div style={{ position: 'absolute', inset: 0, zIndex: 9999 }} onClick={() => setSelectedTrophyId(null)}>
                         <div style={{
-                            position: 'absolute', left: Math.min(rect.left + rect.width / 2, 1600 - 170), top: rect.top - 10, transform: 'translate(-50%, -100%)',
-                            width: '280px', backgroundColor: '#1a1a2e', border: '2px solid #f1c40f', borderRadius: '8px', padding: '14px',
-                            boxShadow: '0 5px 25px rgba(0,0,0,0.8), 0 0 15px rgba(241,196,15,0.2)', display: 'flex', flexDirection: 'column', gap: '6px',
-                            color: '#fff', fontFamily: "'Noto Sans KR', sans-serif", fontSize: '0.9rem', textAlign: 'center'
+                            position: 'absolute',
+                            left: finalX,
+                            top: logicalY - 12,
+                            transform: 'translate(-50%, -100%)',
+                            width: `${popupWidth}px`,
+                            backgroundColor: '#1a1a2e',
+                            border: '3px solid #f1c40f',
+                            borderRadius: '12px',
+                            padding: '28px',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.9), 0 0 20px rgba(241,196,15,0.4)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '15px',
+                            color: '#fff',
+                            fontFamily: "'Noto Sans KR', sans-serif",
+                            textAlign: 'center'
                         }} onClick={(e) => e.stopPropagation()}>
-                            <p style={{ margin: 0, color: '#95a5a6', fontSize: '0.75rem' }}>{trophy.chapterInfo}</p>
-                            <h3 style={{ margin: 0, color: '#f1c40f', fontSize: '1.15rem', fontWeight: 'bold', wordBreak: 'keep-all' }}>{trophy.name[language]}</h3>
-                            <p style={{ margin: 0, color: '#bdc3c7', fontSize: '0.8rem', fontStyle: 'italic' }}>{trophy.desc[language]}</p>
+                            <p style={{ margin: 0, color: '#95a5a6', fontSize: '1.1rem', fontWeight: 'bold' }}>{trophy.chapterInfo}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '18px', margin: '5px 0' }}>
+                                <img
+                                    src={`/assets/trophy/${trophy.image}`}
+                                    alt="Trophy"
+                                    style={{ width: '85px', height: '85px', objectFit: 'contain' }}
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }}
+                                />
+                                <h3 style={{ margin: 0, color: '#f1c40f', fontSize: '1.8rem', fontWeight: 'bold', wordBreak: 'keep-all', lineHeight: '1.2' }}>{trophy.name[language]}</h3>
+                            </div>
+                            <p style={{ margin: 0, color: '#bdc3c7', fontSize: '1.25rem', fontStyle: 'italic', lineHeight: '1.5' }}>{trophy.desc[language]}</p>
                         </div>
                     </div>
                 );

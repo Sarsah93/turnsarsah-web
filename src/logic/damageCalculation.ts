@@ -101,13 +101,15 @@ export function calculatePlayerDamage(
   bannedHandType: string | null = null,
   bannedRanks: string[] = [],
   bannedSuit: string | null = null,
-  difficulty?: Difficulty
+  difficulty?: Difficulty,
+  isDyschromatopsia: boolean = false
 ): DamageCalculationResult {
   const diff = difficulty ?? useGameStore.getState().difficulty;
   const config = DIFFICULTY_CONFIGS[diff];
+  const isDys = isDyschromatopsia || useGameStore.getState().equippedAltarSkills.includes('4A-1');
 
   // 1. Check Banned Hand (Stage Rule)
-  const handEval = evaluateHand(cards);
+  const handEval = evaluateHand(cards, isDys);
   if (bannedHandType && handEval.type === bannedHandType && handEval.type !== 'High Card') {
     return {
       baseDamage: 0,

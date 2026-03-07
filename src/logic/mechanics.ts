@@ -9,7 +9,7 @@ export interface HandEvaluation {
   scoringIndices: number[];
 }
 
-export function evaluateHand(cards: Card[]): HandEvaluation {
+export function evaluateHand(cards: Card[], isDyschromatopsia: boolean = false): HandEvaluation {
   if (!cards || cards.length === 0) {
     return { type: 'None', bonus: 0, scoringIndices: [] };
   }
@@ -25,7 +25,7 @@ export function evaluateHand(cards: Card[]): HandEvaluation {
     return best;
   }
 
-  const evalResult = evaluateCleanHand(nonJokers);
+  const evalResult = evaluateCleanHand(nonJokers, isDyschromatopsia);
   return {
     ...evalResult,
     scoringIndices: evalResult.scoringIndices.map(idx => (nonJokers[idx] as any).originalIndex)
@@ -76,7 +76,7 @@ function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards
 
   // Check for Straight Flush (including wrap-around)
   if (totalCards === 5) {
-    const straightFlushResult = checkStraightFlushWithJokers(nonJokers, jokerCount);
+    const straightFlushResult = checkStraightFlushWithJokers(nonJokers, jokerCount, isDyschromatopsia);
     if (straightFlushResult.success) {
       return { type: 'Straight Flush', bonus: HAND_BONUSES.STRAIGHT_FLUSH, scoringIndices: allIndices };
     }
@@ -104,7 +104,7 @@ function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards
 
   // Check for Flush (5 cards same suit)
   if (totalCards === 5) {
-    const flushResult = checkFlushWithJokers(nonJokers, jokerCount);
+    const flushResult = checkFlushWithJokers(nonJokers, jokerCount, isDyschromatopsia);
     if (flushResult.success) {
       return { type: 'Flush', bonus: HAND_BONUSES.FLUSH, scoringIndices: allIndices };
     }
@@ -161,12 +161,21 @@ function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards
 }
 
 // Helper: Check if cards can form a Straight Flush with jokers
-function checkStraightFlushWithJokers(nonJokers: any[], jokerCount: number): { success: boolean, indices: number[] } {
+function checkStraightFlushWithJokers(nonJokers: any[], jokerCount: number, isDyschromatopsia: boolean = false): { success: boolean, indices: number[] } {
   if (nonJokers.length === 0) return { success: jokerCount >= 5, indices: [] };
 
-  // All non-jokers must be same suit
+  // All non-jokers must be same suit OR same color if Dyschromatopsia is active
   const suits = nonJokers.map((c: any) => c.suit);
-  if (!suits.every((s: string) => s === suits[0])) return { success: false, indices: [] };
+  const colors = suits.map(s => (s === 'Heart' || s === 'Diamond') ? 'Red' : 'Black');
+
+  const sameSuit = suits.every((s: string) => s === suits[0]);
+  const sameColor = colors.every((c: string) => c === colors[0]);
+
+  if (isDyschromatopsia) {
+    if (!sameColor) return { success: false, indices: [] };
+  } else {
+    if (!sameSuit) return { success: false, indices: [] };
+  }
 
   const straightResult = checkStraightWithJokers(nonJokers, jokerCount);
   return { success: straightResult.success, indices: straightResult.indices };
@@ -259,11 +268,18 @@ function checkFullHouseWithJokers(nonJokers: any[], jokerCount: number): { succe
 }
 
 // Helper: Check for Flush with jokers
-function checkFlushWithJokers(nonJokers: any[], jokerCount: number): { success: boolean, indices: number[] } {
+function checkFlushWithJokers(nonJokers: any[], jokerCount: number, isDyschromatopsia: boolean = false): { success: boolean, indices: number[] } {
   if (nonJokers.length === 0) return { success: jokerCount >= 5, indices: [] };
 
   const suits = nonJokers.map((c: any) => c.suit);
-  if (suits.every((s: string) => s === suits[0]) && nonJokers.length + jokerCount >= 5) {
+  const colors = suits.map(s => (s === 'Heart' || s === 'Diamond') ? 'Red' : 'Black');
+
+  const sameSuit = suits.every((s: string) => s === suits[0]);
+  const sameColor = colors.every((c: string) => c === colors[0]);
+
+  const success = isDyschromatopsia ? sameColor : sameSuit;
+
+  if (success && nonJokers.length + jokerCount >= 5) {
     return { success: true, indices: nonJokers.map(c => c.originalIndex) };
   }
   return { success: false, indices: [] };
@@ -345,12 +361,12 @@ function calculateSumOfIndices(hand: any[], indices: number[]): number {
 }
 
 
-function evaluateCleanHand(cards: Card[]): HandEvaluation {
+function evaluateCleanHand(cards: Card[], isDyschromatopsia: boolean = false): HandEvaluation {
   if (cards.length === 0) return { type: 'High Card', bonus: 0, scoringIndices: [] };
 
   // Check hands from best to worst
-  if (isRoyalFlush(cards)) return { type: 'Royal Flush', bonus: HAND_BONUSES.ROYAL_FLUSH, scoringIndices: getAllIndices(cards) };
-  if (isStraightFlush(cards)) return { type: 'Straight Flush', bonus: HAND_BONUSES.STRAIGHT_FLUSH, scoringIndices: getAllIndices(cards) };
+  if (isRoyalFlush(cards, isDyschromatopsia)) return { type: 'Royal Flush', bonus: HAND_BONUSES.ROYAL_FLUSH, scoringIndices: getAllIndices(cards) };
+  if (isStraightFlush(cards, isDyschromatopsia)) return { type: 'Straight Flush', bonus: HAND_BONUSES.STRAIGHT_FLUSH, scoringIndices: getAllIndices(cards) };
 
   const fourKind = getFourOfAKind(cards);
   if (fourKind.indices.length > 0) return { type: 'Four of a Kind', bonus: HAND_BONUSES.FOUR_OF_A_KIND, scoringIndices: fourKind.indices };
@@ -358,7 +374,7 @@ function evaluateCleanHand(cards: Card[]): HandEvaluation {
   const fullHouse = getFullHouse(cards);
   if (fullHouse.indices.length > 0) return { type: 'Full House', bonus: HAND_BONUSES.FULL_HOUSE, scoringIndices: fullHouse.indices };
 
-  if (isFlush(cards)) return { type: 'Flush', bonus: HAND_BONUSES.FLUSH, scoringIndices: getAllIndices(cards) };
+  if (isFlush(cards, isDyschromatopsia)) return { type: 'Flush', bonus: HAND_BONUSES.FLUSH, scoringIndices: getAllIndices(cards) };
 
   const straight = getStraight(cards);
   if (straight.indices.length > 0) return { type: 'Straight', bonus: HAND_BONUSES.STRAIGHT, scoringIndices: straight.indices };
@@ -376,14 +392,14 @@ function evaluateCleanHand(cards: Card[]): HandEvaluation {
 }
 
 // Helper functions
-function isRoyalFlush(cards: Card[]): boolean {
-  if (!isFlush(cards)) return false;
+function isRoyalFlush(cards: Card[], isDyschromatopsia: boolean = false): boolean {
+  if (!isFlush(cards, isDyschromatopsia)) return false;
   const ranks = cards.map((c) => c.rank);
   return ['10', 'J', 'Q', 'K', 'A'].every((r) => ranks.includes(r));
 }
 
-function isStraightFlush(cards: Card[]): boolean {
-  return isFlush(cards) && getStraight(cards).indices.length > 0;
+function isStraightFlush(cards: Card[], isDyschromatopsia: boolean = false): boolean {
+  return isFlush(cards, isDyschromatopsia) && getStraight(cards).indices.length > 0;
 }
 
 function getFourOfAKind(cards: Card[]): { indices: number[] } {
@@ -421,10 +437,15 @@ function getFullHouse(cards: Card[]): { indices: number[] } {
   return { indices: [] };
 }
 
-function isFlush(cards: Card[]): boolean {
+function isFlush(cards: Card[], isDyschromatopsia: boolean = false): boolean {
   if (cards.length < 5) return false;
   const suits = cards.map((c) => c.suit);
-  return suits.every((s) => s === suits[0]);
+  const colors = suits.map(s => (s === 'Heart' || s === 'Diamond') ? 'Red' : 'Black');
+
+  const sameSuit = suits.every((s) => s === suits[0]);
+  const sameColor = colors.every((c) => c === colors[0]);
+
+  return isDyschromatopsia ? sameColor : sameSuit;
 }
 
 function getStraight(cards: Card[]): { indices: number[] } {
