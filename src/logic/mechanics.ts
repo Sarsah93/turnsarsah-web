@@ -21,7 +21,12 @@ export function evaluateHand(cards: Card[], isDyschromatopsia: boolean = false):
   const nonJokers = indexedCards.filter((c) => !c.isJoker);
 
   if (jokers.length > 0) {
-    const best = findBestWildcardCombination(nonJokers, jokers, cards.length);
+    const best = findBestWildcardCombination(
+      nonJokers,
+      jokers,
+      cards.length,
+      isDyschromatopsia
+    );
     return best;
   }
 
@@ -32,7 +37,12 @@ export function evaluateHand(cards: Card[], isDyschromatopsia: boolean = false):
   };
 }
 
-function findBestWildcardCombination(nonJokers: any[], jokers: any[], totalCards: number): HandEvaluation {
+function findBestWildcardCombination(
+  nonJokers: any[],
+  jokers: any[],
+  totalCards: number,
+  isDyschromatopsia: boolean = false
+): HandEvaluation {
   const jokerCount = jokers.length;
   const nonJokerCount = nonJokers.length;
 
