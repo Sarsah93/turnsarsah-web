@@ -533,7 +533,6 @@ export const useGameLoop = () => {
 
         // --- PHASE 1: GATHERING ---
         store.setGamePhase('GATHERING');
-        AudioManager.playSFX('/assets/audio/combat/gathering.mp3');
         setTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
         const gatheringDuration = (selectedCards.length * 200) + 500;
         await new Promise(r => setTimeout(r, gatheringDuration));
