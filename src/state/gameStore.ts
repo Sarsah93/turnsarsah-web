@@ -977,13 +977,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           if (sums.length > 0) target = sums[Math.floor(Math.random() * sums.length)];
         }
         if (target > 0) {
-          set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN });
+          set({ puzzleTarget: target, stage10RuleText: t.RULES.PUZZLE_DMG_50_AWAKEN || t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN });
         } else if (state.puzzleTarget > 0) {
-          set({ stage10RuleText: t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN });
-        }
-        // Always Blind 1 for SPHINX
-        if (blindIndices.length === 0) {
-          blindIndices.push(Math.floor(Math.random() * 8));
+          set({ stage10RuleText: t.RULES.PUZZLE_DMG_50_AWAKEN || t.RULES.PUZZLE_DMG_50_BLIND_1_AWAKEN });
         }
       } else if (stageId === 11) {
         // Special: SAND DRAGON

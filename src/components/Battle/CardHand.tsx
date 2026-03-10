@@ -6,6 +6,7 @@ import { Card } from '../../types/Card';
 import { calculatePlayerDamage } from '../../logic/damageCalculation';
 import { BlockButton } from '../BlockButton';
 import { TRANSLATIONS } from '../../constants/translations';
+import { RANK_VALUES } from '../../constants/cards';
 import '../styles/CardHand.css';
 
 interface CardHandProps {
@@ -47,7 +48,10 @@ export const CardHand: React.FC<CardHandProps> = ({
     bannedIndices,
     tutorialStep,
     tutorialHighlights,
-    language
+    language,
+    chapterNum,
+    stageNum,
+    puzzleTarget
   } = useGameStore();
 
   const t = TRANSLATIONS[language];
@@ -57,10 +61,28 @@ export const CardHand: React.FC<CardHandProps> = ({
   const prevGamePhase = useRef(gamePhase);
   const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // v2.4.7: Scale-Aware Measurement (Point B in Logical Units)
+  // v2.4.7: Scale-Aware Measurement
   const lastMeasuredB = useRef({ topCenterX: 0, topCenterY: 0 });
+
+  // v2.3.2: Sphinx Puzzle Logic
+  const selectionSum = useMemo(() => {
+    if (chapterNum !== '2A' || stageNum !== 10) return 0;
+    return selectedCards.reduce((acc, idx) => {
+      const card = cards[idx];
+      if (!card) return acc;
+      if (card.isJoker) return acc + 14;
+      if (card.rank === 'A') return acc + 1;
+      const rank = card.rank;
+      return acc + (rank ? (RANK_VALUES[rank] || 0) : 0);
+    }, 0);
+  }, [selectedCards, cards, chapterNum, stageNum]);
+
+  const isPuzzleCorrect = chapterNum === '2A' && stageNum === 10 && selectedCards.length === 5 && selectionSum === puzzleTarget;
+
   const measureCards = React.useCallback(() => {
+    // ... existing measureCards logic
     if (!onMeasureCards) return;
+    // ... (rest of the existing measureCards logic)
 
     // Indices 3 and 4 are 4th and 5th cards
     const slot4 = slotRefs.current[3];
@@ -388,6 +410,13 @@ export const CardHand: React.FC<CardHandProps> = ({
                 margin: '0 10px',
                 position: 'relative'
               }}>
+              {/* v2.4.9: Sphinx Puzzle Target (Above 1st Card) */}
+              {idx === 0 && chapterNum === '2A' && stageNum === 10 && puzzleTarget > 0 && (
+                <div className="sphinx-puzzle-ui">
+                  PUZZLE: {puzzleTarget}
+                  {isPuzzleCorrect && <span className="puzzle-correct"> (CORRECT!)</span>}
+                </div>
+              )}
               {card && (
                 <div key={card.id}
                   className={showDealAnim ? 'card-deal' : ''}

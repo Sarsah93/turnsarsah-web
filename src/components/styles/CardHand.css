@@ -177,3 +177,39 @@
     transform: translateY(-10px);
   }
 }
+/* v2.4.9: Sphinx Puzzle Target Display */
+.sphinx-puzzle-ui {
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #f1c40f;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 2.8rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 1), 2px 2px 4px #000, 0 0 20px rgba(241, 196, 15, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 8px 16px;
+  border: 2px solid rgba(241, 196, 15, 0.6);
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  animation: pulse-gold 2s infinite ease-in-out;
+}
+
+@keyframes pulse-gold {
+  0% {
+    box-shadow: 0 0 5px rgba(241, 196, 15, 0.4);
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(241, 196, 15, 0.8);
+    transform: translateX(-50%) scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(241, 196, 15, 0.4);
+    transform: translateX(-50%) scale(1);
+  }
+}

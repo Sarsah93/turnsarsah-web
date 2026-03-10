@@ -555,6 +555,7 @@ export const useGameLoop = () => {
         // Damage Popup & Message
         if (isPuzzleCorrect) {
             showDamageText('BOSS_LEFT', 'CORRECT DAMAGE!', '#2ecc71');
+            showDamageText('BOT', `-${damage}`, '#2ecc71');
             AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
         } else {
             showDamageText('BOT', `-${damage}`, isCrit ? '#c0392b' : '#ecf0f1');

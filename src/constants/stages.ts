@@ -43,7 +43,7 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       7: { name: 'STAGE 7', bossName: 'SAND GOLEM', hp: 320, atk: 35, level: 17, rule: 'FULL_HOUSE_DMG_0_PARALYZE_40%', accuracy: 1.0 },
       8: { name: 'STAGE 8', bossName: 'SAND WYVERN', hp: 300, atk: 20, level: 18, rule: 'STRAIGHT_DMG_0_BLIND_1_BAN_1', accuracy: 1.0 },
       9: { name: 'STAGE 9', bossName: 'SAND DEATHWARM', hp: 340, atk: 20, level: 19, rule: 'FLUSH_DMG_0_BLIND_3', accuracy: 1.0 },
-      10: { name: 'STAGE 10', bossName: 'SPHINX', hp: 300, atk: 40, level: 20, rule: 'PUZZLE_DMG+50%_BLIND_1_AWAKEN', accuracy: 1.0 },
+      10: { name: 'STAGE 10', bossName: 'SPHINX', hp: 300, atk: 40, level: 20, rule: 'PUZZLE_DMG+50%_AWAKEN', accuracy: 1.0 },
       11: { name: 'SPECIAL STAGE', bossName: 'SAND DRAGON', hp: 400, atk: 15, level: 21, rule: 'SAND_STORM_AWAKEN_BURN', accuracy: 1.0 },
     }
   },

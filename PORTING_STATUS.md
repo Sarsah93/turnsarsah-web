@@ -1,110 +1,55 @@
 # TurnSarsah JavaScript 포팅 진행 상황
 
 **시작일**: 2026-02-03  
-**목표**: Pygame v2.0.0.3 → Vite + React + TypeScript (v2.0.0.5)
+**목표**: Pygame v2.0.0.3 → Vite + React + TypeScript (v2.4.x)
 
 ---
 
 ## ✅ 완료된 작업
 
-### 문서 및 분석
-- [x] Pygame 원본 코드 분석 (main.py, entities.py, mechanics.py, ui.py, constants.py)
-- [x] docs 폴더 마크다운 검토 (task.md, implementation_plan.md, walkthrough.md)
-- [x] 아키텍처 마이그레이션 문서 작성 (`JAVASCRIPT_PORT_GUIDE.md`)
-- [x] 프로젝트 구조 설계
+### 핵심 인프라 & 로직
+- [x] Vite + React + TypeScript 기반 아키텍처 구축
+- [x] Zustand를 활용한 통합 상태 관리 (`gameStore.ts`)
+- [x] 족보 판정 엔진 및 데미지 계산 로직 (`mechanics.ts`, `damageCalculation.ts`)
+- [x] 상태이상 및 조건 관리 시스템 (`conditions.ts`)
+- [x] Altar(제단) 스킬 및 트로피 시스템 완벽 구현
+- [x] Sphinx(2A-10) 단계의 퍼즐 UI 로직 및 연동 완료
 
-### 기본 인프라
-- [x] Vite + React + TypeScript 스캐폴드
-- [x] 폴더 구조 생성 (constants/, types/, logic/, state/, storage/, components/, styles/)
-- [x] package.json 의존성 추가 (zustand, vite-plugin-react 등)
-
-### 상수 및 타입 레이어
-- [x] `constants/gameConfig.ts` - 화면, 게임 상태, 게임 규칙 완전 정의
-- [x] `constants/cards.ts` - 카드 수치, 족보 보너스 완전 정의
-- [x] `constants/stages.ts` - 보스 스테이지 데이터
-- [x] `constants/colors.ts` - 색상 정의
-- [x] `types/Card.ts` - Card 인터페이스 및 CardFactory
-- [x] `types/Character.ts` - Character, Condition 인터페이스
-- [x] `types/GameData.ts` - 세이브 데이터 구조
-
-### 핵심 로직
-- [x] `logic/Deck.ts` - 덱 구현 (뽑기, 리셔플)
-- [x] `logic/mechanics.ts` - 족보 판정 엔진 (조커 와일드카드 포함 완전 구현)
-- [x] `logic/damageCalculator.ts` - 데미지 및 크리티컬 계산 로직
-- [x] `logic/conditionManager.ts` - 상태이상(Bleeding, Poison 등) 처리 시스템
-
-### UI 컴포넌트 (Phase 3 완료)
-- [x] 기본 UI 컴포넌트 (Button, BlockButton, HPBar, Modal, Tooltip, FadeOverlay)
-- [x] 전투 화면 컴포넌트 (BattleField, BattleScreen, CardHand, DamagePopup, BossDisplay, PlayerDisplay)
-- [x] 메뉴 컴포넌트 (MainMenu, StageSelect, SaveLoadMenu, SettingsMenu, PauseMenu)
-- [x] 결과 화면 (GameOverScreen, Victory/Defeat 처리)
-
-### 상태 관리 및 저장
-- [x] `state/gameStore.ts` - Zustand 기반 통합 상태 관리
-- [x] `storage/SaveManager.ts` - LocalStorage 기반 슬롯 저장/로드 시스템
-
-### 리소스 및 미디어 (Phase 4 완료)
-- [x] `VideoBackground.tsx` - 비디오 배경 렌더링 시스템
-- [x] 오디오 시스템 통합 (BGM 및 효과음)
+### UI/UX 및 미디어
+- [x] React 기반 배틀 UI 모바일 어댑티브 레이아웃 적용
+- [x] 고해상도(1600x900) 통합 캔버스 도입 및 PWA 대응
+- [x] 비디오 배경, 배경음(BGM), 효과음(SFX) 통합 완료
+- [x] 다국어(KO/EN) 번역 시스템 구축 및 적용
 
 ---
 
-## 🚧 진행 중인 작업
-
-- [ ] 세부 애니메이션 및 이펙트 튜닝
-- [x] 밸런스 조정 및 버그 수정 (보스 각성, 공격력 상한, 카드 중복 버그 해결)
-
----
-
-## ⏳ 아직 할 작업
-
-### Phase 5: 통합 및 최적화
-- [ ] 캐싱 전략 고도화
-- [ ] 성능 프로파일링 및 렌더링 최적화
-- [ ] 다양한 해상도 대응 (반응형 보정)
-
-### Phase 6: 배포
-- [ ] 최종 빌드 및 프로덕션 번들링
-- [ ] 호스팅 설정 및 도메인 연결
-- [ ] 최종 QA 및 사용자 피드백 반영
+- [ ] HELL 난이도 밸런스 정밀 튜닝
+- [ ] 프로덕션 빌드 최적화 및 에셋 압축
 
 ---
 
 ## 📊 진행률
 
 ```
-기초 인프라:        ████████████████████████ 100%
-타입 & 상수:       ████████████████████████ 100%
-로직 & 저장소:      ████████████████████████ 100%
+핵심 엔진:        ████████████████████████ 100%
 UI 컴포넌트:       ████████████████████████ 100%
-리소스 & 미디어:   ████████████████████████ 100%
-통합 & 최적화:      ████████████████████░░░░ 85%
+상태이상/기믹:      ████████████████████████ 100%
+알타 시스템:       ████████████████████████ 100%
+모바일 최적화:      ████████████████████████ 100%
+최종 QA/최적화:     ██████████████████████░░ 92%
 
-전체:              ██████████████████████░░ 95%
+전체:              ███████████████████████░ 98%
 ```
 
 ---
 
 ## 🔗 주요 참고 파일
 
-**핵심 소스코드**
-- [src/logic/mechanics.ts](file:///c:/Users/dungy/OneDrive/바탕 화면/turnsarsah/turnsarsah-web/src/logic/mechanics.ts)
-- [src/state/gameStore.ts](file:///c:/Users/dungy/OneDrive/바탕 화면/turnsarsah/turnsarsah-web/src/state/gameStore.ts)
-- [src/logic/useGameLoop.ts](file:///c:/Users/dungy/OneDrive/바탕 화면/turnsarsah/turnsarsah-web/src/logic/useGameLoop.ts)
-
-**문서**
-- [README.md](file:///c:/Users/voinosis-pc/Desktop/project%20TurnSarsah/turnsarsah-web/README.md)
-- [INSTRUCTION FOR USE.md](file:///c:/Users/voinosis-pc/Desktop/project%20TurnSarsah/turnsarsah-web/INSTRUCTION%20FOR%20USE.md)
+- `src/logic/useGameLoop.ts`: 메인 게임 루프 및 턴 진행
+- `src/constants/stages.ts`: 보스 데이터 및 챕터 설정 (Source of Truth)
+- `src/constants/altarSystem.ts`: 제단 스킬 및 갈림길 정의
 
 ---
 
-## 🎯 다음 단계
-
-### 즉시
-1. 최종 QA 및 밸런스 테스트
-2. 프로덕션 빌드 확인
-
----
-
-**마지막 업데이트**: 2026-02-10 v2.1.0 (보스 메커니즘 및 카드 로직 버그 수정 완료)
+**마지막 업데이트**: 2026-03-10 v2.4.9 (스핑크스 퍼즐 로직 및 UI 연동 완료)
 
