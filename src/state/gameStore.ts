@@ -254,6 +254,10 @@ interface GameStoreState {
   // v2.4.3: Dynamic HUD Positioning (Score Preview)
   scorePreviewHUDPos: { x: number; y: number };
   setScorePreviewHUDPos: (pos: { x: number; y: number }) => void;
+
+  // v2.5.0: Victory Fanfare State (UI synchronization)
+  isVictoryFanfareActive: boolean;
+  setIsVictoryFanfareActive: (active: boolean) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -780,6 +784,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   scorePreviewHUDPos: { x: 800, y: 380 }, // Default gap area
   setScorePreviewHUDPos: (pos) => set({ scorePreviewHUDPos: pos }),
+
+  isVictoryFanfareActive: false,
+  setIsVictoryFanfareActive: (isVictoryFanfareActive) => set({ isVictoryFanfareActive }),
 
   applyStageRules: (chapterId: string, stageId: number, turn: number) => {
     const state = get();

@@ -20,6 +20,8 @@ html {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  position: fixed;
+  inset: 0;
 }
 
 body {
@@ -32,6 +34,9 @@ body {
   padding: 0;
   overflow: hidden;
   background: transparent;
+  position: fixed;
+  inset: 0;
+  touch-action: none;
 }
 
 .App.font-small {

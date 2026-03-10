@@ -24,6 +24,9 @@ export const GameOverScreen: React.FC = () => {
         const { AltarManager } = await import('../utils/AltarManager');
         AltarManager.commitPendingTrophies();
         useGameStore.getState().resetGame();
+
+        // Ensure scroll is reset before reload
+        window.scrollTo(0, 0);
         window.location.reload();
     };
 

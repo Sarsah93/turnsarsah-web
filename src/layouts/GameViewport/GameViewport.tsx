@@ -33,8 +33,13 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
     };
 
     const insets = getSafeInsets();
-    const usableWidth = width - (insets.left + insets.right);
-    const usableHeight = height - (insets.top + insets.bottom);
+
+    // Use visualViewport if available for better mobile accuracy (e.g., ignoring keyboard/toolbar shifts)
+    const viewportW = window.visualViewport?.width ?? width;
+    const viewportH = window.visualViewport?.height ?? height;
+
+    const usableWidth = viewportW - (insets.left + insets.right);
+    const usableHeight = viewportH - (insets.top + insets.bottom);
 
     // 3. Scale-to-fit Logic: Calculate the scale factor
     const scale = useMemo(() => {
@@ -65,6 +70,14 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
 
     useEffect(() => {
         lockOrientation();
+
+        // 5. Layout Settle Hack: Some browsers need a moment to stabilize innerHeight
+        // after rotation or navigation. Force a resize event after a short delay.
+        const timer = setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+
+        return () => clearTimeout(timer);
     }, [lockOrientation]);
 
     // Apply scale and center the fixed 1600x900 canvas

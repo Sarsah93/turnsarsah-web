@@ -1686,10 +1686,15 @@ export const useGameLoop = () => {
         }
 
         setMessage(victoryMsg);
+        store.setIsVictoryFanfareActive(true);
         AudioManager.playSFX('/assets/audio/stages/victory/victory.mp3');
 
         // 4. Wait for victory.mp3 (approx 5s)
         await new Promise(r => setTimeout(r, 5000));
+
+        // v2.5.0: Clear fanfare state and temporary message after audio finishes
+        store.setIsVictoryFanfareActive(false);
+        setMessage("");
 
         // 5. Transition to next stage or unlock difficulty on final stage clear
         const nextStage = stageNum + 1;

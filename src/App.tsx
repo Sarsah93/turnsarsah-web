@@ -26,8 +26,14 @@ function App() {
   // Version migration popup state
   const [showVersionNotice, setShowVersionNotice] = useState(false);
 
-  // Version check on mount (runs once)
+  // Version check and Scroll reset on mount
   useEffect(() => {
+    // Force scroll to top on mount to fix UI shift issues
+    window.scrollTo(0, 0);
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
     const wasWiped = SaveManager.checkAndMigrateVersion();
     if (wasWiped) {
       setShowVersionNotice(true);

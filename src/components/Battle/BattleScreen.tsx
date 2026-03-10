@@ -261,18 +261,6 @@ export const BattleScreen: React.FC = () => {
             {/* v2.4.4: Damage Texts moved after BossDisplay but before Card Layer,
                 ideally in the portal or high z-index area */}
 
-            {message && (message.endsWith('정화 완료!') || message.endsWith('Area Purified!')) && (
-                <div style={{
-                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                    color: '#f1c40f', fontSize: '7.5rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
-                    textShadow: '0 0 30px #f39c12, 4px 4px 0 #000',
-                    zIndex: 1000, textAlign: 'center'
-                }}>
-                    {t.COMBAT.VICTORY}<br />
-                    <span style={{ fontSize: '3.5rem' }}>{t.COMBAT.CLEARED_INFO.replace('{chapter}', chapterNum).replace('{stage}', stageNum.toString())}</span>
-                </div>
-            )}
-
             {message === t.COMBAT.DEFEAT && (
                 <div style={{
                     position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
@@ -284,7 +272,30 @@ export const BattleScreen: React.FC = () => {
                 </div>
             )}
 
-            {message && message !== t.COMBAT.VICTORY && message !== t.COMBAT.DEFEAT && (
+            {/* v2.5.0: Unified Victory Flow — Display only during fanfare */}
+            {(store.isVictoryFanfareActive) && (
+                <div style={{
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    zIndex: 1000, textAlign: 'center', width: '100%'
+                }}>
+                    {/* Upper: Area/Chapter phrase (store.message) */}
+                    <div style={{
+                        color: '#f1c40f', fontSize: '7.5rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
+                        textShadow: '0 0 30px #f39c12, 4px 4px 0 #000', marginBottom: '20px'
+                    }}>
+                        {message}
+                    </div>
+                    {/* Lower: Stage clear phrase */}
+                    <div style={{
+                        color: '#ecf0f1', fontSize: '3.5rem', fontFamily: 'BebasNeue',
+                        textShadow: '0 0 10px rgba(0,0,0,0.8)'
+                    }}>
+                        {language === 'KR' ? `스테이지 ${stageNum} 클리어!` : `Stage ${stageNum} Cleared!`}
+                    </div>
+                </div>
+            )}
+
+            {message && message !== t.COMBAT.VICTORY && message !== t.COMBAT.DEFEAT && !store.isVictoryFanfareActive && !message.includes('정화 완료') && !message.includes('Purified') && (
                 <div className="battle-toast" style={{
                     position: 'absolute',
                     top: '40%', left: '50%',
@@ -341,8 +352,8 @@ export const BattleScreen: React.FC = () => {
                 ))}
             </div>
 
-            {/* Final Game Over Buttons Layer */}
-            {(store.gameState === GameState.GAMEOVER || (store.gameState === GameState.VICTORY && stageNum >= 10 && chapterNum !== '1')) && (
+            {/* Final Game Over Buttons Layer — Removed VICTORY condition to avoid duplication with Congratulations Popup */}
+            {(store.gameState === GameState.GAMEOVER) && (
                 <div className="game-end-overlay" style={{
                     position: 'fixed', inset: 0,
                     backgroundColor: 'rgba(0,0,0,0.7)',
