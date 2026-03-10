@@ -124,7 +124,7 @@ export const useGameLoop = () => {
                 5: '05_sand scorpion.mp3',
                 7: '07_sand golem.mp3',
                 8: '08_sand wyvern.mp3',
-                9: '09_sand deathwarm.mp3',
+                9: '09_sand deathworm.mp3',
                 11: '2A_SAND DRAGON.mp3'
             };
             const filename = sfxMap[stage];

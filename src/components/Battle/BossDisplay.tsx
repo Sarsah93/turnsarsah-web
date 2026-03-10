@@ -64,7 +64,7 @@ export const BossDisplay: React.FC = () => {
                 6: '06_desert vultures.png',
                 7: '07_sand golem.png',
                 8: '08_wyvern.png',
-                9: '09_sand deathwarm.png',
+                9: '09_sand deathworm.png',
                 10: '10_sphinx.png',
                 11: '2A_sand dragon.png'
             };
