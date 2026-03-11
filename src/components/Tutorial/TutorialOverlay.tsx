@@ -218,8 +218,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: '300px',
-                position: 'relative',
-                top: '-64px'
+                position: 'relative'
             }}>
                 <h2 style={{ color: '#f1c40f', fontSize: '2.5rem', marginBottom: '20px' }}>{content.title}</h2>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

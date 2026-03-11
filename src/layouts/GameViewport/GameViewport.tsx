@@ -15,13 +15,12 @@ const BASE_H = 900;
 
 export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
     const language = useGameStore((state) => state.language);
+    
     const { isLandscape, lockOrientation } = useOrientation();
     const { width, height, isMobile } = useViewport();
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // 2. Calculate usable area excluding safe-area insets
-    // These are typically applied as padding to the body, 
-    // but for scale-to-fit, we need to know the actual available pixels.
     const getSafeInsets = () => {
         const style = window.getComputedStyle(document.documentElement);
         return {
@@ -34,14 +33,13 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
 
     const insets = getSafeInsets();
 
-    // Use visualViewport if available for better mobile accuracy (e.g., ignoring keyboard/toolbar shifts)
     const viewportW = window.visualViewport?.width ?? width;
     const viewportH = window.visualViewport?.height ?? height;
 
     const usableWidth = viewportW - (insets.left + insets.right);
     const usableHeight = viewportH - (insets.top + insets.bottom);
 
-    // 3. Scale-to-fit Logic: Calculate the scale factor
+    // 3. Scale-to-fit Logic
     const scale = useMemo(() => {
         const scaleX = usableWidth / BASE_W;
         const scaleY = usableHeight / BASE_H;
@@ -49,11 +47,16 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
     }, [usableWidth, usableHeight]);
 
     useEffect(() => {
+        const vh = viewportH * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }, [viewportH]);
+
+    useEffect(() => {
         const handleFullscreenChange = () => {
             setIsFullscreen(!!document.fullscreenElement);
         };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.addEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
     const toggleFullscreen = () => {
@@ -70,17 +73,12 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
 
     useEffect(() => {
         lockOrientation();
-
-        // 5. Layout Settle Hack: Some browsers need a moment to stabilize innerHeight
-        // after rotation or navigation. Force a resize event after a short delay.
         const timer = setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
         }, 100);
-
         return () => clearTimeout(timer);
     }, [lockOrientation]);
 
-    // Apply scale and center the fixed 1600x900 canvas
     const canvasStyle: React.CSSProperties = {
         position: 'absolute',
         top: '50%',
@@ -95,7 +93,6 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
         <div className={styles.viewport}>
             {!isLandscape && <OrientationWarning language={language} />}
 
-            {/* 4. Desktop Canvas: The 1600x900 container that scales to fit */}
             <div className={styles.desktopCanvas} style={canvasStyle}>
                 {children}
             </div>

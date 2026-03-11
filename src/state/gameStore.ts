@@ -258,6 +258,7 @@ interface GameStoreState {
   // v2.5.0: Victory Fanfare State (UI synchronization)
   isVictoryFanfareActive: boolean;
   setIsVictoryFanfareActive: (active: boolean) => void;
+
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -1351,4 +1352,5 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     // Immediately apply rules for turn 0
     get().applyStageRules(chapterId, stageId, 0);
   },
+
 }));

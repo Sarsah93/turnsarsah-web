@@ -355,10 +355,11 @@ export const BattleScreen: React.FC = () => {
             {/* Final Game Over Buttons Layer — Removed VICTORY condition to avoid duplication with Congratulations Popup */}
             {(store.gameState === GameState.GAMEOVER) && (
                 <div className="game-end-overlay" style={{
-                    position: 'fixed', inset: 0,
+                    position: 'absolute', inset: 0,
                     backgroundColor: 'rgba(0,0,0,0.7)',
                     zIndex: 1500,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    pointerEvents: 'auto'
                 }}>
                     <div style={{ marginTop: '200px' }}>
                         <BlockButton
@@ -397,14 +398,17 @@ export const BattleScreen: React.FC = () => {
                 />
             )}
 
-            {/* Modals */}
+            {/* Modals and Menus Overlay */}
             {activeMenu !== 'NONE' && (
                 <div style={{
-                    position: 'fixed', inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    zIndex: 10000, pointerEvents: 'auto',
-                    backdropFilter: 'blur(4px)'
+                    position: 'fixed',
+                    inset: 0,
+                    backgroundColor: 'rgba(0,0,0,0.7)',
+                    zIndex: 10000,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    pointerEvents: 'auto'
                 }}>
                     {activeMenu === 'PAUSE' && (
                         <PauseMenu
