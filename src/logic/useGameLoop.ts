@@ -290,6 +290,15 @@ export const useGameLoop = () => {
 
         const currentPlayerHand = store.playerHand;
 
+        // MUDDED Check (Prevent Attack)
+        const selectedCardsForMudCheck = selectedIndices.map(idx => currentPlayerHand[idx]).filter(Boolean);
+        if (selectedCardsForMudCheck.some(c => (c as any).isMudded)) {
+            setMessage("진흙 카드가 포함되어 있습니다!");
+            triggerScreenEffect('shake-small');
+            store.setGamePhase('IDLE');
+            return;
+        }
+
         if (selectedIndices.length === 0) {
             setMessage(t.COMBAT.SELECT_CARDS);
             triggerScreenEffect('shake-small');
@@ -1518,6 +1527,24 @@ export const useGameLoop = () => {
         toRemoveBot.forEach(name => botConditions.delete(name));
         const freshBot = useGameStore.getState().bot;
         useGameStore.getState().setBot({ ...freshBot, conditions: botConditions });
+
+        // MUDDED Duration Decrement (End of turn)
+        const handAfterTurn = [...useGameStore.getState().playerHand];
+        let handChanged = false;
+        handAfterTurn.forEach((card, idx) => {
+            if (card && card.isMudded) {
+                const nextDuration = card.mudDuration - 1;
+                if (nextDuration <= 0) {
+                    handAfterTurn[idx] = { ...card, isMudded: false, mudDuration: 0 };
+                } else {
+                    handAfterTurn[idx] = { ...card, mudDuration: nextDuration };
+                }
+                handChanged = true;
+            }
+        });
+        if (handChanged) {
+            useGameStore.getState().setPlayerHand(handAfterTurn);
+        }
     };
 
 

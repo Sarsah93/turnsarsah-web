@@ -60,6 +60,23 @@ export const Card: React.FC<CardProps> = ({ card, selected, onClick }) => {
                     BANNED
                 </div>
             )}
+
+            {/* Mudded Overlay */}
+            {(card as any).isMudded && (
+                <img
+                    src="/assets/cards/MUD.png"
+                    alt="Mudded"
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                    }}
+                />
+            )}
         </div>
     );
 };

@@ -138,6 +138,9 @@ interface GameStoreState {
   removeBotCondition: (name: string) => void;
   clearBotConditions: () => void;
 
+  // v3.0: MUDDED Status
+  applyMudStatus: (count: number) => void;
+
   // Combat
   playerHand: (Card | null)[];
   deck: Deck;
@@ -538,6 +541,29 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       };
     }),
 
+  // MUDDED Status implementation
+  applyMudStatus: (count: number) => set((state) => {
+    const hand = [...state.playerHand];
+    const validIndices = hand
+      .map((c, i) => (c && !c.isBlind && !c.isBanned && !c.isMudded) ? i : -1)
+      .filter(i => i !== -1);
+
+    if (validIndices.length === 0) return state;
+
+    // Shuffle and pick 'count' indices
+    const shuffled = validIndices.sort(() => 0.5 - Math.random());
+    const targets = shuffled.slice(0, count);
+
+    targets.forEach(idx => {
+      const card = hand[idx];
+      if (card) {
+        hand[idx] = { ...card, isMudded: true, mudDuration: 2 };
+      }
+    });
+
+    return { playerHand: hand };
+  }),
+
   // Combat
   playerHand: [],
   deck: new Deck(),
@@ -876,6 +902,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         // v2.2.1: Dynamic Rule Text - Hide REGEN/REDUCE if Awakened
         const isAwakened = bot.conditions.has('Awakening');
         set({ stage10RuleText: t.RULES.CH1_RULE_10 });
+      } else if (stageId === 99) {
+        // DEBUG: MUDDED status stage
+        set({ stage10RuleText: 'DEBUG RULE: APPLY MUD STATUS' });
+        // Schedule the applyMudStatus logic after the frame so state initializes first
+        setTimeout(() => get().applyMudStatus(2), 0);
       } else {
         // Normal stage rules - SWAPPED Stage 2 and 3
         const ch1RuleKey = `CH1_RULE_${stageId}`;

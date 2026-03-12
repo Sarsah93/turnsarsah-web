@@ -8,6 +8,8 @@ export interface Card {
   selected: boolean;
   isBlind: boolean;
   isBanned: boolean;
+  isMudded: boolean;
+  mudDuration: number;
 }
 
 export interface CardJSON {
@@ -17,6 +19,8 @@ export interface CardJSON {
   is_joker: boolean;
   is_blind: boolean;
   is_banned: boolean;
+  is_mudded: boolean;
+  mud_duration: number;
 }
 
 export class CardFactory {
@@ -29,6 +33,8 @@ export class CardFactory {
       selected: false,
       isBlind: false,
       isBanned: false,
+      isMudded: false,
+      mudDuration: 0,
     };
   }
 
@@ -40,6 +46,8 @@ export class CardFactory {
       is_joker: card.isJoker,
       is_blind: card.isBlind,
       is_banned: card.isBanned,
+      is_mudded: card.isMudded,
+      mud_duration: card.mudDuration,
     };
   }
 
@@ -51,6 +59,8 @@ export class CardFactory {
       isJoker: data.is_joker,
       isBlind: data.is_blind,
       isBanned: data.is_banned,
+      isMudded: data.is_mudded,
+      mudDuration: data.mud_duration,
       selected: false,
     };
   }

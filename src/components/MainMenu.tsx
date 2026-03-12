@@ -52,10 +52,10 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} />
                 <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} />
 
-                {/* Temporary Debug Button for Verification */}
+                {/* Debug Button for Verification */}
                 <BlockButton
-                    text="DEBUG: SPHINX (2A-10)"
-                    onClick={() => triggerTransition(() => initGameWithDifficulty('2A', 10, Difficulty.NORMAL))}
+                    text="DEBUG: MUDDED (1-99)"
+                    onClick={() => triggerTransition(() => initGameWithDifficulty('1', 99, Difficulty.NORMAL))}
                     variant="primary"
                 />
 

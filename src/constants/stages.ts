@@ -29,6 +29,7 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       8: { name: 'STAGE 8', bossName: 'Troll', hp: 350, atk: 40, level: 8, rule: 'SKIP_TURN_REGEN', accuracy: 1.0 },
       9: { name: 'STAGE 9', bossName: 'Giant Goblin', hp: 350, atk: 5, level: 9, rule: 'ATK_DOUBLE_EACH_TURN', accuracy: 1.0 },
       10: { name: 'STAGE 10', bossName: 'Goblin Lord', hp: 400, atk: 15, level: 10, rule: 'BOSS_ULTRA_RANDOM', accuracy: 1.0 },
+      99: { name: 'DEBUG: MUDDED', bossName: 'Mud Slime', hp: 9999, atk: 0, level: 99, rule: 'DEBUG_MUDDED', accuracy: 1.0 },
     }
   },
   '2A': {
