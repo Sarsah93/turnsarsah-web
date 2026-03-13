@@ -291,9 +291,17 @@ export const useGameLoop = () => {
         const currentPlayerHand = store.playerHand;
 
         // MUDDED Check (Prevent Attack)
-        const selectedCardsForMudCheck = selectedIndices.map(idx => currentPlayerHand[idx]).filter(Boolean);
-        if (selectedCardsForMudCheck.some(c => (c as any).isMudded)) {
+        const selectedCardsForStatusCheck = selectedIndices.map(idx => currentPlayerHand[idx]).filter(Boolean) as Card[];
+        if (selectedCardsForStatusCheck.some(c => c.isMudded)) {
             setMessage("진흙 카드가 포함되어 있습니다!");
+            triggerScreenEffect('shake-small');
+            store.setGamePhase('IDLE');
+            return;
+        }
+
+        // PETRIFIED Check (Prevent Attack)
+        if (selectedCardsForStatusCheck.some(c => c.isPetrified)) {
+            setMessage("석화된 카드가 포함되어 있습니다!");
             triggerScreenEffect('shake-small');
             store.setGamePhase('IDLE');
             return;
@@ -1528,16 +1536,30 @@ export const useGameLoop = () => {
         const freshBot = useGameStore.getState().bot;
         useGameStore.getState().setBot({ ...freshBot, conditions: botConditions });
 
-        // MUDDED Duration Decrement (End of turn)
+        // MUDDED/PETRIFIED Duration Decrement (End of turn)
         const handAfterTurn = [...useGameStore.getState().playerHand];
         let handChanged = false;
         handAfterTurn.forEach((card, idx) => {
-            if (card && card.isMudded) {
-                const nextDuration = card.mudDuration - 1;
-                if (nextDuration <= 0) {
+            if (!card) return;
+
+            // Handle Mudded
+            if (card.isMudded) {
+                const nextMudDuration = card.mudDuration - 1;
+                if (nextMudDuration <= 0) {
                     handAfterTurn[idx] = { ...card, isMudded: false, mudDuration: 0 };
                 } else {
-                    handAfterTurn[idx] = { ...card, mudDuration: nextDuration };
+                    handAfterTurn[idx] = { ...card, mudDuration: nextMudDuration };
+                }
+                handChanged = true;
+            }
+
+            // Handle Petrified
+            if (card.isPetrified) {
+                const nextPetrifyDuration = card.petrifyDuration - 1;
+                if (nextPetrifyDuration <= 0) {
+                    handAfterTurn[idx] = { ...card, isPetrified: false, petrifyDuration: 0 };
+                } else {
+                    handAfterTurn[idx] = { ...card, petrifyDuration: nextPetrifyDuration };
                 }
                 handChanged = true;
             }
@@ -1567,6 +1589,15 @@ export const useGameLoop = () => {
         }
 
         const store = useGameStore.getState();
+
+        // PETRIFIED Check (Prevent Swap)
+        const selectedCardsForSwapCheck = selectedIndices.map(idx => store.playerHand[idx]).filter(Boolean) as Card[];
+        if (selectedCardsForSwapCheck.some(c => c.isPetrified)) {
+            setMessage("석화된 카드는 교체할 수 없습니다!");
+            triggerScreenEffect('shake-small');
+            store.setGamePhase('IDLE');
+            return;
+        }
         const p = store.player;
 
         // 5B-3: Fragments Recovery (+2 extra swaps when HP <= 25%, once per stage)

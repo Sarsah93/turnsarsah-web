@@ -10,6 +10,8 @@ export interface Card {
   isBanned: boolean;
   isMudded: boolean;
   mudDuration: number;
+  isPetrified: boolean;
+  petrifyDuration: number;
 }
 
 export interface CardJSON {
@@ -21,6 +23,8 @@ export interface CardJSON {
   is_banned: boolean;
   is_mudded: boolean;
   mud_duration: number;
+  is_petrified: boolean;
+  petrify_duration: number;
 }
 
 export class CardFactory {
@@ -35,6 +39,8 @@ export class CardFactory {
       isBanned: false,
       isMudded: false,
       mudDuration: 0,
+      isPetrified: false,
+      petrifyDuration: 0,
     };
   }
 
@@ -48,6 +54,8 @@ export class CardFactory {
       is_banned: card.isBanned,
       is_mudded: card.isMudded,
       mud_duration: card.mudDuration,
+      is_petrified: card.isPetrified,
+      petrify_duration: card.petrifyDuration,
     };
   }
 
@@ -61,6 +69,8 @@ export class CardFactory {
       isBanned: data.is_banned,
       isMudded: data.is_mudded,
       mudDuration: data.mud_duration,
+      isPetrified: data.is_petrified,
+      petrifyDuration: data.petrify_duration,
       selected: false,
     };
   }

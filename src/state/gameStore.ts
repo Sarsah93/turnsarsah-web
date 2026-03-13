@@ -140,6 +140,7 @@ interface GameStoreState {
 
   // v3.0: MUDDED Status
   applyMudStatus: (count: number) => void;
+  applyPetrifyStatus: (count: number) => void;
 
   // Combat
   playerHand: (Card | null)[];
@@ -548,20 +549,52 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       .map((c, i) => (c && !c.isBlind && !c.isBanned && !c.isMudded) ? i : -1)
       .filter(i => i !== -1);
 
-    if (validIndices.length === 0) return state;
+    const validCards = state.playerHand.filter(c => c !== null && !c.isBlind && !c.isBanned && !c.isMudded) as Card[];
+    if (validCards.length === 0) return state;
 
-    // Shuffle and pick 'count' indices
-    const shuffled = validIndices.sort(() => 0.5 - Math.random());
-    const targets = shuffled.slice(0, count);
+    const indices = validCards.map(c => state.playerHand.indexOf(c));
+    const targetIndices: number[] = [];
+    for (let i = 0; i < count && indices.length > 0; i++) {
+      const randIdx = Math.floor(Math.random() * indices.length);
+      targetIndices.push(indices.splice(randIdx, 1)[0]);
+    }
 
-    targets.forEach(idx => {
-      const card = hand[idx];
+    const newHand = [...state.playerHand];
+    targetIndices.forEach(idx => {
+      const card = newHand[idx];
       if (card) {
-        hand[idx] = { ...card, isMudded: true, mudDuration: 2 };
+        newHand[idx] = { ...card, isMudded: true, mudDuration: 2 };
       }
     });
 
-    return { playerHand: hand };
+    return { playerHand: newHand };
+  }),
+
+  applyPetrifyStatus: (count: number) => set((state) => {
+    // Candidates: !isBlind && !isBanned && !isMudded && !isPetrified
+    const validCards = state.playerHand.filter(c => 
+      c !== null && !c.isBlind && !c.isBanned && !c.isMudded && !c.isPetrified
+    ) as Card[];
+    
+    if (validCards.length === 0) return state;
+
+    const indices = validCards.map(c => state.playerHand.indexOf(c));
+    const targetIndices: number[] = [];
+    for (let i = 0; i < count && indices.length > 0; i++) {
+      const randIdx = Math.floor(Math.random() * indices.length);
+      targetIndices.push(indices.splice(randIdx, 1)[0]);
+    }
+
+    const newHand = [...state.playerHand];
+    targetIndices.forEach(idx => {
+      const card = newHand[idx];
+      if (card) {
+        // Petrify duration: 2 turns (Turns into 2 here, then decrements at end of turn)
+        newHand[idx] = { ...card, isPetrified: true, petrifyDuration: 2 };
+      }
+    });
+
+    return { playerHand: newHand };
   }),
 
   // Combat
@@ -903,10 +936,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         const isAwakened = bot.conditions.has('Awakening');
         set({ stage10RuleText: t.RULES.CH1_RULE_10 });
       } else if (stageId === 99) {
-        // DEBUG: MUDDED status stage
-        set({ stage10RuleText: 'DEBUG RULE: APPLY MUD STATUS' });
-        // Schedule the applyMudStatus logic after the frame so state initializes first
-        setTimeout(() => get().applyMudStatus(2), 0);
+        // DEBUG: PETRIFIED status stage
+        set({ stage10RuleText: 'DEBUG RULE: APPLY PETRIFY STATUS' });
+        // Schedule the applyPetrifyStatus logic after the frame so state initializes first
+        setTimeout(() => get().applyPetrifyStatus(1), 0);
       } else {
         // Normal stage rules - SWAPPED Stage 2 and 3
         const ch1RuleKey = `CH1_RULE_${stageId}`;

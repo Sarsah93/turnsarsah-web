@@ -195,8 +195,10 @@ export const CardHand: React.FC<CardHandProps> = ({
 
   const handleCardClick = (index: number) => {
     if (!isInteracting || disabled || !cards[index] || isProcessing) return;
-    // Banned check removed in v2.3.6: Player wants to be able to select and attack with banned cards (for 0 score)
-    // if (bannedIndices && bannedIndices.includes(index)) return; 
+    
+    // v3.0: PETRIFIED check - Cannot select if petrified
+    if (cards[index]?.isPetrified) return;
+
     onSelectCard(index);
   };
 
