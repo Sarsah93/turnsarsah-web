@@ -63,5 +63,20 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       10: { name: 'STAGE 10', bossName: 'HIGH ORC LORD', hp: 370, atk: 40, level: 20, rule: 'HIGH_ORC_LORD_RULE', accuracy: 0.95 },
       11: { name: 'SPECIAL STAGE', bossName: 'HIGH ORC SHAMAN', hp: 350, atk: 12, level: 21, rule: 'BLIND_BAN_REFLECTION_AWAKEN', accuracy: 1.0 },
     }
-  }
+  },
+  '3A': {
+    name: 'CHAPTER 3 (CAVE)',
+    stages: {
+      1:  { name: 'STAGE 1',  bossName: 'SLIME',          hp: 180, atk: 8,  level: 22, rule: 'ACID_ATTACK',    accuracy: 1.0 },
+      2:  { name: 'STAGE 2',  bossName: 'VAMPIRE BAT',    hp: 200, atk: 15, level: 23, rule: 'HEMATOPHAGY',    accuracy: 1.0 },
+      3:  { name: 'STAGE 3',  bossName: 'CAVE WORM',      hp: 200, atk: 12, level: 24, rule: 'MUCUS',          accuracy: 1.0 },
+      4:  { name: 'STAGE 4',  bossName: 'POISON SPIDER',  hp: 230, atk: 15, level: 25, rule: 'SHOOTING_WEB',   accuracy: 1.0 },
+      5:  { name: 'STAGE 5',  bossName: 'WRAITH',         hp: 250, atk: 18, level: 26, rule: 'GHOST',          accuracy: 1.0 },
+      6:  { name: 'STAGE 6',  bossName: 'CAVE BEAR',      hp: 300, atk: 23, level: 27, rule: 'HONEY_DANGUN',   accuracy: 1.0 },
+      7:  { name: 'STAGE 7',  bossName: 'CRYSTAL GOLEM',  hp: 350, atk: 23, level: 28, rule: 'BRITTLE',        accuracy: 1.0 },
+      8:  { name: 'STAGE 8',  bossName: 'DRAKE',          hp: 350, atk: 20, level: 29, rule: 'ROLL_BOULDER',   accuracy: 1.0 },
+      9:  { name: 'STAGE 9',  bossName: 'BASILISK',       hp: 350, atk: 25, level: 30, rule: 'PETRIFIED_RULE', accuracy: 1.0 },
+      10: { name: 'STAGE 10', bossName: 'HYDRA',          hp: 320, atk: 28, level: 31, rule: 'TYPHON_MYTH',    accuracy: 1.0 },
+    }
+  },
 };

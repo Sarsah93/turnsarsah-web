@@ -88,6 +88,22 @@ export const BossDisplay: React.FC = () => {
             const filename = mapping[stage] || '01_orc.png';
             return `/assets/boss_orc/${filename}`;
         }
+        if (chapter === '3A') {
+            const mapping: Record<number, string> = {
+                1: '01_SLIME.png',
+                2: '02_VAMPIRE BAT.png',
+                3: '03_CAVE WORM.png',
+                4: '04_POISON SPIDER.png',
+                5: '05_WRAITH.png',
+                6: '06_CAVE BEAR.png',
+                7: '07_CRYSTAL GOLEM.png',
+                8: '08_DRAKE.png',
+                9: '09_BASILISK.png',
+                10: '10_HYDRA.png'
+            };
+            const filename = mapping[stage] || '01_SLIME.png';
+            return `/assets/boss_cave/${filename}`;
+        }
         return '/assets/boss_goblin/01_goblin.png';
     };
 
@@ -223,9 +239,11 @@ export const BossDisplay: React.FC = () => {
                 minHeight: '50px',
                 zIndex: 100
             }}>
-                {Array.from(bot.conditions.entries()).map(([name, condition]) => (
-                    <ConditionIcon key={name} name={name} condition={condition} popupDirection="bottom-left" />
-                ))}
+                {Array.from(bot.conditions.entries())
+                    .filter(([name]) => name !== 'Brittle')
+                    .map(([name, condition]) => (
+                        <ConditionIcon key={name} name={name} condition={condition} popupDirection="bottom-left" />
+                    ))}
             </div>
         </div>
     );

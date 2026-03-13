@@ -37,8 +37,11 @@
 | **Berserker** | 버서커 | 3턴 | HP 30% 이하 시 **ATK +20**<br>가한 피해량의 **10% 흡혈** | - |
 | **Adrenaline** | 아드레날린 | 3턴 | 가해진 피해가 **60 이하**일 경우 **0으로 무효화** | 버티기 기믹 |
 | **Reflection** | 데미지 반사 | 영구 | 일반 공격 피격 시 **30% 확률**로<br>받은 피해의 **10%**를 반사 | - |
-| **Revival** | 부활 | 횟수제 | HP 0 시 **최대 HP의 N%**로 부활 | (Mummy 등 50% 부활) |
+| **Revival** | 부활 | 횟수제 | HP 0 시 **최대 HP의 N%**로 부활 | (Mummy, Hydra 등) |
 | **Invincible Spirit**| 불굴의 의지 | 1회 | HP 20% 이하 시 **HP 50** 즉시 회복 | (Orc Chieftain 등) |
+| **Echo** | 메아리 | 영구 | 보스 공격 시 20% 확률로 30% 경감된 추가 타격 발생 (독립 회피 계산) | 3A 동굴 환경 패시브 |
+| **Hematophagy** | 흡혈 | 영구 | 피해를 입힐 때, 입힌 피해량의 N%만큼 자신의 HP를 회복 | 보스 전용 (Vampire Bat 등) |
+| **Brittle** | 취성 | 영구 | 매 턴 종료 시 **경감(DR) 추가 증가**<br>**5스택 시 초기화 보너스** | 골렘 류 특수 기믹 |
 
 ---
 
@@ -67,4 +70,4 @@
 3. **중독**이 걸린 상태에서 다시 **중독** 부여 시도 → **쇠약**으로 진화.
 
 ---
-*Last Updated: 2026-03-13 (Antigravity - Petrified Update)*
+*Last Updated: 2026-03-14 (Antigravity - Chapter 3A Detailed Update)*

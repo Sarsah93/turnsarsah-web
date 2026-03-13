@@ -134,6 +134,20 @@ export const TROPHIES: Record<string, TrophyDef> = {
         name: { KR: '하이 오크 제사장의 주술 지팡이', EN: 'High Orc Shaman\'s Voodoo Staff' },
         desc: { KR: '피와 절규로 빚어진 저주받은 지팡이.', EN: 'A cursed staff molded from blood and screams.' },
         chapterInfo: 'CHAPTER 2B / SP STAGE'
+    },
+    TR_3A_07: {
+        id: 'TR_3A_07',
+        image: 'trophy_crystal golem.png',
+        name: { KR: '크리스탈 골렘의 오팔 조각', EN: 'Opal Fragment of the Crystal Golem' },
+        desc: { KR: '오랜 시간 동굴의 에너지를 응축하여 찬란하게 빛나는 희귀한 오팔 조각.', EN: 'A rare opal fragment that shines brilliantly, condensing the cave\'s energy over a long time.' },
+        chapterInfo: 'CHAPTER 3A / STAGE 07'
+    },
+    TR_3A_10: {
+        id: 'TR_3A_10',
+        image: 'trophy_hydra.png',
+        name: { KR: '하이드라의 신화독', EN: 'Mythical Poison of the Hydra' },
+        desc: { KR: '닿는 즉시 모든 것을 부식시키는, 전설 속 괴물의 치명적인 독력이 담긴 정수.', EN: 'An essence containing the lethal poison of a legendary monster, corroding everything it touches instantly.' },
+        chapterInfo: 'CHAPTER 3A / STAGE 10'
     }
 };
 

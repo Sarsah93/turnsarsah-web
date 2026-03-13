@@ -5,6 +5,7 @@ import { VideoBackground } from './components/VideoBackground';
 import { MainMenu } from './components/MainMenu';
 import { BattleScreen } from './components/Battle/BattleScreen';
 import { ChapterSelect } from './components/ChapterSelect';
+import { ChapterNextPopup } from './components/ChapterNextPopup';
 import './App.css';
 // import './responsive.css';
 import './styles/safe-area.css';
@@ -63,6 +64,7 @@ function App() {
       let bgm = 'meadow field_background.mp3';
       if (chapterNum === '2A') bgm = 'desert_background.mp3';
       else if (chapterNum === '2B') bgm = 'deep forest.mp3';
+      else if (chapterNum === '3A') bgm = 'cave_background.mp3';
 
       AudioManager.playBGM(`/assets/backgrounds/audio sounds/${bgm}`);
     }
@@ -80,6 +82,9 @@ function App() {
     if (chapterNum === '2B') {
       return "/assets/backgrounds/video/deep forest.mp4";
     }
+    if (chapterNum === '3A') {
+      return "/assets/backgrounds/video/cave_background.mp4";
+    }
 
     // Default Chapter 1
     return "/assets/backgrounds/video/meadow field_background.mp4";
@@ -90,7 +95,20 @@ function App() {
     if (result === 'WIN') {
       if (chapterNum === '1' && stageNum === 10) {
         store.triggerTransition(() => store.setGameState(GameState.CHAPTER_SELECT));
+      } else if (chapterNum === '2A' && stageNum === 11) {
+        // 2A 스페셜 스테이지(SAND DRAGON) 클리어 → 챕터 3A 연결 팝업
+        store.triggerTransition(() => {
+          store.setNextChapterId('3A');
+          store.setGameState(GameState.CHAPTER_NEXT);
+        });
+      } else if (chapterNum === '2A' && stageNum === 10) {
+        // 2A-10(SPHINX) 클리어 → 스페셜 스테이지 진입
+        store.triggerTransition(() => store.initGame('2A', 11));
       } else if (chapterNum.startsWith('2') && stageNum === 10) {
+        // 2B-10 클리어 (향후 3B 추가 전까지 임시 GAMEOVER)
+        store.triggerTransition(() => store.setGameState(GameState.GAMEOVER));
+      } else if (chapterNum === '3A' && stageNum === 10) {
+        // 3A-10(HYDRA) 클리어 → 엔딩(향후 추가 챕터 연결)
         store.triggerTransition(() => store.setGameState(GameState.GAMEOVER));
       } else {
         store.triggerTransition(() => store.initGame(chapterNum, stageNum + 1));
@@ -122,6 +140,7 @@ function App() {
         <div className="ui-layer">
           {gameState === GameState.MENU && <MainMenu />}
           {gameState === GameState.CHAPTER_SELECT && <ChapterSelect />}
+          {gameState === GameState.CHAPTER_NEXT && <ChapterNextPopup />}
           {(gameState === GameState.BATTLE || gameState === GameState.TUTORIAL || gameState === GameState.VICTORY || gameState === GameState.GAMEOVER) && <BattleScreen />}
         </div>
 

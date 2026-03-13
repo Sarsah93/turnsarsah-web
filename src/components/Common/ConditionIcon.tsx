@@ -41,6 +41,8 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Provocation') filename = '도발(Provocation).png';
   if (name === 'Decreasing accuracy') filename = '명중률 저하(Decreasing accuracy).png';
   if (name === 'Revived') filename = '부활(Revival).png';
+  if (name === 'Echo') filename = '메아리(Echo).png';
+  if (name === 'Hematophagy') filename = '흡혈(Hematophagy).png';
 
   const iconPath = `/assets/conditions/${filename}`;
 
@@ -73,6 +75,9 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
     resolvedDesc = resolvedDesc.replace('{percent}', '20').replace('{dmg}', '15');
   } else if (name === 'Dehydration' && condition.data) {
     resolvedDesc = resolvedDesc.replace('{dmg}', ((condition.data as any).amount || 0).toString());
+  } else if (name === 'Hematophagy' && condition.data) {
+    const percent = (condition.data as any).percent || 30;
+    resolvedDesc = resolvedDesc.replace('{percent}', percent.toString());
   } else if (name === 'Triple Attack') {
     // No dynamic data needed for now
   }

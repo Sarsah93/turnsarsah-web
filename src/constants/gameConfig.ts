@@ -13,6 +13,7 @@ export enum GameState {
   LOAD = 'LOAD',
   TUTORIAL = 'TUTORIAL',
   CHAPTER_SELECT = 'CHAPTER_SELECT',
+  CHAPTER_NEXT = 'CHAPTER_NEXT', // v3.0: 챕터 클리어 후 다음 챕터 자동 연결 팝업
 }
 
 export enum PauseSubstate {

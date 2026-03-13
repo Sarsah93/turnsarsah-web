@@ -151,6 +151,11 @@ export const useGameLoop = () => {
             return sfxMap[stage] ? `/assets/audio/stages/chapter 2B/${sfxMap[stage]}` : null;
         }
 
+        if (chapter === '3A') {
+            // 임시로 공용 타격음 적용 (이후 개별 에셋 추가 시 수정)
+            return `/assets/audio/combat/chapter 1 goblin/04_sword hit_heavy.mp3`;
+        }
+
         if (chapter !== '1') return '';
 
         const map: Record<number, string> = {
@@ -450,6 +455,33 @@ export const useGameLoop = () => {
                 }
             }
 
+            // 3A-5: GHOST (유체화 - 족보 데미지만 적용)
+            if (store.chapterNum === '3A' && stageNum === 5) {
+                const handBonusesAll: Record<string, number> = {
+                    'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
+                    'Straight': 75, 'Flush': 100, 'Full House': 125, 'Four of a Kind': 150,
+                    'Straight Flush': 175, 'Royal Flush': 300
+                };
+                const pokerBonusOnly = Math.floor((handBonusesAll[handType] || 0) * (finalDamage / rawDamage));
+                damage = pokerBonusOnly;
+                displayMessage = "유체화: 기본/카드 피해 적용 면역!";
+            }
+
+            // 3A-6/7: HONEY YUMMY/BRITTLE (+8 bonus condition)
+            if (store.chapterNum === '3A') {
+                if (stageNum === 6) {
+                    // 단군신화: 3 또는 7 포함 시 +8
+                    if (selectedCards.some(c => c.rank === '3' || c.rank === '7')) {
+                         damage += 8;
+                    }
+                } else if (stageNum === 7) {
+                    // 취성: 다이아몬드 포함 시 +8
+                    if (selectedCards.some(c => c.suit === '♦')) {
+                         damage += 8;
+                    }
+                }
+            }
+
             // v2.3.2: 2A-4 No damage under 30
             if (store.chapterNum === '2A' && stageNum === 4 && damage < 30) {
                 damage = 0;
@@ -631,6 +663,26 @@ export const useGameLoop = () => {
             }
         }
 
+        // 3A-10 티폰 전승 타격 기믹 (Flush 4문양 완성 시 즉사)
+        if (store.chapterNum === '3A' && stageNum === 10 && handType.includes('Flush')) {
+            const suit = selectedCards.find(c => !c.isJoker)?.suit;
+            if (suit && !store.hydraFlushSuits.includes(suit)) {
+                const newSuits = [...store.hydraFlushSuits, suit];
+                store.setHydraFlushSuits(newSuits);
+                setMessage(t.UI.HYDRA_FLUSH_COUNT.replace('{count}', newSuits.length.toString()));
+                triggerScreenEffect('flash-red');
+                if (newSuits.length >= 4) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    setMessage("티폰 전승: 거대 뱀의 심장을 찔렀습니다!");
+                    setBotHp(0);
+                    // 즉사이므로 부활 조건을 스킵/강제삭제
+                    const killConds = new Map(useGameStore.getState().bot.conditions);
+                    killConds.delete('Revival');
+                    useGameStore.getState().setBot({ ...useGameStore.getState().bot, conditions: killConds });
+                }
+            }
+        }
+
         // 4B-3: Symbiotic Relationship (re-implemented as health sync when boss heals)
         // Handled in bot hp update logic or via sub-effect
 
@@ -755,6 +807,36 @@ export const useGameLoop = () => {
         }
 
         if (newBotHp <= 0) {
+            // 보스 부활 기믹 (3A-10 HYDRA 등)
+            const freshBotRevive = useGameStore.getState().bot;
+            const revivalCond = freshBotRevive.conditions.get('Revival');
+            if (revivalCond) {
+                const limit = (revivalCond.data as any)?.limit || 1;
+                if (limit > 0) {
+                    const healPercent = (revivalCond.data as any)?.percent || 0.6;
+                    const reviveHp = Math.floor(freshBotRevive.maxHp * healPercent);
+                    setBotHp(reviveHp);
+                    setMessage(t.CONDITIONS.REVIVAL.NAME + "!");
+                    playConditionSound('Revival');
+                    showDamageText('BOT', `+${reviveHp}`, '#2ecc71');
+                    
+                    const newConds = new Map(freshBotRevive.conditions);
+                    const updated = { ...revivalCond, data: { ...((revivalCond.data as any) || {}), limit: limit - 1 } };
+                    if (updated.data.limit <= 0) newConds.delete('Revival');
+                    else newConds.set('Revival', updated);
+                    
+                    useGameStore.getState().setBot({ ...freshBotRevive, hp: reviveHp, conditions: newConds });
+                    
+                    await new Promise(r => setTimeout(r, 1500));
+                    
+                    // "부활 직후 1턴 공격 불가"
+                    setMessage("보스가 행동을 회복 중입니다...");
+                    await new Promise(r => setTimeout(r, 1000));
+                    await proceedToEndTurn();
+                    return; // 승리/봇턴 분기 스킵
+                }
+            }
+
             await handleVictory();
         } else {
             if (awakeningTriggered) {
@@ -845,6 +927,16 @@ export const useGameLoop = () => {
         // v2.3.2: 2A-7 Sand Golem (Every 2 turns)
         if (store.chapterNum === '2A' && stageNum === 7 && store.currentTurn % 2 === 0) {
             setMessage(t.COMBAT.BOSS_SKIPPED);
+            await new Promise(r => setTimeout(r, 1000));
+            await proceedToEndTurn();
+            return;
+        }
+
+        // 3A-6 Cave Bear: Honey Yummy 꿀섭취 (20% 스킵)
+        if (store.chapterNum === '3A' && stageNum === 6 && Math.random() < 0.20) {
+            setMessage("꿀 섭취 중! (공격 스킵 & 체력 회복)");
+            setBotHp(Math.min(currentBot.maxHp, currentBot.hp + 20));
+            showDamageText('BOT', `+20`, '#2ecc71');
             await new Promise(r => setTimeout(r, 1000));
             await proceedToEndTurn();
             return;
@@ -977,6 +1069,16 @@ export const useGameLoop = () => {
             }
         }
 
+        // 3A Echo (메아리 보스 패시브) 공격 횟수 추가 로직 적용
+        const botEchoCond = currentBot.conditions.get('Echo');
+        let hasEchoAdded = false;
+        let echoDamage = 0;
+        if (botEchoCond && Math.random() < ((botEchoCond.data as any)?.chance || 0.20)) {
+            hasEchoAdded = true;
+            attackCount += 1;
+            echoDamage = Math.floor(damage * ((botEchoCond.data as any)?.damageScale || 0.70));
+        }
+
         const sfx = getBossAttackSFX(store.chapterNum, stageNum);
 
         // Execute Attacks Loop
@@ -1022,9 +1124,30 @@ export const useGameLoop = () => {
                 finalDmg = Math.floor(finalDmg * 0.7);
             }
 
-            if (finalDmg > damage) {
+            if (finalDmg > damage && !hasEchoAdded) {
                 setMessage(t.COMBAT.CRITICAL_HIT);
                 triggerScreenEffect('flash-red');
+            }
+
+            // Echo 특수타격 오버라이드 (추가된 마지막 타격일 경우)
+            if (hasEchoAdded && i === attackCount - 1) {
+                finalDmg = echoDamage;
+                setMessage("메아리 추가 타격!");
+                triggerScreenEffect('shake');
+            }
+
+            // 3A-9 Basilisk Petrify 기믹
+            if (store.chapterNum === '3A' && stageNum === 9 && Math.random() < 0.40) {
+                const pHand = store.playerHand;
+                const petrifyTargets = pHand.map((c, idx) => c && !c.isPetrified ? idx : -1).filter(idx => idx !== -1);
+                if (petrifyTargets.length > 0) {
+                    const rndIdx = petrifyTargets[Math.floor(Math.random() * petrifyTargets.length)];
+                    const newHand = [...pHand];
+                    newHand[rndIdx] = { ...(newHand[rndIdx] as Card), isPetrified: true, petrifyDuration: 2 };
+                    useGameStore.getState().setPlayerHand(newHand);
+                    setMessage("카드가 석화되었습니다!");
+                    playConditionSound('Paralyzing'); // 석화 효과음
+                }
             }
 
             setPlayerHp(applyDamage(useGameStore.getState().player.hp, finalDmg));
@@ -1071,6 +1194,28 @@ export const useGameLoop = () => {
                 const recoil = (recoCond.data as any)?.recoil || 12;
                 setBotHp(Math.max(0, freshBotAfterHit.hp - recoil));
                 showDamageText('BOT', `-${recoil}`, '#e74c3c');
+            }
+
+            // 3A-2: HEMATOPHAGY (흡혈 30%)
+            if (stageNum === 2 && finalDmg > 0) {
+                const heal = Math.floor(finalDmg * 0.3);
+                if (heal > 0) {
+                    setBotHp(Math.min(currentBot.maxHp, currentBot.hp + heal));
+                    showDamageText('BOT', `+${heal}`, '#2ecc71');
+                    AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');
+                }
+            }
+            // 3A-4: POISON SPIDER (공격 시 20% 확률로 신경성맹독 부여)
+            if (stageNum === 4 && finalDmg > 0 && Math.random() < 0.2) {
+                store.addPlayerCondition('Neurotoxicity', 3);
+                playConditionSound('Neurotoxicity');
+                setMessage(t.CONDITIONS.NEUROTOXICITY.NAME + "!");
+            }
+            // 3A-9: PETRIFY ATTACK (30% 확률로 카드 석화)
+            if (stageNum === 9 && Math.random() < 0.3) {
+                setMessage("석화의 시선!");
+                store.applyPetrifyStatus(1);
+                AudioManager.playSFX('/assets/audio/common/UI_ERROR.mp3'); // Appropriate SFX for status
             }
 
             await new Promise(r => setTimeout(r, i < attackCount - 1 ? 800 : 400)); // Delay between multi-attacks
@@ -1120,6 +1265,71 @@ export const useGameLoop = () => {
                     store.addPlayerCondition('Paralyzing', 2);
                 }
             }
+        } else if (store.chapterNum === '3A') {
+            // 3A 고정 피해 및 상태이상 (Acid, Mucus, Shooting Web, Roll Boulder)
+            const currentTurnMod = (store.currentTurn % 3);
+            const currentTurnMod2 = (store.currentTurn % 2);
+
+            // 3A-1: ACID ATTACK (매 3턴 15뎀 + 화상)
+            if (stageNum === 1 && currentTurnMod === 2) {
+                setMessage("산성 공격!");
+                setPlayerHp(Math.max(0, store.player.hp - 15));
+                showDamageText('PLAYER', `-15`, '#e74c3c');
+                if (Math.random() < 0.2) store.addPlayerCondition('Burn', 3);
+            }
+            // 3A-3: MUCUS (매 2턴 20뎀 + 50% 중독 또는 명중저하)
+            if (stageNum === 3 && currentTurnMod2 === 1) {
+                setMessage("점액 분비!");
+                setPlayerHp(Math.max(0, store.player.hp - 20));
+                showDamageText('PLAYER', `-20`, '#e74c3c');
+                if (Math.random() < 0.5) {
+                    if (Math.random() < 0.5) store.addPlayerCondition('Poisoning', 3);
+                    else store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 30 });
+                }
+            }
+            // 3A-4: SHOOTING WEB (매 2턴 10뎀 + 거미줄)
+            if (stageNum === 4 && currentTurnMod2 === 1) {
+                setMessage("거미줄 투척!");
+                setPlayerHp(Math.max(0, store.player.hp - 10));
+                showDamageText('PLAYER', `-10`, '#e74c3c');
+                // 회피 5% 깎는 디버프 처리 (별도 관리 어려우므로 명중률 저하로 대체)
+                store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 5 });
+            }
+            // 3A-8: ROLL BOULDER (매 2턴 20뎀, 플레이어 40% 확률 회피)
+            if (stageNum === 8 && currentTurnMod2 === 1) {
+                setMessage("바위 굴리기!");
+                triggerScreenEffect('shake-heavy');
+                
+                if (Math.random() < 0.4) {
+                    setMessage(t.COMBAT.ATTACK_AVOIDED);
+                    showDamageText('PLAYER', t.COMBAT.ATTACK_AVOIDED, '#f39c12');
+                } else {
+                    setPlayerHp(Math.max(0, store.player.hp - 20));
+                    showDamageText('PLAYER', `-20`, '#e74c3c');
+                }
+            }
+            // 3A-7: BRITTLE 스택 리셋 체크
+            if (stageNum === 7) {
+                const brittCond = currentBot.conditions.get('Brittle');
+                if (brittCond) {
+                    const st = (brittCond.data as any)?.stackCount || 0;
+                    if (st >= 5) {
+                        setMessage("취성 파괴! (경감 초기화)");
+                        const freshBotC = new Map(currentBot.conditions);
+                        // 피해경감 10%부터 재시작
+                        const drCond = freshBotC.get('Damage Reducing');
+                        if (drCond && drCond.data) {
+                            freshBotC.set('Damage Reducing', { 
+                                ...drCond, 
+                                data: { ...(drCond.data as object), percent: 10 } 
+                            } as any);
+                        }
+                        freshBotC.set('Brittle', { ...brittCond, data: { ...(brittCond.data as any), stackCount: 0 } });
+                        store.setBot({ ...currentBot, conditions: freshBotC });
+                    }
+                }
+            }
+
         } else if (store.chapterNum === '2B') {
             // v2.3.9: Chapter 2B Special Stage (Stage 11) - 100% Status Application
             if (stageNum === 11 && !currentBot.conditions.has('Awakening')) {
@@ -1531,6 +1741,30 @@ export const useGameLoop = () => {
             }
         }
 
+        // 3A-7: BRITTLE 스택 매 턴 증가 (보스 페이즈 종료 시점)
+        if (botConditions.has('Brittle')) {
+            const brittCond = botConditions.get('Brittle') as any;
+            const currentDR = botConditions.get('Damage Reducing') as any;
+            
+            const currentStack = brittCond.data?.stackCount || 0;
+            const nextStack = currentStack + 1;
+            
+            // Damage Reducing 퍼센트 10 상승
+            if (currentDR) {
+                const currentPercent = currentDR.data?.percent || 10;
+                botConditions.set('Damage Reducing', {
+                    ...currentDR,
+                    duration: 999,
+                    data: { ...currentDR.data, percent: currentPercent + 10 }
+                });
+            }
+            
+            botConditions.set('Brittle', {
+                ...brittCond,
+                data: { ...brittCond.data, stackCount: nextStack }
+            });
+        }
+
         // Remove expired bot conditions
         toRemoveBot.forEach(name => botConditions.delete(name));
         const freshBot = useGameStore.getState().bot;
@@ -1642,6 +1876,9 @@ export const useGameLoop = () => {
 
         // 1. 상태 정리 (Heal + Clear Conditions)
         store.clearPlayerConditions();
+        if (store.chapterNum === '3A' && store.stageNum === 10) {
+            store.resetHydraFlushSuits(); // 히드라용 전승 카운터 리셋
+        }
 
         const currentHp = store.player.hp;
         let maxHp = store.player.maxHp;
@@ -1703,7 +1940,8 @@ export const useGameLoop = () => {
         const trophyIdMap: Record<string, Record<number, string>> = {
             '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
             '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
-            '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' }
+            '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' },
+            '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' }
         };
         const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
 

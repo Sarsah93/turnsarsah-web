@@ -263,6 +263,15 @@ interface GameStoreState {
   isVictoryFanfareActive: boolean;
   setIsVictoryFanfareActive: (active: boolean) => void;
 
+  // v3.0: Chapter Next Popup
+  nextChapterId: string;          // 다음에 진입할 체터 ID
+  setNextChapterId: (id: string) => void;
+
+  // v3.0: Hydra Flush Counter (티폰전승)
+  hydraFlushSuits: string[];      // 성공한 다른 문양 목록
+  setHydraFlushSuits: (suits: string[]) => void;
+  resetHydraFlushSuits: () => void;
+
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -297,6 +306,15 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   ch2SpecialQualify: false,
   setHiddenState: (update) => set((state) => ({ ...state, ...update })),
   stageSkillsTriggered: [],
+
+  // v3.0: Chapter Next Popup
+  nextChapterId: '',
+  setNextChapterId: (nextChapterId) => set({ nextChapterId }),
+
+  // v3.0: Hydra Flush Counter
+  hydraFlushSuits: [],
+  setHydraFlushSuits: (hydraFlushSuits) => set({ hydraFlushSuits }),
+  resetHydraFlushSuits: () => set({ hydraFlushSuits: [] }),
 
   // Tutorial System
   isTutorial: false,
@@ -741,6 +759,41 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
           applyCondition(botConditions, 'Reflection', 9999, '', { chance: 30, percent: 10 });
         }
+      } else if (chapterId === '3A') {
+        // ── 챕터 3A 공통: 메아리(Echo) 조건 부여 ──────────────────────
+        applyCondition(botConditions, 'Echo', 9999, '', { chance: 0.20, damageScale: 0.70 });
+
+        // ── 스테이지별 패시브 ────────────────────────────────────────────
+        // 3A-1 SLIME: 재생 +2/턴
+        if (stageId === 1) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 2 });
+        }
+        // 3A-2 VAMPIRE BAT: 흡혈 30%
+        if (stageId === 2) {
+          applyCondition(botConditions, 'Hematophagy', 9999, '', { percent: 30 });
+        }
+        // 3A-6 CAVE BEAR: 피해경감 15%
+        if (stageId === 6) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+        }
+        // 3A-7 CRYSTAL GOLEM: 초기 피해경감 10% (brittle 스택 카운터: stackCount)
+        if (stageId === 7) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 10 });
+          applyCondition(botConditions, 'Brittle', 9999, '', { stackCount: 0, maxStacks: 5 });
+        }
+        // 3A-8 DRAKE: 피해경감 15%
+        if (stageId === 8) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+        }
+        // 3A-9 BASILISK: 피해경감 15%
+        if (stageId === 9) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+        }
+        // 3A-10 HYDRA: 피해경감 15% + 부활 3회 (60% HP)
+        if (stageId === 10) {
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+          applyCondition(botConditions, 'Revival', 9999, '', { count: 3, percent: 60 });
+        }
       }
 
       // Boss stat overrides based on difficulty
@@ -1112,6 +1165,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           state.addBotCondition('Reflection', 9999, '', { chance: 0.3, percent: 10 });
         }
         set({ stage10RuleText: t.RULES.BLIND_BAN_REFLECTION_AWAKEN });
+      }
+    } else if (chapterId === '3A') {
+      // ── 챕터 3A: 각 스테이지 룰 텍스트 설정 ──────────────────────────
+      const ruleKey = (CHAPTERS['3A'].stages as any)[stageId]?.rule;
+      if (ruleKey && (t.RULES as any)[ruleKey]) {
+        set({ stage10RuleText: (t.RULES as any)[ruleKey] });
       }
     }
 

@@ -236,6 +236,14 @@ export const TRANSLATIONS = {
             DECAY: {
                 NAME: "부패",
                 DESC: "턴이 지날수록 증가하는 부패 피해를 입습니다. (최대 HP의 3% → 5% → 8% → 10%, 4턴 지속)"
+            },
+            ECHO: {
+                NAME: "메아리",
+                DESC: "동굴 챕터에서 보스는 일반 공격 시, 20% 확률로 30% 경감된 일반 공격을 한 번 더 적용한다. (각 공격의 회피가 적용될 확률은 별도로 계산한다.)"
+            },
+            HEMATOPHAGY: {
+                NAME: "흡혈",
+                DESC: "피해를 입힐 때, 입힌 피해량의 {percent}%만큼 자신의 HP를 회복한다."
             }
         },
         RULES: {
@@ -296,6 +304,21 @@ export const TRANSLATIONS = {
             HIGH_ORC_LORD_RULE: "강력한 버서커 및 도발",
             SAND_STORM_TRIPLE_AWAKEN: "규칙: 모래폭풍+삼중공격+각성",
             BLIND_BAN_REFLECTION_AWAKEN: "규칙: BLIND/BAN+데미지반사+각성(부패 폭발)",
+
+            // Chapter 3A Rules
+            ACID_ATTACK: "규칙: 산성공격 (3턴마다 15 고정피해 + 20% 화상)",
+            HEMATOPHAGY: "규칙: 흡혈 (가한 피해의 30% 회복)",
+            MUCUS: "규칙: 점액분비 (2턴마다 20 고정피해 + 50% 명중률저하/중독)",
+            SHOOTING_WEB: "규칙: 거미줄발사 (2턴마다 10 고정피해 + 회피율 -5%)",
+            GHOST: "규칙: 유체화 (족보 보너스 피해만 유효)",
+            HONEY_DANGUN: "규칙: 꿀섭취/단군신화 (20% 공격 스킵+HP회복 / 3·7 포함 시 +8)",
+            BRITTLE: "규칙: 취성 (매 턴 경감 +10%, 5회 누적 후 초기화 / 다이아 포함 시 +8)",
+            ROLL_BOULDER: "규칙: 바위굴리기 (2턴마다 20 고정피해, 40% 회피)",
+            PETRIFIED_RULE: "규칙: 석화 (공격 성공 시 40% 확률로 카드 1장 석화)",
+            TYPHON_MYTH: "규칙: 티폰전승 (부활 3회 / 4문양 플러시 성공 시 즉사)",
+
+            // Chapter 3A Echo
+            CHAPTER_ECHO: "챕터 규칙: 메아리 (20% 확률, 70% 피해 추가 공격)",
         },
         UI: {
             CHAPTER_SELECT_TITLE: "들판 구역 안정화 완료",
@@ -348,7 +371,14 @@ export const TRANSLATIONS = {
             CLEAR_EASY_BODY: "쉬움 난이도의 모든 스테이지를 클리어 하셨습니다!\n이제부터 보통 난이도를 플레이할 수 있으며,\n보스들로부터 전리품을 얻고, 제단 스킬을 활성화하여,\n더 다양한 챕터들을 클리어 해 보세요!",
             CLEAR_NORMAL_BODY: "보통 난이도의 모든 스테이지를 클리어 하셨습니다!\n이제부터 어려움 난이도를 플레이할 수 있으며,\n보스들로부터 전리품을 얻고, 제단 스킬을 활성화하여,\n더 다양한 챕터들을 클리어 해 보세요!",
             BACK_TO_MAIN_MENU: "메인 화면으로 돌아가기",
-            UNDER_PREPARATION: "현재 준비중입니다."
+            UNDER_PREPARATION: "현재 준비중입니다.",
+            // Chapter Next Popup (v3.0)
+            CHAPTER_NEXT_CLEAR: "{area} 구역 안정화 완료!",
+            CHAPTER_NEXT_ACTIVATED: "다음 섹터가 활성화되었습니다.",
+            CHAPTER_NEXT_ENTER: "이동",
+            CHAPTER_3A_NAME: "챕터 3A 동굴",
+            CHAPTER_3B_NAME: "챕터 3B 늪지대",
+            HYDRA_FLUSH_COUNT: "티폰 전승: {count}/4"
         }
     },
     EN: {
@@ -643,6 +673,21 @@ export const TRANSLATIONS = {
             HIGH_ORC_LORD_RULE: "Heavy Berserker & Provoke",
             SAND_STORM_TRIPLE_AWAKEN: "RULE: SAND STORM + TRIPLE ATK + AWAKEN",
             BLIND_BAN_REFLECTION_AWAKEN: "RULE: BLIND/BAN + REFLECT + AWAKEN (DECAY)",
+
+            // Chapter 3A Rules
+            ACID_ATTACK: "RULE: ACID ATTACK (Fixed 15 dmg every 3 turns + 20% Burn)",
+            HEMATOPHAGY: "RULE: HEMATOPHAGY (Heal 30% of damage dealt)",
+            MUCUS: "RULE: MUCUS (Fixed 20 dmg every 2 turns + 50% Accuracy Down/Poison)",
+            SHOOTING_WEB: "RULE: SHOOTING WEB (Fixed 10 dmg every 2 turns + Evasion -5%)",
+            GHOST: "RULE: GHOST (Only hand bonus damage applies)",
+            HONEY_DANGUN: "RULE: HONEY YUMMY/DANGUN MYTH (20% skip+heal / 3·7 included +8)",
+            BRITTLE: "RULE: BRITTLE (DR+10% each turn, resets at 5 / Diamond included +8)",
+            ROLL_BOULDER: "RULE: ROLL BOULDER (Fixed 20 dmg every 2 turns, 40% dodge)",
+            PETRIFIED_RULE: "RULE: PETRIFIED (40% chance to Petrify 1 card on hit)",
+            TYPHON_MYTH: "RULE: KEY MYTHS OF TYPHON (Revive x3 / Instakill on 4-suit Flush)",
+
+            // Chapter 3A Echo
+            CHAPTER_ECHO: "CHAPTER RULE: Echo (20% chance for 70% dmg bonus attack)",
         },
         UI: {
             CHAPTER_SELECT_TITLE: "Field Area Stabilized",
@@ -694,7 +739,14 @@ export const TRANSLATIONS = {
             CLEAR_EASY_BODY: "You have cleared all stages of EASY difficulty!\nNow you can play NORMAL difficulty, obtain loot from bosses,\nactivate Altar skills, and clear even more diverse chapters!",
             CLEAR_NORMAL_BODY: "You have cleared all stages of NORMAL difficulty!\nNow you can play HARD difficulty, obtain loot from bosses,\nactivate Altar skills, and clear even more diverse chapters!",
             BACK_TO_MAIN_MENU: "Back to Main Menu",
-            UNDER_PREPARATION: "Under Preparation."
+            UNDER_PREPARATION: "Under Preparation.",
+            // Chapter Next Popup (v3.0)
+            CHAPTER_NEXT_CLEAR: "{area} Area Stabilized!",
+            CHAPTER_NEXT_ACTIVATED: "Next sector has been activated.",
+            CHAPTER_NEXT_ENTER: "ENTER",
+            CHAPTER_3A_NAME: "Chapter 3A: Cave",
+            CHAPTER_3B_NAME: "Chapter 3B: Swamp",
+            HYDRA_FLUSH_COUNT: "Typhon Myth: {count}/4"
         }
     }
 };
