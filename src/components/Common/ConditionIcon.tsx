@@ -43,6 +43,8 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Revived') filename = '부활(Revival).png';
   if (name === 'Echo') filename = '메아리(Echo).png';
   if (name === 'Hematophagy') filename = '흡혈(Hematophagy).png';
+  if (name === 'Swamping') filename = '잠김(Swamping).png';
+  if (name === 'Stem Cell') filename = '줄기세포(STEM-CELL).png';
 
   const iconPath = `/assets/conditions/${filename}`;
 

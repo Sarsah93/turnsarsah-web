@@ -104,6 +104,22 @@ export const BossDisplay: React.FC = () => {
             const filename = mapping[stage] || '01_SLIME.png';
             return `/assets/boss_cave/${filename}`;
         }
+        if (chapter === '3B') {
+            const mapping: Record<number, string> = {
+                1: '01_ALLIGATOR SNAPPING TURTLE.png',
+                2: '02_MULROC.png',
+                3: '03_CROCODILE.png',
+                4: '04_LIZARD SKINK.png',
+                5: '05_LIZARD MAN.png',
+                6: '06_LIZARD SLANN.png',
+                7: '07_LIZARD SAURUS.png',
+                8: '08_TROGLODON.png',
+                9: '09_LIZARD KROXIGOR.png',
+                10: '10_LIZARD KING.png'
+            };
+            const filename = mapping[stage] || '01_ALLIGATOR SNAPPING TURTLE.png';
+            return `/assets/boss_swamp/${filename}`;
+        }
         return '/assets/boss_goblin/01_goblin.png';
     };
 

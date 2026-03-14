@@ -4,7 +4,7 @@ import { AudioManager } from '../utils/AudioManager';
 import { calculatePlayerDamage, calculateBotDamage, applyDamage } from './damageCalculation';
 import { Card, CardFactory } from '../types/Card';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
-import { RANK_VALUES } from '../constants/cards';
+import { RANK_VALUES, JOKER_DRAW_PROBABILITY } from '../constants/cards';
 import { TRANSLATIONS } from '../constants/translations';
 import { playCoreDeathFX } from '../utils/fxUtils';
 
@@ -482,6 +482,51 @@ export const useGameLoop = () => {
                 }
             }
 
+            // ── 3B 챕터: 플레이어 공격 기믹 처리 ──────────────────────────
+            if (store.chapterNum === '3B') {
+                // 3B-1: HARDNESS(단단함) - 투페어 이상 족보만 피해 적용
+                if (stageNum === 1) {
+                    const lowHands = ['High Card', 'One Pair'];
+                    if (lowHands.includes(handType)) {
+                        damage = 0;
+                        displayMessage = "단단함: 투페어 이상 족보만 피해를 줄 수 있습니다!";
+                    }
+                }
+
+                // 3B-4: AUTOTOMY(자절) - 매 2턴(2, 4, 6...)마다 플레이어 공격 피해 30% 감소
+                if (stageNum === 4 && (store.currentTurn + 1) % 2 === 0) {
+                    damage = Math.floor(damage * 0.7);
+                    displayMessage = "자절: 플레이어 공격 피해 30% 감소!";
+                }
+
+                // 3B-5: CAMOUFLAGE(위장) - 매 2턴 종료 후 1턴간(3, 6, 9...) 보스 무적
+                if (stageNum === 5 && (store.currentTurn + 1) % 3 === 0) {
+                    damage = 0;
+                    displayMessage = "위장: 보스가 투명 상태여서 공격이 통하지 않습니다!";
+                }
+
+                // 3B-7: HOLD BREATH(숨참기) - 보스 공격 2회 성공 시 다음 턴 무적 (v2.4.0)
+                if (stageNum === 7 && (store as any).holdBreathInvulnerable3B) {
+                    damage = 0;
+                    displayMessage = "숨참기: 보스가 무적 상태여서 피해를 줄 수 없습니다!";
+                }
+
+                // 3B-10: STEM CELL 해제 조건 - 스트레이트 계열 족보 공격 성공 시
+                if (stageNum === 10 && damage > 0) {
+                    const straightHands = ['Straight', 'Straight Flush', 'Royal Flush'];
+                    if (straightHands.includes(handType)) {
+                        const freshBot10 = useGameStore.getState().bot;
+                        if (freshBot10.conditions.has('Stem Cell')) {
+                            const newConds10 = new Map(freshBot10.conditions);
+                            newConds10.delete('Stem Cell');
+                            useGameStore.getState().setBot({ ...freshBot10, conditions: newConds10 });
+                            setMessage("줄기세포 파괴! (스트레이트 계열 공격 성공)");
+                            triggerScreenEffect('flash-red');
+                        }
+                    }
+                }
+            }
+
             // v2.3.2: 2A-4 No damage under 30
             if (store.chapterNum === '2A' && stageNum === 4 && damage < 30) {
                 damage = 0;
@@ -792,6 +837,7 @@ export const useGameLoop = () => {
                 await new Promise(r => setTimeout(r, 1000));
             }
         }
+        
         if (store.chapterNum === '2B') {
             const bThresholds: Record<number, number> = { 4: 0.2, 7: 0.3, 10: 0.3 };
             const bAtkBonuses: Record<number, number> = { 4: 15, 7: 20, 10: 25 };
@@ -803,6 +849,32 @@ export const useGameLoop = () => {
                     playConditionSound('Berserker');
                     await new Promise(r => setTimeout(r, 1000));
                 }
+            }
+        }
+
+        // ── 3B-9 각성(AWAKENING) 트리거 ──────────────────────────────
+        if (store.chapterNum === '3B' && stageNum === 9) {
+            if (newBotHp > 0 && newBotHp <= bot.maxHp * 0.4 && !bot.conditions.has('Awakening')) {
+                setMessage("각성: 보스가 기운을 되찾고 모든 방해를 떨쳐내며 더욱 흉포해집니다!");
+                playConditionSound('Awakening');
+                triggerScreenEffect('flash-red');
+                
+                // v2.5.0: 사용자 요구사항 - 기존 버프(피해경감, 재생 등) 모두 제거
+                const newBotConds = new Map<string, any>(); 
+                // Awakening은 중복 발동 방지를 위해 새로 추가
+                newBotConds.set('Awakening', { name: TRANSLATIONS.KR.CONDITIONS.AWAKENING.NAME, duration: 9999, elapsed: 0, data: {} });
+
+                const awakenedBot = {
+                    ...bot,
+                    hp: bot.maxHp,
+                    atk: bot.atk + 20, // 사용자 요구사항: ATK +20
+                    conditions: newBotConds
+                };
+                store.setBot(awakenedBot);
+                
+                await new Promise(r => setTimeout(r, 1200));
+                await proceedToEndTurn();
+                return;
             }
         }
 
@@ -924,6 +996,14 @@ export const useGameLoop = () => {
             return;
         }
 
+        if (store.chapterNum === '3B' && stageNum === 7 && (store as any).holdBreathInvulnerable3B) {
+            setMessage("숨참기: 보스가 이번 턴에 공격하지 않습니다.");
+            (store as any).holdBreathInvulnerable3B = false; // 플래그 해제
+            await new Promise(r => setTimeout(r, 1000));
+            await proceedToEndTurn();
+            return;
+        }
+
         // v2.3.2: 2A-7 Sand Golem (Every 2 turns)
         if (store.chapterNum === '2A' && stageNum === 7 && store.currentTurn % 2 === 0) {
             setMessage(t.COMBAT.BOSS_SKIPPED);
@@ -1013,6 +1093,28 @@ export const useGameLoop = () => {
         const has2B = store.equippedAltarSkills.includes('2B');
         const isBossStage = stageNum >= 10;
 
+
+
+        // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 2회 성공 후 다음 턴 100% 차단
+        if (store.chapterNum === '3B' && stageNum === 7) {
+            const holdBreathActive = (store as any).holdBreathTurn3B === store.currentTurn;
+            if (holdBreathActive) {
+                setMessage("숨참기: 보스가 공격을 완전히 막고 행동을 회복 중입니다...");
+                triggerScreenEffect('flash-red');
+                await new Promise(r => setTimeout(r, 1000));
+                await proceedToEndTurn();
+                return;
+            }
+        }
+
+        // ────────── 잠김(Swamping) 회피 패널티 계산 ──────────────────────
+        let swampAvoidPenalty = 0;
+        if (store.chapterNum === '3B') {
+            const swampCond = currentPlayer.conditions.get('Swamping');
+            const swampAttackCount = (swampCond?.data as any)?.attackCount || 0;
+            swampAvoidPenalty = swampAttackCount < 5 ? 0.05 : 0.20;
+        }
+
         // 5B-1: Threat Prediction (100% evasion on first attack in boss stages 10/SP)
         const isFirstBossAttack = isBossStage && store.currentTurn === 0 && !store.stageSkillsTriggered.includes('5B-1');
         if (store.equippedAltarSkills.includes('5B-1') && isFirstBossAttack) {
@@ -1027,6 +1129,9 @@ export const useGameLoop = () => {
 
         let finalAvoidChance = avoidCond ? ((avoidCond.data as any)?.chance ?? config.avoidChance) : config.avoidChance;
         if (has2B) finalAvoidChance += 0.05;
+
+        // 3B: 잠김(Swamping) 회피 패널티 적용 (최저 0%)
+        finalAvoidChance = Math.max(0, finalAvoidChance - swampAvoidPenalty);
 
         // v2.3.6: Chapter 2B Environmental Rule - Player Avoiding is DISABLED (unless 2B skill is equipped)
         const isAvoided = !isTutorial && (store.chapterNum !== '2B' || has2B) && finalAvoidChance > 0 && Math.random() < finalAvoidChance;
@@ -1152,6 +1257,18 @@ export const useGameLoop = () => {
 
             setPlayerHp(applyDamage(useGameStore.getState().player.hp, finalDmg));
             showDamageText('PLAYER', `-${finalDmg}`, '#e74c3c');
+
+            // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 성공 시 카운터 (2.4.0)
+            if (store.chapterNum === '3B' && stageNum === 7 && finalDmg > 0) {
+                const hbCount = ((store as any).holdBreathCount3B || 0) + 1;
+                if (hbCount >= 2) {
+                    (store as any).holdBreathInvulnerable3B = true; 
+                    (store as any).holdBreathCount3B = 0;
+                    setMessage("숨참기: 보스가 공격을 멈추고 다음 턴 무적 상태가 됩니다!");
+                } else {
+                    (store as any).holdBreathCount3B = hbCount;
+                }
+            }
 
             // v2.3.0: Boss Lifesteal / Recoil / Provocation
             const freshBotAfterHit = useGameStore.getState().bot;
@@ -1361,38 +1478,109 @@ export const useGameLoop = () => {
         } else if (store.chapterNum === '1') {
             // v2.3.7: Restore Chapter 1 Status Application Mechanics
             applyBotStageMechanics();
+        } else if (store.chapterNum === '3B') {
+            // ── 3B 보스 공격 후 상태이상 부여 ─────────────────────────────
+            const freshP3B = useGameStore.getState().player;
+            // 3B-1: 출혈 20%
+            if (stageNum === 1 && Math.random() < 0.2) {
+                store.addPlayerCondition('Bleeding', 4);
+                playConditionSound('Bleeding');
+                triggerScreenEffect('flash-red');
+            }
+            // 3B-2: 진흙 뿌리기 40% (1장) + 중독 20%
+            if (stageNum === 2) {
+                if (Math.random() < 0.4) {
+                    const hand2 = useGameStore.getState().playerHand;
+                    const validIdx2 = hand2.map((c, i) => c && !c.isMudded ? i : -1).filter(i => i !== -1);
+                    if (validIdx2.length > 0) {
+                        const ri = validIdx2[Math.floor(Math.random() * validIdx2.length)];
+                        const newH2 = [...hand2];
+                        newH2[ri] = { ...CardFactory.create((newH2[ri] as any).rank, (newH2[ri] as any).suit, (newH2[ri] as any).isJoker), isMudded: true, mudDuration: 2 };
+                        useGameStore.getState().setPlayerHand(newH2);
+                        setMessage("진흙 뿌리기: 카드 1장이 진흙 상태가 됩니다!");
+                        triggerScreenEffect('shake-small');
+                    }
+                }
+                if (Math.random() < 0.2) { store.addPlayerCondition('Poisoning', 3); }
+            }
+            // 3B-3,4: 출혈 20% + 중독 10%
+            if ((stageNum === 3 || stageNum === 4)) {
+                if (Math.random() < 0.2) { store.addPlayerCondition('Bleeding', 4); playConditionSound('Bleeding'); }
+                if (Math.random() < 0.1) { store.addPlayerCondition('Poisoning', 3); }
+            }
+            // 3B-5: 과출혈 30%
+            if (stageNum === 5 && Math.random() < 0.3) {
+                store.addPlayerCondition('Heavy Bleeding', 4);
+                playConditionSound('Heavy Bleeding');
+                triggerScreenEffect('flash-red');
+            }
+            // 3B-6: 쇠약 30% + 중독 30%
+            if (stageNum === 6) {
+                if (Math.random() < 0.3) { store.addPlayerCondition('Debilitating', 3); }
+                if (Math.random() < 0.3) { store.addPlayerCondition('Poisoning', 3); }
+            }
+            // 3B-7: 과출혈 30%
+            if (stageNum === 7 && Math.random() < 0.3) {
+                store.addPlayerCondition('Heavy Bleeding', 4);
+                playConditionSound('Heavy Bleeding');
+                triggerScreenEffect('flash-red');
+            }
+            // 3B-8: 진흙 뿌리기 40% (랜덤 2장) + 출혈 20% + 쇠약 30%
+            if (stageNum === 8) {
+                if (Math.random() < 0.4) {
+                    let hand8 = useGameStore.getState().playerHand;
+                    const validIdx8 = hand8.map((c, i) => c && !c.isMudded ? i : -1).filter(i => i !== -1);
+                    const shuffled8 = validIdx8.sort(() => 0.5 - Math.random()).slice(0, 2);
+                    if (shuffled8.length > 0) {
+                        const newH8 = [...hand8];
+                        shuffled8.forEach(ri => {
+                            newH8[ri] = { ...(newH8[ri] as any), isMudded: true, mudDuration: 2 };
+                        });
+                        useGameStore.getState().setPlayerHand(newH8);
+                        setMessage(`진흙 뿌리기: 카드 ${shuffled8.length}장이 진흙 상태가 됩니다!`);
+                        triggerScreenEffect('shake-small');
+                    }
+                }
+                if (Math.random() < 0.2) { store.addPlayerCondition('Bleeding', 4); playConditionSound('Bleeding'); }
+                if (Math.random() < 0.3) { store.addPlayerCondition('Debilitating', 3); }
+            }
+            // 3B-9: 출혈 40% + 쇠약 40%
+            if (stageNum === 9) {
+                if (Math.random() < 0.4) { store.addPlayerCondition('Bleeding', 4); playConditionSound('Bleeding'); }
+                if (Math.random() < 0.4) { store.addPlayerCondition('Debilitating', 3); }
+            }
+            // 3B-10: 과출혈 20% + 중독 20%
+            if (stageNum === 10) {
+                if (Math.random() < 0.2) { store.addPlayerCondition('Heavy Bleeding', 4); playConditionSound('Bleeding'); }
+                if (Math.random() < 0.2) { store.addPlayerCondition('Poisoning', 3); }
+            }
+
+            // 잠김(Swamping) 공격 카운터 (보스 공격 시)
+            const sCond = freshP3B.conditions.get('Swamping');
+            if (sCond) {
+                const prevCount = (sCond.data as any)?.attackCount || 0;
+                store.addPlayerCondition('Swamping', 9999, '', { attackCount: prevCount + 1 });
+            }
         }
 
         await new Promise(r => setTimeout(r, 300));
         setBotAnimState('NONE');
         setPlayerAnimState('NONE');
 
-        // v2.0.0.21: Boss ATK Scaling only on successful hit (Chapter 1 Only)
         let updatedAtk = currentBot.atk;
         const maxAtkCap = 100;
-
         if (store.chapterNum === '1') {
-            if (stageNum === 7) {
-                updatedAtk = Math.min(maxAtkCap, updatedAtk + 10);
-            } else if (stageNum === 9) {
-                updatedAtk = Math.min(maxAtkCap, updatedAtk * 2);
-            }
+            if (stageNum === 7) updatedAtk = Math.min(maxAtkCap, updatedAtk + 10);
+            else if (stageNum === 9) updatedAtk = Math.min(maxAtkCap, updatedAtk * 2);
         }
-
-        // Global ATK Cap
         updatedAtk = Math.min(maxAtkCap, updatedAtk);
+        if (updatedAtk !== currentBot.atk) store.syncBot({ ...currentBot, atk: updatedAtk });
 
-        if (updatedAtk !== currentBot.atk) {
-            store.syncBot({ ...currentBot, atk: updatedAtk });
-        }
-
-        // Check death using fresh state after both damage and status effects
         const finalPlayerHp = useGameStore.getState().player.hp;
         if (finalPlayerHp <= 0) {
             await handleDefeat();
         } else {
             if (isTutorial && tutorialStep === 9) {
-                // v2.0.0.21: Wait 3 seconds so player can read the Step 9 explanation
                 await new Promise(r => setTimeout(r, 3000));
                 setTutorialStep(10);
             }
@@ -1400,87 +1588,48 @@ export const useGameLoop = () => {
         }
     };
 
-    // v2.3.0: Survival Check Helper
-    const checkPlayerSurvival = async (): Promise<boolean> => {
-        const store = useGameStore.getState();
-        const p = store.player;
-
-        // 1. Revival
-        const revivalCond = p.conditions.get('Revival');
-        const revivalLimit = (revivalCond?.data as any)?.limit || 1;
-        if (revivalCond && revivalLimit > 0) {
-            const heal = Math.floor(p.maxHp * 0.5);
-            setPlayerHp(heal);
-            setMessage(t.CONDITIONS.REVIVAL.NAME + "!");
-            playConditionSound('Revival');
-
-            // Reduce charges
-            const newConds = new Map(p.conditions);
-            const updated = { ...revivalCond, data: { ...((revivalCond.data as any) || {}), limit: revivalLimit - 1 } };
-            if (updated.data.limit <= 0) newConds.delete('Revival');
-            else newConds.set('Revival', updated);
-            useGameStore.getState().setPlayer({ ...p, conditions: newConds });
-
-            return true;
-        }
-
-        // 3B-1: Phase Transition (Survive fatal damage at 1 HP + random Joker, once per session)
-        if (store.equippedAltarSkills.includes('3B-1') && !store.sessionSkillsTriggered.includes('3B-1')) {
-            setPlayerHp(1);
-            store.setSessionSkillTriggered('3B-1');
-            setMessage('PHASE TRANSITION!');
-            AudioManager.playSFX('/assets/audio/conditions/Revival.mp3');
-
-            // Replace a random card in hand with Joker
-            const currentHand = store.playerHand;
-            const validIndices = currentHand.map((c: any, idx: number) => c && !c.isJoker ? idx : -1).filter((i: number) => i !== -1);
-            if (validIndices.length > 0) {
-                const randIdx = validIndices[Math.floor(Math.random() * validIndices.length)];
-                const updatedHand = [...currentHand];
-                updatedHand[randIdx] = { rank: null, suit: null, isJoker: true, isBanned: false, color: 'wild' } as any;
-                store.setPlayerHand(updatedHand);
-            }
-            await new Promise(r => setTimeout(r, 1200));
-            return true;
-        }
-
-        return false;
-    };
-
-    // v2.0.0.19: Trigger Bot Turn on Tutorial Step 9
-    useEffect(() => {
-        if (isTutorial && tutorialStep === 9 && gamePhase === 'IDLE') {
-            executeBotTurn();
-        }
-    }, [isTutorial, tutorialStep, gamePhase]);
-
     const proceedToEndTurn = async () => {
         await resolveStatusEffects();
-
         const store = useGameStore.getState();
-
-        // v2.2.1: Check for death after status effect damage (Bleeding, Poison, etc.)
-        if (store.player.hp <= 0) {
-            await handleDefeat();
-            return;
-        }
-        if (store.bot.hp <= 0) {
-            await handleVictory();
-            return;
-        }
+        if (store.player.hp <= 0) { await handleDefeat(); return; }
+        if (store.bot.hp <= 0) { await handleVictory(); return; }
 
         const nextTurn = store.currentTurn + 1;
         store.setCurrentTurn(nextTurn);
 
-        // 8: System Overload (5% chance to convert all cards to Jokers, once per stage)
+        if (store.chapterNum === '3B') {
+            if (stageNum === 6) {
+                setMessage("초기의식: 핸드 초기화 및 패턴 붕괴!");
+                triggerScreenEffect('flash-red');
+                setPlayerHand(new Array(8).fill(null));
+                const newDeck = store.deck;
+                newDeck.jokerProbability = Math.max(0, newDeck.jokerProbability - 0.05);
+                store.setDeck(newDeck);
+                await refillHandSequentially(1200);
+            }
+            if (stageNum === 10 && store.bot.conditions.has('Stem Cell')) {
+                const currentBot = store.bot;
+                const healAmt = Math.floor(currentBot.maxHp * 0.20);
+                const nextMaxHp = currentBot.maxHp + 10;
+                const scCond = currentBot.conditions.get('Stem Cell');
+                const prevAvoid = (scCond?.data as any)?.currentAvoid || 0;
+                const nextAvoid = prevAvoid + 2;
+                const updatedBot = { ...currentBot, maxHp: nextMaxHp, hp: Math.min(nextMaxHp, currentBot.hp + healAmt), atk: currentBot.atk + 2 };
+                const newBotConds = new Map(currentBot.conditions);
+                newBotConds.set('Stem Cell', { ...scCond!, data: { ...(scCond?.data as any), currentAvoid: nextAvoid } });
+                newBotConds.set('Avoiding', { name: t.CONDITIONS.AVOIDING.NAME, duration: 9999, elapsed: 0, data: { chance: nextAvoid / 100 } } as any);
+                store.setBot({ ...updatedBot, conditions: newBotConds });
+                setMessage("줄기세포: 보스가 급격히 성장합니다!");
+                showDamageText('BOT', `+${healAmt}`, '#2ecc71');
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+
         if (store.equippedAltarSkills.includes('8') && !store.stageSkillsTriggered.includes('8')) {
             if (Math.random() < 0.05) {
                 store.setStageSkillTriggered('8');
                 const currentHand = store.playerHand;
-                const jokerHand = currentHand.map((c: any) => {
-                    if (!c) return null;
-                    return { rank: null, suit: null, isJoker: true, isBanned: false, color: 'wild' } as any;
-                });
+                const jokerHand = currentHand.map((c: any) => c ? { ...CardFactory.create(null, null, true), isJoker: true } : null);
                 store.setPlayerHand(jokerHand);
                 setMessage(store.language === 'KR' ? '시스템 과부하!' : 'SYSTEM OVERLOAD!');
                 AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
@@ -1488,38 +1637,24 @@ export const useGameLoop = () => {
             }
         }
 
-        // v2.0.0.19: Tutorial Progression
         if (store.isTutorial) {
             if (store.tutorialStep === -1 || store.tutorialStep === 6) {
-                // If freedom turns are active
-                if (nextTurn >= 5) { // Turn 0: Trial, 1,2,3,4: Freedom. Now turn 5.
-                    // Force a Joker card if not already in hand
+                if (nextTurn >= 5) {
                     const currentHand = store.playerHand;
                     const hasJoker = currentHand.some(c => c?.isJoker);
                     if (!hasJoker) {
                         const nullIdx = currentHand.indexOf(null);
                         const jokerCard = { ...CardFactory.create(null, null, true), isJoker: true };
-                        if (nullIdx !== -1) {
-                            const updatedHand = [...currentHand];
-                            updatedHand[nullIdx] = jokerCard;
-                            setPlayerHand(updatedHand);
-                        } else {
-                            // Replace the last card with a Joker if hand is full
-                            const updatedHand = [...currentHand];
-                            updatedHand[updatedHand.length - 1] = jokerCard;
-                            setPlayerHand(updatedHand);
-                        }
+                        if (nullIdx !== -1) { const updatedHand = [...currentHand]; updatedHand[nullIdx] = jokerCard; setPlayerHand(updatedHand); }
+                        else { const updatedHand = [...currentHand]; updatedHand[updatedHand.length - 1] = jokerCard; setPlayerHand(updatedHand); }
                     }
-                    store.setTutorialStep(7); // Joker Explanation
+                    store.setTutorialStep(7);
                 } else if (nextTurn === 3) {
-                    // Turn 1,2 finished. Now it's the start of Turn 3.
-                    store.setTutorialStep(13); // SWAP Guide
+                    store.setTutorialStep(13);
                 }
             } else if (store.tutorialStep === 7 || store.tutorialStep === -7) {
-                // After Joker attack turn ends
-                store.setTutorialStep(8); // Status Effects Explanation
+                store.setTutorialStep(8);
             } else if (store.tutorialStep === 11) {
-                // v2.0.0.21: Delay Boss Rule explanation until all combat animations finish
                 store.setTutorialStep(14);
             }
         }
@@ -1527,8 +1662,37 @@ export const useGameLoop = () => {
         await refillHandSequentially();
         const finalStore = useGameStore.getState();
         finalStore.applyStageRules(finalStore.chapterNum, stageNum, nextTurn);
-        finalStore.setGamePhase('IDLE'); // UI re-enabled only after all turn processing
+        finalStore.setGamePhase('IDLE');
     };
+
+    const checkPlayerSurvival = async (): Promise<boolean> => {
+        const store = useGameStore.getState();
+        const p = store.player;
+        const revivalCond = p.conditions.get('Revival');
+        const revivalLimit = (revivalCond?.data as any)?.limit || 1;
+        if (revivalCond && revivalLimit > 0) {
+            const heal = Math.floor(p.maxHp * 0.5);
+            setPlayerHp(heal);
+            setMessage(t.CONDITIONS.REVIVAL.NAME + "!");
+            playConditionSound('Revival');
+            const newConds = new Map(p.conditions);
+            const updated = { ...revivalCond, data: { ...((revivalCond.data as any) || {}), limit: revivalLimit - 1 } };
+            if (updated.data.limit <= 0) newConds.delete('Revival');
+            else newConds.set('Revival', updated);
+            store.setPlayer({ ...p, conditions: newConds });
+            await new Promise(r => setTimeout(r, 1000));
+            return true;
+        }
+        return false;
+    };
+
+    useEffect(() => {
+        if (isTutorial && tutorialStep === 9 && gamePhase === 'IDLE') {
+            executeBotTurn();
+        }
+    }, [isTutorial, tutorialStep, gamePhase, executeBotTurn]);
+
+
 
     const resolveStatusEffects = async () => {
         const store = useGameStore.getState();
@@ -1804,7 +1968,7 @@ export const useGameLoop = () => {
     };
 
 
-    const executeCardSwap = (selectedIndices: number[]) => {
+    const executeCardSwap = async (selectedIndices: number[]) => {
         // Critical Fix: Prevent UI spamming during animations
         if (useGameStore.getState().gamePhase !== 'IDLE') return;
         useGameStore.getState().setGamePhase('SWAPPING');
@@ -1851,6 +2015,16 @@ export const useGameLoop = () => {
             useGameStore.getState().setDrawsRemaining(newDraws);
             setMessage(t.COMBAT.CARDS_SWAPPED);
 
+            // 3B-3: DEATHROLL(데스롤) - 플레이어 SWAP 시 즉시 보스 1회 공격
+            if (store.chapterNum === '3B' && stageNum === 3) {
+                setMessage("데스롤: SWAP에 반응하여 보스가 즉시 공격합니다!");
+                triggerScreenEffect('shake');
+                await new Promise(r => setTimeout(r, 1000));
+                // SWAP 단계 종료 후 보스 턴 실행
+                await executeBotTurn();
+                return; 
+            }
+
             // 4A-3: Probability Distortion (25% chance for +1 extra swap)
             if (store.equippedAltarSkills.includes('4A-3') && Math.random() < 0.25) {
                 useGameStore.getState().setDrawsRemaining(newDraws + 1);
@@ -1865,6 +2039,12 @@ export const useGameLoop = () => {
 
     const handleVictory = async () => {
         const store = useGameStore.getState();
+        // 3B-6: Reset Joker probability
+        if (store.chapterNum === '3B' && store.stageNum === 6) {
+            const d = store.deck;
+            d.jokerProbability = JOKER_DRAW_PROBABILITY;
+            store.setDeck(d);
+        }
         const config = DIFFICULTY_CONFIGS[store.difficulty];
 
         // 0. Boss Death FX
@@ -1941,7 +2121,8 @@ export const useGameLoop = () => {
             '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
             '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
             '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' },
-            '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' }
+            '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' },
+            '3B': { 6: 'TR_3B_06', 10: 'TR_3B_10' }
         };
         const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
 
@@ -2081,6 +2262,12 @@ export const useGameLoop = () => {
 
     const handleDefeat = async () => {
         const store = useGameStore.getState();
+        // 3B-6: Reset Joker probability
+        if (store.chapterNum === '3B' && store.stageNum === 6) {
+            const d = store.deck;
+            d.jokerProbability = JOKER_DRAW_PROBABILITY;
+            store.setDeck(d);
+        }
 
         // 1. 상태 정리
         setGameState(GameState.GAMEOVER);

@@ -148,6 +148,20 @@ export const TROPHIES: Record<string, TrophyDef> = {
         name: { KR: '하이드라의 신화독', EN: 'Mythical Poison of the Hydra' },
         desc: { KR: '닿는 즉시 모든 것을 부식시키는, 전설 속 괴물의 치명적인 독력이 담긴 정수.', EN: 'An essence containing the lethal poison of a legendary monster, corroding everything it touches instantly.' },
         chapterInfo: 'CHAPTER 3A / STAGE 10'
+    },
+    TR_3B_06: {
+        id: 'TR_3B_06',
+        image: 'trophy_lizard slann.png',
+        name: { KR: '리자드 슬란의 명상 결정', EN: 'Meditation Crystal of the Lizard Slann' },
+        desc: { KR: '늪지대의 흐름을 명상으로 제어하던 슬란의 힘이 깃든 결정.', EN: 'A crystal imbued with Slann\'s power, which controlled the swamp\'s flow through meditation.' },
+        chapterInfo: 'CHAPTER 3B / STAGE 06'
+    },
+    TR_3B_10: {
+        id: 'TR_3B_10',
+        image: 'trophy_lizard king.png',
+        name: { KR: '리자드 킹의 줄기세포 근원', EN: 'Stem Cell Source of the Lizard King' },
+        desc: { KR: '무한한 재생과 성장의 근원이 되는 리자드 킹의 생명력 핵심.', EN: 'The core of the Lizard King\'s life force, the source of infinite regeneration and growth.' },
+        chapterInfo: 'CHAPTER 3B / STAGE 10'
     }
 };
 

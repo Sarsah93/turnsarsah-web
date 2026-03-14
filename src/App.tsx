@@ -65,6 +65,7 @@ function App() {
       if (chapterNum === '2A') bgm = 'desert_background.mp3';
       else if (chapterNum === '2B') bgm = 'deep forest.mp3';
       else if (chapterNum === '3A') bgm = 'cave_background.mp3';
+      else if (chapterNum === '3B') bgm = 'swamp_background.mp3';
 
       AudioManager.playBGM(`/assets/backgrounds/audio sounds/${bgm}`);
     }
@@ -84,6 +85,9 @@ function App() {
     }
     if (chapterNum === '3A') {
       return "/assets/backgrounds/video/cave_background.mp4";
+    }
+    if (chapterNum === '3B') {
+      return "/assets/backgrounds/video/swamp_background.mp4";
     }
 
     // Default Chapter 1

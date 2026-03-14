@@ -244,6 +244,14 @@ export const TRANSLATIONS = {
             HEMATOPHAGY: {
                 NAME: "흡혈",
                 DESC: "피해를 입힐 때, 입힌 피해량의 {percent}%만큼 자신의 HP를 회복한다."
+            },
+            SWAMPING: {
+                NAME: "늪",
+                DESC: "늪으로 인해, 플레이어의 회피율이 감소합니다. 5턴 이후부터는 더욱 감소하여, 회피가 어려워집니다. (챕터 진행동안, 영구 적용)"
+            },
+            STEM_CELL: {
+                NAME: "줄기세포",
+                DESC: "매 턴 종료 시: 최대 HP +10 상승, 최대 HP의 20% 회복, 공격력 +2 상승, 회피 확률 +2% 상승. (순서대로 적용)"
             }
         },
         RULES: {
@@ -319,6 +327,21 @@ export const TRANSLATIONS = {
 
             // Chapter 3A Echo
             CHAPTER_ECHO: "챕터 규칙: 메아리 (20% 확률, 70% 피해 추가 공격)",
+
+            // Chapter 3B Rules
+            HARDNESS: "규칙: 단단함 (투페어 이상 족보만 피해 적용)",
+            MUDDED_20PCT: "규칙:진흙뿌리기",
+            DEATHROLL: "규칙: 데스롤 (플레이어가 SWAP 시 즉시 보스 1회 공격)",
+            AUTOTOMY: "규칙: 자절 (2턴마다 플레이어 공격 피해 30% 감소)",
+            CAMOUFLAGE: "규칙: 위장 (3턴마다 플레이어 공격 100% 회피)",
+            INITIALTORY: "규칙: 초기의식 (매 턴 핸드 초기화 + 조커 확률 -5% 영구 감소)",
+            HOLD_BREATH: "규칙: 숨참기 (보스 공격 2회 성공 시, 다음 턴 공격 100% 차단 후 스킵)",
+            MUDDED_40PCT: "규칙:진흙뿌리기",
+            AWAKENING_3B: "규칙:각성 (HP 40% 이하 시 ATK +30, 매 턴 회복 +20)",
+            STEM_CELL: "규칙:줄기세포",
+
+            // Chapter 3B Swamping
+            CHAPTER_SWAMPING: "챕터 규칙: 잠김 (5공격 전 회피 -5%, 5공격 후 -20%)",
         },
         UI: {
             CHAPTER_SELECT_TITLE: "들판 구역 안정화 완료",
@@ -613,6 +636,14 @@ export const TRANSLATIONS = {
             DECAY: {
                 NAME: "Decay",
                 DESC: "Takes escalating decay damage each turn. (3% → 5% → 8% → 10% of max HP, lasts 4 turns)"
+            },
+            SWAMPING: {
+                NAME: "Swamping",
+                DESC: "In the swamp chapter, the player's evasion rate is reduced by -5% before the 5th attack, and by -20% after the 5th attack of each stage. (Negative evasion is treated as 0%)"
+            },
+            STEM_CELL: {
+                NAME: "Stem Cell",
+                DESC: "At the end of each turn: Max HP +10, Heals 20% of Max HP, ATK +2, Evasion +2%. (Applied in order)"
             }
         },
         RULES: {
@@ -688,6 +719,21 @@ export const TRANSLATIONS = {
 
             // Chapter 3A Echo
             CHAPTER_ECHO: "CHAPTER RULE: Echo (20% chance for 70% dmg bonus attack)",
+
+            // Chapter 3B Rules
+            HARDNESS: "RULE: HARDNESS (Takes damage only from Two Pair or higher hands)",
+            MUDDED_20PCT: "RULE: MUD SPRAY-20% (20% chance to Mud 1 card when boss attacks)",
+            DEATHROLL: "RULE: DEATHROLL (Boss attacks immediately when player SWAPs)",
+            AUTOTOMY: "RULE: AUTOTOMY (Reduces player attack damage by 30% every 2 turns)",
+            CAMOUFLAGE: "RULE: CAMOUFLAGE (100% evasion against player attacks every 3 turns)",
+            INITIALTORY: "RULE: INITIALTORY (Resets hand every turn + Perm -5% Joker chance)",
+            HOLD_BREATH: "RULE: HOLD BREATH (Blocks all damage next turn after 2 successful boss attacks)",
+            MUDDED_40PCT: "RULE: MUD SPRAY-40% (40% chance to Mud 2 cards when boss attacks)",
+            AWAKENING_3B: "RULE: AWAKENING (HPフル회복 + AWAKEN + ATK +20 at 50% HP or below)",
+            STEM_CELL: "RULE: STEM CELL (Clear Stem Cell by succeeding with Straight-type hands within 3 turns)",
+
+            // Chapter 3B Swamping
+            CHAPTER_SWAMPING: "CHAPTER RULE: Swamping (Evasion -5% before 5th atk, -20% after)",
         },
         UI: {
             CHAPTER_SELECT_TITLE: "Field Area Stabilized",

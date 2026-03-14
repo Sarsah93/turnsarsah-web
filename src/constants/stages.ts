@@ -79,4 +79,19 @@ export const CHAPTERS: Record<string, ChapterConfig> = {
       10: { name: 'STAGE 10', bossName: 'HYDRA',          hp: 320, atk: 28, level: 31, rule: 'TYPHON_MYTH',    accuracy: 1.0 },
     }
   },
+  '3B': {
+    name: 'CHAPTER 3 (SWAMP)',
+    stages: {
+      1:  { name: 'STAGE 1',  bossName: 'ALLIGATOR SNAPPING TURTLE', hp: 160, atk: 20, level: 32, rule: 'HARDNESS',    accuracy: 1.0 },
+      2:  { name: 'STAGE 2',  bossName: 'MURLOC',                    hp: 180, atk: 20, level: 33, rule: 'MUDDED_20PCT', accuracy: 1.0 },
+      3:  { name: 'STAGE 3',  bossName: 'CROCODILE',                 hp: 180, atk: 25, level: 34, rule: 'DEATHROLL',    accuracy: 1.0 },
+      4:  { name: 'STAGE 4',  bossName: 'LIZARD SKINK',              hp: 200, atk: 15, level: 35, rule: 'AUTOTOMY',     accuracy: 1.0 },
+      5:  { name: 'STAGE 5',  bossName: 'LIZARD MAN',                hp: 250, atk: 20, level: 36, rule: 'CAMOUFLAGE',   accuracy: 1.0 },
+      6:  { name: 'STAGE 6',  bossName: 'LIZARD SLANN',              hp: 200, atk: 15, level: 37, rule: 'INITIALTORY',  accuracy: 1.0 },
+      7:  { name: 'STAGE 7',  bossName: 'LIZARD SAURUS',             hp: 300, atk: 25, level: 38, rule: 'HOLD_BREATH',  accuracy: 1.0 },
+      8:  { name: 'STAGE 8',  bossName: 'TROGLODON',                 hp: 400, atk: 20, level: 39, rule: 'MUDDED_40PCT', accuracy: 1.0 },
+      9:  { name: 'STAGE 9',  bossName: 'LIZARD KROXIGOR',           hp: 350, atk: 30, level: 40, rule: 'AWAKENING_3B', accuracy: 1.0 },
+      10: { name: 'STAGE 10', bossName: 'LIZARD KING',               hp: 380, atk: 35, level: 41, rule: 'STEM_CELL',    accuracy: 1.0 },
+    }
+  },
 };

@@ -794,6 +794,59 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
           applyCondition(botConditions, 'Revival', 9999, '', { count: 3, percent: 60 });
         }
+      } else if (chapterId === '3B') {
+        // ── 챕터 3B 공통: 잠김(Swamping) 플레이어 상태이상 부여 ────────
+        // (플레이어 conditions는 아래 player 초기화 시 추가)
+
+        // ── 스테이지별 패시브 ────────────────────────────────────────────
+        // 3B-1 SWAMP WOLFTURTLE: 재생+5, 피해경감 15%, 데미지반사 10%
+        if (stageId === 1) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 5 });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+          applyCondition(botConditions, 'Reflection', 9999, '', { chance: 1.0, percent: 10 });
+        }
+        // 3B-2 MURLOC: 재생+10, 피해경감 10%
+        if (stageId === 2) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 10 });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 10 });
+        }
+        // 3B-3 CROCODILE: 재생+15, 피해경감 12%
+        if (stageId === 3) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 12 });
+        }
+        // 3B-4 LIZARD SKINK: 재생+15, 피해경감 10%
+        if (stageId === 4) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 10 });
+        }
+        // 3B-5 LIZARD MAN: 재생+15, 피해경감 12%
+        if (stageId === 5) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 12 });
+        }
+        // 3B-6 LIZARD SLANN: 패시브 없음
+        // 3B-7 LIZARD SAURUS: 패시브 없음
+        // 3B-8 TROGLODON: 재생(매 턴 종료 시 마다, +15), 피해경감(12%)
+        if (stageId === 8) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 12 });
+        }
+        // 3B-9 LIZARD KROXIGOR: 재생+20, 피해경감 15%
+        if (stageId === 9) {
+          applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 20 });
+          applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+        }
+        // 3B-10 LIZARD KING: 줄기세포 (매 턴 종료: maxHp+10, 20% 회복, ATK+2, 회피+2%)
+        if (stageId === 10) {
+          applyCondition(botConditions, 'Stem Cell', 9999, '', {
+            maxHpGrowth: 10,
+            healPercent: 20,
+            atkGrowth: 2,
+            avoidGrowth: 2,
+            currentAvoid: 0,
+          });
+        }
       }
 
       // Boss stat overrides based on difficulty
@@ -836,6 +889,16 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           const bonus = isOnenessWithNature ? 0.05 : 0;
           applyCondition(player.conditions, 'Avoiding', 9999, '', { chance: config.avoidChance + bonus });
         }
+
+        // 3B 챕터 진입 시 기존 Swamping 제거 후 재부여 (스테이지마다 초기화)
+        if (chapterId === '3B') {
+          player.conditions.delete('Swamping');
+        }
+      }
+
+      // 3B 챕터: 스테이지 시작 시마다 플레이어에게 Swamping 부여
+      if (chapterId === '3B') {
+        applyCondition(player.conditions, 'Swamping', 9999, '', { attackCount: 0 });
       }
 
       // 4A-2: Bottom Deal (+5% Joker probability)
@@ -1171,6 +1234,56 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const ruleKey = (CHAPTERS['3A'].stages as any)[stageId]?.rule;
       if (ruleKey && (t.RULES as any)[ruleKey]) {
         set({ stage10RuleText: (t.RULES as any)[ruleKey] });
+      }
+    } else if (chapterId === '3B') {
+      // ── 챕터 3B: 각 스테이지 룰 텍스트 설정 ──────────────────────────
+      const ruleKey = (CHAPTERS['3B'].stages as any)[stageId]?.rule;
+      if (ruleKey && (t.RULES as any)[ruleKey]) {
+        set({ stage10RuleText: (t.RULES as any)[ruleKey] });
+      }
+
+      // ── 3B 보스 패시브 정밀 구현 (v2.5.0) ──────────────────────────
+      // 3B-1 ~ 3B-8: 재생 (+15)
+      if (stageId >= 1 && stageId <= 8) {
+        if (!bot.conditions.has('Regenerating')) {
+          state.addBotCondition('Regenerating', 9999, t.CONDITIONS.REGENERATING.DESC, { amount: 15 });
+        }
+      }
+
+      // 3B-1: 피해경감 (10%), 반동 (12)
+      if (stageId === 1) {
+        if (!bot.conditions.has('Damage Reducing')) {
+          state.addBotCondition('Damage Reducing', 9999, '', { percent: 10 });
+        }
+        if (!bot.conditions.has('Damage recoiling')) {
+          state.addBotCondition('Damage recoiling', 9999, '', { recoil: 12 });
+        }
+      }
+
+      // 3B-2 ~ 3B-8: 피해경감 (12%)
+      if (stageId >= 2 && stageId <= 8) {
+        if (!bot.conditions.has('Damage Reducing')) {
+          state.addBotCondition('Damage Reducing', 9999, '', { percent: 12 });
+        }
+      }
+
+      // 3B-9: 각성 전 패시브 - 재생 (+20), 피해경감 (15%)
+      if (stageId === 9) {
+        if (!bot.conditions.has('Awakening')) { // 각성 전일 때만 부여
+          if (!bot.conditions.has('Regenerating')) {
+            state.addBotCondition('Regenerating', 9999, t.CONDITIONS.REGENERATING.DESC, { amount: 20 });
+          }
+          if (!bot.conditions.has('Damage Reducing')) {
+            state.addBotCondition('Damage Reducing', 9999, '', { percent: 15 });
+          }
+        }
+      }
+
+      // 3B-10: 반사 (30% 확률, 10% 반사)
+      if (stageId === 10) {
+        if (!bot.conditions.has('Reflection')) {
+          state.addBotCondition('Reflection', 9999, '', { chance: 0.3, percent: 10 });
+        }
       }
     }
 
