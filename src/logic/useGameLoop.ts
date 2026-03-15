@@ -7,6 +7,8 @@ import { GameState, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConf
 import { RANK_VALUES, JOKER_DRAW_PROBABILITY } from '../constants/cards';
 import { TRANSLATIONS } from '../constants/translations';
 import { playCoreDeathFX } from '../utils/fxUtils';
+import { hasSeenGuide, CHAPTER_INTROS, SYSTEM_GUIDES, CONDITION_GUIDES, getGimmickGuide, GuidePopupData } from '../constants/guideData';
+import { CHAPTERS } from '../constants/stages';
 
 export interface DamageTextData {
     id: number;
@@ -186,6 +188,7 @@ export const useGameLoop = () => {
                     store.addPlayerCondition('Bleeding', 4);
                     playConditionSound('Bleeding');
                     setMessage(t.CONDITIONS.BLEEDING.NAME + "!");
+                    showConditionGuideIfNew('Bleeding');
                 } else {
                     // Randomly apply Poisoning or Debilitating
                     const effect = Math.random() < 0.5 ? 'Poisoning' : 'Debilitating';
@@ -194,6 +197,7 @@ export const useGameLoop = () => {
                     const condKey = effect.toUpperCase();
                     const condName = (t.CONDITIONS as any)[condKey]?.NAME || effect;
                     setMessage(condName + "!");
+                    showConditionGuideIfNew(effect);
                 }
                 triggerScreenEffect('flash-red');
                 return;
@@ -229,6 +233,7 @@ export const useGameLoop = () => {
             const condName = (t.CONDITIONS as any)[condKey]?.NAME || conditionApplied.toUpperCase();
             setMessage(`${condName}!`);
             triggerScreenEffect('flash-red');
+            showConditionGuideIfNew(conditionApplied);
         }
 
         // v2.0.0.19: Tutorial Forced Bleed (Step 9: Explanation -> Attack triggered)
@@ -411,6 +416,7 @@ export const useGameLoop = () => {
                 isPuzzleCorrect = true;
                 if (!player.conditions.has('Immune')) {
                     store.addPlayerCondition('Immune', 3);
+                    showConditionGuideIfNew('Immune');
                 }
             }
         }
@@ -506,7 +512,7 @@ export const useGameLoop = () => {
                 }
 
                 // 3B-7: HOLD BREATH(숨참기) - 보스 공격 2회 성공 시 다음 턴 무적 (v2.4.0)
-                if (stageNum === 7 && (store as any).holdBreathInvulnerable3B) {
+                if (stageNum === 7 && store.holdBreathTurn3B === store.currentTurn) {
                     damage = 0;
                     displayMessage = "숨참기: 보스가 무적 상태여서 피해를 줄 수 없습니다!";
                 }
@@ -996,9 +1002,9 @@ export const useGameLoop = () => {
             return;
         }
 
-        if (store.chapterNum === '3B' && stageNum === 7 && (store as any).holdBreathInvulnerable3B) {
+        if (store.chapterNum === '3B' && stageNum === 7 && store.holdBreathInvulnerable3B) {
             setMessage("숨참기: 보스가 이번 턴에 공격하지 않습니다.");
-            (store as any).holdBreathInvulnerable3B = false; // 플래그 해제
+            store.setHoldBreathInvulnerable3B(false); // 플래그 해제
             await new Promise(r => setTimeout(r, 1000));
             await proceedToEndTurn();
             return;
@@ -1097,7 +1103,7 @@ export const useGameLoop = () => {
 
         // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 2회 성공 후 다음 턴 100% 차단
         if (store.chapterNum === '3B' && stageNum === 7) {
-            const holdBreathActive = (store as any).holdBreathTurn3B === store.currentTurn;
+            const holdBreathActive = store.holdBreathTurn3B === store.currentTurn;
             if (holdBreathActive) {
                 setMessage("숨참기: 보스가 공격을 완전히 막고 행동을 회복 중입니다...");
                 triggerScreenEffect('flash-red');
@@ -1252,6 +1258,7 @@ export const useGameLoop = () => {
                     useGameStore.getState().setPlayerHand(newHand);
                     setMessage("카드가 석화되었습니다!");
                     playConditionSound('Paralyzing'); // 석화 효과음
+                    showConditionGuideIfNew('Petrified');
                 }
             }
 
@@ -1260,24 +1267,29 @@ export const useGameLoop = () => {
 
             // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 성공 시 카운터 (2.4.0)
             if (store.chapterNum === '3B' && stageNum === 7 && finalDmg > 0) {
-                const hbCount = ((store as any).holdBreathCount3B || 0) + 1;
+                const hbCount = store.holdBreathCount3B + 1;
                 if (hbCount >= 2) {
-                    (store as any).holdBreathInvulnerable3B = true; 
-                    (store as any).holdBreathCount3B = 0;
+                    store.setHoldBreathTurn3B(store.currentTurn + 1);
+                    store.setHoldBreathInvulnerable3B(true);
+                    store.setHoldBreathCount3B(0);
                     setMessage("숨참기: 보스가 공격을 멈추고 다음 턴 무적 상태가 됩니다!");
                 } else {
-                    (store as any).holdBreathCount3B = hbCount;
+                    store.setHoldBreathCount3B(hbCount);
                 }
             }
 
             // v2.3.0: Boss Lifesteal / Recoil / Provocation
             const freshBotAfterHit = useGameStore.getState().bot;
-            const bCondHit = freshBotAfterHit.conditions.get('Berserker');
-            if (bCondHit) {
-                const heal = Math.floor(finalDmg * ((bCondHit.data as any)?.lifesteal || 10) / 100);
-                if (heal > 0) {
-                    setBotHp(Math.min(freshBotAfterHit.maxHp, freshBotAfterHit.hp + heal));
-                    showDamageText('BOT', `+${heal}`, '#2ecc71');
+            
+            // 2B Orcs Berserker Lifesteal
+            if (store.chapterNum === '2B') {
+                const bCondHit = freshBotAfterHit.conditions.get('Berserker');
+                if (bCondHit) {
+                    const heal = Math.floor(finalDmg * ((bCondHit.data as any)?.lifesteal || 10) / 100);
+                    if (heal > 0) {
+                        setBotHp(Math.min(freshBotAfterHit.maxHp, freshBotAfterHit.hp + heal));
+                        showDamageText('BOT', `+${heal}`, '#2ecc71');
+                    }
                 }
             }
 
@@ -1299,9 +1311,11 @@ export const useGameLoop = () => {
                 if (store.equippedAltarSkills.includes('2A-2')) {
                     setMessage("HUNTER IMMUNITY!");
                 } else {
-                    // 2B-5: 20%, 2B-9: 25%, 2B-10: 30%
-                    const accPercent = stageNum === 5 ? 20 : (stageNum === 9 ? 25 : 30);
+                    // 2B/3B-5: 20%, 2B/3B-9: 25%, default: 30%
+                    const isAdvancedChapter = store.chapterNum === '2B' || store.chapterNum === '3B' || store.chapterNum === '3A';
+                    const accPercent = (isAdvancedChapter && stageNum === 5) ? 20 : ((isAdvancedChapter && stageNum === 9) ? 25 : 30);
                     store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: accPercent });
+                    showConditionGuideIfNew('Decreasing accuracy');
                 }
             }
 
@@ -1314,7 +1328,7 @@ export const useGameLoop = () => {
             }
 
             // 3A-2: HEMATOPHAGY (흡혈 30%)
-            if (stageNum === 2 && finalDmg > 0) {
+            if (store.chapterNum === '3A' && stageNum === 2 && finalDmg > 0) {
                 const heal = Math.floor(finalDmg * 0.3);
                 if (heal > 0) {
                     setBotHp(Math.min(currentBot.maxHp, currentBot.hp + heal));
@@ -1323,16 +1337,18 @@ export const useGameLoop = () => {
                 }
             }
             // 3A-4: POISON SPIDER (공격 시 20% 확률로 신경성맹독 부여)
-            if (stageNum === 4 && finalDmg > 0 && Math.random() < 0.2) {
+            if (store.chapterNum === '3A' && stageNum === 4 && finalDmg > 0 && Math.random() < 0.2) {
                 store.addPlayerCondition('Neurotoxicity', 3);
                 playConditionSound('Neurotoxicity');
                 setMessage(t.CONDITIONS.NEUROTOXICITY.NAME + "!");
+                showConditionGuideIfNew('Neurotoxicity');
             }
             // 3A-9: PETRIFY ATTACK (30% 확률로 카드 석화)
-            if (stageNum === 9 && Math.random() < 0.3) {
+            if (store.chapterNum === '3A' && stageNum === 9 && Math.random() < 0.3) {
                 setMessage("석화의 시선!");
                 store.applyPetrifyStatus(1);
                 AudioManager.playSFX('/assets/audio/common/UI_ERROR.mp3'); // Appropriate SFX for status
+                showConditionGuideIfNew('Petrified');
             }
 
             await new Promise(r => setTimeout(r, i < attackCount - 1 ? 800 : 400)); // Delay between multi-attacks
@@ -1357,16 +1373,19 @@ export const useGameLoop = () => {
             if ([1, 2, 3, 6, 8, 9, 10].includes(stageNum)) {
                 if (Math.random() < config.poisonProbCh2A) {
                     store.addPlayerCondition('Poisoning', 3);
+                    showConditionGuideIfNew('Poisoning');
                 }
             }
             if ([1, 2, 3, 6, 8, 9, 10].includes(stageNum)) {
                 if (Math.random() < 0.3) {
                     store.addPlayerCondition('Debilitating', 3);
+                    showConditionGuideIfNew('Debilitating');
                 }
             }
             if ([3, 4, 6, 9, 10].includes(stageNum)) {
                 if (Math.random() < config.bleedProbCh2A) {
                     store.addPlayerCondition('Bleeding', 6);
+                    showConditionGuideIfNew('Bleeding');
                 }
             }
             if (stageNum === 5) {
@@ -1374,12 +1393,14 @@ export const useGameLoop = () => {
                 if (Math.random() < 0.40) {
                     // Replaced neuroProbCh2A with explicit 40%
                     store.addPlayerCondition('Neurotoxicity', 3);
+                    showConditionGuideIfNew('Neurotoxicity');
                 }
             }
             if (stageNum === 7) {
                 // Now 40% based on user request (down from 50%)
                 if (Math.random() < 0.4) {
                     store.addPlayerCondition('Paralyzing', 2);
+                    showConditionGuideIfNew('Paralyzing');
                 }
             }
         } else if (store.chapterNum === '3A') {
@@ -1392,7 +1413,10 @@ export const useGameLoop = () => {
                 setMessage("산성 공격!");
                 setPlayerHp(Math.max(0, store.player.hp - 15));
                 showDamageText('PLAYER', `-15`, '#e74c3c');
-                if (Math.random() < 0.2) store.addPlayerCondition('Burn', 3);
+                if (Math.random() < 0.2) {
+                    store.addPlayerCondition('Burn', 3);
+                    showConditionGuideIfNew('Burn');
+                }
             }
             // 3A-3: MUCUS (매 2턴 20뎀 + 50% 중독 또는 명중저하)
             if (stageNum === 3 && currentTurnMod2 === 1) {
@@ -1400,8 +1424,14 @@ export const useGameLoop = () => {
                 setPlayerHp(Math.max(0, store.player.hp - 20));
                 showDamageText('PLAYER', `-20`, '#e74c3c');
                 if (Math.random() < 0.5) {
-                    if (Math.random() < 0.5) store.addPlayerCondition('Poisoning', 3);
-                    else store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 30 });
+                    if (Math.random() < 0.5) {
+                        store.addPlayerCondition('Poisoning', 3);
+                        showConditionGuideIfNew('Poisoning');
+                    }
+                    else {
+                        store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 30 });
+                        showConditionGuideIfNew('Decreasing accuracy');
+                    }
                 }
             }
             // 3A-4: SHOOTING WEB (매 2턴 10뎀 + 거미줄)
@@ -1411,6 +1441,7 @@ export const useGameLoop = () => {
                 showDamageText('PLAYER', `-10`, '#e74c3c');
                 // 회피 5% 깎는 디버프 처리 (별도 관리 어려우므로 명중률 저하로 대체)
                 store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 5 });
+                showConditionGuideIfNew('Decreasing accuracy');
             }
             // 3A-8: ROLL BOULDER (매 2턴 20뎀, 플레이어 40% 확률 회피)
             if (stageNum === 8 && currentTurnMod2 === 1) {
@@ -1455,6 +1486,7 @@ export const useGameLoop = () => {
                     store.addPlayerCondition('Bleeding', 4);
                     playConditionSound('Bleeding');
                     setMessage(t.CONDITIONS.BLEEDING.NAME + "!");
+                    showConditionGuideIfNew('Bleeding');
                 } else {
                     const effect = Math.random() < 0.5 ? 'Poisoning' : 'Debilitating';
                     store.addPlayerCondition(effect, 4);
@@ -1462,6 +1494,7 @@ export const useGameLoop = () => {
                     const condKey = effect.toUpperCase();
                     const condName = (t.CONDITIONS as any)[condKey]?.NAME || effect;
                     setMessage(condName + "!");
+                    showConditionGuideIfNew(effect);
                 }
                 triggerScreenEffect('flash-red');
             } else {
@@ -1470,9 +1503,11 @@ export const useGameLoop = () => {
                 const bProb = bleedMap[stageNum] || 0.15;
                 if (bProb > 0 && Math.random() < bProb) {
                     store.addPlayerCondition('Bleeding', 4);
+                    showConditionGuideIfNew('Bleeding');
                 }
                 if (stageNum === 8 && Math.random() < 0.25) {
                     store.addPlayerCondition('Poisoning', 4);
+                    showConditionGuideIfNew('Poisoning');
                 }
             }
         } else if (store.chapterNum === '1') {
@@ -1486,73 +1521,99 @@ export const useGameLoop = () => {
                 store.addPlayerCondition('Bleeding', 4);
                 playConditionSound('Bleeding');
                 triggerScreenEffect('flash-red');
+                showConditionGuideIfNew('Bleeding');
             }
             // 3B-2: 진흙 뿌리기 40% (1장) + 중독 20%
             if (stageNum === 2) {
                 if (Math.random() < 0.4) {
-                    const hand2 = useGameStore.getState().playerHand;
-                    const validIdx2 = hand2.map((c, i) => c && !c.isMudded ? i : -1).filter(i => i !== -1);
-                    if (validIdx2.length > 0) {
-                        const ri = validIdx2[Math.floor(Math.random() * validIdx2.length)];
-                        const newH2 = [...hand2];
-                        newH2[ri] = { ...CardFactory.create((newH2[ri] as any).rank, (newH2[ri] as any).suit, (newH2[ri] as any).isJoker), isMudded: true, mudDuration: 2 };
-                        useGameStore.getState().setPlayerHand(newH2);
-                        setMessage("진흙 뿌리기: 카드 1장이 진흙 상태가 됩니다!");
-                        triggerScreenEffect('shake-small');
-                    }
+                    store.applyMudStatus(1);
+                    setMessage("진흙 뿌리기: 카드 1장이 진흙 상태가 됩니다!");
+                    triggerScreenEffect('shake-small');
+                    showConditionGuideIfNew('Mudded');
                 }
-                if (Math.random() < 0.2) { store.addPlayerCondition('Poisoning', 3); }
+                if (Math.random() < 0.2) { 
+                    store.addPlayerCondition('Poisoning', 3); 
+                    showConditionGuideIfNew('Poisoning');
+                }
             }
             // 3B-3,4: 출혈 20% + 중독 10%
             if ((stageNum === 3 || stageNum === 4)) {
-                if (Math.random() < 0.2) { store.addPlayerCondition('Bleeding', 4); playConditionSound('Bleeding'); }
-                if (Math.random() < 0.1) { store.addPlayerCondition('Poisoning', 3); }
+                if (Math.random() < 0.2) { 
+                    store.addPlayerCondition('Bleeding', 4); 
+                    playConditionSound('Bleeding'); 
+                    showConditionGuideIfNew('Bleeding');
+                }
+                if (Math.random() < 0.1) { 
+                    store.addPlayerCondition('Poisoning', 3); 
+                    showConditionGuideIfNew('Poisoning');
+                }
             }
             // 3B-5: 과출혈 30%
             if (stageNum === 5 && Math.random() < 0.3) {
                 store.addPlayerCondition('Heavy Bleeding', 4);
                 playConditionSound('Heavy Bleeding');
                 triggerScreenEffect('flash-red');
+                showConditionGuideIfNew('Heavy Bleeding');
             }
             // 3B-6: 쇠약 30% + 중독 30%
             if (stageNum === 6) {
-                if (Math.random() < 0.3) { store.addPlayerCondition('Debilitating', 3); }
-                if (Math.random() < 0.3) { store.addPlayerCondition('Poisoning', 3); }
+                if (Math.random() < 0.3) { 
+                    store.addPlayerCondition('Debilitating', 3); 
+                    showConditionGuideIfNew('Debilitating');
+                }
+                if (Math.random() < 0.3) { 
+                    store.addPlayerCondition('Poisoning', 3); 
+                    showConditionGuideIfNew('Poisoning');
+                }
             }
             // 3B-7: 과출혈 30%
             if (stageNum === 7 && Math.random() < 0.3) {
                 store.addPlayerCondition('Heavy Bleeding', 4);
                 playConditionSound('Heavy Bleeding');
                 triggerScreenEffect('flash-red');
+                showConditionGuideIfNew('Heavy Bleeding');
             }
             // 3B-8: 진흙 뿌리기 40% (랜덤 2장) + 출혈 20% + 쇠약 30%
             if (stageNum === 8) {
                 if (Math.random() < 0.4) {
-                    let hand8 = useGameStore.getState().playerHand;
-                    const validIdx8 = hand8.map((c, i) => c && !c.isMudded ? i : -1).filter(i => i !== -1);
-                    const shuffled8 = validIdx8.sort(() => 0.5 - Math.random()).slice(0, 2);
-                    if (shuffled8.length > 0) {
-                        const newH8 = [...hand8];
-                        shuffled8.forEach(ri => {
-                            newH8[ri] = { ...(newH8[ri] as any), isMudded: true, mudDuration: 2 };
-                        });
-                        useGameStore.getState().setPlayerHand(newH8);
-                        setMessage(`진흙 뿌리기: 카드 ${shuffled8.length}장이 진흙 상태가 됩니다!`);
-                        triggerScreenEffect('shake-small');
-                    }
+                    store.applyMudStatus(2);
+                    setMessage(`진흙 뿌리기: 카드 2장이 진흙 상태가 됩니다!`);
+                    triggerScreenEffect('shake-small');
+                    showConditionGuideIfNew('Mudded');
                 }
-                if (Math.random() < 0.2) { store.addPlayerCondition('Bleeding', 4); playConditionSound('Bleeding'); }
-                if (Math.random() < 0.3) { store.addPlayerCondition('Debilitating', 3); }
+                if (Math.random() < 0.2) { 
+                    store.addPlayerCondition('Bleeding', 4); 
+                    playConditionSound('Bleeding'); 
+                    showConditionGuideIfNew('Bleeding');
+                }
+                if (Math.random() < 0.3) { 
+                    store.addPlayerCondition('Debilitating', 3); 
+                    showConditionGuideIfNew('Debilitating');
+                }
             }
             // 3B-9: 출혈 40% + 쇠약 40%
             if (stageNum === 9) {
-                if (Math.random() < 0.4) { store.addPlayerCondition('Bleeding', 4); playConditionSound('Bleeding'); }
-                if (Math.random() < 0.4) { store.addPlayerCondition('Debilitating', 3); }
+                if (Math.random() < 0.4) { 
+                    store.addPlayerCondition('Bleeding', 4); 
+                    playConditionSound('Bleeding'); 
+                    showConditionGuideIfNew('Bleeding');
+                }
+                if (Math.random() < 0.4) { 
+                    store.addPlayerCondition('Debilitating', 3); 
+                    showConditionGuideIfNew('Debilitating');
+                }
             }
             // 3B-10: 과출혈 20% + 중독 20%
             if (stageNum === 10) {
-                if (Math.random() < 0.2) { store.addPlayerCondition('Heavy Bleeding', 4); playConditionSound('Bleeding'); }
-                if (Math.random() < 0.2) { store.addPlayerCondition('Poisoning', 3); }
+                if (Math.random() < 0.2) { 
+                    store.addPlayerCondition('Heavy Bleeding', 4); 
+                    playConditionSound('Bleeding'); 
+                    showConditionGuideIfNew('Heavy Bleeding');
+                }
+                if (Math.random() < 0.2) { 
+                    store.addPlayerCondition('Poisoning', 3); 
+                    showConditionGuideIfNew('Poisoning');
+                }
             }
 
             // 잠김(Swamping) 공격 카운터 (보스 공격 시)
@@ -1560,6 +1621,9 @@ export const useGameLoop = () => {
             if (sCond) {
                 const prevCount = (sCond.data as any)?.attackCount || 0;
                 store.addPlayerCondition('Swamping', 9999, '', { attackCount: prevCount + 1 });
+            } else {
+                store.addPlayerCondition('Swamping', 9999, '', { attackCount: 1 });
+                showConditionGuideIfNew('Swamping');
             }
         }
 
@@ -1737,6 +1801,7 @@ export const useGameLoop = () => {
                         if (store.equippedAltarSkills.includes('3A-1')) healAmt = Math.floor(healAmt * 1.2);
                         store.addPlayerCondition('Regenerating', 3, '', { amount: healAmt });
                         setMessage("ACCLIMATIZATION!");
+                        showConditionGuideIfNew('Regenerating');
                     }
                 }
 
@@ -1764,6 +1829,7 @@ export const useGameLoop = () => {
                         if (store.equippedAltarSkills.includes('2A-1')) healAmt = Math.floor(healAmt * 1.2);
                         store.addPlayerCondition('Regenerating', 3, '', { amount: healAmt });
                         setMessage("ACCLIMATIZATION!");
+                        showConditionGuideIfNew('Regenerating');
                     }
                 }
 
@@ -1826,6 +1892,7 @@ export const useGameLoop = () => {
                         if (store.equippedAltarSkills.includes('2A-1')) healAmt = Math.floor(healAmt * 1.2);
                         store.addPlayerCondition('Regenerating', 3, '', { amount: healAmt });
                         setMessage("ACCLIMATIZATION!");
+                        showConditionGuideIfNew('Regenerating');
                     }
                 }
 
@@ -2133,6 +2200,11 @@ export const useGameLoop = () => {
                 const staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
                 AltarManager.commitPendingTrophies(); // v2.4.9: Commit immediately for better persistence
                 if (staged) {
+                    // ─── Guide Popup: Loot & Altar System (first trophy only) ──
+                    if (!hasSeenGuide(SYSTEM_GUIDES.LOOT_SYSTEM.key)) {
+                        await showGuidePopup(SYSTEM_GUIDES.LOOT_SYSTEM);
+                        await showGuidePopup(SYSTEM_GUIDES.ALTAR_SYSTEM);
+                    }
                     const { TROPHIES } = await import('../constants/altarSystem');
                     store.setTrophyPopup(TROPHIES[potentialTrophyId]);
                     // Hold here while the popup is visible
@@ -2234,6 +2306,26 @@ export const useGameLoop = () => {
         setPlayerHand(new Array(8).fill(null));
         await refillHandSequentially(1500);
 
+        // ─── Guide Popup: Chapter Intro (Stage 1 only) ───────────────────
+        const freshStore = useGameStore.getState();
+        if (freshStore.stageNum === 1 && !freshStore.isTutorial) {
+            const introData = CHAPTER_INTROS[freshStore.chapterNum];
+            if (introData && !hasSeenGuide(introData.key)) {
+                await showGuidePopup(introData);
+            }
+        }
+
+        // ─── Guide Popup: Gimmick Guide ──────────────────────────────────
+        if (!freshStore.isTutorial) {
+            const stageConfig = CHAPTERS[freshStore.chapterNum]?.stages[freshStore.stageNum];
+            if (stageConfig?.rule) {
+                const gimmickGuide = getGimmickGuide(stageConfig.rule);
+                if (gimmickGuide && !hasSeenGuide(gimmickGuide.key)) {
+                    await showGuidePopup(gimmickGuide);
+                }
+            }
+        }
+
         // v2.3.5: Regenerate Sphinx target after hand is full
         if (store.chapterNum === '2A' && store.stageNum === 10) {
             store.applyStageRules(store.chapterNum, store.stageNum, store.currentTurn);
@@ -2290,6 +2382,25 @@ export const useGameLoop = () => {
             });
         } else {
             // Standard Defeat
+        }
+    };
+
+    // ─── Guide Popup Helper ──────────────────────────────────────────
+    const showGuidePopup = async (data: GuidePopupData) => {
+        const store = useGameStore.getState();
+        store.setGuidePopup(data);
+        // Wait for user to dismiss
+        while (useGameStore.getState().guidePopup !== null) {
+            await new Promise(r => setTimeout(r, 200));
+        }
+        await new Promise(r => setTimeout(r, 300));
+    };
+
+    // ─── Guide Popup: Condition Guide (on first status effect) ───────
+    const showConditionGuideIfNew = async (conditionName: string) => {
+        const guide = CONDITION_GUIDES[conditionName];
+        if (guide && !hasSeenGuide(guide.key)) {
+            await showGuidePopup(guide);
         }
     };
 

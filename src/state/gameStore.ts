@@ -10,6 +10,7 @@ import { CHAPTERS } from '../constants/stages';
 import { applyCondition, clearConditions } from '../logic/conditions';
 import { SaveManager } from '../utils/SaveManager';
 import { Language, TRANSLATIONS } from '../constants/translations';
+import { GuidePopupData } from '../constants/guideData';
 import { TROPHIES, ALTAR_SKILLS, TrophyDef } from '../constants/altarSystem';
 import { AltarManager } from '../utils/AltarManager';
 
@@ -164,6 +165,11 @@ interface GameStoreState {
   trophyPopup: TrophyDef | null;
   setTrophyPopup: (trophy: TrophyDef | null) => void;
 
+  // Guide Popup
+  guidePopup: GuidePopupData | null;
+  setGuidePopup: (data: GuidePopupData | null) => void;
+  clearGuidePopup: () => void;
+
   // Altar System
   equippedAltarSkills: string[];
   setEquippedAltarSkills: (skills: string[]) => void;
@@ -182,6 +188,7 @@ interface GameStoreState {
   isDyschromatopsiaActive: boolean;
   setDyschromatopsiaActive: (active: boolean) => void;
   incrementDyschromatopsiaUses: () => void;
+
 
   // Game initialization
   initGame: (chapterId: string, stageId: number) => void;
@@ -272,6 +279,13 @@ interface GameStoreState {
   setHydraFlushSuits: (suits: string[]) => void;
   resetHydraFlushSuits: () => void;
 
+  // Chapter 3B specific (v2.5.0)
+  holdBreathCount3B: number;
+  setHoldBreathCount3B: (count: number) => void;
+  holdBreathTurn3B: number;
+  setHoldBreathTurn3B: (turn: number) => void;
+  holdBreathInvulnerable3B: boolean;
+  setHoldBreathInvulnerable3B: (active: boolean) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -370,6 +384,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setActiveMenu: (activeMenu) => set({ activeMenu }),
   trophyPopup: null,
   setTrophyPopup: (trophyPopup) => set({ trophyPopup }),
+  guidePopup: null,
+  setGuidePopup: (guidePopup) => set({ guidePopup }),
+  clearGuidePopup: () => set({ guidePopup: null }),
   equippedAltarSkills: AltarManager.getAltarData().normal?.equippedSkills || [],
   setEquippedAltarSkills: (equippedAltarSkills) => {
     set({ equippedAltarSkills });
@@ -399,6 +416,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   isDyschromatopsiaActive: false,
   setDyschromatopsiaActive: (isDyschromatopsiaActive) => set({ isDyschromatopsiaActive }),
   incrementDyschromatopsiaUses: () => set((state) => ({ dyschromatopsiaUses: Math.min(2, state.dyschromatopsiaUses + 1) })),
+
+  holdBreathCount3B: 0,
+  setHoldBreathCount3B: (holdBreathCount3B) => set({ holdBreathCount3B }),
+  holdBreathTurn3B: -1,
+  setHoldBreathTurn3B: (holdBreathTurn3B) => set({ holdBreathTurn3B }),
+  holdBreathInvulnerable3B: false,
+  setHoldBreathInvulnerable3B: (holdBreathInvulnerable3B) => set({ holdBreathInvulnerable3B }),
 
   setBannedRanks: (bannedRanks) => set({ bannedRanks }),
   setBannedSuit: (bannedSuit) => set({ bannedSuit }),
@@ -952,6 +976,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         message: '',
         dyschromatopsiaUses: 0,
         isDyschromatopsiaActive: false,
+        holdBreathCount3B: 0,
+        holdBreathTurn3B: -1,
+        holdBreathInvulnerable3B: false,
       };
     });
     // Immediately apply rules for turn 0
@@ -1250,13 +1277,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         }
       }
 
-      // 3B-1: 피해경감 (10%), 반동 (12)
+      // 3B-1: 피해경감 (10%), 반사 (10%)
       if (stageId === 1) {
         if (!bot.conditions.has('Damage Reducing')) {
           state.addBotCondition('Damage Reducing', 9999, '', { percent: 10 });
         }
-        if (!bot.conditions.has('Damage recoiling')) {
-          state.addBotCondition('Damage recoiling', 9999, '', { recoil: 12 });
+        if (!bot.conditions.has('Reflection')) {
+          state.addBotCondition('Reflection', 9999, '', { chance: 1.0, percent: 10 });
         }
       }
 

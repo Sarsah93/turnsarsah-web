@@ -51,13 +51,6 @@ export const MainMenu: React.FC = () => {
                 }} />
                 <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} />
                 <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} />
-                <BlockButton text="DEBUG: Start 3A (Cave) NORMAL" onClick={() => {
-                    triggerTransition(() => initGameWithDifficulty('3A', 1, Difficulty.NORMAL));
-                }} />
-                <BlockButton text="3B SWAMP STAGE DEBUG" onClick={() => {
-                    triggerTransition(() => initGameWithDifficulty('3B', 1, Difficulty.NORMAL));
-                }} />
-
                 <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
             </div>
 

@@ -72,7 +72,7 @@ export class Deck {
         this.consecutiveJokers = 0;
 
         if (this.cards.length === 0) {
-          this.initialize(heldCards);
+          this.initialize([...heldCards, ...drawn]);
         }
 
         if (this.cards.length > 0) {

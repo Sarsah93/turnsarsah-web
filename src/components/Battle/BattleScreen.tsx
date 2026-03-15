@@ -11,6 +11,7 @@ import { GameState } from '../../constants/gameConfig';
 import { TutorialOverlay } from '../Tutorial/TutorialOverlay';
 import { TRANSLATIONS } from '../../constants/translations';
 import { TrophyPopup } from '../TrophyPopup';
+import { GuidePopup } from '../GuidePopup';
 import { ALTAR_SKILLS } from '../../constants/altarSystem';
 import { AltarSkillSlots } from './AltarSkillSlots';
 import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
@@ -241,6 +242,7 @@ export const BattleScreen: React.FC = () => {
     return (
         <div className={`battle-screen ${screenEffect}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
             <TrophyPopup />
+            <GuidePopup />
             <ClearCongratulationsPopup />
 
             {/* Entity Layer */}
