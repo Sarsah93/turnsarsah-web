@@ -11,7 +11,7 @@ export const BossDisplay: React.FC = () => {
 
     // Get max stages for the current chapter (v2.4.3)
     const chapterConfig = CHAPTERS[chapterNum];
-    const maxStages = chapterConfig ? Object.keys(chapterConfig.stages).length : 10;
+    const maxStages = chapterConfig ? Object.keys(chapterConfig.stages).filter(s => parseInt(s) < 90).length : 10;
     const isSpecialStage = stageNum > 10;
     const stageInfoText = isTutorial
         ? `TUTORIAL ${t.UI.STAGE_NUM}`
