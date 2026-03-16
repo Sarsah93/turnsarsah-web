@@ -4,7 +4,7 @@ import { Character } from '../types/Character';
 import { Card } from '../types/Card';
 import { Difficulty } from '../constants/gameConfig';
 
-export const SAVE_VERSION = 'v2.4.2';
+export const SAVE_VERSION = 'v2.5.0';
 const VERSION_KEY = 'turnsarsah_save_version';
 const UNLOCKED_DIFFICULTIES_KEY = 'turnsarsah_unlocked_difficulties';
 

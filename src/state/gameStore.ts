@@ -188,7 +188,9 @@ interface GameStoreState {
   isDyschromatopsiaActive: boolean;
   setDyschromatopsiaActive: (active: boolean) => void;
   incrementDyschromatopsiaUses: () => void;
-
+  // v2.5.0: Game Speed
+  gameSpeed: number;
+  setGameSpeed: (speed: number) => void;
 
   // Game initialization
   initGame: (chapterId: string, stageId: number) => void;
@@ -416,6 +418,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   isDyschromatopsiaActive: false,
   setDyschromatopsiaActive: (isDyschromatopsiaActive) => set({ isDyschromatopsiaActive }),
   incrementDyschromatopsiaUses: () => set((state) => ({ dyschromatopsiaUses: Math.min(2, state.dyschromatopsiaUses + 1) })),
+
+  // v2.5.0: Game Speed
+  gameSpeed: Number(localStorage.getItem('turnsarsah_game_speed')) || 1.0,
+  setGameSpeed: (gameSpeed) => {
+    set({ gameSpeed });
+    localStorage.setItem('turnsarsah_game_speed', gameSpeed.toString());
+  },
 
   holdBreathCount3B: 0,
   setHoldBreathCount3B: (holdBreathCount3B) => set({ holdBreathCount3B }),

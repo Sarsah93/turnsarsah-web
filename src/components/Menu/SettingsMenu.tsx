@@ -12,7 +12,7 @@ interface SettingsMenuProps {
 }
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) => {
-  const { language, setLanguage, fontSize, setFontSize } = useGameStore();
+  const { language, setLanguage, fontSize, setFontSize, gameSpeed, setGameSpeed } = useGameStore();
   const t = TRANSLATIONS[language].SETTINGS;
   const [bgmVolume, setBgmVolume] = useState(Math.round(AudioManager.getBGMVolume() * 10));
   const [sfxVolume, setSfxVolume] = useState(Math.round(AudioManager.getSFXVolume() * 10));
@@ -100,6 +100,29 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onCl
               text={t.FONT_SMALL}
               onClick={() => setFontSize('SMALL')}
               variant={fontSize === 'SMALL' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+          </div>
+        </div>
+
+        {/* v2.5.0: Game Speed Selection */}
+        <div className="setting-item" style={{ marginTop: '5px' }}>
+          <label>{t.GAME_SPEED}</label>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
+            <BlockButton
+              text="1.0x"
+              onClick={() => setGameSpeed(1.0)}
+              variant={gameSpeed === 1.0 ? 'primary' : undefined}
+              textColor={gameSpeed === 1.0 ? '#f39c12' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+            <BlockButton
+              text="1.5x"
+              onClick={() => setGameSpeed(1.5)}
+              variant={gameSpeed === 1.5 ? 'primary' : undefined}
+              textColor={gameSpeed === 1.5 ? '#f39c12' : undefined}
               width="150px"
               fontSize="1.1rem"
             />

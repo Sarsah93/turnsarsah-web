@@ -15,6 +15,7 @@ export const TRANSLATIONS = {
             FONT_LARGE: "크게",
             FONT_NORMAL: "보통",
             FONT_SMALL: "작게",
+            GAME_SPEED: "배속 설정",
             BACK: "뒤로가기"
         },
         TUTORIAL: {
@@ -416,6 +417,7 @@ export const TRANSLATIONS = {
             FONT_LARGE: "LARGE",
             FONT_NORMAL: "NORMAL",
             FONT_SMALL: "SMALL",
+            GAME_SPEED: "GAME SPEED",
             BACK: "BACK"
         },
         TUTORIAL: {

@@ -1,4 +1,5 @@
 // utils/AudioManager.ts
+import { useGameStore } from '../state/gameStore';
 
 export class AudioManager {
     private static bgmVolume: number = (() => {
@@ -56,6 +57,9 @@ export class AudioManager {
     public static playSFX(src: string) {
         const audio = new Audio(src);
         audio.volume = this.sfxVolume;
+        // v2.5.0: Apply game speed to SFX playback rate
+        const speed = useGameStore.getState().gameSpeed;
+        audio.playbackRate = speed;
         audio.play().catch(e => console.warn("SFX Playback failed:", e));
     }
 

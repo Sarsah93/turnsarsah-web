@@ -181,7 +181,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Player starts with +25 Max HP.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_1_4']
+        cost: ['TR_1_4', 'TR_1_5']
     },
     '1B': {
         id: '1B',
@@ -197,7 +197,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'When attacking, deals +25 additional fixed damage.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_1_4']
+        cost: ['TR_1_4', 'TR_1_5']
     },
 
     // LEVEL 2
@@ -215,7 +215,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: "Attacks have a 50% chance to inflict Bleed or Poison. Different debuffs can be active simultaneously, but same debuffs do not stack."
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_1_5', 'TR_1_10']
+        cost: ['TR_1_10']
     },
     '2B': {
         id: '2B',
@@ -231,7 +231,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: "+5% permanent Evasion chance. Negates environmental evasion restrictions (e.g., Chapter 2B)."
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_1_5', 'TR_1_10']
+        cost: ['TR_1_10']
     },
 
     // LEVEL 3
@@ -249,7 +249,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Increases the effectiveness of Regeneration and permanent Max HP bonuses by +20%.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_2A_5', 'TR_2A_10']
+        cost: ['TR_2B_5', 'TR_2A_5']
     },
     '3A-2': {
         id: '3A-2',
@@ -265,7 +265,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Immune to accuracy reduction debuffs and paralysis effects (negates all accuracy drop and paralysis logic).'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_2A_5', 'TR_2A_10']
+        cost: ['TR_2B_5', 'TR_2A_5']
     },
     '3B-1': {
         id: '3B-1',
@@ -281,7 +281,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Reduces damage taken from boss attacks by 30% (excludes status effect damage).'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_2B_5', 'TR_2B_10']
+        cost: ['TR_2B_5', 'TR_2A_5']
     },
     '3B-2': {
         id: '3B-2',
@@ -297,7 +297,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'When taking status effect damage, gain "Regeneration" for 3 turns, restoring +5 HP each time.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: ['TR_2B_5', 'TR_2B_10']
+        cost: ['TR_2B_5', 'TR_2A_5']
     },
 
     // LEVEL 4
@@ -315,7 +315,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Treats suits of the same color (Heart/Diamond, Spade/Club) as the same suit for hand evaluation.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
     },
     '4A-2': {
         id: '4A-2',
@@ -331,7 +331,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Increases the probability of Jokers appearing in the deck by +5%.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
     },
     '4A-3': {
         id: '4A-3',
@@ -347,7 +347,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: '25% chance to not consume a swap chance when swapping cards. (Displays "Draws +1")'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
     },
     '4B-1': {
         id: '4B-1',
@@ -363,7 +363,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Once per stage, survives with 1 HP when taking fatal damage and converts a random card in hand to a Joker.'
         },
         duration: { KR: '1회/스테이지(1 Time/Stage)', EN: '1 Time/Stage' },
-        cost: []
+        cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
     },
     '4B-2': {
         id: '4B-2',
@@ -379,7 +379,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Reduces boss special attack damage by 50% and reflects the reduced amount back to the boss.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
     },
     '4B-3': {
         id: '4B-3',
@@ -395,7 +395,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'When the boss recovers HP via status effects, the player recovers the same flat amount.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
     },
 
     // LEVEL 5
@@ -413,7 +413,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: '20% chance to apply bonus damage from one tier higher than the actual hand type.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_3A_10', 'TR_3B_10', 'TR_2A_SP']
     },
     '5A-2': {
         id: '5A-2',
@@ -429,7 +429,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Using the same hand consecutively increases damage by 10% from the second attack. (Max 3 stacks, +30%)'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_3A_10', 'TR_3B_10', 'TR_2A_SP']
     },
     '5A-3': {
         id: '5A-3',
@@ -445,7 +445,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Damage increases as boss HP decreases (Below 50%: +5%, Below 25%: +10%).'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_3A_10', 'TR_3B_10', 'TR_2A_SP']
     },
     '5B-1': {
         id: '5B-1',
@@ -461,7 +461,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: '100% chance to evade the boss\'s first attack. Only applies to Chapter Boss stages.'
         },
         duration: { KR: '1회/스테이지(1 Time/Stage)', EN: '1 Time/Stage' },
-        cost: []
+        cost: ['TR_3A_10', 'TR_3B_10', 'TR_2B_SP']
     },
     '5B-2': {
         id: '5B-2',
@@ -477,7 +477,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'As player HP decreases, deals additional fixed damage on attack. (HP 80% or below: +10, 50%: +20, 30%: +30)'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_3A_10', 'TR_3B_10', 'TR_2B_SP']
     },
     '5B-3': {
         id: '5B-3',
@@ -493,7 +493,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Gain +2 extra swap chances when player HP is 25% or below.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
-        cost: []
+        cost: ['TR_3A_10', 'TR_3B_10', 'TR_2B_SP']
     },
 
     // LEVEL 6

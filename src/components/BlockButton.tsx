@@ -10,6 +10,7 @@ interface BlockButtonProps {
     fontSize?: string;
     disabled?: boolean;
     variant?: 'primary' | 'danger';
+    textColor?: string;
 }
 
 export const BlockButton: React.FC<BlockButtonProps> = ({
@@ -20,7 +21,8 @@ export const BlockButton: React.FC<BlockButtonProps> = ({
     style,
     fontSize = '2.2rem',
     disabled = false,
-    variant = 'primary'
+    variant = 'primary',
+    textColor
 }) => {
     const [isHovered, setIsHovered] = useState(false);
 
@@ -62,7 +64,7 @@ export const BlockButton: React.FC<BlockButtonProps> = ({
         >
             <span style={{
                 fontSize: fontSize,
-                color: variant === 'danger' ? '#ff6b6b' : '#fff',
+                color: textColor ? textColor : (variant === 'danger' ? '#ff6b6b' : '#fff'),
                 textShadow: '2px 2px 0 #000',
                 fontFamily: "'Bebas Neue', sans-serif",
                 letterSpacing: '1px',

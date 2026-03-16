@@ -169,10 +169,10 @@ function App() {
               <div style={{ fontSize: '2.4rem', color: '#e67e22', marginBottom: '8px', fontFamily: "'Bebas Neue', sans-serif" }}>
                 ⚠ VERSION UPDATE
               </div>
-              <div style={{ fontSize: '1.4rem', color: '#e67e22', marginBottom: '16px', letterSpacing: '1px' }}>
+              <div style={{ fontSize: '2.4rem', color: '#e67e22', marginBottom: '16px', letterSpacing: '1px' }}>
                 {SAVE_VERSION}
               </div>
-              <p style={{ color: '#ecf0f1', fontSize: '1rem', lineHeight: '1.7', marginBottom: '24px' }}>
+              <p style={{ color: '#ecf0f1', fontSize: '2.4rem', lineHeight: '1.4', marginBottom: '24px', whiteSpace: 'pre-line' }}>
                 {language === 'KR'
                   ? '최신 버전으로 업데이트됨에 따라, 기존에 저장된 데이터가 손상되거나 게임 진행에 오류를 발생시킬 수 있으므로 초기화를 진행합니다.\n\n저장 데이터 및 제단 데이터가 초기화되었습니다.'
                   : 'The game has been updated to the latest version. Existing save data may be corrupted or cause errors, so all data has been reset.\n\nSave data and Altar data have been cleared.'}

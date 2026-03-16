@@ -390,6 +390,31 @@ export const BattleScreen: React.FC = () => {
             >
                 三
             </button>
+ 
+            {/* v2.5.0: Speed Toggle Button - Moved to the left of Pause Button */}
+            <button
+                className="speed-toggle-btn"
+                onClick={() => store.setGameSpeed(store.gameSpeed === 1.0 ? 1.5 : 1.0)}
+                style={{
+                    position: 'absolute', bottom: '50px', right: '140px',
+                    zIndex: 5000, 
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    color: store.gameSpeed === 1.5 ? '#f39c12' : '#ecf0f1',
+                    border: `3px solid ${store.gameSpeed === 1.5 ? '#f39c12' : '#bdc3c7'}`,
+                    borderRadius: '16px', 
+                    width: '80px', height: '60px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '24px', cursor: 'pointer',
+                    boxShadow: '0 0 25px rgba(0,0,0,0.7)',
+                    fontFamily: 'BebasNeue, Arial',
+                    fontWeight: 'bold',
+                    transition: 'all 0.2s ease-in-out',
+                    transform: store.gamePhase !== 'IDLE' ? 'scale(0.9)' : 'scale(1)',
+                    opacity: store.gamePhase !== 'IDLE' ? 0.8 : 1
+                }}
+            >
+                {store.gameSpeed === 1.0 ? '1.0x' : '1.5x'}
+            </button>
 
             {isTutorial && (
                 <TutorialOverlay

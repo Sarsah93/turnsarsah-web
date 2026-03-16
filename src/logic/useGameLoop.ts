@@ -41,14 +41,18 @@ export const useGameLoop = () => {
     const [damageTexts, setDamageTexts] = useState<DamageTextData[]>([]);
     const [screenEffect, setScreenEffect] = useState<string>('');
 
+    // v2.5.0: Game Speed Helpers
+    const wait = (ms: number) => new Promise(r => setTimeout(r, ms / store.gameSpeed));
+    const scaledTimeout = (callback: () => void, ms: number) => setTimeout(callback, ms / store.gameSpeed);
+
     // v2.0.0.12: Auto-clear generic messages after 2.5s
     useEffect(() => {
         const exempt = [t.COMBAT.VICTORY, t.COMBAT.DEFEAT, t.COMBAT.PARALYZED];
         if (message && !exempt.includes(message)) {
-            const timer = setTimeout(() => setMessage(""), 2500);
+            const timer = scaledTimeout(() => setMessage(""), 2500);
             return () => clearTimeout(timer);
         }
-    }, [message, setMessage]);
+    }, [message, setMessage, store.gameSpeed]);
 
     // Helper to add damage text
     const showDamageText = (target: 'PLAYER' | 'BOT' | 'BOSS_LEFT', text: string, color: string) => {
@@ -68,7 +72,7 @@ export const useGameLoop = () => {
 
     const triggerScreenEffect = (effect: string) => {
         setScreenEffect(effect);
-        setTimeout(() => setScreenEffect(''), 500);
+        scaledTimeout(() => setScreenEffect(''), 500);
     };
 
     // 4B-2: Node Interference Helper (Generic Special Attack Reflection)
@@ -293,7 +297,7 @@ export const useGameLoop = () => {
             playConditionSound('Paralyzing');
             triggerScreenEffect('flash-red');
             store.setGamePhase('BOT_TURN');
-            await new Promise(r => setTimeout(r, 1200));
+            await wait(1200);
             await executeBotTurn();
             return;
         }
@@ -349,7 +353,7 @@ export const useGameLoop = () => {
             if (store.equippedAltarSkills.includes('6A-1')) {
                 store.setAltarSkillUse('6A-1_stacks', 0);
             }
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             store.setGamePhase('IDLE');
             await executeBotTurn();
             return;
@@ -633,22 +637,22 @@ export const useGameLoop = () => {
 
         // --- PHASE 1: GATHERING ---
         store.setGamePhase('GATHERING');
-        setTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
-        const gatheringDuration = (selectedCards.length * 200) + 500;
-        await new Promise(r => setTimeout(r, gatheringDuration));
+        scaledTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
+        const gatheringDurationRaw = (selectedCards.length * 200) + 500;
+        await wait(gatheringDurationRaw);
 
         // --- PHASE 2: CHARGING (0.8s) ---
         store.setGamePhase('CHARGING');
-        await new Promise(r => setTimeout(r, 800));
+        await wait(800);
 
         // --- PHASE 3: THRUSTING ---
         store.setGamePhase('THRUSTING');
-        await new Promise(r => setTimeout(r, 67));
-        await new Promise(r => setTimeout(r, 133));
+        await wait(67);
+        await wait(133);
         AudioManager.playSFX('/assets/audio/player/whipping.mp3');
 
         // Boss Shake & Hit
-        await new Promise(r => setTimeout(r, 100));
+        await wait(100);
         triggerScreenEffect('shake');
         setBotAnimState('HIT');
 
@@ -663,7 +667,7 @@ export const useGameLoop = () => {
         setMessage(displayMessage);
 
         // --- HP REDUCTION & EFFECTS ---
-        await new Promise(r => setTimeout(r, 150));
+        await wait(150);
         const currentBotPreDmg = useGameStore.getState().bot; // Use fresh state just before damage
         const newBotHp = Math.max(0, currentBotPreDmg.hp - damage);
         setBotHp(newBotHp);
@@ -676,14 +680,14 @@ export const useGameLoop = () => {
             if (Math.random() < chance) {
                 const rDmg = Math.floor(damage * (percent / 100));
                 if (rDmg > 0) {
-                    await new Promise(r => setTimeout(r, 600));
+                    await wait(600);
                     const freshP = useGameStore.getState().player;
                     setPlayerHp(Math.max(0, freshP.hp - rDmg));
                     showDamageText('PLAYER', `-${rDmg}`, '#e74c3c');
                     setMessage("REFLECTION!");
                     playConditionSound('Reflection');
                     triggerScreenEffect('shake');
-                    await new Promise(r => setTimeout(r, 800));
+                    await wait(800);
                 }
             }
         }
@@ -724,7 +728,7 @@ export const useGameLoop = () => {
                 setMessage(t.UI.HYDRA_FLUSH_COUNT.replace('{count}', newSuits.length.toString()));
                 triggerScreenEffect('flash-red');
                 if (newSuits.length >= 4) {
-                    await new Promise(r => setTimeout(r, 1000));
+                    await wait(1000);
                     setMessage("티폰 전승: 거대 뱀의 심장을 찔렀습니다!");
                     setBotHp(0);
                     // 즉사이므로 부활 조건을 스킵/강제삭제
@@ -741,7 +745,7 @@ export const useGameLoop = () => {
         // 7A: Causality Rearrangement (8% chance to apply attack twice)
         if (store.equippedAltarSkills.includes('7A') && damage > 0 && !isPuzzleCorrect && !isAdrenalineNull) {
             if (Math.random() < 0.08) {
-                await new Promise(r => setTimeout(r, 600));
+                await wait(600);
                 setMessage(language === 'KR' ? '인과재배열!' : 'CAUSALITY REARRANGEMENT!');
                 triggerScreenEffect('shake');
                 playConditionSound('Triple Attack'); // Use same impactful sound
@@ -749,7 +753,7 @@ export const useGameLoop = () => {
                 const newBotHpDouble = Math.max(0, freshBot7A.hp - damage);
                 setBotHp(newBotHpDouble);
                 showDamageText('BOT', `-${damage}`, '#f39c12');
-                await new Promise(r => setTimeout(r, 600));
+                await wait(600);
                 if (newBotHpDouble <= 0) {
                     await handleVictory();
                     return;
@@ -802,13 +806,13 @@ export const useGameLoop = () => {
                 store.addBotCondition('Revived', 9999);
                 setMessage(`${t.CONDITIONS.REVIVED.NAME}!`);
                 AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
-                await new Promise(r => setTimeout(r, 1000));
+                await wait(1000);
             }
         }
 
         // --- PHASE 4: SCATTERED ---
         store.setGamePhase('SCATTERED');
-        await new Promise(r => setTimeout(r, 400));
+        await wait(400);
         setBotAnimState('NONE');
         store.removePlayerCards(selectedIndices);
 
@@ -841,7 +845,7 @@ export const useGameLoop = () => {
                 if (updated.data.limit <= 0) newConds.delete('Invincible spirit');
                 else newConds.set('Invincible spirit', updated);
                 useGameStore.getState().setBot({ ...freshBot, conditions: newConds });
-                await new Promise(r => setTimeout(r, 1000));
+                await wait(1000);
             }
         }
         
@@ -854,7 +858,7 @@ export const useGameLoop = () => {
                     store.addBotCondition('Berserker', 9999, '', { atkBonus: bAtkBonuses[stageNum], lifesteal: bLifesteals[stageNum] });
                     setMessage(t.CONDITIONS.BERSERKER.NAME + "!");
                     playConditionSound('Berserker');
-                    await new Promise(r => setTimeout(r, 1000));
+                    await wait(1000);
                 }
             }
         }
@@ -880,7 +884,7 @@ export const useGameLoop = () => {
                 };
                 store.setBot(awakenedBot);
                 
-                await new Promise(r => setTimeout(r, 1200));
+                await wait(1200);
                 await proceedToEndTurn();
                 return;
             }
@@ -907,11 +911,11 @@ export const useGameLoop = () => {
                     
                     useGameStore.getState().setBot({ ...freshBotEndCheck, hp: reviveHp, conditions: newConds });
                     
-                    await new Promise(r => setTimeout(r, 1500));
+                    await wait(1500);
                     
                     // "부활 직후 1턴 공격 불가"
                     setMessage("보스가 행동을 회복 중입니다...");
-                    await new Promise(r => setTimeout(r, 1000));
+                    await wait(1000);
                     await proceedToEndTurn();
                     return; // 승리/봇턴 분기 스킵
                 }
@@ -921,7 +925,7 @@ export const useGameLoop = () => {
         } else {
             if (awakeningTriggered) {
                 setMessage(t.COMBAT.ST_AWAKENING);
-                await new Promise(r => setTimeout(r, 1200));
+                await wait(1200);
                 await proceedToEndTurn();
             } else {
                 await executeBotTurn();
@@ -953,7 +957,7 @@ export const useGameLoop = () => {
                 });
                 store.addBotCondition('Awakening', 9999);
 
-                await new Promise(r => setTimeout(r, 1200));
+                await wait(1200);
                 await proceedToEndTurn();
                 return;
             }
@@ -973,7 +977,7 @@ export const useGameLoop = () => {
                 });
                 store.addBotCondition('Awakening', 9999);
 
-                await new Promise(r => setTimeout(r, 1200));
+                await wait(1200);
                 await proceedToEndTurn();
                 return;
             }
@@ -999,7 +1003,7 @@ export const useGameLoop = () => {
         if (store.chapterNum === '1' && stageNum === 8 && store.currentTurn % 2 === 0) {
             setMessage(t.COMBAT.BOSS_SKIPPED);
             AudioManager.playSFX('/assets/audio/combat/chapter 1 goblin/06_swing_ weapon.mp3');
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             await proceedToEndTurn();
             return;
         }
@@ -1007,7 +1011,7 @@ export const useGameLoop = () => {
         if (store.chapterNum === '3B' && stageNum === 7 && store.holdBreathInvulnerable3B) {
             setMessage("숨참기: 보스가 이번 턴에 공격하지 않습니다.");
             store.setHoldBreathInvulnerable3B(false); // 플래그 해제
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             await proceedToEndTurn();
             return;
         }
@@ -1015,7 +1019,7 @@ export const useGameLoop = () => {
         // v2.3.2: 2A-7 Sand Golem (Every 2 turns)
         if (store.chapterNum === '2A' && stageNum === 7 && store.currentTurn % 2 === 0) {
             setMessage(t.COMBAT.BOSS_SKIPPED);
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             await proceedToEndTurn();
             return;
         }
@@ -1025,7 +1029,7 @@ export const useGameLoop = () => {
             setMessage("꿀 섭취 중! (공격 스킵 & 체력 회복)");
             setBotHp(Math.min(currentBot.maxHp, currentBot.hp + 20));
             showDamageText('BOT', `+20`, '#2ecc71');
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             await proceedToEndTurn();
             return;
         }
@@ -1036,7 +1040,7 @@ export const useGameLoop = () => {
             if (cycleTurn === 1) {
                 // Turn 2 of 3 (indices 1, 4, 7...): Skip/Setup
                 setMessage("’특수 공격: 모래폭풍’을 준비 중입니다…");
-                await new Promise(r => setTimeout(r, 1200));
+                await wait(1200);
                 await proceedToEndTurn();
                 return;
             } else if (cycleTurn === 2) {
@@ -1055,7 +1059,7 @@ export const useGameLoop = () => {
                     store.addPlayerCondition('Burn', 3);
                     playConditionSound('Burn');
                 }
-                await new Promise(r => setTimeout(r, 1200));
+                await wait(1200);
                 await proceedToEndTurn();
                 return;
             }
@@ -1069,7 +1073,7 @@ export const useGameLoop = () => {
                 if (cycleTurn === 2) {
                     // Skip turn before special
                     setMessage("’특수 공격: 부패 폭발’을 준비 중입니다…");
-                    await new Promise(r => setTimeout(r, 1200));
+                    await wait(1200);
                     await proceedToEndTurn();
                     return;
                 } else if (cycleTurn === 3) {
@@ -1088,7 +1092,7 @@ export const useGameLoop = () => {
                         store.addPlayerCondition('Decay', 4);
                         playConditionSound('Decay');
                     }
-                    await new Promise(r => setTimeout(r, 1200));
+                    await wait(1200);
                     await proceedToEndTurn();
                     return;
                 }
@@ -1109,7 +1113,7 @@ export const useGameLoop = () => {
             if (holdBreathActive) {
                 setMessage("숨참기: 보스가 공격을 완전히 막고 행동을 회복 중입니다...");
                 triggerScreenEffect('flash-red');
-                await new Promise(r => setTimeout(r, 1000));
+                await wait(1000);
                 await proceedToEndTurn();
                 return;
             }
@@ -1130,7 +1134,7 @@ export const useGameLoop = () => {
             setMessage('THREAT PREDICTION!');
             playConditionSound('Avoiding');
             triggerScreenEffect('flash-red');
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             await proceedToEndTurn();
             return;
         }
@@ -1148,7 +1152,7 @@ export const useGameLoop = () => {
             setMessage(t.COMBAT.ATTACK_AVOIDED);
             playConditionSound('Avoiding');
             triggerScreenEffect('flash-red');
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             await proceedToEndTurn();
             return;
         }
@@ -1159,7 +1163,7 @@ export const useGameLoop = () => {
             setMessage(t.COMBAT.BOSS_MISSED);
             // Play swing sound for miss
             AudioManager.playSFX('/assets/audio/combat/chapter 1 goblin/06_swing_ weapon.mp3');
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             await proceedToEndTurn();
             return;
         }
@@ -1200,7 +1204,7 @@ export const useGameLoop = () => {
             if (i === 0) {
                 setMessage(t.COMBAT.BOSS_ATTACKS);
                 setBotAnimState('ATTACK');
-                if (sfx) setTimeout(() => AudioManager.playSFX(sfx), 200);
+                if (sfx) scaledTimeout(() => AudioManager.playSFX(sfx), 200);
             } else {
                 // For Triple Attack, show specific message and play sound again
                 const msg = i === 1 ? t.CONDITIONS.TRIPLE_ATTACK.NAME + " x2!" : t.CONDITIONS.TRIPLE_ATTACK.NAME + " x3!";
@@ -1219,11 +1223,11 @@ export const useGameLoop = () => {
                     const targets = shuffleIndices.slice(0, 2); // 2 cards swapped without consuming
                     store.swapCards(targets, true);
                     setMessage("FORCE SWAP x2");
-                    await new Promise(r => setTimeout(r, 500));
+                    await wait(500);
                 }
             }
 
-            await new Promise(r => setTimeout(r, 200));
+            await wait(200);
             triggerScreenEffect('shake-heavy');
             setPlayerAnimState('HIT');
 
@@ -1353,7 +1357,7 @@ export const useGameLoop = () => {
                 showConditionGuideIfNew('Petrified');
             }
 
-            await new Promise(r => setTimeout(r, i < attackCount - 1 ? 800 : 400)); // Delay between multi-attacks
+            await wait(i < attackCount - 1 ? 800 : 400); // Delay between multi-attacks
 
             // Reset anim for next hit
             setBotAnimState('NONE');
@@ -1364,7 +1368,7 @@ export const useGameLoop = () => {
         if (freshPlayer.hp <= 0) {
             const survived = await checkPlayerSurvival();
             if (survived) {
-                await new Promise(r => setTimeout(r, 1000));
+                await wait(1000);
                 await proceedToEndTurn();
                 return;
             }
@@ -1629,7 +1633,7 @@ export const useGameLoop = () => {
             }
         }
 
-        await new Promise(r => setTimeout(r, 300));
+        await wait(300);
         setBotAnimState('NONE');
         setPlayerAnimState('NONE');
 
@@ -1647,7 +1651,7 @@ export const useGameLoop = () => {
             await handleDefeat();
         } else {
             if (isTutorial && tutorialStep === 9) {
-                await new Promise(r => setTimeout(r, 3000));
+                await wait(3000);
                 setTutorialStep(10);
             }
             await proceedToEndTurn();
@@ -1687,7 +1691,7 @@ export const useGameLoop = () => {
                 store.setBot({ ...updatedBot, conditions: newBotConds });
                 setMessage("줄기세포: 보스가 급격히 성장합니다!");
                 showDamageText('BOT', `+${healAmt}`, '#2ecc71');
-                await new Promise(r => setTimeout(r, 1000));
+                await wait(1000);
             }
         }
 
@@ -1699,7 +1703,7 @@ export const useGameLoop = () => {
                 store.setPlayerHand(jokerHand);
                 setMessage(store.language === 'KR' ? '시스템 과부하!' : 'SYSTEM OVERLOAD!');
                 AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
-                await new Promise(r => setTimeout(r, 1500));
+                await wait(1500);
             }
         }
 
@@ -1746,7 +1750,7 @@ export const useGameLoop = () => {
             if (updated.data.limit <= 0) newConds.delete('Revival');
             else newConds.set('Revival', updated);
             store.setPlayer({ ...p, conditions: newConds });
-            await new Promise(r => setTimeout(r, 1000));
+            await wait(1000);
             return true;
         }
         return false;
@@ -1807,7 +1811,7 @@ export const useGameLoop = () => {
                     }
                 }
 
-                await new Promise(r => setTimeout(r, 800));
+                await wait(800);
 
                 if (Math.random() < 0.20 && !playerConditions.has('Paralyzing')) {
                     const { applyCondition: applyC } = await import('./conditions');
@@ -1835,7 +1839,7 @@ export const useGameLoop = () => {
                     }
                 }
 
-                await new Promise(r => setTimeout(r, 800));
+                await wait(800);
             } else if (cond === 'Burn') {
                 setMessage(t.COMBAT.PLAYER_BURN || "PLAYER BURNED!");
                 playConditionSound('Burn');
@@ -1843,7 +1847,7 @@ export const useGameLoop = () => {
                 const freshHP = useGameStore.getState().player.hp;
                 setPlayerHp(Math.max(0, freshHP - amount));
                 showDamageText('PLAYER', `-${amount}`, '#e67e22');
-                await new Promise(r => setTimeout(r, 800));
+                await wait(800);
             } else if (cond === 'Decay') {
                 setMessage(t.COMBAT.PLAYER_DECAY || "PLAYER DECAYED!");
                 playConditionSound('Decay');
@@ -1853,7 +1857,7 @@ export const useGameLoop = () => {
                 const freshHP = useGameStore.getState().player.hp;
                 setPlayerHp(Math.max(0, freshHP - amount));
                 showDamageText('PLAYER', `-${amount}`, '#8e44ad');
-                await new Promise(r => setTimeout(r, 800));
+                await wait(800);
             } else if (cond === 'Regenerating') {
                 setMessage(t.COMBAT.PLAYER_REGEN);
                 playConditionSound('Regenerating');
@@ -1866,7 +1870,7 @@ export const useGameLoop = () => {
 
                 setPlayerHp(Math.min(currentP.maxHp, currentP.hp + heal));
                 showDamageText('PLAYER', `+${heal}`, '#2ecc71');
-                await new Promise(r => setTimeout(r, 800));
+                await wait(800);
             }
 
             // Increment elapsed
@@ -1898,7 +1902,7 @@ export const useGameLoop = () => {
                     }
                 }
 
-                await new Promise(r => setTimeout(r, 1000));
+                await wait(1000);
             }
             condData.elapsed += 1;
             if (condData.duration < 999 && condData.elapsed >= condData.duration) {
@@ -1911,7 +1915,7 @@ export const useGameLoop = () => {
         useGameStore.getState().setPlayer({ ...freshPAfter, conditions: playerConditions });
 
         // 0.5s pause between phases
-        await new Promise(r => setTimeout(r, 500));
+        await wait(500);
 
         // Boss Phase
         for (const [condName, condData] of Array.from(botConditions.entries())) {
@@ -1924,7 +1928,7 @@ export const useGameLoop = () => {
                 const dmg = 10;
                 setBotHp(Math.max(0, bot.hp - dmg));
                 showDamageText('BOT', `-${dmg}`, '#c0392b');
-                await new Promise(r => setTimeout(r, 800));
+                await wait(800);
             } else if (cond === 'Regenerating') {
                 setMessage(t.COMBAT.BOSS_REGENERATING);
                 playConditionSound('Regenerating');
@@ -1953,7 +1957,7 @@ export const useGameLoop = () => {
                     AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');
                 }
 
-                await new Promise(r => setTimeout(r, 800));
+                await wait(800);
             }
 
             // Increment elapsed
@@ -2091,7 +2095,7 @@ export const useGameLoop = () => {
             if (store.chapterNum === '3B' && stageNum === 3) {
                 setMessage("데스롤: SWAP에 반응하여 보스가 즉시 공격합니다!");
                 triggerScreenEffect('shake');
-                await new Promise(r => setTimeout(r, 1000));
+                await wait(1000);
                 // SWAP 단계 종료 후 보스 턴 실행
                 await executeBotTurn();
                 return; 
@@ -2214,9 +2218,9 @@ export const useGameLoop = () => {
                     store.setTrophyPopup(TROPHIES[potentialTrophyId]);
                     // Hold here while the popup is visible
                     while (useGameStore.getState().trophyPopup !== null) {
-                        await new Promise(r => setTimeout(r, 200));
+                        await wait(200);
                     }
-                    await new Promise(r => setTimeout(r, 500));
+                    await wait(500);
                 }
             }
         }
@@ -2349,7 +2353,7 @@ export const useGameLoop = () => {
                     setMessage("연산 오류 감지! 카드 패턴이 붕괴되었습니다!");
                     triggerScreenEffect('flash-red');
                     AudioManager.playSFX('/assets/audio/common/UI_ALTAR_UPGRADE.mp3');
-                    await new Promise(r => setTimeout(r, 1500));
+                    await wait(1500);
                 }
             }
         }
@@ -2396,9 +2400,9 @@ export const useGameLoop = () => {
         store.setGuidePopup(data);
         // Wait for user to dismiss
         while (useGameStore.getState().guidePopup !== null) {
-            await new Promise(r => setTimeout(r, 200));
+            await wait(200);
         }
-        await new Promise(r => setTimeout(r, 300));
+        await wait(300);
     };
 
     // ─── Guide Popup: Condition Guide (on first status effect) ───────
