@@ -27,7 +27,6 @@ export const PlayerDisplay: React.FC = () => {
 
             {/* Condition Icons (Above HP Bar) */}
             <div className="player-conditions-row" style={{
-                display: 'flex', gap: '8px',
                 position: 'absolute',
                 bottom: '135px',
                 left: '20px',

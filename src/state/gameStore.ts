@@ -150,7 +150,7 @@ interface GameStoreState {
   removePlayerCards: (indices: number[]) => void;
   drawCards: (count: number) => void;
   refillHand: () => void;
-  swapCards: (indices: number[]) => void;
+  swapCards: (indices: number[], isFree?: boolean) => void;
   setDeck: (deck: Deck) => void;
 
   // UI
@@ -681,7 +681,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   puzzleTarget: 0,
   setPuzzleTarget: (target) => set({ puzzleTarget: target }),
 
-  swapCards: (indices) => set((state) => {
+  swapCards: (indices, isFree) => set((state) => {
     // 6A-2: Probability Alignment (Get majority suit)
     let majoritySuit: string | null = null;
     if (state.equippedAltarSkills.includes('6A-2')) {
@@ -701,7 +701,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }
 
     const newHand = [...state.playerHand];
-    let drawsToConsume = 1;
+    let drawsToConsume = isFree ? 0 : 1;
 
     // 4A-3: Probability Distortion (25% chance to not consume a swap chance)
     if (state.equippedAltarSkills.includes('4A-3') && Math.random() < 0.25) {
@@ -912,6 +912,16 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         } else if ((chapterId === '1' || chapterId === '2A') && config.avoidChance > 0 && !player.conditions.has('Avoiding')) {
           const bonus = isOnenessWithNature ? 0.05 : 0;
           applyCondition(player.conditions, 'Avoiding', 9999, '', { chance: config.avoidChance + bonus });
+        }
+
+        if (chapterId === '2A' && !player.conditions.has('Dehydration')) {
+          const dehydrationDmg = {
+            [Difficulty.EASY]: 1,
+            [Difficulty.NORMAL]: 2,
+            [Difficulty.HARD]: 3,
+            [Difficulty.HELL]: 4
+          }[state.difficulty] || 2;
+          applyCondition(player.conditions, 'Dehydration', 9999, '', { amount: dehydrationDmg });
         }
 
         // 3B 챕터 진입 시 기존 Swamping 제거 후 재부여 (스테이지마다 초기화)
@@ -1383,6 +1393,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       specialQualify: state.specialQualify,
       ch2PerfectCount: state.ch2PerfectCount,
       ch2SpecialQualify: state.ch2SpecialQualify,
+      hasStage6Bonus: state.hasStage6Bonus,
     });
   },
 
@@ -1451,6 +1462,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         specialQualify: gameData.specialQualify ?? false,
         ch2PerfectCount: gameData.ch2PerfectCount ?? 0,
         ch2SpecialQualify: gameData.ch2SpecialQualify ?? false,
+        hasStage6Bonus: gameData.hasStage6Bonus ?? false,
       });
 
       // Restore Deck State

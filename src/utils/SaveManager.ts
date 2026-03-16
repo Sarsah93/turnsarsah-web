@@ -30,6 +30,7 @@ interface SaveData {
   specialQualify?: boolean;
   ch2PerfectCount?: number;
   ch2SpecialQualify?: boolean;
+  hasStage6Bonus?: boolean;
   timestamp: number;
 }
 

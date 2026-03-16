@@ -226,7 +226,7 @@ export const BossDisplay: React.FC = () => {
                                     2: t.RULES.ONE_PAIR_DMG_0,
                                     3: t.RULES.TWO_PAIR_DMG_0,
                                     4: t.RULES.UNDER_30_POINTS_NO_DMG,
-                                    5: t.RULES.FORCE_SWAP,
+                                    5: t.RULES.FORCE_SWAP_2_NEUROTOXIC,
                                     6: t.RULES.TRIPLE_DMG_0_TRIPLE_ATTACK,
                                     7: t.RULES.FULL_HOUSE_DMG_0_PARALYZE_40,
                                     8: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1,

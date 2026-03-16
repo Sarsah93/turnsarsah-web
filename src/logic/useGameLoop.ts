@@ -1215,7 +1215,7 @@ export const useGameLoop = () => {
                 if (indices.length > 0) {
                     const shuffleIndices = indices.sort(() => 0.5 - Math.random());
                     const targets = shuffleIndices.slice(0, 2); // 2 cards swapped without consuming
-                    store.swapCards(targets);
+                    store.swapCards(targets, true);
                     setMessage("FORCE SWAP x2");
                     await new Promise(r => setTimeout(r, 500));
                 }
@@ -1899,6 +1899,9 @@ export const useGameLoop = () => {
                 await new Promise(r => setTimeout(r, 1000));
             }
             condData.elapsed += 1;
+            if (condData.duration < 999 && condData.elapsed >= condData.duration) {
+                toRemovePlayer.push('Dehydration');
+            }
         }
         // Remove expired player conditions
         toRemovePlayer.forEach(name => playerConditions.delete(name));
