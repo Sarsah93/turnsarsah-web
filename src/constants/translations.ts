@@ -286,7 +286,7 @@ export const TRANSLATIONS = {
             TRIPLE_DMG_0_TRIPLE_ATTACK: "트리플 점수 0 + 3연속 공격(확률적)",
             FULL_HOUSE_DMG_0_PARALYZE_40: "풀하우스 점수 0 + 2턴 마다 공격",
             STRAIGHT_DMG_0_BLIND_1_BAN_1: "스트레이트 점수 0 & 블라인드 1장 & 밴 1장",
-            FLUSH_DMG_0_BLIND_3: "플러시 점수 0 & 블라인드 3장",
+            FLUSH_DMG_0_BLIND_2: "플러시 점수 0 & 블라인드 2장",
             PUZZLE_DMG_50_BLIND_1_AWAKEN: "퍼즐 + 각성",
 
             PUZZLE_TARGET: "타겟: {target}",
@@ -678,7 +678,7 @@ export const TRANSLATIONS = {
             TRIPLE_DMG_0_TRIPLE_ATTACK: "Triple DMG 0 + Triple Attack (Prob.)",
             FULL_HOUSE_DMG_0_PARALYZE_40: "Full House DMG 0 + Attack Every 2 Turns",
             STRAIGHT_DMG_0_BLIND_1_BAN_1: "Straight DMG 0 & Blind 1, Ban 1",
-            FLUSH_DMG_0_BLIND_3: "Flush DMG 0 & Blind 3",
+            FLUSH_DMG_0_BLIND_2: "Flush DMG 0 & Blind 2",
             PUZZLE_DMG_50_BLIND_1_AWAKEN: "Puzzle + Awakening",
 
             PUZZLE_TARGET: "Target: {target}",

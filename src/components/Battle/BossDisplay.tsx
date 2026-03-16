@@ -230,7 +230,7 @@ export const BossDisplay: React.FC = () => {
                                     6: t.RULES.TRIPLE_DMG_0_TRIPLE_ATTACK,
                                     7: t.RULES.FULL_HOUSE_DMG_0_PARALYZE_40,
                                     8: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1,
-                                    9: t.RULES.FLUSH_DMG_0_BLIND_3,
+                                    9: t.RULES.FLUSH_DMG_0_BLIND_2,
                                 };
                                 return (ruleMap[stageNum] || t.RULES.NONE).replace(t.RULES.RULE_HINT, '');
                             })()}`

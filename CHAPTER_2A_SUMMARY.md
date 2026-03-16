@@ -10,7 +10,7 @@
 | **2A-6** | DESERT VULTURES | 200 | 15 | ACC 100%, 회피 | 출혈, 중독, 쇠약 | TRIPLE_DMG_0_TRIPLE_ATTACK | 트리플 무효, 삼중 공격, 회피(15%) | - |
 | **2A-7** | SAND GOLEM | 320 | 35 | ACC 100%, 경감 | **마비** | FULL_HOUSE_DMG_0_PARALYZE_40% | 풀하우스 무효, 경감(30%), 2턴마다 공격 | - |
 | **2A-8** | SAND WYVERN | 300 | 20 | ACC 100%, 재생, 경감, 회피 | 중독, 쇠약 | STRAIGHT_DMG_0_BLIND_1_BAN_1 | 스트레이트 무효, 블라인드1+금지1, 재생(+10), 경감(10%), 회피(5%) | - |
-| **2A-9** | SAND DEATHWORM | 340 | 20 | ACC 100%, 재생, 경감 | 출혈, 중독, 쇠약 | FLUSH_DMG_0_BLIND_3 | 플러시 무효, 블라인드 3, 재생(+15), 경감(15%) | - |
+| **2A-9** | SAND DEATHWORM | 340 | 20 | ACC 100%, 재생, 경감 | 출혈, 중독, 쇠약 | FLUSH_DMG_0_BLIND_2 | 플러시 무효, 블라인드 2, 재생(+15), 경감(15%) | - |
 | **2A-10** | SPHINX | 300 | 40 | ACC 100%, 재생, 경감 | 출혈, 중독, 쇠약 | PUZZLE_DMG+50%_AWAKEN | 수수께끼(5장 합), 각성, 재생(+15), 경감(40%) | 전리품(TR_2A_10) |
 | **2A-11** | SAND DRAGON | 400 | 15 | ACC 100%, 재생, 경감 | **화상** | SAND_STORM_AWAKEN_BURN | 모래폭풍(3턴 주기), 각성, 재생, 경감 | 전리품(TR_2A_SP) |
 

@@ -1177,11 +1177,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         set({ stage10RuleText: t.RULES.STRAIGHT_DMG_0_BLIND_1_BAN_1 });
       } else if (stageId === 9) {
         const indices = [0, 1, 2, 3, 4, 5, 6, 7];
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 2; i++) {
           const randIdx = Math.floor(Math.random() * indices.length);
           blindIndices.push(indices.splice(randIdx, 1)[0]);
         }
-        set({ stage10RuleText: t.RULES.FLUSH_DMG_0_BLIND_3 });
+        set({ stage10RuleText: t.RULES.FLUSH_DMG_0_BLIND_2 });
       } else if (stageId === 10) {
         const validCards = state.playerHand.filter(c => c !== null) as Card[];
         let target = 0;
