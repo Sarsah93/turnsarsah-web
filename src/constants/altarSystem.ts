@@ -152,15 +152,15 @@ export const TROPHIES: Record<string, TrophyDef> = {
     TR_3B_06: {
         id: 'TR_3B_06',
         image: 'trophy_lizard slann.png',
-        name: { KR: '리자드 슬란의 명상 결정', EN: 'Meditation Crystal of the Lizard Slann' },
-        desc: { KR: '늪지대의 흐름을 명상으로 제어하던 슬란의 힘이 깃든 결정.', EN: 'A crystal imbued with Slann\'s power, which controlled the swamp\'s flow through meditation.' },
+        name: { KR: '리자드 슬란의 명상 제어 지팡이', EN: 'Meditation Control Staff of the Lizard Slann' },
+        desc: { KR: '늪지대의 흐름을 명상으로 제어하던 슬란의 힘이 깃든 지팡이.', EN: 'A staff imbued with Slann\'s power, which controlled the swamp\'s flow through meditation.' },
         chapterInfo: 'CHAPTER 3B / STAGE 06'
     },
     TR_3B_10: {
         id: 'TR_3B_10',
         image: 'trophy_lizard king.png',
-        name: { KR: '리자드 킹의 줄기세포 근원', EN: 'Stem Cell Source of the Lizard King' },
-        desc: { KR: '무한한 재생과 성장의 근원이 되는 리자드 킹의 생명력 핵심.', EN: 'The core of the Lizard King\'s life force, the source of infinite regeneration and growth.' },
+        name: { KR: '리자드 킹의 근원 증폭 목걸이', EN: 'Lizard King\'s Source Amplification Necklace' },
+        desc: { KR: '늪지대 근원의 힘을 제어할 자격을 갖춘 자의 목걸이', EN: 'A necklace belonging to one qualified to control the power of the swamp\'s source.' },
         chapterInfo: 'CHAPTER 3B / STAGE 10'
     }
 };

@@ -664,7 +664,8 @@ export const useGameLoop = () => {
 
         // --- HP REDUCTION & EFFECTS ---
         await new Promise(r => setTimeout(r, 150));
-        let newBotHp = Math.max(0, bot.hp - damage);
+        const currentBotPreDmg = useGameStore.getState().bot; // Use fresh state just before damage
+        const newBotHp = Math.max(0, currentBotPreDmg.hp - damage);
         setBotHp(newBotHp);
 
         // Reflection
@@ -764,41 +765,40 @@ export const useGameLoop = () => {
             if (hpAfterRecoil <= 0) await checkPlayerSurvival();
         }
 
-        if (store.isTutorial && newBotHp < 300) {
-            newBotHp = 1000;
+        const freshBotTut = useGameStore.getState().bot;
+        if (store.isTutorial && freshBotTut.hp < 300) {
+            setBotHp(1000);
             store.setMessage(t.COMBAT.TUTORIAL_RESTORED);
         }
 
         // Awakening Logic
-        const currentBotState = useGameStore.getState().bot;
+        const freshBotBeforeAwaken = useGameStore.getState().bot; // Critical: Get current state after all adjustments
+        const finalBotHp = freshBotBeforeAwaken.hp;
         let awakeningTriggered = false;
-        if (newBotHp > 0 && newBotHp <= bot.maxHp * 0.5 && !currentBotState.conditions.has('Awakening')) {
+
+        if (finalBotHp > 0 && finalBotHp <= freshBotBeforeAwaken.maxHp * 0.5 && !freshBotBeforeAwaken.conditions.has('Awakening')) {
             if ((store.chapterNum === '1' && stageNum === 10) || (store.chapterNum === '2A' && stageNum === 10) || (store.chapterNum === '2B' && stageNum === 10)) {
-                newBotHp = bot.maxHp;
                 awakeningTriggered = true;
                 const atkBonus = store.chapterNum === '1' ? ({ [Difficulty.EASY]: 20, [Difficulty.NORMAL]: 30, [Difficulty.HARD]: 40, [Difficulty.HELL]: 50 }[store.difficulty] || 30) : (store.chapterNum === '2A' ? 20 : 25);
-                const newAtk = bot.atk + atkBonus;
-                const newConditions = new Map(currentBotState.conditions);
+                const newAtk = freshBotBeforeAwaken.atk + atkBonus;
+                const newConditions = new Map(freshBotBeforeAwaken.conditions);
                 newConditions.delete('Damage Reducing');
                 newConditions.delete('Regenerating');
                 newConditions.delete('Reflection');
                 import('../logic/conditions').then(({ applyCondition }) => {
                     applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
-                    store.syncBot({ ...bot, hp: newBotHp, atk: newAtk, conditions: newConditions });
+                    store.syncBot({ ...freshBotBeforeAwaken, hp: freshBotBeforeAwaken.maxHp, atk: newAtk, conditions: newConditions });
                 });
                 setMessage(t.COMBAT.AWAKENING);
                 AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
-            } else {
-                setBotHp(newBotHp);
             }
-        } else {
-            setBotHp(newBotHp);
         }
 
-        if (newBotHp <= 0 && store.chapterNum === '2A' && stageNum === 1) {
-            if (!bot.conditions.has('Revived') && Math.random() < 0.5) {
-                newBotHp = Math.floor(bot.maxHp * 0.5);
-                setBotHp(newBotHp);
+        const freshBotAfterRevive = useGameStore.getState().bot;
+        if (freshBotAfterRevive.hp <= 0 && store.chapterNum === '2A' && stageNum === 1) {
+            if (!freshBotAfterRevive.conditions.has('Revived') && Math.random() < 0.5) {
+                const reviveHp = Math.floor(freshBotAfterRevive.maxHp * 0.5);
+                setBotHp(reviveHp);
                 store.addBotCondition('Revived', 9999);
                 setMessage(`${t.CONDITIONS.REVIVED.NAME}!`);
                 AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
@@ -816,9 +816,10 @@ export const useGameLoop = () => {
         const stagesWithRegen = [6, 8, 10];
         const config = DIFFICULTY_CONFIGS[store.difficulty];
         if (config.stage9HasRegen) stagesWithRegen.push(9);
-        const isBotAwakened = useGameStore.getState().bot.conditions.has('Awakening');
-        if (store.chapterNum === '1' && stagesWithRegen.includes(stageNum) && newBotHp < bot.maxHp && !bot.conditions.has('Regenerating') && !isBotAwakened) {
-            if (stageNum !== 6 || newBotHp <= bot.maxHp * 0.5) {
+        const freshBotRegenCheck = useGameStore.getState().bot;
+        const isBotAwakened = freshBotRegenCheck.conditions.has('Awakening');
+        if (store.chapterNum === '1' && stagesWithRegen.includes(stageNum) && freshBotRegenCheck.hp < freshBotRegenCheck.maxHp && !freshBotRegenCheck.conditions.has('Regenerating') && !isBotAwakened) {
+            if (stageNum !== 6 || freshBotRegenCheck.hp <= freshBotRegenCheck.maxHp * 0.5) {
                 store.addBotCondition('Regenerating', 3, `At the end of each turn, restores ${Math.floor(config.regenPercent * 100)}% HP.`, { percent: config.regenPercent });
                 playConditionSound('Regenerating');
             }
@@ -859,8 +860,9 @@ export const useGameLoop = () => {
         }
 
         // ── 3B-9 각성(AWAKENING) 트리거 ──────────────────────────────
+        const freshBot3B9 = useGameStore.getState().bot;
         if (store.chapterNum === '3B' && stageNum === 9) {
-            if (newBotHp > 0 && newBotHp <= bot.maxHp * 0.4 && !bot.conditions.has('Awakening')) {
+            if (freshBot3B9.hp > 0 && freshBot3B9.hp <= freshBot3B9.maxHp * 0.4 && !freshBot3B9.conditions.has('Awakening')) {
                 setMessage("각성: 보스가 기운을 되찾고 모든 방해를 떨쳐내며 더욱 흉포해집니다!");
                 playConditionSound('Awakening');
                 triggerScreenEffect('flash-red');
@@ -871,9 +873,9 @@ export const useGameLoop = () => {
                 newBotConds.set('Awakening', { name: TRANSLATIONS.KR.CONDITIONS.AWAKENING.NAME, duration: 9999, elapsed: 0, data: {} });
 
                 const awakenedBot = {
-                    ...bot,
-                    hp: bot.maxHp,
-                    atk: bot.atk + 20, // 사용자 요구사항: ATK +20
+                    ...freshBot3B9,
+                    hp: freshBot3B9.maxHp,
+                    atk: freshBot3B9.atk + 20, // 사용자 요구사항: ATK +20
                     conditions: newBotConds
                 };
                 store.setBot(awakenedBot);
@@ -884,26 +886,26 @@ export const useGameLoop = () => {
             }
         }
 
-        if (newBotHp <= 0) {
+        const freshBotEndCheck = useGameStore.getState().bot;
+        if (freshBotEndCheck.hp <= 0) {
             // 보스 부활 기믹 (3A-10 HYDRA 등)
-            const freshBotRevive = useGameStore.getState().bot;
-            const revivalCond = freshBotRevive.conditions.get('Revival');
+            const revivalCond = freshBotEndCheck.conditions.get('Revival');
             if (revivalCond) {
                 const limit = (revivalCond.data as any)?.limit || 1;
                 if (limit > 0) {
                     const healPercent = (revivalCond.data as any)?.percent || 0.6;
-                    const reviveHp = Math.floor(freshBotRevive.maxHp * healPercent);
+                    const reviveHp = Math.floor(freshBotEndCheck.maxHp * healPercent);
                     setBotHp(reviveHp);
                     setMessage(t.CONDITIONS.REVIVAL.NAME + "!");
                     playConditionSound('Revival');
                     showDamageText('BOT', `+${reviveHp}`, '#2ecc71');
                     
-                    const newConds = new Map(freshBotRevive.conditions);
+                    const newConds = new Map(freshBotEndCheck.conditions);
                     const updated = { ...revivalCond, data: { ...((revivalCond.data as any) || {}), limit: limit - 1 } };
                     if (updated.data.limit <= 0) newConds.delete('Revival');
                     else newConds.set('Revival', updated);
                     
-                    useGameStore.getState().setBot({ ...freshBotRevive, hp: reviveHp, conditions: newConds });
+                    useGameStore.getState().setBot({ ...freshBotEndCheck, hp: reviveHp, conditions: newConds });
                     
                     await new Promise(r => setTimeout(r, 1500));
                     
