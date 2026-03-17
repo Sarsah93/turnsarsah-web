@@ -58,6 +58,7 @@ export const BattleScreen: React.FC = () => {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
+                if (store.gamePhase === 'BOSS_DEFEATED') return; // Block during victory
                 setActiveMenu(prev => prev === 'NONE' ? 'PAUSE' : 'NONE');
             }
         };
@@ -376,16 +377,23 @@ export const BattleScreen: React.FC = () => {
             {/* Interaction Overlays */}
             <button
                 className="mobile-menu-btn"
-                onClick={() => setActiveMenu('PAUSE')}
+                onClick={() => {
+                    if (gamePhase === 'BOSS_DEFEATED') return;
+                    setActiveMenu('PAUSE');
+                }}
                 style={{
                     position: 'absolute', bottom: '40px', right: '40px',
-                    zIndex: 5000, backgroundColor: 'rgba(0,0,0,0.85)',
-                    color: '#f1c40f', border: '3px solid #f1c40f',
+                    zIndex: 5000, 
+                    backgroundColor: gamePhase === 'BOSS_DEFEATED' ? 'rgba(50,50,50,0.5)' : 'rgba(0,0,0,0.85)',
+                    color: gamePhase === 'BOSS_DEFEATED' ? '#7f8c8d' : '#f1c40f', 
+                    border: `3px solid ${gamePhase === 'BOSS_DEFEATED' ? '#7f8c8d' : '#f1c40f'}`,
                     borderRadius: '16px', width: '80px', height: '80px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '42px', cursor: 'pointer',
+                    fontSize: '42px', 
+                    cursor: gamePhase === 'BOSS_DEFEATED' ? 'default' : 'pointer',
                     boxShadow: '0 0 25px rgba(0,0,0,0.7)',
-                    fontFamily: 'BebasNeue, Arial'
+                    fontFamily: 'BebasNeue, Arial',
+                    opacity: gamePhase === 'BOSS_DEFEATED' ? 0.5 : 1
                 }}
             >
                 三

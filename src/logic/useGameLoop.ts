@@ -2115,6 +2115,9 @@ export const useGameLoop = () => {
 
     const handleVictory = async () => {
         const store = useGameStore.getState();
+        const wasBattle = store.gameState === GameState.BATTLE || store.gameState === GameState.TUTORIAL;
+        store.setGamePhase('BOSS_DEFEATED');
+
         // 3B-6: Reset Joker probability
         if (store.chapterNum === '3B' && store.stageNum === 6) {
             const d = store.deck;
@@ -2123,110 +2126,115 @@ export const useGameLoop = () => {
         }
         const config = DIFFICULTY_CONFIGS[store.difficulty];
 
-        // 0. Boss Death FX
-        const monsterEl = document.querySelector('.boss-avatar-wrapper img') as HTMLElement;
-        if (monsterEl) {
-            await playCoreDeathFX(monsterEl);
-            store.syncBot({ ...store.bot, isBossVisible: false });
-        }
-
-        // 1. 상태 정리 (Heal + Clear Conditions)
-        store.clearPlayerConditions();
-        if (store.chapterNum === '3A' && store.stageNum === 10) {
-            store.resetHydraFlushSuits(); // 히드라용 전승 카운터 리셋
-        }
-
-        const currentHp = store.player.hp;
-        let maxHp = store.player.maxHp;
-
-        // v2.0.0.14/16: Stage 6 Reward (Chapter 1 Only: difficulty-based MAX HP bonus + FULL HEAL)
-        if (store.chapterNum === '1' && stageNum === 6) {
-            const bonus = Math.floor(maxHp * config.stage6MaxHpBonus);
-            maxHp += bonus;
-            store.setHasStage6Bonus(true);
-            store.setPlayerMaxHp(maxHp);
-            setPlayerHp(maxHp); // FULL HEAL per user request
-        } else {
-            // Standard Heal for other stages (difficulty-based)
-            let healAmount = config.clearHpBonus;
-            // v2.3.0: Halved recovery for Chapter 2
-            if (store.chapterNum === '2A' || store.chapterNum === '2B') {
-                healAmount = Math.floor(healAmount / 2);
+        // 0. Boss Death FX - Only play if boss is still visible
+        if (store.bot.isBossVisible) {
+            const monsterEl = document.querySelector('.boss-avatar-wrapper img') as HTMLElement;
+            if (monsterEl) {
+                await playCoreDeathFX(monsterEl);
+                store.syncBot({ ...store.bot, isBossVisible: false });
             }
-            const newHp = Math.min(maxHp, currentHp + healAmount);
-            setPlayerHp(newHp);
         }
 
-        // Hidden Scenario: Perfect Clear Tracking
-        const currentHpPercent = currentHp / maxHp;
-        const isPerfect = currentHpPercent >= 0.5;
+        if (wasBattle) {
+            // 1. 상태 정리 (Heal + Clear Conditions)
+            store.clearPlayerConditions();
+            if (store.chapterNum === '3A' && store.stageNum === 10) {
+                store.resetHydraFlushSuits(); // 히드라용 전승 카운터 리셋
+            }
 
-        if (store.chapterNum === '1') {
-            if (stageNum >= 1 && stageNum <= 9) {
-                if (isPerfect) {
-                    const nextCount = store.ch1PerfectCount + 1;
-                    store.setHiddenState({ ch1PerfectCount: nextCount });
-                    if (nextCount >= 9) {
-                        store.setHiddenState({ specialQualify: true });
+            const currentHp = store.player.hp;
+            let maxHp = store.player.maxHp;
+
+            // v2.0.0.14/16: Stage 6 Reward (Chapter 1 Only: difficulty-based MAX HP bonus + FULL HEAL)
+            if (store.chapterNum === '1' && stageNum === 6) {
+                const bonus = Math.floor(maxHp * config.stage6MaxHpBonus);
+                maxHp += bonus;
+                store.setHasStage6Bonus(true);
+                store.setPlayerMaxHp(maxHp);
+                setPlayerHp(maxHp); // FULL HEAL per user request
+            } else {
+                // Standard Heal for other stages (difficulty-based)
+                let healAmount = config.clearHpBonus;
+                // v2.3.0: Halved recovery for Chapter 2
+                if (store.chapterNum === '2A' || store.chapterNum === '2B') {
+                    healAmount = Math.floor(healAmount / 2);
+                }
+                const newHp = Math.min(maxHp, currentHp + healAmount);
+                setPlayerHp(newHp);
+            }
+
+            // Hidden Scenario: Perfect Clear Tracking
+            const currentHpPercent = currentHp / maxHp;
+            const isPerfect = currentHpPercent >= 0.5;
+
+            if (store.chapterNum === '1') {
+                if (stageNum >= 1 && stageNum <= 9) {
+                    if (isPerfect) {
+                        const nextCount = store.ch1PerfectCount + 1;
+                        store.setHiddenState({ ch1PerfectCount: nextCount });
+                        if (nextCount >= 9) {
+                            store.setHiddenState({ specialQualify: true });
+                        }
+                    }
+                }
+            } else if ((store.chapterNum === '2A' || store.chapterNum === '2B') && store.specialQualify) {
+                if (stageNum >= 1 && stageNum <= 5) {
+                    if (isPerfect) {
+                        const nextCount = store.ch2PerfectCount + 1;
+                        store.setHiddenState({ ch2PerfectCount: nextCount });
+                        if (nextCount >= 5) {
+                            store.setHiddenState({ ch2SpecialQualify: true });
+                        }
                     }
                 }
             }
-        } else if ((store.chapterNum === '2A' || store.chapterNum === '2B') && store.specialQualify) {
-            if (stageNum >= 1 && stageNum <= 5) {
-                if (isPerfect) {
-                    const nextCount = store.ch2PerfectCount + 1;
-                    store.setHiddenState({ ch2PerfectCount: nextCount });
-                    if (nextCount >= 5) {
-                        store.setHiddenState({ ch2SpecialQualify: true });
+
+            // v2.3.7: Chapter Transition Reward (120 HP heal when moving from Ch1 to Ch2)
+            if (store.chapterNum === '1' && stageNum === 10) {
+                const freshPlayer = useGameStore.getState().player;
+                const transitionHeal = 120;
+                setPlayerHp(Math.min(freshPlayer.maxHp, freshPlayer.hp + transitionHeal));
+                showDamageText('PLAYER', `+${transitionHeal}`, '#2ecc71');
+                setMessage(t.COMBAT.VICTORY + " (+120 HP)");
+            }
+
+            // 2. Trophy Check — stage trophy in memory (NOT saved to localStorage yet)
+            const trophyIdMap: Record<string, Record<number, string>> = {
+                '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
+                '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
+                '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' },
+                '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' },
+                '3B': { 6: 'TR_3B_06', 10: 'TR_3B_10' }
+            };
+            const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
+
+            if (potentialTrophyId && store.difficulty !== Difficulty.EASY) {
+                const { AltarManager } = await import('../utils/AltarManager');
+                // Only stage if not already permanently owned and not already pending
+                if (!AltarManager.hasTrophy(potentialTrophyId, store.difficulty)) {
+                    const staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
+                    AltarManager.commitPendingTrophies(); // v2.4.9: Commit immediately for better persistence
+                    if (staged) {
+                        // ─── Guide Popup: Loot & Altar System (first trophy only) ──
+                        if (!hasSeenGuide(SYSTEM_GUIDES.LOOT_SYSTEM.key)) {
+                            await showGuidePopup(SYSTEM_GUIDES.LOOT_SYSTEM);
+                            await showGuidePopup(SYSTEM_GUIDES.ALTAR_SYSTEM);
+                        }
+                        const { TROPHIES } = await import('../constants/altarSystem');
+                        store.setTrophyPopup(TROPHIES[potentialTrophyId]);
+                        // Hold here while the popup is visible
+                        while (useGameStore.getState().trophyPopup !== null) {
+                            await wait(200);
+                        }
+                        await wait(500);
                     }
                 }
             }
-        }
-
-        // v2.3.7: Chapter Transition Reward (120 HP heal when moving from Ch1 to Ch2)
-        if (store.chapterNum === '1' && stageNum === 10) {
-            const freshPlayer = useGameStore.getState().player;
-            const transitionHeal = 120;
-            setPlayerHp(Math.min(freshPlayer.maxHp, freshPlayer.hp + transitionHeal));
-            showDamageText('PLAYER', `+${transitionHeal}`, '#2ecc71');
-            setMessage(t.COMBAT.VICTORY + " (+120 HP)");
-        }
-
-        // 2. Trophy Check — stage trophy in memory (NOT saved to localStorage yet)
-        const trophyIdMap: Record<string, Record<number, string>> = {
-            '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
-            '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
-            '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' },
-            '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' },
-            '3B': { 6: 'TR_3B_06', 10: 'TR_3B_10' }
-        };
-        const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
-
-        if (potentialTrophyId && store.difficulty !== Difficulty.EASY) {
-            const { AltarManager } = await import('../utils/AltarManager');
-            // Only stage if not already permanently owned and not already pending
-            if (!AltarManager.hasTrophy(potentialTrophyId, store.difficulty)) {
-                const staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
-                AltarManager.commitPendingTrophies(); // v2.4.9: Commit immediately for better persistence
-                if (staged) {
-                    // ─── Guide Popup: Loot & Altar System (first trophy only) ──
-                    if (!hasSeenGuide(SYSTEM_GUIDES.LOOT_SYSTEM.key)) {
-                        await showGuidePopup(SYSTEM_GUIDES.LOOT_SYSTEM);
-                        await showGuidePopup(SYSTEM_GUIDES.ALTAR_SYSTEM);
-                    }
-                    const { TROPHIES } = await import('../constants/altarSystem');
-                    store.setTrophyPopup(TROPHIES[potentialTrophyId]);
-                    // Hold here while the popup is visible
-                    while (useGameStore.getState().trophyPopup !== null) {
-                        await wait(200);
-                    }
-                    await wait(500);
-                }
-            }
+            
+            setGameState(GameState.VICTORY);
         }
 
         // 3. Victory State & Sound
-        setGameState(GameState.VICTORY);
         const bonusPercent = Math.floor(config.stage6MaxHpBonus * 100);
 
         let victoryMsg = t.COMBAT.VICTORY;
@@ -2305,6 +2313,12 @@ export const useGameLoop = () => {
         if (store.isGameLoaded) {
             store.setIsGameLoaded(false);
             console.log("Skipping initial draw for loaded game.");
+
+            // Fail-safe: If boss is already dead, re-trigger victory handling
+            if (store.bot.hp <= 0 && store.gameState === GameState.BATTLE) {
+                console.log("Boss already defeated, resuming victory sequence.");
+                handleVictory();
+            }
             return;
         }
 

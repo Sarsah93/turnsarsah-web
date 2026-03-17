@@ -1403,6 +1403,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       ch2PerfectCount: state.ch2PerfectCount,
       ch2SpecialQualify: state.ch2SpecialQualify,
       hasStage6Bonus: state.hasStage6Bonus,
+      gameState: state.gameState,
+      gamePhase: state.gamePhase,
     });
   },
 
@@ -1459,7 +1461,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         chapterNum: gameData.chapterNum || '1',
         stageNum: gameData.stageNum,
         difficulty: gameData.difficulty,
-        gameState: GameState.BATTLE,
         currentTurn: gameData.currentTurn,
         player: gameData.player,
         bot: gameData.bot,
@@ -1472,6 +1473,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         ch2PerfectCount: gameData.ch2PerfectCount ?? 0,
         ch2SpecialQualify: gameData.ch2SpecialQualify ?? false,
         hasStage6Bonus: gameData.hasStage6Bonus ?? false,
+        gameState: gameData.gameState || GameState.BATTLE,
+        gamePhase: gameData.gamePhase || 'IDLE',
       });
 
       // Restore Deck State

@@ -2,7 +2,7 @@
 
 import { Character } from '../types/Character';
 import { Card } from '../types/Card';
-import { Difficulty } from '../constants/gameConfig';
+import { Difficulty, GameState } from '../constants/gameConfig';
 
 export const SAVE_VERSION = 'v2.5.0';
 const VERSION_KEY = 'turnsarsah_save_version';
@@ -12,6 +12,8 @@ interface SaveData {
   chapterNum: string;
   stageNum: number;
   difficulty: Difficulty;
+  gameState: GameState;
+  gamePhase: string;
   currentTurn: number;
   player: Character;
   bot: Character;
