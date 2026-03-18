@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { Card, CardFactory } from '../types/Card';
 import { Character, Condition } from '../types/Character';
-import { GameState, Difficulty, DifficultyConfig, DIFFICULTY_CONFIGS, UNLOCKED_DIFFICULTIES_KEY } from '../constants/gameConfig';
+import { GameState, Difficulty, DifficultyConfig, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
 import { RANK_VALUES } from '../constants/cards';
 import { Deck } from '../logic/Deck';
 import { CHAPTERS } from '../constants/stages';
@@ -12,6 +12,8 @@ import { storageKey } from '../utils/buildTarget';
 import { SaveManager } from '../utils/SaveManager';
 import { Language, TRANSLATIONS } from '../constants/translations';
 import { GuidePopupData } from '../constants/guideData';
+
+const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
 import { TROPHIES, ALTAR_SKILLS, TrophyDef } from '../constants/altarSystem';
 import { AltarManager } from '../utils/AltarManager';
 

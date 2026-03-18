@@ -232,5 +232,4 @@ export const IMMUNE_DURATION = 3;
 export const REGEN_DURATION = 5;
 
 // Difficulty Unlock Persistence Key
-import { storageKey } from '../utils/buildTarget';
-export const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
+// Removed: Local directly defined inside gameStore.ts & SaveManager.ts using storageKey.
