@@ -1,0 +1,14 @@
+/* styles/PauseMenu.css */
+
+.pause-menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  align-items: center;
+}
+
+.pause-menu-buttons button {
+  width: 100%;
+  max-width: 240px;
+}

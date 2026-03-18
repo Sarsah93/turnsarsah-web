@@ -1,0 +1,17 @@
+node_modules/
+.dist/
+.env
+.env.*
+.vscode/
+.DS_Store
+dist/
+.vercel
+logs/
+# Tauri / Rust
+src-tauri/target/
+
+# build outputs
+*.exe
+*.msi
+*.rlib
+*.rmeta

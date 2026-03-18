@@ -1,0 +1,36 @@
+{
+  "productName": "Turn Sarsah",
+  "version": "0.1.0",
+  "identifier": "com.turnsarsah.game",
+  "build": {
+    "beforeDevCommand": "npm run dev:steam",
+    "beforeBuildCommand": "npm run build:steam",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Turn Sarsah",
+        "width": 1600,
+        "height": 900,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "msi",
+      "nsis"
+    ],
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png"
+    ]
+  }
+}

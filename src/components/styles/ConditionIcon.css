@@ -1,0 +1,30 @@
+/* styles/ConditionIcon.css */
+
+.condition-icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: help;
+  transition: transform 0.2s ease;
+}
+
+.condition-icon:hover {
+  transform: scale(1.1);
+  border-color: #ffd700;
+}
+
+/* Player Status Row Layout */
+.player-conditions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* 한 줄 최대 4개 제한: (icon width 50px * 4) + (gap 8px * 3) = 224px */
+  width: 224px;
+  justify-content: flex-start;
+  align-content: flex-start;
+}

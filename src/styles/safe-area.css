@@ -1,0 +1,33 @@
+/* src/styles/safe-area.css */
+
+:root {
+    /* Default safe-area insets if not provided by browser */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-padding {
+    padding-top: var(--safe-top);
+    padding-right: var(--safe-right);
+    padding-bottom: var(--safe-bottom);
+    padding-left: var(--safe-left);
+}
+
+/* For absolute elements that need to avoid the notch */
+.safe-top {
+    top: var(--safe-top);
+}
+
+.safe-bottom {
+    bottom: var(--safe-bottom);
+}
+
+.safe-left {
+    left: var(--safe-left);
+}
+
+.safe-right {
+    right: var(--safe-right);
+}

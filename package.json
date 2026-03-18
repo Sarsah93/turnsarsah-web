@@ -1,0 +1,32 @@
+{
+  "name": "turnsarsah-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "dev:internal": "vite --mode internal",
+    "dev:steam": "vite --mode steam",
+    "build": "vite build",
+    "build:steam": "vite build --mode steam",
+    "build:internal": "vite build --mode internal",
+    "tauri:dev": "tauri dev",
+    "tauri:build:steam": "tauri build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.5.0",
+    "firebase": "^12.9.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.4.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.5.0",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "^5.1.6",
+    "vite": "^8.0.0"
+  }
+}

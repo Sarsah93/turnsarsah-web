@@ -1,0 +1,215 @@
+/* styles/CardHand.css */
+
+.card-hand-container {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  z-index: 20;
+}
+
+.action-buttons {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 30;
+}
+
+.attack-button-wrapper {
+  margin: 0 40px;
+}
+
+.draw-button-wrapper {
+  margin: 0 40px;
+}
+
+.cards-area {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 280px;
+  width: 100%;
+  position: absolute;
+  bottom: 100px;
+  /* Shifted slightly lower for larger cards */
+}
+
+/* Attack Animations */
+@keyframes fly-to-center {
+  0% {
+    /* Starts from its layout position */
+  }
+
+  100% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(1.2) rotate(360deg);
+  }
+}
+
+.gathering {
+  position: fixed !important;
+  /* left is set via inline style for accurate viewport centering */
+  bottom: 30% !important;
+  top: auto !important;
+  z-index: 1000 !important;
+  transform: translateX(-50%) rotate(360deg) !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.charging {
+  position: fixed !important;
+  /* left is set via inline style for accurate viewport centering */
+  top: 65% !important;
+  /* Move backwards (down) */
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(1.1) rotate(-5deg) !important;
+  z-index: 1001 !important;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: brightness(1.4) drop-shadow(0 0 15px #f1c40f);
+}
+
+.thrusting {
+  position: fixed !important;
+  /* left is set via inline style for accurate viewport centering */
+  top: 15% !important;
+  /* Hit boss center (boss is at top: 0) */
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(0.8) rotate(10deg) !important;
+  opacity: 1;
+  z-index: 1002 !important;
+  transition: all 0.1s cubic-bezier(0.32, 0, 0.67, 0);
+  /* Sharp thrust */
+}
+
+.scattering {
+  position: fixed !important;
+  /* left is set via inline style for accurate viewport centering */
+  top: 15% !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) scale(2.5) rotate(45deg) !important;
+  opacity: 0;
+  filter: blur(20px) brightness(4) contrast(150%);
+  z-index: 1003 !important;
+  transition: all 0.5s cubic-bezier(0.1, 0.7, 1.0, 0.1);
+  box-shadow: 0 0 50px #fff, 0 0 100px #f1c40f;
+}
+
+/* Fly-from-deck Animation with Dynamic Offsets */
+@keyframes fly-from-deck {
+  0% {
+    transform: translate(var(--deal-offset-x, 400px), var(--deal-offset-y, 100px)) rotate(20deg) scale(0.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.card-deal {
+  animation: fly-from-deck 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2) forwards;
+}
+
+.combo-preview {
+  color: #f1c40f;
+  font-size: 2.8rem;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  text-shadow: 2px 2px 2px #000;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px 30px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Tutorial Highlights */
+.tutorial-cue-container {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.tutorial-arrow {
+  width: 30px;
+  height: 30px;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 20px solid #f1c40f;
+  animation: bounce-arrow 0.6s infinite alternate ease-in-out;
+}
+
+.tutorial-text {
+  color: #f1c40f;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  text-shadow: 2px 2px 4px #000;
+  white-space: nowrap;
+  margin-bottom: 5px;
+}
+
+@keyframes bounce-arrow {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-10px);
+  }
+}
+/* v2.4.9: Sphinx Puzzle Target Display */
+.sphinx-puzzle-ui {
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #f1c40f;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 2.8rem;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 1), 2px 2px 4px #000, 0 0 20px rgba(241, 196, 15, 0.4);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 8px 16px;
+  border: 2px solid rgba(241, 196, 15, 0.6);
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  animation: pulse-gold 2s infinite ease-in-out;
+}
+
+@keyframes pulse-gold {
+  0% {
+    box-shadow: 0 0 5px rgba(241, 196, 15, 0.4);
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(241, 196, 15, 0.8);
+    transform: translateX(-50%) scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(241, 196, 15, 0.4);
+    transform: translateX(-50%) scale(1);
+  }
+}

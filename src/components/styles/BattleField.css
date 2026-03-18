@@ -1,0 +1,166 @@
+/* styles/BattleField.css */
+
+.battlefield {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: transparent;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.popups-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.boss-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.boss-name {
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 32px;
+  color: #ffd700;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin-top: 10px;
+}
+
+.boss-portrait {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 20px;
+}
+
+.boss-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3a3a3a, #2a2a2a);
+  border: 2px solid #ffd700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+}
+
+.boss-conditions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 300px;
+}
+
+.player-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  /* Ensure player section stays reachable for tooltips, above popups */
+  position: relative;
+  z-index: 200;
+}
+
+.player-conditions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 300px;
+}
+
+/* v2.0.0.5: Battle Animations */
+
+@keyframes thrust-down {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  30% {
+    transform: translateX(-50%) translateY(100px);
+  }
+
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes thrust-up {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  30% {
+    transform: translateX(-50%) translateY(-100px);
+  }
+
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes hit-shake {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  10% {
+    transform: translateX(calc(-50% - 10px));
+  }
+
+  30% {
+    transform: translateX(calc(-50% + 10px));
+  }
+
+  50% {
+    transform: translateX(calc(-50% - 10px));
+  }
+
+  70% {
+    transform: translateX(calc(-50% + 10px));
+  }
+
+  90% {
+    transform: translateX(calc(-50% - 5px));
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-thrust-down {
+  animation: thrust-down 0.4s ease-out;
+}
+
+.animate-hit-shake {
+  animation: hit-shake 0.3s ease-in-out;
+}
+
+.boss-avatar-wrapper {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 450px;
+  height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+}

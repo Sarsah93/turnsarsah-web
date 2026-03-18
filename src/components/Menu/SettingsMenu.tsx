@@ -1,0 +1,139 @@
+import React, { useState } from 'react';
+import Modal from '../Common/Modal';
+import { Button } from '../Common/Button';
+import { BlockButton } from '../BlockButton';
+import { AudioManager } from '../../utils/AudioManager';
+import { useGameStore } from '../../state/gameStore';
+import { TRANSLATIONS } from '../../constants/translations';
+import '../styles/SettingsMenu.css';
+
+interface SettingsMenuProps {
+  onVolumeChange?: (type: 'bgm' | 'sfx', volume: number) => void;
+  onClose?: () => void;
+}
+
+export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onClose }) => {
+  const { language, setLanguage, fontSize, setFontSize, gameSpeed, setGameSpeed } = useGameStore();
+  const t = TRANSLATIONS[language].SETTINGS;
+  const [bgmVolume, setBgmVolume] = useState(Math.round(AudioManager.getBGMVolume() * 10));
+  const [sfxVolume, setSfxVolume] = useState(Math.round(AudioManager.getSFXVolume() * 10));
+
+  const handleBgmChange = (delta: number) => {
+    const newVolumeBars = Math.max(0, Math.min(10, bgmVolume + delta));
+    setBgmVolume(newVolumeBars);
+    onVolumeChange?.('bgm', newVolumeBars / 10);
+  };
+
+  const handleSfxChange = (delta: number) => {
+    const newVolumeBars = Math.max(0, Math.min(10, sfxVolume + delta));
+    setSfxVolume(newVolumeBars);
+    onVolumeChange?.('sfx', newVolumeBars / 10);
+  };
+
+  return (
+    <Modal title={t.TITLE} onClose={onClose} width={600} height={550} showCloseButton={false}>
+      <div className="settings-content" style={{ padding: '30px', gap: '20px' }}>
+        <div className="setting-item">
+          <label>{t.BGM}</label>
+          <div className="volume-bars">
+            <Button variant="overlay" size="sm" onClick={() => handleBgmChange(-1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>-</Button>
+            <div className="bars">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className={`bar ${i < bgmVolume ? 'active' : ''}`} />
+              ))}
+            </div>
+            <Button variant="overlay" size="sm" onClick={() => handleBgmChange(1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>+</Button>
+          </div>
+        </div>
+        <div className="setting-item">
+          <label>{t.SFX}</label>
+          <div className="volume-bars">
+            <Button variant="overlay" size="sm" onClick={() => handleSfxChange(-1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>-</Button>
+            <div className="bars">
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className={`bar ${i < sfxVolume ? 'active' : ''}`} />
+              ))}
+            </div>
+            <Button variant="overlay" size="sm" onClick={() => handleSfxChange(1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>+</Button>
+          </div>
+        </div>
+
+        {/* Language Selection */}
+        <div className="setting-item" style={{ marginTop: '5px' }}>
+          <label>{t.LANGUAGE}</label>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
+            <BlockButton
+              text={t.KOREAN}
+              onClick={() => setLanguage('KR')}
+              variant={language === 'KR' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+            <BlockButton
+              text={t.ENGLISH}
+              onClick={() => setLanguage('EN')}
+              variant={language === 'EN' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+          </div>
+        </div>
+
+        {/* Font Size Selection */}
+        <div className="setting-item" style={{ marginTop: '5px' }}>
+          <label>{t.FONT_SIZE}</label>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
+            <BlockButton
+              text={t.FONT_LARGE}
+              onClick={() => setFontSize('LARGE')}
+              variant={fontSize === 'LARGE' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+            <BlockButton
+              text={t.FONT_NORMAL}
+              onClick={() => setFontSize('NORMAL')}
+              variant={fontSize === 'NORMAL' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+            <BlockButton
+              text={t.FONT_SMALL}
+              onClick={() => setFontSize('SMALL')}
+              variant={fontSize === 'SMALL' ? 'primary' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+          </div>
+        </div>
+
+        {/* v2.5.0: Game Speed Selection */}
+        <div className="setting-item" style={{ marginTop: '5px' }}>
+          <label>{t.GAME_SPEED}</label>
+          <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
+            <BlockButton
+              text="1.0x"
+              onClick={() => setGameSpeed(1.0)}
+              variant={gameSpeed === 1.0 ? 'primary' : undefined}
+              textColor={gameSpeed === 1.0 ? '#f39c12' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+            <BlockButton
+              text="1.5x"
+              onClick={() => setGameSpeed(1.5)}
+              variant={gameSpeed === 1.5 ? 'primary' : undefined}
+              textColor={gameSpeed === 1.5 ? '#f39c12' : undefined}
+              width="150px"
+              fontSize="1.1rem"
+            />
+          </div>
+        </div>
+
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+          <BlockButton text={t.BACK} onClick={() => onClose?.()} width="160px" />
+        </div>
+      </div>
+    </Modal>
+  );
+};

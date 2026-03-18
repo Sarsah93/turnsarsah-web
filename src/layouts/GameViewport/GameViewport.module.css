@@ -1,0 +1,105 @@
+.viewport {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: calc(var(--vh, 1vh) * 100);
+    overflow: hidden;
+    background-color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Prevent any scrolling at the viewport level */
+    touch-action: none;
+}
+
+/*
+   Desktop Canvas: 1280x720 base resolution.
+   This will be scaled by CSS transform to fit the viewport.
+*/
+.desktopCanvas {
+    position: absolute;
+    transform-origin: center center;
+    overflow: hidden;
+}
+
+.overlayRoot {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.orientationWarning {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background-color: #0b0b10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #f1c40f;
+    text-align: center;
+    padding: 20px;
+    font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
+}
+
+.warningIcon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    animation: rotate 2s infinite ease-in-out;
+}
+
+.warningText {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    white-space: pre-wrap;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(90deg);
+    }
+
+    50% {
+        transform: rotate(90deg);
+    }
+
+    75% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.fullscreenBtn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 5000;
+    background: rgba(0, 0, 0, 0.5);
+    color: #f1c40f;
+    border: 2px solid #f1c40f;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.3;
+}
+
+.fullscreenBtn:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+}

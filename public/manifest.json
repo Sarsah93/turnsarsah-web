@@ -1,0 +1,16 @@
+{
+    "name": "TurnSarsah",
+    "short_name": "TurnSarsah",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "landscape",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "icons": [
+        {
+            "src": "/assets/etc images/turnsarsah_logo_image.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

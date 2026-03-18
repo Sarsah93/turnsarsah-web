@@ -1,0 +1,96 @@
+/* styles/GuidePopup.css */
+
+.guide-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.85);
+  transition: opacity 0.3s ease;
+}
+
+.guide-popup-card {
+  background-color: #1a1a2e;
+  border: 2px solid #a8dadc;
+  padding: 32px 40px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 520px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  transition: transform 0.4s ease-out;
+  font-family: 'Noto Sans KR', 'Bebas Neue', sans-serif;
+}
+
+.guide-popup-badge {
+  padding: 8px 24px;
+  border-radius: 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.guide-popup-title {
+  font-size: 2.4rem;
+  font-weight: bold;
+  margin: 0 0 12px 0;
+  text-align: center;
+  font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px currentColor;
+}
+
+.guide-popup-divider {
+  width: 100%;
+  border-top: 1px solid rgba(168, 218, 220, 0.25);
+  margin: 16px 0;
+}
+
+.guide-popup-body {
+  width: 100%;
+  text-align: left;
+  color: #ecf0f1;
+  font-size: 2rem;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+
+.guide-popup-body p {
+  margin: 8px 0;
+}
+
+.guide-popup-body .guide-popup-spacer {
+  height: 12px;
+  margin: 0;
+}
+
+.guide-popup-btn-wrap {
+  width: 100%;
+  max-width: 240px;
+  margin-top: 16px;
+}
+
+/* Scrollbar styling */
+.guide-popup-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.guide-popup-card::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.guide-popup-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
