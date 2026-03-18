@@ -5,7 +5,7 @@ import { Difficulty, GameState } from '../constants/gameConfig';
 import { BlockButton } from './BlockButton';
 
 export const ClearCongratulationsPopup: React.FC = () => {
-    const { clearPopupDifficulty, setClearPopupDifficulty, language, setGameState, triggerTransition } = useGameStore();
+    const { clearPopupDifficulty, setClearPopupDifficulty, language, setGameState, triggerTransition, chapterNum } = useGameStore();
     const t = TRANSLATIONS[language];
 
     if (!clearPopupDifficulty) return null;
@@ -18,6 +18,11 @@ export const ClearCongratulationsPopup: React.FC = () => {
     };
 
     const getBodyText = () => {
+        // v3.0: If clearing Chapter 3, show final gratitude message instead of difficulty guide
+        if (chapterNum === '3A' || chapterNum === '3B') {
+            return (t.UI as any).FINAL_CLEAR_BODY || t.UI.CLEAR_NORMAL_BODY;
+        }
+
         if (clearPopupDifficulty === Difficulty.EASY) return t.UI.CLEAR_EASY_BODY;
         if (clearPopupDifficulty === Difficulty.NORMAL) return t.UI.CLEAR_NORMAL_BODY;
         // Fallback for Hard/Hell if ever reached

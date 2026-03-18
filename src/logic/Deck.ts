@@ -79,9 +79,14 @@ export class Deck {
           let cardIdx = 0;
 
           if (targetRank) {
-            // Try to find same rank
+            // Try to find same rank; fallback to random if not found
             const foundIdx = this.cards.findIndex(c => c.rank === targetRank);
-            if (foundIdx !== -1) cardIdx = foundIdx;
+            if (foundIdx !== -1) {
+              cardIdx = foundIdx;
+            } else {
+              // Bug fix: avoid index-0 bias when target rank not in deck
+              cardIdx = Math.floor(Math.random() * this.cards.length);
+            }
           } else if (targetSuit) {
             // Try to find majority suit
             const foundIdx = this.cards.findIndex(c => c.suit === targetSuit);

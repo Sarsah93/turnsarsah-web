@@ -8,8 +8,9 @@ export interface GuidePopupData {
   category: 'CHAPTER_INTRO' | 'SYSTEM' | 'GIMMICK' | 'CONDITION';
 }
 
-// ─── localStorage Helpers ─────────────────────────────────────────────
-const GUIDE_PREFIX = 'guide_seen_';
+// --- localStorage Helpers ---
+import { storageKey } from '../utils/buildTarget';
+const GUIDE_PREFIX = storageKey('guide_seen_');
 
 export function hasSeenGuide(key: string): boolean {
   return localStorage.getItem(GUIDE_PREFIX + key) === '1';

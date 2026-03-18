@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Modal from '../Common/Modal';
+import { Button } from '../Common/Button';
 import { BlockButton } from '../BlockButton';
 import { AudioManager } from '../../utils/AudioManager';
 import { useGameStore } from '../../state/gameStore';
@@ -35,25 +36,25 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ onVolumeChange, onCl
         <div className="setting-item">
           <label>{t.BGM}</label>
           <div className="volume-bars">
-            <button onClick={() => handleBgmChange(-1)}>-</button>
+            <Button variant="overlay" size="sm" onClick={() => handleBgmChange(-1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>-</Button>
             <div className="bars">
               {[...Array(10)].map((_, i) => (
                 <div key={i} className={`bar ${i < bgmVolume ? 'active' : ''}`} />
               ))}
             </div>
-            <button onClick={() => handleBgmChange(1)}>+</button>
+            <Button variant="overlay" size="sm" onClick={() => handleBgmChange(1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>+</Button>
           </div>
         </div>
         <div className="setting-item">
           <label>{t.SFX}</label>
           <div className="volume-bars">
-            <button onClick={() => handleSfxChange(-1)}>-</button>
+            <Button variant="overlay" size="sm" onClick={() => handleSfxChange(-1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>-</Button>
             <div className="bars">
               {[...Array(10)].map((_, i) => (
                 <div key={i} className={`bar ${i < sfxVolume ? 'active' : ''}`} />
               ))}
             </div>
-            <button onClick={() => handleSfxChange(1)}>+</button>
+            <Button variant="overlay" size="sm" onClick={() => handleSfxChange(1)} style={{ width: '40px', height: '40px', minWidth: 'auto', padding: 0, borderColor: '#f1c40f', color: '#f1c40f' }}>+</Button>
           </div>
         </div>
 

@@ -5,6 +5,7 @@ import { useGameStore } from '../state/gameStore';
 import { Difficulty } from '../constants/gameConfig';
 import { TRANSLATIONS } from '../constants/translations';
 import { BlockButton } from './BlockButton';
+import { Button } from './Common/Button';
 import Modal from './Common/Modal';
 import './styles/SettingsMenu.css';
 
@@ -37,41 +38,23 @@ export const DifficultyPopup: React.FC<DifficultyPopupProps> = ({ onClose, onSel
                         const canClick = isUnlocked && isImplemented;
 
                         return (
-                            <button
+                            <Button
                                 key={key}
                                 onClick={() => canClick && onSelect(key)}
                                 disabled={!canClick}
-                                className="difficulty-btn"
+                                variant="overlay"
+                                size="lg"
                                 style={{
-                                    fontFamily: 'BebasNeue',
+                                    width: '350px',
                                     fontSize: '1.8rem',
-                                    padding: '12px 40px',
-                                    border: `2px solid ${canClick ? color : '#7f8c8d'}`,
-                                    borderRadius: '8px',
-                                    backgroundColor: canClick ? 'rgba(0,0,0,0.3)' : 'rgba(50,50,50,0.5)',
-                                    color: canClick ? color : '#7f8c8d',
-                                    cursor: canClick ? 'pointer' : 'not-allowed',
+                                    borderColor: canClick ? '#f1c40f' : '#7f8c8d',
+                                    color: canClick ? '#f1c40f' : '#7f8c8d',
                                     opacity: canClick ? 1 : 0.5,
-                                    width: '350px', // v2.4.1: Adjusted width for longer text
-                                    textTransform: 'uppercase',
                                     letterSpacing: '2px',
-                                    transition: 'all 0.2s ease',
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (canClick) {
-                                        e.currentTarget.style.backgroundColor = color;
-                                        e.currentTarget.style.color = '#000';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (canClick) {
-                                        e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.3)';
-                                        e.currentTarget.style.color = color;
-                                    }
                                 }}
                             >
                                 {displayLabel}
-                            </button>
+                            </Button>
                         );
                     })}
                 </div>

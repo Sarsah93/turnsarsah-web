@@ -3,10 +3,11 @@
 import { Character } from '../types/Character';
 import { Card } from '../types/Card';
 import { Difficulty, GameState } from '../constants/gameConfig';
+import { storageKey } from './buildTarget';
 
 export const SAVE_VERSION = 'v2.5.0';
-const VERSION_KEY = 'turnsarsah_save_version';
-const UNLOCKED_DIFFICULTIES_KEY = 'turnsarsah_unlocked_difficulties';
+const VERSION_KEY = storageKey('save_version');
+const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
 
 interface SaveData {
   chapterNum: string;
@@ -36,8 +37,8 @@ interface SaveData {
   timestamp: number;
 }
 
-const SAVE_KEY_PREFIX = 'turnsarsah_save_';
-const ALTAR_STORAGE_KEY = 'turnsarsah_altar_data';
+const SAVE_KEY_PREFIX = storageKey('save_');
+const ALTAR_STORAGE_KEY = storageKey('altar_data');
 
 export class SaveManager {
   /**

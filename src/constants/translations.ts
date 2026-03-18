@@ -396,6 +396,7 @@ export const TRANSLATIONS = {
             CLEAR_NORMAL_BODY: "보통 난이도의 모든 스테이지를 클리어 하셨습니다!\n이제부터 어려움 난이도를 플레이할 수 있으며,\n보스들로부터 전리품을 얻고, 제단 스킬을 활성화하여,\n더 다양한 챕터들을 클리어 해 보세요!",
             BACK_TO_MAIN_MENU: "메인 화면으로 돌아가기",
             UNDER_PREPARATION: "현재 준비중입니다.",
+            FINAL_CLEAR_BODY: "현재까지 구현된 챕터를 모두 클리어 하셨습니다.\n추후 업데이트될 챕터를 기대해주세요! 감사합니다.",
             // Chapter Next Popup (v3.0)
             CHAPTER_NEXT_CLEAR: "{area} 구역 안정화 완료!",
             CHAPTER_NEXT_ACTIVATED: "다음 섹터가 활성화되었습니다.",
@@ -788,6 +789,7 @@ export const TRANSLATIONS = {
             CLEAR_NORMAL_BODY: "You have cleared all stages of NORMAL difficulty!\nNow you can play HARD difficulty, obtain loot from bosses,\nactivate Altar skills, and clear even more diverse chapters!",
             BACK_TO_MAIN_MENU: "Back to Main Menu",
             UNDER_PREPARATION: "Under Preparation.",
+            FINAL_CLEAR_BODY: "You have cleared all the chapters implemented so far.\nPlease look forward to future updates! Thank you.",
             // Chapter Next Popup (v3.0)
             CHAPTER_NEXT_CLEAR: "{area} Area Stabilized!",
             CHAPTER_NEXT_ACTIVATED: "Next sector has been activated.",

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useGameStore } from '../state/gameStore';
 import { BlockButton } from './BlockButton';
+import { Button } from './Common/Button';
 import { TROPHIES, ALTAR_SKILLS, ALTAR_PATHS } from '../constants/altarSystem';
 import { AltarManager } from '../utils/AltarManager';
 import { Difficulty } from '../constants/gameConfig';
@@ -155,39 +156,39 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <h1 style={{ color: '#fff', fontSize: '3rem', margin: 0, marginRight: '20px' }}>ALTAR SYSTEM</h1>
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            <button
+                            <Button
+                                variant={activeTab === Difficulty.NORMAL ? 'primary' : 'secondary'}
+                                size="sm"
                                 onClick={() => { setActiveTab(Difficulty.NORMAL); setSelectedTreeSkill(null); }}
                                 style={{
-                                    backgroundColor: activeTab === Difficulty.NORMAL ? '#3498db' : '#2c3e50',
-                                    color: '#fff', border: '2px solid #2980b9', borderRadius: '4px',
-                                    padding: '8px 20px', fontSize: '1.2rem', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif",
-                                    cursor: 'pointer', transition: 'all 0.2s', fontWeight: 'bold'
+                                    backgroundColor: activeTab === Difficulty.NORMAL ? undefined : '#2c3e50',
+                                    border: activeTab === Difficulty.NORMAL ? undefined : '2px solid #555',
                                 }}
                             >
                                 {language === 'KR' ? '보통 (NORMAL)' : 'NORMAL'}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant={activeTab === Difficulty.HARD ? 'primary' : 'secondary'}
+                                size="sm"
                                 onClick={() => { setActiveTab(Difficulty.HARD); setSelectedTreeSkill(null); }}
                                 style={{
                                     backgroundColor: activeTab === Difficulty.HARD ? '#e67e22' : '#2c3e50',
-                                    color: '#fff', border: '2px solid #d35400', borderRadius: '4px',
-                                    padding: '8px 20px', fontSize: '1.2rem', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif",
-                                    cursor: 'pointer', transition: 'all 0.2s', fontWeight: 'bold'
+                                    border: activeTab === Difficulty.HARD ? '#d35400' : '2px solid #555',
                                 }}
                             >
                                 {language === 'KR' ? '어려움 (HARD)' : 'HARD'}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant={activeTab === Difficulty.HELL ? 'primary' : 'secondary'}
+                                size="sm"
                                 onClick={() => { setActiveTab(Difficulty.HELL); setSelectedTreeSkill(null); }}
                                 style={{
                                     backgroundColor: activeTab === Difficulty.HELL ? '#e74c3c' : '#2c3e50',
-                                    color: '#fff', border: '2px solid #c0392b', borderRadius: '4px',
-                                    padding: '8px 20px', fontSize: '1.2rem', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif",
-                                    cursor: 'pointer', transition: 'all 0.2s', fontWeight: 'bold'
+                                    border: activeTab === Difficulty.HELL ? '#c0392b' : '2px solid #555',
                                 }}
                             >
                                 {language === 'KR' ? '지옥 (HELL)' : 'HELL'}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                     <BlockButton text="BACK" onClick={onClose} width="100px" height="40px" fontSize="1.2rem" />
@@ -454,36 +455,37 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                                 })}
                                             </div>
                                         </div>
-                                        <button
+                                        <Button
+                                            variant="primary"
+                                            size="md"
                                             disabled={!AltarManager.canUnlockSkill(selectedTreeSkill, activeTab)}
-                                            style={{
-                                                backgroundColor: AltarManager.canUnlockSkill(selectedTreeSkill, activeTab) ? '#2ecc71' : '#7f8c8d',
-                                                color: '#fff', border: 'none', padding: '12px', fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.4rem',
-                                                cursor: AltarManager.canUnlockSkill(selectedTreeSkill, activeTab) ? 'pointer' : 'not-allowed', borderRadius: '6px'
-                                            }} onClick={() => handleUnlock(selectedTreeSkill)}
+                                            style={{ width: '100%', fontSize: '1.4rem' }}
+                                            onClick={() => handleUnlock(selectedTreeSkill)}
                                         >
                                             {language === 'KR' ? '활성화 하기 (ACTIVATE)' : 'ACTIVATE SKILL'}
-                                        </button>
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                         <div style={{ color: '#2ecc71', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ fontSize: '1.2rem' }}>✓</span> {language === 'KR' ? '현재 활성화 됨' : 'ALREADY ACTIVATED'}</div>
                                         <div style={{ display: 'flex', gap: '10px' }}>
-                                            <button
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
                                                 disabled={equippedAltarSkills.includes(selectedTreeSkill) || equippedAltarSkills.length >= 4}
-                                                style={{
-                                                    flex: 1, backgroundColor: (equippedAltarSkills.includes(selectedTreeSkill) || equippedAltarSkills.length >= 4) ? '#7f8c8d' : '#3498db',
-                                                    color: '#fff', border: 'none', padding: '10px', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif", fontSize: '1.1rem',
-                                                    cursor: (equippedAltarSkills.includes(selectedTreeSkill) || equippedAltarSkills.length >= 4) ? 'default' : 'pointer', borderRadius: '6px'
-                                                }} onClick={() => handleEquipToSlot(selectedTreeSkill)}
+                                                style={{ flex: 1, fontSize: '1.1rem' }}
+                                                onClick={() => handleEquipToSlot(selectedTreeSkill)}
                                             >
                                                 {language === 'KR' ? (equippedAltarSkills.includes(selectedTreeSkill) ? '이미 장착됨' : '< 슬롯에 적용하기') : '< APPLY TO SLOT'}
-                                            </button>
-                                            <button style={{
-                                                flex: 1, backgroundColor: '#e74c3c', color: '#fff', border: 'none', padding: '10px', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif", fontSize: '1.1rem', cursor: 'pointer', borderRadius: '6px'
-                                            }} onClick={() => { handleReturn(selectedTreeSkill); setSelectedTreeSkill(null); }}>
+                                            </Button>
+                                            <Button
+                                                variant="danger"
+                                                size="sm"
+                                                style={{ flex: 1, fontSize: '1.1rem' }}
+                                                onClick={() => { handleReturn(selectedTreeSkill); setSelectedTreeSkill(null); }}
+                                            >
                                                 {language === 'KR' ? '비활성화 (RETURN)' : 'REFUND / RETURN'}
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 )}
@@ -500,9 +502,9 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                     <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 10001, display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setShowUnequipConfirm(null)}>
                         <div style={{ width: '320px', backgroundColor: '#1a1a2e', border: '2px solid #e74c3c', borderRadius: '12px', padding: '24px', textAlign: 'center', color: '#fff', fontFamily: "'Noto Sans KR', sans-serif" }} onClick={e => e.stopPropagation()}>
                             <h3 style={{ fontSize: '1.3rem', marginBottom: '20px', whiteSpace: 'pre-line', fontWeight: 'bold' }}>{language === 'KR' ? '해당 스킬을\n해제 하시겠습니까?' : 'Do you want to\nunequip this skill?'}</h3>
-                            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                                <button style={{ width: '100px', padding: '10px', backgroundColor: '#e74c3c', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => handleUnequipSlot(showUnequipConfirm)}>YES</button>
-                                <button style={{ width: '100px', padding: '10px', backgroundColor: '#7f8c8d', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }} onClick={() => setShowUnequipConfirm(null)}>NO</button>
+                             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                                <Button variant="danger" size="sm" onClick={() => handleUnequipSlot(showUnequipConfirm)}>YES</Button>
+                                <Button variant="secondary" size="sm" onClick={() => setShowUnequipConfirm(null)}>NO</Button>
                             </div>
                         </div>
                     </div>

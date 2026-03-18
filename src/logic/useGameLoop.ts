@@ -2294,26 +2294,31 @@ export const useGameLoop = () => {
         // v2.4.0: Simplified check to just stageNum >= 10. If player clears stage 10 or 11, the game ends.
         // v2.4.2: Revised Victory & Difficulty Unlock Logic with Popup
         if (stageNum >= 10) {
-            if (store.difficulty === Difficulty.EASY) {
-                // Easy Clear: Stage 10 -> Unlock Normal -> Show Popup
-                store.unlockDifficulty(Difficulty.NORMAL);
-                store.setClearPopupDifficulty(Difficulty.EASY);
-            } else if (store.difficulty === Difficulty.NORMAL) {
-                if (store.chapterNum === '1') {
-                    // Normal Chapter 1: Stage 10 -> Chapter Select
-                    setGameState(GameState.CHAPTER_SELECT);
-                } else {
-                    // Normal Chapter 2: Stage 10 -> Unlock Hard -> Show Popup
+            if (store.chapterNum === '1') {
+                // Chapter 1 Clear: Go to Chapter Select (Desert/Deep Forest)
+                setGameState(GameState.CHAPTER_SELECT);
+            } else if (store.chapterNum === '2A') {
+                // Chapter 2A Clear: Go to Chapter 3A Cave
+                store.setNextChapterId('3A');
+                setGameState(GameState.CHAPTER_NEXT);
+            } else if (store.chapterNum === '2B') {
+                // Chapter 2B Clear: Go to Chapter 3B Swamp
+                store.setNextChapterId('3B');
+                setGameState(GameState.CHAPTER_NEXT);
+            } else if (store.chapterNum === '3A' || store.chapterNum === '3B') {
+                // Final Chapter 3 Clear: Unlock Difficulty & Show Congratulations Popup
+                if (store.difficulty === Difficulty.EASY) {
+                    store.unlockDifficulty(Difficulty.NORMAL);
+                    store.setClearPopupDifficulty(Difficulty.EASY);
+                } else if (store.difficulty === Difficulty.NORMAL) {
                     store.unlockDifficulty(Difficulty.HARD);
                     store.setClearPopupDifficulty(Difficulty.NORMAL);
-                }
-            } else {
-                // Hard/Hell or fallbacks (Keep existing end-game behavior)
-                if (store.difficulty === Difficulty.HARD) {
+                } else if (store.difficulty === Difficulty.HARD) {
                     store.unlockDifficulty(Difficulty.HELL);
-                }
-                if (store.chapterNum === '1') {
-                    setGameState(GameState.CHAPTER_SELECT);
+                    store.setClearPopupDifficulty(Difficulty.HARD);
+                } else {
+                    // HELL Clear or fallback
+                    store.setClearPopupDifficulty(Difficulty.HELL);
                 }
             }
         } else {
@@ -2431,9 +2436,16 @@ export const useGameLoop = () => {
     const showGuidePopup = async (data: GuidePopupData) => {
         const store = useGameStore.getState();
         store.setGuidePopup(data);
-        // Wait for user to dismiss
-        while (useGameStore.getState().guidePopup !== null) {
+        // Wait for user to dismiss, with safety timeout (max ~30s)
+        let waitCount = 0;
+        const maxWait = 150; // 150 * 200ms = 30 seconds
+        while (useGameStore.getState().guidePopup !== null && waitCount < maxWait) {
             await wait(200);
+            waitCount++;
+        }
+        // Force-close if timed out
+        if (useGameStore.getState().guidePopup !== null) {
+            useGameStore.getState().setGuidePopup(null);
         }
         await wait(300);
     };

@@ -1,8 +1,9 @@
 // storage/SaveManager.ts
 
 import { GameData, SlotInfo } from '../types/GameData';
+import { storageKey } from '../utils/buildTarget';
 
-const SAVE_KEY_PREFIX = 'turnsarsah_slot_';
+const SAVE_KEY_PREFIX = storageKey('slot_');
 
 export class SaveManager {
   static save(slot: number, data: GameData): void {

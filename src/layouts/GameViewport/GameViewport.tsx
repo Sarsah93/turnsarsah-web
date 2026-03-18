@@ -104,7 +104,7 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
                     onClick={toggleFullscreen}
                     title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
                 >
-                    {isFullscreen ? '缩小' : '⛶'}
+                    {isFullscreen ? '✕' : '⛶'}
                 </button>
             )}
         </div>

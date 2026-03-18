@@ -56,7 +56,7 @@ export function calculateBaseDamage(
     const sortedValues = cards.map(c => {
       const isBannedRank = c.rank && bannedRanks.includes(c.rank);
       const isBannedSuit = c.suit && c.suit === bannedSuit;
-      if (isBannedRank || isBannedSuit) return 0;
+      if (isBannedRank || isBannedSuit || c.isBanned) return 0;
       if (c.isJoker) return 14;
       return RANK_VALUES[c.rank!] || 0;
     }).sort((a, b) => b - a);

@@ -1,50 +1,41 @@
 // components/Common/Button.tsx
 
 import React from 'react';
-import '../styles/Button.css';
+import '../../styles/components/button.css';
 
 export interface ButtonProps {
   label?: string;
   text?: string;
+  children?: React.ReactNode;
   onClick?: () => void;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'overlay';
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
-  hover?: boolean;
-  alpha?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   label,
   text,
+  children,
   onClick,
   variant = 'primary',
   size = 'md',
   disabled = false,
-  hover = false,
-  alpha = 1,
   className = '',
+  style
 }) => {
-  const displayText = label || text || 'Button';
+  const content = children || label || text || 'Button';
 
   return (
     <button
       className={`btn btn-${variant} btn-${size} ${className}`}
       onClick={onClick}
       disabled={disabled}
-      style={{
-        opacity: alpha,
-        pointerEvents: disabled ? 'none' : 'auto',
-      }}
-      onMouseEnter={(e) => {
-        if (!disabled) e.currentTarget.classList.add('btn-hover');
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.classList.remove('btn-hover');
-      }}
+      style={style}
     >
-      {displayText}
+      {content}
     </button>
   );
 };

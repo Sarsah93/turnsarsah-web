@@ -8,6 +8,7 @@ import { RANK_VALUES } from '../constants/cards';
 import { Deck } from '../logic/Deck';
 import { CHAPTERS } from '../constants/stages';
 import { applyCondition, clearConditions } from '../logic/conditions';
+import { storageKey } from '../utils/buildTarget';
 import { SaveManager } from '../utils/SaveManager';
 import { Language, TRANSLATIONS } from '../constants/translations';
 import { GuidePopupData } from '../constants/guideData';
@@ -230,6 +231,9 @@ interface GameStoreState {
   stage10RuleText: string;
   setStage10RuleText: (text: string) => void;
 
+  // Bug fix: prevent ATK_UP from stacking on load/reapply
+  stageRulesApplied: boolean;
+
   // Difficulty System
   difficulty: Difficulty;
   setDifficulty: (diff: Difficulty) => void;
@@ -306,10 +310,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setIsProcessing: (isProcessing) => set({ isProcessing }),
 
   // Font Size
-  fontSize: (localStorage.getItem('turnsarsah_font_size') as 'LARGE' | 'NORMAL' | 'SMALL') || 'LARGE',
+  fontSize: (localStorage.getItem(storageKey('font_size')) as 'LARGE' | 'NORMAL' | 'SMALL') || 'LARGE',
   setFontSize: (fontSize) => {
     set({ fontSize });
-    localStorage.setItem('turnsarsah_font_size', fontSize);
+    localStorage.setItem(storageKey('font_size'), fontSize);
   },
 
   // Stage
@@ -323,6 +327,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setCurrentTurn: (currentTurn) => set({ currentTurn }),
   stage10RuleText: '',
   setStage10RuleText: (stage10RuleText) => set({ stage10RuleText }),
+  stageRulesApplied: false,
   // Hidden Scenario
   ch1PerfectCount: 0,
   specialQualify: false,
@@ -348,10 +353,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setTutorialHighlights: (tutorialHighlights) => set({ tutorialHighlights }),
 
   // Localization
-  language: (localStorage.getItem('turnsarsah_lang') as Language) || 'KR',
+  language: (localStorage.getItem(storageKey('lang')) as Language) || 'KR',
   setLanguage: (language) => {
     set({ language });
-    localStorage.setItem('turnsarsah_lang', language);
+    localStorage.setItem(storageKey('lang'), language);
   },
 
   // Entities
@@ -428,10 +433,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   incrementDyschromatopsiaUses: () => set((state) => ({ dyschromatopsiaUses: Math.min(2, state.dyschromatopsiaUses + 1) })),
 
   // v2.5.0: Game Speed
-  gameSpeed: Number(localStorage.getItem('turnsarsah_game_speed')) || 1.0,
+  gameSpeed: Number(localStorage.getItem(storageKey('game_speed'))) || 1.0,
   setGameSpeed: (gameSpeed) => {
     set({ gameSpeed });
-    localStorage.setItem('turnsarsah_game_speed', gameSpeed.toString());
+    localStorage.setItem(storageKey('game_speed'), gameSpeed.toString());
   },
 
   holdBreathCount3B: 0,
@@ -999,6 +1004,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         deck: newDeck,
         isPaused: false,
         stage10RuleText: '',
+        stageRulesApplied: false,
         puzzleTarget: 0,
         message: '',
         dyschromatopsiaUses: 0,
@@ -1091,7 +1097,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             ruleDescs.push('POISON');
           } else if (pick === 'ATK_UP') {
             activeStageIds.push(7);
-            if (turn === 0) {
+            // Bug fix: prevent ATK_UP stacking on load/reapply
+            // Only apply +10 atk if not already applied for this stage instance
+            if (turn === 0 && !state.stageRulesApplied) {
               set({ bot: { ...bot, atk: bot.atk + 10 } });
             }
             ruleDescs.push('ATK_UP');
@@ -1104,7 +1112,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
         // v2.2.1: Dynamic Rule Text - Hide REGEN/REDUCE if Awakened
         const isAwakened = bot.conditions.has('Awakening');
-        set({ stage10RuleText: t.RULES.CH1_RULE_10 });
+        set({ stage10RuleText: t.RULES.CH1_RULE_10, stageRulesApplied: true });
       } else if (stageId === 99) {
         // DEBUG: PETRIFIED status stage
         set({ stage10RuleText: 'DEBUG RULE: APPLY PETRIFY STATUS' });
@@ -1654,6 +1662,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       deck: newDeck,
       isPaused: false,
       stage10RuleText: '',
+      stageRulesApplied: false,
       puzzleTarget: 0,
       message: '',
       clearPopupDifficulty: null,

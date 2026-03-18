@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Modal from '../Common/Modal';
-import { BlockButton } from '../BlockButton';
+import { Button } from '../Common/Button';
 import { useGameStore } from '../../state/gameStore';
 import { TRANSLATIONS } from '../../constants/translations';
 import '../styles/ConfirmationPopup.css';
@@ -32,9 +32,9 @@ export const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
     <Modal title="" onClose={onNo} showCloseButton={false}>
       <div className="confirmation-content">
         <p className="confirmation-message">{message}</p>
-        <div className="confirmation-buttons">
-          <BlockButton text={finalYes} onClick={onYes || (() => { })} width="140px" />
-          <BlockButton text={finalNo} onClick={onNo || (() => { })} width="140px" />
+        <div className="confirmation-buttons" style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '20px' }}>
+          <Button variant="overlay" size="md" onClick={onYes || (() => { })} style={{ width: '140px', borderColor: '#e74c3c', color: '#e74c3c' }}>{finalYes}</Button>
+          <Button variant="overlay" size="md" onClick={onNo || (() => { })} style={{ width: '140px', borderColor: '#bdc3c7', color: '#ecf0f1' }}>{finalNo}</Button>
         </div>
       </div>
     </Modal>

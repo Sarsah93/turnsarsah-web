@@ -5,6 +5,7 @@ import React from 'react';
 import { useGameStore } from '../state/gameStore';
 import { GameState } from '../constants/gameConfig';
 import { TRANSLATIONS } from '../constants/translations';
+import { Button } from './Common/Button';
 
 export const ChapterNextPopup: React.FC = () => {
     const { nextChapterId, initGame, triggerTransition, setGameState, language, chapterNum } = useGameStore();
@@ -113,33 +114,19 @@ export const ChapterNextPopup: React.FC = () => {
                 }} />
 
                 {/* 이동 버튼 */}
-                <button
+                <Button
+                    variant="overlay"
+                    size="lg"
                     onClick={handleEnter}
                     style={{
                         marginTop: '8px',
-                        padding: '14px 60px',
-                        fontSize: '1.8rem',
-                        fontFamily: "'Bebas Neue', sans-serif",
-                        letterSpacing: '3px',
-                        backgroundColor: '#1d3557',
-                        color: '#a8dadc',
-                        border: '2px solid #a8dadc',
-                        borderRadius: '10px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 4px 20px rgba(168,218,220,0.2)',
-                    }}
-                    onMouseEnter={e => {
-                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#a8dadc';
-                        (e.currentTarget as HTMLButtonElement).style.color = '#1d3557';
-                    }}
-                    onMouseLeave={e => {
-                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1d3557';
-                        (e.currentTarget as HTMLButtonElement).style.color = '#a8dadc';
+                        width: '240px',
+                        borderColor: '#f1c40f',
+                        color: '#f1c40f',
                     }}
                 >
                     {t.UI.CHAPTER_NEXT_ENTER}
-                </button>
+                </Button>
             </div>
 
             <style>{`

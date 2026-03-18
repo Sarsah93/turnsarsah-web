@@ -6,6 +6,7 @@ import { useGameLoop } from '../../logic/useGameLoop';
 import { DamageText } from './DamageText';
 import { AudioManager } from '../../utils/AudioManager';
 import { BlockButton } from '../BlockButton';
+import { Button } from '../Common/Button';
 import { useGameStore } from '../../state/gameStore';
 import { GameState } from '../../constants/gameConfig';
 import { TutorialOverlay } from '../Tutorial/TutorialOverlay';
@@ -58,7 +59,9 @@ export const BattleScreen: React.FC = () => {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                if (store.gamePhase === 'BOSS_DEFEATED') return; // Block during victory
+                // Bug fix: read latest state to avoid stale closure
+                const currentPhase = useGameStore.getState().gamePhase;
+                if (currentPhase === 'BOSS_DEFEATED') return; // Block during victory
                 setActiveMenu(prev => prev === 'NONE' ? 'PAUSE' : 'NONE');
             }
         };
@@ -376,54 +379,55 @@ export const BattleScreen: React.FC = () => {
             )}
 
             {/* Interaction Overlays */}
-            <button
+            <Button
                 className="mobile-menu-btn"
+                variant="overlay"
                 onClick={() => {
                     if (gamePhase === 'BOSS_DEFEATED') return;
                     setActiveMenu('PAUSE');
                 }}
+                disabled={gamePhase === 'BOSS_DEFEATED'}
                 style={{
                     position: 'absolute', bottom: '40px', right: '40px',
-                    zIndex: 5000, 
-                    backgroundColor: gamePhase === 'BOSS_DEFEATED' ? 'rgba(50,50,50,0.5)' : 'rgba(0,0,0,0.85)',
-                    color: gamePhase === 'BOSS_DEFEATED' ? '#7f8c8d' : '#f1c40f', 
-                    border: `3px solid ${gamePhase === 'BOSS_DEFEATED' ? '#7f8c8d' : '#f1c40f'}`,
-                    borderRadius: '16px', width: '80px', height: '80px',
+                    zIndex: 5000,
+                    width: '80px', height: '80px',
+                    minWidth: 'auto',
+                    fontSize: '42px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '42px', 
-                    cursor: gamePhase === 'BOSS_DEFEATED' ? 'default' : 'pointer',
-                    boxShadow: '0 0 25px rgba(0,0,0,0.7)',
+                    padding: 0,
+                    borderColor: '#f1c40f',
+                    color: '#f1c40f',
                     fontFamily: 'BebasNeue, Arial',
                     opacity: gamePhase === 'BOSS_DEFEATED' ? 0.5 : 1
                 }}
             >
                 三
-            </button>
+            </Button>
  
             {/* v2.5.0: Speed Toggle Button - Moved to the left of Pause Button */}
-            <button
+            <Button
                 className="speed-toggle-btn"
+                variant="overlay"
                 onClick={() => store.setGameSpeed(store.gameSpeed === 1.0 ? 1.5 : 1.0)}
                 style={{
                     position: 'absolute', bottom: '50px', right: '140px',
-                    zIndex: 5000, 
-                    backgroundColor: 'rgba(0,0,0,0.85)',
-                    color: store.gameSpeed === 1.5 ? '#f39c12' : '#ecf0f1',
-                    border: `3px solid ${store.gameSpeed === 1.5 ? '#f39c12' : '#bdc3c7'}`,
-                    borderRadius: '16px', 
+                    zIndex: 5000,
                     width: '80px', height: '60px',
+                    minWidth: 'auto',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '24px', cursor: 'pointer',
-                    boxShadow: '0 0 25px rgba(0,0,0,0.7)',
+                    fontSize: '24px',
                     fontFamily: 'BebasNeue, Arial',
                     fontWeight: 'bold',
+                    padding: 0,
+                    borderColor: store.gameSpeed === 1.5 ? '#f39c12' : '#bdc3c7',
+                    color: store.gameSpeed === 1.5 ? '#f39c12' : '#ecf0f1',
                     transition: 'all 0.2s ease-in-out',
                     transform: store.gamePhase !== 'IDLE' ? 'scale(0.9)' : 'scale(1)',
                     opacity: store.gamePhase !== 'IDLE' ? 0.8 : 1
                 }}
             >
                 {store.gameSpeed === 1.0 ? '1.0x' : '1.5x'}
-            </button>
+            </Button>
 
             {isTutorial && (
                 <TutorialOverlay

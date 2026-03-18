@@ -1,6 +1,7 @@
 // components/Common/Modal.tsx
 
 import React from 'react';
+import { Button } from './Button';
 import '../styles/Modal.css';
 
 interface ModalProps {
@@ -34,9 +35,26 @@ export const Modal: React.FC<ModalProps> = ({
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
           {showCloseButton && (
-            <button className="modal-close" onClick={onClose}>
+            <Button
+              className="modal-close"
+              variant="overlay"
+              size="sm"
+              onClick={onClose}
+              style={{
+                width: '32px',
+                height: '32px',
+                minWidth: 'auto',
+                padding: 0,
+                fontSize: '1.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderColor: '#bdc3c7',
+                color: '#ecf0f1'
+              }}
+            >
               ✕
-            </button>
+            </Button>
           )}
         </div>
         <div className="modal-body">{children}</div>

@@ -1,8 +1,9 @@
 import { obfuscateData, deobfuscateData } from './encryption';
 import { ALTAR_SKILLS, ALTAR_PATHS } from '../constants/altarSystem';
 import { Difficulty } from '../constants/gameConfig';
+import { storageKey } from './buildTarget';
 
-const ALTAR_STORAGE_KEY = 'turnsarsah_altar_data';
+const ALTAR_STORAGE_KEY = storageKey('altar_data');
 
 export interface DifficultyAltarData {
     ownedTrophies: string[];

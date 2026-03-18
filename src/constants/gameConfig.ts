@@ -232,4 +232,5 @@ export const IMMUNE_DURATION = 3;
 export const REGEN_DURATION = 5;
 
 // Difficulty Unlock Persistence Key
-export const UNLOCKED_DIFFICULTIES_KEY = 'turnsarsah_unlocked_difficulties';
+import { storageKey } from '../utils/buildTarget';
+export const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');

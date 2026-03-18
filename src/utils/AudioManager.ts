@@ -1,20 +1,21 @@
 // utils/AudioManager.ts
 import { useGameStore } from '../state/gameStore';
+import { storageKey } from './buildTarget';
 
 export class AudioManager {
     private static bgmVolume: number = (() => {
-        const saved = localStorage.getItem('bgmVolume');
+        const saved = localStorage.getItem(storageKey('bgmVolume'));
         return saved !== null ? Number(saved) : 0.5;
     })();
     private static sfxVolume: number = (() => {
-        const saved = localStorage.getItem('sfxVolume');
+        const saved = localStorage.getItem(storageKey('sfxVolume'));
         return saved !== null ? Number(saved) : 0.5;
     })();
     private static bgmAudio: HTMLAudioElement | null = null;
 
     public static setBGMVolume(volume: number) {
         this.bgmVolume = Math.max(0, Math.min(1, volume));
-        localStorage.setItem('bgmVolume', this.bgmVolume.toString());
+        localStorage.setItem(storageKey('bgmVolume'), this.bgmVolume.toString());
         if (this.bgmAudio) {
             this.bgmAudio.volume = this.bgmVolume;
         }
@@ -22,7 +23,7 @@ export class AudioManager {
 
     public static setSFXVolume(volume: number) {
         this.sfxVolume = Math.max(0, Math.min(1, volume));
-        localStorage.setItem('sfxVolume', this.sfxVolume.toString());
+        localStorage.setItem(storageKey('sfxVolume'), this.sfxVolume.toString());
     }
 
     public static getBGMVolume(): number {
