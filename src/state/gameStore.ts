@@ -91,6 +91,10 @@ interface GameStoreState {
   currentTurn: number;
   setCurrentTurn: (turn: number) => void;
 
+  // v3.0: Combat stabilization
+  isProcessing: boolean;
+  setIsProcessing: (val: boolean) => void;
+
   // Entities
   player: Character;
   bot: Character;
@@ -296,6 +300,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setGameState: (gameState) => set({ gameState }),
   gamePhase: 'IDLE',
   setGamePhase: (gamePhase) => set({ gamePhase }),
+
+  // Combat stabilization
+  isProcessing: false,
+  setIsProcessing: (isProcessing) => set({ isProcessing }),
 
   // Font Size
   fontSize: (localStorage.getItem('turnsarsah_font_size') as 'LARGE' | 'NORMAL' | 'SMALL') || 'LARGE',
@@ -1376,10 +1384,24 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   saveGame: (slot: number) => {
     const state = get();
+    // Block saving during tutorial or active combat processing
     if (state.isTutorial) {
       console.log("Saving is blocked during tutorial.");
       return;
     }
+    if (state.isProcessing) {
+      const msg = state.language === 'KR' ? "전투 중에는 저장할 수 없습니다." : "Cannot save during combat.";
+      state.setMessage(msg);
+      console.log(msg);
+      return;
+    }
+
+    // Normalization for STAGE_CLEAR (Boss HP <= 0)
+    const isBossDefeated = state.bot.hp <= 0;
+    const finalGamePhase = isBossDefeated ? 'BOSS_DEFEATED' : state.gamePhase;
+    // When normalization, clear selected cards and prevent further input
+    const finalPlayerHand = isBossDefeated ? state.playerHand.map(c => c) : state.playerHand;
+
     SaveManager.saveGame(slot, {
       chapterNum: state.chapterNum,
       stageNum: state.stageNum,
@@ -1387,7 +1409,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       currentTurn: state.currentTurn,
       player: state.player,
       bot: state.bot,
-      playerHand: state.playerHand,
+      playerHand: finalPlayerHand,
       deckState: {
         cards: state.deck.cards,
         jokerProbability: state.deck.jokerProbability,
@@ -1404,7 +1426,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       ch2SpecialQualify: state.ch2SpecialQualify,
       hasStage6Bonus: state.hasStage6Bonus,
       gameState: state.gameState,
-      gamePhase: state.gamePhase,
+      gamePhase: finalGamePhase,
     });
   },
 

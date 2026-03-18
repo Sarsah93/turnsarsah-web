@@ -22,7 +22,7 @@ import { BattleField } from './BattleField';
 export const BattleScreen: React.FC = () => {
     const {
         message, damageTexts, screenEffect, onDamageTextComplete,
-        executePlayerAttack, executeCardSwap, startInitialDraw
+        runCombatSequence, executeCardSwap, startInitialDraw
     } = useGameLoop();
     const store = useGameStore();
     const {
@@ -112,7 +112,7 @@ export const BattleScreen: React.FC = () => {
                 setTutorialStep(12);
             }
         }
-        executePlayerAttack(selectedCards);
+        runCombatSequence(selectedCards);
     };
 
     const handleSwap = () => {
@@ -166,6 +166,7 @@ export const BattleScreen: React.FC = () => {
     }, [bossPos, cardsPos, store.scorePreviewHUDPos.x, store.scorePreviewHUDPos.y]);
 
     const handleSaveGame = (slot: number) => {
+        if (store.isProcessing) return; // gameStore.saveGame에서 이미 메시지를 처리하므로 여기서 중단
         store.saveGame(slot);
         setActiveMenu('NONE');
         store.setMessage(t.UI.SAVE_SUCCESS);

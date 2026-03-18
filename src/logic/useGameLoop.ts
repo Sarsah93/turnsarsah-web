@@ -283,6 +283,18 @@ export const useGameLoop = () => {
         }
 
     };
+    const runCombatSequence = async (selectedIndices: number[]) => {
+        if (useGameStore.getState().isProcessing) return;
+        const { setIsProcessing } = useGameStore.getState();
+        setIsProcessing(true);
+        try {
+            await executePlayerAttack(selectedIndices);
+        } finally {
+            useGameStore.getState().setIsProcessing(false);
+        }
+    };
+
+
     const executePlayerAttack = async (selectedIndices: number[]) => {
         const store = useGameStore.getState();
         if (store.gameState !== GameState.BATTLE && store.gameState !== GameState.TUTORIAL) return;
@@ -701,7 +713,9 @@ export const useGameLoop = () => {
         // 2A: Utilization (50% chance to inflict Bleed or Poison on boss)
         if (store.equippedAltarSkills.includes('2A') && damage > 0 && !isPuzzleCorrect) {
             if (Math.random() < 0.5) {
-                const freshBotCondition = useGameStore.getState().bot.conditions;
+                // Critical Fix: Always use fresh state for HP and conditions to prevent rollbacks
+                const freshBot = useGameStore.getState().bot; 
+                const freshBotCondition = freshBot.conditions;
                 const hasBleed = freshBotCondition.has('Bleeding') || freshBotCondition.has('Heavy Bleeding');
                 const hasPoison = freshBotCondition.has('Poisoning');
 
@@ -1730,6 +1744,11 @@ export const useGameLoop = () => {
         }
 
         await refillHandSequentially();
+        
+        // v2.5.0: Final settling wait to ensure all UI animations (floating text, cards) are finished 
+        // before releasing the isProcessing lock and switching to IDLE.
+        await wait(500); 
+
         const finalStore = useGameStore.getState();
         finalStore.applyStageRules(finalStore.chapterNum, stageNum, nextTurn);
         finalStore.setGamePhase('IDLE');
@@ -1926,7 +1945,7 @@ export const useGameLoop = () => {
                 setMessage(toastMsg);
                 playConditionSound(cond);
                 const dmg = 10;
-                setBotHp(Math.max(0, bot.hp - dmg));
+                setBotHp(Math.max(0, useGameStore.getState().bot.hp - dmg)); // Stale bot.hp -> 최신 상태 조회
                 showDamageText('BOT', `-${dmg}`, '#c0392b');
                 await wait(800);
             } else if (cond === 'Regenerating') {
@@ -2432,7 +2451,7 @@ export const useGameLoop = () => {
         damageTexts,
         screenEffect,
         onDamageTextComplete,
-        executePlayerAttack,
+        runCombatSequence,
         executeBotTurn,
         executeCardSwap,
         startInitialDraw

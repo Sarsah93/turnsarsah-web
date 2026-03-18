@@ -24,7 +24,7 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   onResume,
   onQuit,
 }) => {
-  const { language } = useGameStore();
+  const { language, isProcessing } = useGameStore();
   const t = TRANSLATIONS[language];
 
   return (
@@ -38,7 +38,13 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
     >
       <div className="pause-menu-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center', padding: '20px' }}>
         <BlockButton text={t.UI.RESUME} onClick={onResume || onClose || (() => { })} width="220px" height="40px" />
-        <BlockButton text={t.UI.SAVE_GAME} onClick={onSave || (() => { })} width="220px" height="40px" />
+        <BlockButton 
+          text={t.UI.SAVE_GAME} 
+          onClick={isProcessing ? (() => { }) : (onSave || (() => { }))} 
+          width="220px" 
+          height="40px" 
+          disabled={isProcessing}
+        />
         <BlockButton text={t.SETTINGS.TITLE} onClick={onSettings || (() => { })} width="220px" height="40px" />
         <BlockButton text={t.UI.BACK_TO_MAIN} onClick={onQuit || (() => { })} width="220px" height="40px" fontSize="1.5rem" />
       </div>
