@@ -25,9 +25,43 @@
   max-width: 520px;
   width: 90%;
   max-height: 80vh;
-  overflow-y: auto;
+  overflow: hidden;
   transition: transform 0.4s ease-out;
   font-family: 'Noto Sans KR', 'Bebas Neue', sans-serif;
+  position: relative;
+}
+
+/* Inner scrollable area */
+.guide-popup-scroll-area {
+  width: 100%;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Firefox scrollbar */
+  scrollbar-width: auto;
+  scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+/* Webkit scrollbar — wider and higher contrast */
+.guide-popup-scroll-area::-webkit-scrollbar {
+  width: 10px;
+}
+
+.guide-popup-scroll-area::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.guide-popup-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.guide-popup-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .guide-popup-badge {
@@ -74,23 +108,52 @@
   margin: 0;
 }
 
+/* Fixed bottom area (divider + confirm button) */
+.guide-popup-bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
 .guide-popup-btn-wrap {
   width: 100%;
   max-width: 240px;
-  margin-top: 16px;
+  margin: 16px auto 0;
+  display: flex;
+  justify-content: center;
 }
 
-/* Scrollbar styling */
-.guide-popup-card::-webkit-scrollbar {
-  width: 6px;
+/* Scroll hint indicator — flow-based, sits between scroll area and bottom */
+.guide-popup-scroll-hint {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 6px 0 2px;
+  /* Subtle top fade shadow to hint at more content above */
+  box-shadow: 0 -12px 16px -8px rgba(26, 26, 46, 0.9);
+  position: relative;
+  z-index: 2;
 }
 
-.guide-popup-card::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
+.guide-popup-scroll-hint-text {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
 }
 
-.guide-popup-card::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+.guide-popup-scroll-hint-arrow {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.6rem;
+  animation: guideScrollBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes guideScrollBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
 }
