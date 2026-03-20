@@ -51,4 +51,5 @@
 .save-slot button {
   font-size: 0.9rem !important;
   padding: 5px 10px !important;
+  min-width: 0 !important;
 }

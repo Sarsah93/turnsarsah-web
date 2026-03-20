@@ -91,10 +91,11 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
                 <BlockButton
                   text={t.UI.DELETE}
                   onClick={() => handleDelete(index)}
-                  width="80px"
+                  width="55px"
+                  height="32px"
                   variant="danger"
-                  fontSize="1.4rem"
-                  style={{ marginLeft: 'auto', marginRight: '5px' }}
+                  fontSize="1.6rem"
+                  style={{ marginLeft: 'auto', marginRight: '5px', flexShrink: 0 }}
                 />
               )}
             </div>
