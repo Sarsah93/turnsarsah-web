@@ -17,14 +17,14 @@
 .guide-popup-card {
   background-color: #1a1a2e;
   border: 2px solid #a8dadc;
-  padding: 32px 40px;
+  padding: 20px 28px;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   max-width: 520px;
   width: 90%;
-  max-height: 92vh;
+  max-height: 850px;
   overflow: hidden;
   transition: transform 0.4s ease-out;
   font-family: 'Noto Sans KR', 'Bebas Neue', sans-serif;
@@ -65,19 +65,19 @@
 }
 
 .guide-popup-badge {
-  padding: 8px 24px;
+  padding: 6px 20px;
   border-radius: 20px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1a1a2e;
   letter-spacing: 1px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .guide-popup-title {
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   font-weight: bold;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
   text-align: center;
   font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
   letter-spacing: 1px;
@@ -87,14 +87,14 @@
 .guide-popup-divider {
   width: 100%;
   border-top: 1px solid rgba(168, 218, 220, 0.25);
-  margin: 16px 0;
+  margin: 10px 0;
 }
 
 .guide-popup-body {
   width: 100%;
   text-align: left;
   color: #ecf0f1;
-  font-size: 2rem;
+  font-size: 1.8rem;
   line-height: 1.5;
   word-break: keep-all;
 }
@@ -121,7 +121,7 @@
 .guide-popup-btn-wrap {
   width: 100%;
   max-width: 240px;
-  margin: 16px auto 0;
+  margin: 10px auto 0;
   display: flex;
   justify-content: center;
 }
