@@ -273,7 +273,7 @@ export const BattleScreen: React.FC = () => {
                     position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
                     color: '#c0392b', fontSize: '10rem', fontFamily: 'BebasNeue', fontWeight: 'bold',
                     textShadow: '0 0 30px #e74c3c, 4px 4px 0 #000',
-                    zIndex: 1000, textAlign: 'center'
+                    zIndex: 2000, textAlign: 'center'
                 }}>
                     {t.COMBAT.DEFEAT}
                 </div>

@@ -24,7 +24,7 @@
   align-items: center;
   max-width: 520px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 92vh;
   overflow: hidden;
   transition: transform 0.4s ease-out;
   font-family: 'Noto Sans KR', 'Bebas Neue', sans-serif;
@@ -95,7 +95,7 @@
   text-align: left;
   color: #ecf0f1;
   font-size: 2rem;
-  line-height: 1.8;
+  line-height: 1.5;
   word-break: keep-all;
 }
 

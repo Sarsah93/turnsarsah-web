@@ -2295,8 +2295,14 @@ export const useGameLoop = () => {
         // v2.4.2: Revised Victory & Difficulty Unlock Logic with Popup
         if (stageNum >= 10) {
             if (store.chapterNum === '1') {
-                // Chapter 1 Clear: Go to Chapter Select (Desert/Deep Forest)
-                setGameState(GameState.CHAPTER_SELECT);
+                if (store.difficulty === Difficulty.EASY) {
+                    // EASY: Chapter 1 only → unlock NORMAL, show congratulations popup
+                    store.unlockDifficulty(Difficulty.NORMAL);
+                    store.setClearPopupDifficulty(Difficulty.EASY);
+                } else {
+                    // NORMAL+: Go to Chapter Select (Desert/Deep Forest)
+                    setGameState(GameState.CHAPTER_SELECT);
+                }
             } else if (store.chapterNum === '2A') {
                 // Chapter 2A Clear: Go to Chapter 3A Cave
                 store.setNextChapterId('3A');
@@ -2306,11 +2312,9 @@ export const useGameLoop = () => {
                 store.setNextChapterId('3B');
                 setGameState(GameState.CHAPTER_NEXT);
             } else if (store.chapterNum === '3A' || store.chapterNum === '3B') {
-                // Final Chapter 3 Clear: Unlock Difficulty & Show Congratulations Popup
-                if (store.difficulty === Difficulty.EASY) {
-                    store.unlockDifficulty(Difficulty.NORMAL);
-                    store.setClearPopupDifficulty(Difficulty.EASY);
-                } else if (store.difficulty === Difficulty.NORMAL) {
+                // Final Chapter 3 Clear: Unlock next Difficulty & Show Congratulations Popup
+                // (EASY never reaches Chapter 3 — it ends at Chapter 1)
+                if (store.difficulty === Difficulty.NORMAL) {
                     store.unlockDifficulty(Difficulty.HARD);
                     store.setClearPopupDifficulty(Difficulty.NORMAL);
                 } else if (store.difficulty === Difficulty.HARD) {
