@@ -11,12 +11,14 @@ export const BossDisplay: React.FC = () => {
 
     // Get max stages for the current chapter (v2.4.3)
     const chapterConfig = CHAPTERS[chapterNum];
-    const maxStages = chapterConfig ? Object.keys(chapterConfig.stages).filter(s => parseInt(s) < 90).length : 10;
+    let maxStages = chapterConfig ? Object.keys(chapterConfig.stages).filter(s => parseInt(s) < 90 && parseInt(s) <= 10).length : 10;
     const isSpecialStage = stageNum > 10;
+    
+    const specialText = language === 'KR' ? '스페셜 스테이지' : 'SPECIAL STAGE';
     const stageInfoText = isTutorial
         ? `TUTORIAL ${t.UI.STAGE_NUM}`
         : isSpecialStage
-            ? `${t.UI.CHAPTER_NUM} ${chapterNum} (SPECIAL)`
+            ? `${t.UI.CHAPTER_NUM} ${chapterNum} (${specialText})`
             : `${t.UI.CHAPTER_NUM} ${chapterNum} (${stageNum}/${maxStages})`;
 
     // Map difficulty to display text

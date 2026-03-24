@@ -1261,7 +1261,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       // Initial Boss Conditions for 2B
       const drMap: Record<number, number> = { 1: 5, 2: 8, 3: 10, 4: 13, 5: 11, 6: 13, 7: 15, 8: 12, 9: 17, 10: 20 };
       const drPercent = drMap[stageId];
-      if (drPercent && !bot.conditions.has('Damage Reducing')) {
+      const isAwakened2B = bot.conditions.has('Awakening');
+      if (drPercent && !bot.conditions.has('Damage Reducing') && !isAwakened2B) {
         state.addBotCondition('Damage Reducing', 9999, '', { percent: drPercent });
       }
       if (stageId === 3 && !bot.conditions.has('Avoiding')) {

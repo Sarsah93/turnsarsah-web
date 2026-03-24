@@ -140,6 +140,7 @@ export const TRANSLATIONS = {
             PLAYER_BURN: "플레이어 화상 피해!",
             PLAYER_DECAY: "플레이어 부패 피해!",
             AREA_CLEARED: "{area} 구역 정화 완료!",
+            NODE_CLEARED: "노드 정화 완료!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -247,7 +248,7 @@ export const TRANSLATIONS = {
                 DESC: "피해를 입힐 때, 입힌 피해량의 {percent}%만큼 자신의 HP를 회복한다."
             },
             SWAMPING: {
-                NAME: "늪",
+                NAME: "잠김(Swamping)",
                 DESC: "늪으로 인해, 플레이어의 회피율이 감소합니다. 5턴 이후부터는 더욱 감소하여, 회피가 어려워집니다. (챕터 진행동안, 영구 적용)"
             },
             STEM_CELL: {
@@ -542,6 +543,7 @@ export const TRANSLATIONS = {
             PLAYER_BURN: "PLAYER BURN DAMAGE!",
             PLAYER_DECAY: "PLAYER DECAY DAMAGE!",
             AREA_CLEARED: "{area} Area Purified!",
+            NODE_CLEARED: "Node Purified!",
         },
         CONDITIONS: {
             BLEEDING: {

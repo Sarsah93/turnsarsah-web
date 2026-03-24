@@ -297,7 +297,10 @@ export const BattleScreen: React.FC = () => {
                         color: '#ecf0f1', fontSize: '3.5rem', fontFamily: 'BebasNeue',
                         textShadow: '0 0 10px rgba(0,0,0,0.8)'
                     }}>
-                        {language === 'KR' ? `스테이지 ${stageNum} 클리어!` : `Stage ${stageNum} Cleared!`}
+                        {stageNum > 10 
+                            ? (language === 'KR' ? '스페셜 스테이지 클리어!' : 'Special Stage Cleared!') 
+                            : (language === 'KR' ? `스테이지 ${stageNum} 클리어!` : `Stage ${stageNum} Cleared!`)
+                        }
                     </div>
                 </div>
             )}

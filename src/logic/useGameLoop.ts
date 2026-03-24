@@ -803,10 +803,8 @@ export const useGameLoop = () => {
                 newConditions.delete('Damage Reducing');
                 newConditions.delete('Regenerating');
                 newConditions.delete('Reflection');
-                import('../logic/conditions').then(({ applyCondition }) => {
-                    applyCondition(newConditions, 'Awakening', 9999, t.CONDITIONS.AWAKENING.DESC, { atkBonus });
-                    store.syncBot({ ...freshBotBeforeAwaken, hp: freshBotBeforeAwaken.maxHp, atk: newAtk, conditions: newConditions });
-                });
+                newConditions.set('Awakening', { duration: 9999, elapsed: 0, desc: t.CONDITIONS.AWAKENING.DESC, data: { atkBonus }, type: 'AWAKENING' as any });
+                store.syncBot({ ...freshBotBeforeAwaken, hp: freshBotBeforeAwaken.maxHp, atk: newAtk, conditions: newConditions });
                 setMessage(t.COMBAT.AWAKENING);
                 AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
             }
@@ -2268,6 +2266,8 @@ export const useGameLoop = () => {
             };
             const areaName = areaNames[store.chapterNum] || '';
             victoryMsg = t.COMBAT.AREA_CLEARED.replace('{area}', areaName);
+        } else if (stageNum > 10) {
+            victoryMsg = t.COMBAT.NODE_CLEARED;
         }
 
         setMessage(victoryMsg);
@@ -2286,8 +2286,19 @@ export const useGameLoop = () => {
 
         // Hidden Scenario Stage Redirection
         let targetStage = nextStage;
-        if (stageNum === 9 && store.specialQualify && store.ch2SpecialQualify) {
-            targetStage = 11; // Special Stage
+        if ((store.chapterNum === '2A' || store.chapterNum === '2B') && stageNum === 9 && store.specialQualify && store.ch2SpecialQualify) {
+            let hasSpecialTrophy = false;
+            try {
+                const { AltarManager } = await import('../utils/AltarManager');
+                const trophyId = store.chapterNum === '2A' ? 'TR_2A_SP' : 'TR_2B_SP';
+                hasSpecialTrophy = AltarManager.hasTrophy(trophyId, store.difficulty);
+            } catch (e) {
+                console.error("Failed to check special trophy", e);
+            }
+
+            if (!hasSpecialTrophy) {
+                targetStage = 11; // Special Stage
+            }
         }
 
         // v2.3.8: Fix chapter transition for Chapter 1 (Standard nextStage is 11, which failed the !== 11 check)
