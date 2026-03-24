@@ -128,9 +128,11 @@ export const useGameLoop = () => {
                 3: '03_chimera snake human.mp3',
                 4: '04_sand niddle lizard.mp3',
                 5: '05_sand scorpion.mp3',
+                6: '06_desert vultures.mp3',
                 7: '07_sand golem.mp3',
                 8: '08_sand wyvern.mp3',
                 9: '09_sand deathworm.mp3',
+                10: '10_sphinx.mp3',
                 11: '2A_SAND DRAGON.mp3'
             };
             const filename = sfxMap[stage];
@@ -154,7 +156,7 @@ export const useGameLoop = () => {
                 11: '2B_HIGH ORC SHAMAN.mp3'
             };
             if (stage === 11) return `/assets/audio/combat/chapter 2b deep forest/${sfxMap[stage]}`;
-            return sfxMap[stage] ? `/assets/audio/stages/chapter 2B/${sfxMap[stage]}` : null;
+            return sfxMap[stage] ? `/assets/audio/combat/chapter 2b deep forest/${sfxMap[stage]}` : null;
         }
 
         if (chapter === '3A') {
@@ -1222,7 +1224,9 @@ export const useGameLoop = () => {
                 const msg = i === 1 ? t.CONDITIONS.TRIPLE_ATTACK.NAME + " x2!" : t.CONDITIONS.TRIPLE_ATTACK.NAME + " x3!";
                 store.setMessage(msg);
                 playConditionSound('Triple Attack'); // Sound for the skill activation visual
-                if (sfx) AudioManager.playSFX(sfx); // Actual attack impact sound
+                if (!(store.chapterNum === '2A' && stageNum === 6) && sfx) {
+                    AudioManager.playSFX(sfx); // Actual attack impact sound
+                }
                 setBotAnimState('ATTACK'); // Re-trigger animation state if possible (might need reset)
             }
 
