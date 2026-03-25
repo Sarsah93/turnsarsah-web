@@ -1607,6 +1607,37 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       applyCondition(botConditions, 'Triple Attack', 9999);
     }
 
+    // ── 챕터 3A 보스 패시브 (initGameWithDifficulty) ──
+    if (chapterId === '3A') {
+      // 공통: 메아리(Echo)
+      applyCondition(botConditions, 'Echo', 9999, '', { chance: 0.20, damageScale: 0.70 });
+
+      if (stageId === 1) {
+        applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 2 });
+      }
+      if (stageId === 2) {
+        applyCondition(botConditions, 'Hematophagy', 9999, '', { percent: 30 });
+      }
+      if (stageId === 6) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+      }
+      if (stageId === 7) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 10 });
+        applyCondition(botConditions, 'Brittle', 9999, '', { stackCount: 0, maxStacks: 5 });
+      }
+      if (stageId === 8) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+      }
+      if (stageId === 9) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+      }
+      if (stageId === 10) {
+        applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
+        applyCondition(botConditions, 'Revival', 9999, '', { count: 4, limit: 4, percent: 60 });
+        set({ hydraReviveRemaining: 4 });
+      }
+    }
+
     // v2.4.0: Fetch specific difficulty altar data on game start
     const altarData = AltarManager.getAltarData();
     let currentEquippedSkills: string[] = [];

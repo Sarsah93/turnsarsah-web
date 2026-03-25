@@ -500,7 +500,7 @@ export const useGameLoop = () => {
                     }
                 } else if (stageNum === 7) {
                     // 취성: 다이아몬드 카드 한 장 당 +8
-                    const diamondCount = selectedCards.filter(c => c.suit === '♦').length;
+                    const diamondCount = selectedCards.filter(c => c.suit === 'DIAMONDS').length;
                     if (diamondCount > 0) {
                          damage += diamondCount * 8;
                     }
