@@ -7,7 +7,7 @@ import { DifficultyPopup } from './DifficultyPopup';
 import { Difficulty } from '../constants/gameConfig';
 import { TRANSLATIONS } from '../constants/translations';
 import { AltarSystem } from './AltarSystem';
-import { INTERNAL_FEATURES } from '../utils/buildTarget';
+import { IS_INTERNAL } from '../utils/buildTarget';
 
 export const MainMenu: React.FC = () => {
     const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language } = useGameStore();
@@ -52,14 +52,41 @@ export const MainMenu: React.FC = () => {
                 }} />
                 <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} />
                 <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} />
-                {INTERNAL_FEATURES && (
+                {IS_INTERNAL && (
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '800px' }}>
                     <BlockButton
-                        text="INTERNAL: TEST STAGE (CH1-99)"
+                        text="3A-7 GOLEM"
+                        width="140px"
                         onClick={() => {
                             setActiveMenu('NONE');
-                            triggerTransition(() => initGameWithDifficulty('1', 99, Difficulty.NORMAL));
+                            triggerTransition(() => initGameWithDifficulty('3A', 7, Difficulty.NORMAL));
                         }}
                     />
+                    <BlockButton
+                        text="3A-8 DRAKE"
+                        width="140px"
+                        onClick={() => {
+                            setActiveMenu('NONE');
+                            triggerTransition(() => initGameWithDifficulty('3A', 8, Difficulty.NORMAL));
+                        }}
+                    />
+                    <BlockButton
+                        text="3A-9 BASILISK"
+                        width="140px"
+                        onClick={() => {
+                            setActiveMenu('NONE');
+                            triggerTransition(() => initGameWithDifficulty('3A', 9, Difficulty.NORMAL));
+                        }}
+                    />
+                    <BlockButton
+                        text="3A-10 HYDRA"
+                        width="140px"
+                        onClick={() => {
+                            setActiveMenu('NONE');
+                            triggerTransition(() => initGameWithDifficulty('3A', 10, Difficulty.NORMAL));
+                        }}
+                    />
+                    </div>
                 )}
                 <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
             </div>

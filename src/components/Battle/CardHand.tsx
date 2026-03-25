@@ -51,7 +51,8 @@ export const CardHand: React.FC<CardHandProps> = ({
     language,
     chapterNum,
     stageNum,
-    puzzleTarget
+    puzzleTarget,
+    hydraReviveRemaining
   } = useGameStore();
 
   const t = TRANSLATIONS[language];
@@ -417,6 +418,12 @@ export const CardHand: React.FC<CardHandProps> = ({
                 <div className="sphinx-puzzle-ui">
                   PUZZLE: {puzzleTarget}
                   {isPuzzleCorrect && <span className="puzzle-correct"> (CORRECT!)</span>}
+                </div>
+              )}
+              {/* v3.0: Hydra REVIVE counter (Above 8th card) */}
+              {idx === 7 && chapterNum === '3A' && stageNum === 10 && hydraReviveRemaining > 0 && (
+                <div className="sphinx-puzzle-ui">
+                  REVIVE: {hydraReviveRemaining}
                 </div>
               )}
               {card && (

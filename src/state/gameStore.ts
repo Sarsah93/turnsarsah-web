@@ -55,7 +55,8 @@ const calculateInitialPlayer = (
   // Evasion (Avoiding) - 2B Oneness with Nature (+5% Evasion, ignore env)
   const isOnenessWithNature = activeSkills.includes('2B');
   const bonus = isOnenessWithNature ? 0.05 : 0;
-  if ((chapterId === '1' || chapterId === '2A' || (chapterId === '2B' && isOnenessWithNature)) && (config.avoidChance + bonus) > 0) {
+  // 2B를 제외한 모든 챕터에서 회피 적용 (또는 2B에서 OnenessWithNature 스킬 있을 때)
+  if ((chapterId !== '2B' || isOnenessWithNature) && (config.avoidChance + bonus) > 0) {
     applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance + bonus });
   }
 
@@ -292,6 +293,10 @@ interface GameStoreState {
   setHydraFlushSuits: (suits: string[]) => void;
   resetHydraFlushSuits: () => void;
 
+  // v3.0: Hydra Revive Counter (HUD 표시용)
+  hydraReviveRemaining: number;
+  setHydraReviveRemaining: (count: number) => void;
+
   // Chapter 3B specific (v2.5.0)
   holdBreathCount3B: number;
   setHoldBreathCount3B: (count: number) => void;
@@ -347,6 +352,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   hydraFlushSuits: [],
   setHydraFlushSuits: (hydraFlushSuits) => set({ hydraFlushSuits }),
   resetHydraFlushSuits: () => set({ hydraFlushSuits: [] }),
+
+  // v3.0: Hydra Revive Counter
+  hydraReviveRemaining: 0,
+  setHydraReviveRemaining: (hydraReviveRemaining) => set({ hydraReviveRemaining }),
 
   // Tutorial System
   isTutorial: false,
@@ -838,10 +847,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         if (stageId === 9) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
         }
-        // 3A-10 HYDRA: 피해경감 15% + 부활 3회 (60% HP)
+        // 3A-10 HYDRA: 피해경감 15% + 부활 4회 (60% HP)
         if (stageId === 10) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
-          applyCondition(botConditions, 'Revival', 9999, '', { count: 3, percent: 60 });
+          applyCondition(botConditions, 'Revival', 9999, '', { count: 4, limit: 4, percent: 60 });
+          set({ hydraReviveRemaining: 4 });
         }
       } else if (chapterId === '3B') {
         // ── 챕터 3B 공통: 잠김(Swamping) 플레이어 상태이상 부여 ────────
@@ -934,7 +944,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         const isOnenessWithNature = activeSkills.includes('2B');
         if (chapterId === '2B' && !isOnenessWithNature) {
           player.conditions.delete('Avoiding');
-        } else if ((chapterId === '1' || chapterId === '2A') && config.avoidChance > 0 && !player.conditions.has('Avoiding')) {
+        } else if (chapterId !== '2B' && config.avoidChance > 0 && !player.conditions.has('Avoiding')) {
           const bonus = isOnenessWithNature ? 0.05 : 0;
           applyCondition(player.conditions, 'Avoiding', 9999, '', { chance: config.avoidChance + bonus });
         }

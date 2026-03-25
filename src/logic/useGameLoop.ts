@@ -499,9 +499,10 @@ export const useGameLoop = () => {
                          damage += 8;
                     }
                 } else if (stageNum === 7) {
-                    // 취성: 다이아몬드 포함 시 +8
-                    if (selectedCards.some(c => c.suit === '♦')) {
-                         damage += 8;
+                    // 취성: 다이아몬드 카드 한 장 당 +8
+                    const diamondCount = selectedCards.filter(c => c.suit === '♦').length;
+                    if (diamondCount > 0) {
+                         damage += diamondCount * 8;
                     }
                 }
             }
@@ -909,9 +910,10 @@ export const useGameLoop = () => {
             // 보스 부활 기믹 (3A-10 HYDRA 등)
             const revivalCond = freshBotEndCheck.conditions.get('Revival');
             if (revivalCond) {
-                const limit = (revivalCond.data as any)?.limit || 1;
+                const limit = (revivalCond.data as any)?.limit ?? (revivalCond.data as any)?.count ?? 1;
                 if (limit > 0) {
-                    const healPercent = (revivalCond.data as any)?.percent || 0.6;
+                    const rawPercent = (revivalCond.data as any)?.percent ?? 60;
+                    const healPercent = rawPercent > 1 ? rawPercent / 100 : rawPercent;
                     const reviveHp = Math.floor(freshBotEndCheck.maxHp * healPercent);
                     setBotHp(reviveHp);
                     setMessage(t.CONDITIONS.REVIVAL.NAME + "!");
@@ -919,9 +921,12 @@ export const useGameLoop = () => {
                     showDamageText('BOT', `+${reviveHp}`, '#2ecc71');
                     
                     const newConds = new Map(freshBotEndCheck.conditions);
-                    const updated = { ...revivalCond, data: { ...((revivalCond.data as any) || {}), limit: limit - 1 } };
-                    if (updated.data.limit <= 0) newConds.delete('Revival');
+                    const newCount = limit - 1;
+                    const updated = { ...revivalCond, data: { ...((revivalCond.data as any) || {}), limit: newCount, count: newCount } };
+                    if (newCount <= 0) newConds.delete('Revival');
                     else newConds.set('Revival', updated);
+                    // Update HUD counter
+                    useGameStore.getState().setHydraReviveRemaining(newCount);
                     
                     useGameStore.getState().setBot({ ...freshBotEndCheck, hp: reviveHp, conditions: newConds });
                     
@@ -1365,13 +1370,8 @@ export const useGameLoop = () => {
                 setMessage(t.CONDITIONS.NEUROTOXICITY.NAME + "!");
                 showConditionGuideIfNew('Neurotoxicity');
             }
-            // 3A-9: PETRIFY ATTACK (30% 확률로 카드 석화)
-            if (store.chapterNum === '3A' && stageNum === 9 && Math.random() < 0.3) {
-                setMessage("석화의 시선!");
-                store.applyPetrifyStatus(1);
-                AudioManager.playSFX('/assets/audio/common/UI_ERROR.mp3'); // Appropriate SFX for status
-                showConditionGuideIfNew('Petrified');
-            }
+            // 3A-9: 중복 석화 로직 삭제 (공격 적중 시 즉시 40% 발동이 올바른 사양 — Line 1273)
+            // (기존 30% 추가 발동 코드 제거됨)
 
             await wait(i < attackCount - 1 ? 800 : 400); // Delay between multi-attacks
 
@@ -1388,6 +1388,35 @@ export const useGameLoop = () => {
                 await proceedToEndTurn();
                 return;
             }
+        }
+
+        // 3A-8: ROLL BOULDER — 일반 공격 후, 2턴마다 특수 공격 (20 고정피해, 40% 회피)
+        if (store.chapterNum === '3A' && stageNum === 8 && (store.currentTurn % 2) === 1) {
+            await wait(600);
+            setMessage("바위 굴리기!");
+            triggerScreenEffect('shake-heavy');
+            await wait(400);
+            
+            if (Math.random() < 0.4) {
+                setMessage(t.COMBAT.ATTACK_AVOIDED);
+                showDamageText('PLAYER', t.COMBAT.ATTACK_AVOIDED, '#f39c12');
+            } else {
+                const freshPl = useGameStore.getState().player;
+                setPlayerHp(Math.max(0, freshPl.hp - 20));
+                showDamageText('PLAYER', `-20`, '#e74c3c');
+                
+                // Check player survival after boulder
+                const freshPl2 = useGameStore.getState().player;
+                if (freshPl2.hp <= 0) {
+                    const survived = await checkPlayerSurvival();
+                    if (survived) {
+                        await wait(1000);
+                        await proceedToEndTurn();
+                        return;
+                    }
+                }
+            }
+            await wait(600);
         }
 
         // --- Status Effects (v2.3.2: Chapter 2A Adjustments) ---
@@ -1465,19 +1494,8 @@ export const useGameLoop = () => {
                 store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 5 });
                 showConditionGuideIfNew('Decreasing accuracy');
             }
-            // 3A-8: ROLL BOULDER (매 2턴 20뎀, 플레이어 40% 확률 회피)
-            if (stageNum === 8 && currentTurnMod2 === 1) {
-                setMessage("바위 굴리기!");
-                triggerScreenEffect('shake-heavy');
-                
-                if (Math.random() < 0.4) {
-                    setMessage(t.COMBAT.ATTACK_AVOIDED);
-                    showDamageText('PLAYER', t.COMBAT.ATTACK_AVOIDED, '#f39c12');
-                } else {
-                    setPlayerHp(Math.max(0, store.player.hp - 20));
-                    showDamageText('PLAYER', `-20`, '#e74c3c');
-                }
-            }
+            // 3A-8: ROLL BOULDER — 이제 executeBotTurn의 일반 공격 후에 실행됨
+            // (기존 독립 실행 로직 제거됨)
             // 3A-7: BRITTLE 스택 리셋 체크
             if (stageNum === 7) {
                 const brittCond = currentBot.conditions.get('Brittle');
@@ -2010,20 +2028,37 @@ export const useGameLoop = () => {
             const currentStack = brittCond.data?.stackCount || 0;
             const nextStack = currentStack + 1;
             
-            // Damage Reducing 퍼센트 10 상승
+            // Damage Reducing 퍼센트 10 상승 (최대 50% 상한)
             if (currentDR) {
                 const currentPercent = currentDR.data?.percent || 10;
+                const newPercent = Math.min(currentPercent + 10, 50); // 50% cap
                 botConditions.set('Damage Reducing', {
                     ...currentDR,
                     duration: 999,
-                    data: { ...currentDR.data, percent: currentPercent + 10 }
+                    data: { ...currentDR.data, percent: newPercent }
                 });
             }
             
-            botConditions.set('Brittle', {
-                ...brittCond,
-                data: { ...brittCond.data, stackCount: nextStack }
-            });
+            // 5회 누적 시 경감 10%로 초기화 + 스택 리셋
+            if (nextStack >= 5) {
+                if (currentDR) {
+                    botConditions.set('Damage Reducing', {
+                        ...currentDR,
+                        duration: 999,
+                        data: { ...currentDR.data, percent: 10 }
+                    });
+                }
+                botConditions.set('Brittle', {
+                    ...brittCond,
+                    data: { ...brittCond.data, stackCount: 0 }
+                });
+                setMessage("취성 파괴! (경감 초기화)");
+            } else {
+                botConditions.set('Brittle', {
+                    ...brittCond,
+                    data: { ...brittCond.data, stackCount: nextStack }
+                });
+            }
         }
 
         // Remove expired bot conditions
