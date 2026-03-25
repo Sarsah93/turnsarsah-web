@@ -160,8 +160,35 @@ export const useGameLoop = () => {
         }
 
         if (chapter === '3A') {
-            // 임시로 공용 타격음 적용 (이후 개별 에셋 추가 시 수정)
-            return `/assets/audio/combat/chapter 1 goblin/04_sword hit_heavy.mp3`;
+            const sfxMap: Record<number, string> = {
+                1: '01_slime.mp3',
+                2: '02_vampire bat.mp3',
+                3: '03_cave worm.mp3',
+                4: '04_poison spider.mp3',
+                5: '05_wraith.mp3',
+                6: '06_cave bear.mp3',
+                7: '07_crystal golem.mp3',
+                8: '08_drake.mp3',
+                9: '09_basilisk.mp3',
+                10: '10_hydra.mp3'
+            };
+            return sfxMap[stage] ? `/assets/audio/combat/chapter 3a cave/${sfxMap[stage]}` : null;
+        }
+
+        if (chapter === '3B') {
+            const sfxMap: Record<number, string> = {
+                1: '01_alligator snapping turtle.mp3',
+                2: '02_murloc.mp3',
+                3: '03_crocodile.mp3',
+                4: '04_lizard skink.mp3',
+                5: '05_lizard man.mp3',
+                6: '06_lizard slann.mp3',
+                7: '07_lizard saurus.mp3',
+                8: '08_troglodon.mp3',
+                9: '09_kroxigor.mp3',
+                10: '10_lizard king.mp3'
+            };
+            return sfxMap[stage] ? `/assets/audio/combat/chapter 3b swamp/${sfxMap[stage]}` : null;
         }
 
         if (chapter !== '1') return '';
