@@ -52,7 +52,9 @@ export const CardHand: React.FC<CardHandProps> = ({
     chapterNum,
     stageNum,
     puzzleTarget,
-    hydraReviveRemaining
+    hydraReviveRemaining,
+    lizardKingStraightCount,
+    lizardStemCellDestroyed
   } = useGameStore();
 
   const t = TRANSLATIONS[language];
@@ -424,6 +426,12 @@ export const CardHand: React.FC<CardHandProps> = ({
               {idx === 7 && chapterNum === '3A' && stageNum === 10 && hydraReviveRemaining > 0 && (
                 <div className="sphinx-puzzle-ui">
                   REVIVE: {hydraReviveRemaining}
+                </div>
+              )}
+              {/* 3B-10: Lizard King TELOMERE HUD (Above 8th card) */}
+              {idx === 7 && chapterNum === '3B' && stageNum === 10 && !lizardStemCellDestroyed && (
+                <div className="sphinx-puzzle-ui">
+                  TELOMERE: {lizardKingStraightCount}
                 </div>
               )}
               {card && (

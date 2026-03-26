@@ -200,6 +200,12 @@ interface GameStoreState {
   gameSpeed: number;
   setGameSpeed: (speed: number) => void;
 
+  // 3B-10 Boss States
+  lizardKingStraightCount: number;
+  setLizardKingStraightCount: (count: number) => void;
+  lizardStemCellDestroyed: boolean;
+  setLizardStemCellDestroyed: (destroyed: boolean) => void;
+
   // Game initialization
   initGame: (chapterId: string, stageId: number) => void;
   applyStageRules: (chapterId: string, stageId: number, turn: number) => void;
@@ -458,6 +464,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   holdBreathInvulnerable3B: false,
   setHoldBreathInvulnerable3B: (holdBreathInvulnerable3B) => set({ holdBreathInvulnerable3B }),
 
+  // 3B-10 Boss Initial States
+  lizardKingStraightCount: 0,
+  setLizardKingStraightCount: (count) => set({ lizardKingStraightCount: count }),
+  lizardStemCellDestroyed: false,
+  setLizardStemCellDestroyed: (destroyed) => set({ lizardStemCellDestroyed: destroyed }),
+
   setBannedRanks: (bannedRanks) => set({ bannedRanks }),
   setBannedSuit: (bannedSuit) => set({ bannedSuit }),
   setBannedHand: (bannedHand) => set({ bannedHand }),
@@ -648,10 +660,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   applyPetrifyStatus: (count: number) => set((state) => {
     // Candidates: !isBlind && !isBanned && !isMudded && !isPetrified
-    const validCards = state.playerHand.filter(c => 
+    const validCards = state.playerHand.filter(c =>
       c !== null && !c.isBlind && !c.isBanned && !c.isMudded && !c.isPetrified
     ) as Card[];
-    
+
     if (validCards.length === 0) return state;
 
     const indices = validCards.map(c => state.playerHand.indexOf(c));
@@ -926,9 +938,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       let player: Character;
 
-      if (stageId === 1) {
-        // Start of Chapter/Game - Reset Stats + Apply Altar Bonuses
+      const isChapterTransition = stageId === 1 && state.chapterNum && state.chapterNum !== chapterId;
+
+      if (stageId === 1 && !isChapterTransition) {
+        // Start of Game - Reset Stats + Apply Altar Bonuses
         player = calculateInitialPlayer(config, activeSkills, chapterId, state.difficulty, state.hasStage6Bonus);
+      } else if (isChapterTransition) {
+        // Start of New Chapter - Preserve previous HP (with chapter clear bonus) but update maxHp/conditions
+        const basePlayer = calculateInitialPlayer(config, activeSkills, chapterId, state.difficulty, state.hasStage6Bonus);
+        player = {
+          ...basePlayer,
+          hp: Math.min(basePlayer.maxHp, state.player.hp)
+        };
       } else {
         // Stage transition - preserve current HP and max HP
         player = {
@@ -1003,6 +1024,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         stageSkillsTriggered: [],
         consecutiveHandType: null,
         consecutiveHandStacks: 0,
+        // Reset 3B-10 Boss states when not already destroyed or when it's a new chapter/stage
+        lizardKingStraightCount: (chapterId === '3B' && stageId === 10 && !state.lizardStemCellDestroyed) ? 0 :
+                                 (chapterId === '3B' && stageId === 10 && state.lizardStemCellDestroyed) ? state.lizardKingStraightCount : 0,
+        lizardStemCellDestroyed: (chapterId === '3B' && stageId === 10) ? state.lizardStemCellDestroyed : false,
         bot: {
           name: stageConfig.bossName,
           hp: bossHp,
@@ -1402,6 +1427,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       specialQualify: false,
       ch2PerfectCount: 0,
       ch2SpecialQualify: false,
+      lizardKingStraightCount: 0,
+      lizardStemCellDestroyed: false,
     }),
 
   saveGame: (slot: number) => {
@@ -1469,6 +1496,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       playerHand: tutorialHand,
       deck: new Deck(0),
       message: "TUTORIAL START",
+      equippedAltarSkills: [], // Disable Altar skills during Tutorial
     });
   },
 
@@ -1490,6 +1518,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         specialQualify: gameData.specialQualify ?? false,
         ch2PerfectCount: gameData.ch2PerfectCount ?? 0,
         ch2SpecialQualify: gameData.ch2SpecialQualify ?? false,
+
+        lizardKingStraightCount: gameData.lizardKingStraightCount ?? 0,
+        lizardStemCellDestroyed: gameData.lizardStemCellDestroyed ?? false,
+
+        message: "Game Loaded.",
         hasStage6Bonus: gameData.hasStage6Bonus ?? false,
         gameState: gameData.gameState || GameState.BATTLE,
         gamePhase: gameData.gamePhase || 'IDLE',
@@ -1721,6 +1754,8 @@ function buildSavePayload(state: GameStoreState) {
     specialQualify: state.specialQualify,
     ch2PerfectCount: state.ch2PerfectCount,
     ch2SpecialQualify: state.ch2SpecialQualify,
+    lizardKingStraightCount: state.lizardKingStraightCount,
+    lizardStemCellDestroyed: state.lizardStemCellDestroyed,
     hasStage6Bonus: state.hasStage6Bonus,
     gameState: state.gameState,
     gamePhase: finalGamePhase,

@@ -33,6 +33,8 @@ interface SaveData {
   specialQualify?: boolean;
   ch2PerfectCount?: number;
   ch2SpecialQualify?: boolean;
+  lizardKingStraightCount?: number;
+  lizardStemCellDestroyed?: boolean;
   hasStage6Bonus?: boolean;
   timestamp: number;
 }

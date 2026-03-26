@@ -564,18 +564,51 @@ export const useGameLoop = () => {
                     displayMessage = "숨참기: 보스가 무적 상태여서 피해를 줄 수 없습니다!";
                 }
 
-                // 3B-10: STEM CELL 해제 조건 - 스트레이트 계열 족보 공격 성공 시
-                if (stageNum === 10 && damage > 0) {
+                // 3B-10: STEM CELL 파괴 로직 - 3회 연속 스트레이트 계열 공격 성공 시
+                if (stageNum === 10 && !store.lizardStemCellDestroyed && damage > 0) {
                     const straightHands = ['Straight', 'Straight Flush', 'Royal Flush'];
                     if (straightHands.includes(handType)) {
-                        const freshBot10 = useGameStore.getState().bot;
-                        if (freshBot10.conditions.has('Stem Cell')) {
+                        const newCount = store.lizardKingStraightCount + 1;
+                        store.setLizardKingStraightCount(newCount);
+                        
+                        if (newCount >= 3) {
+                            store.setLizardStemCellDestroyed(true);
+                            const freshBot10 = useGameStore.getState().bot;
+                            
+                            // 보스 초기 스탯 롤백 (초기 배율 적용된 Base MaxHP 및 ATK)
+                            const diffConfig = DIFFICULTY_CONFIGS[store.difficulty];
+                            const chapterConf = CHAPTERS['3B'];
+                            const bossOverride = diffConfig.bossOverrides['3B']?.[10] || {};
+                            const b_stageConfig = chapterConf?.stages[10];
+                            
+                            let initHp = freshBot10.maxHp;
+                            let initAtk = freshBot10.atk;
+                            
+                            if (b_stageConfig) {
+                                initHp = bossOverride.hp ?? Math.floor(b_stageConfig.hp * diffConfig.hpScale);
+                                initAtk = bossOverride.atk ?? Math.floor(b_stageConfig.atk * diffConfig.atkScale);
+                            }
+                            
                             const newConds10 = new Map(freshBot10.conditions);
-                            newConds10.delete('Stem Cell');
-                            useGameStore.getState().setBot({ ...freshBot10, conditions: newConds10 });
-                            setMessage("줄기세포 파괴! (스트레이트 계열 공격 성공)");
-                            triggerScreenEffect('flash-red');
+                            newConds10.delete('Stem Cell'); // 삭제 시 누적된 회피율(currentAvoid)도 함께 날아감
+                            
+                            const cappedHp = Math.min(freshBot10.hp, initHp);
+                            useGameStore.getState().setBot({
+                                ...freshBot10,
+                                maxHp: initHp,
+                                hp: cappedHp,
+                                atk: initAtk,
+                                conditions: newConds10
+                            });
+                            
+                            setMessage("텔로미어 단절! 줄기세포 효과 영구적 제거!");
+                        } else {
+                            setMessage("텔로미어 가속 공격!");
                         }
+                        triggerScreenEffect('flash-red');
+                    } else {
+                        // 스트레이트 외 공격 성공 시 연속 스택 초기화
+                        store.setLizardKingStraightCount(0);
                     }
                 }
             }
@@ -2228,6 +2261,7 @@ export const useGameLoop = () => {
 
             const currentHp = store.player.hp;
             let maxHp = store.player.maxHp;
+            const isFinalBoss = stageNum === 10 || stageNum === 11;
 
             // v2.0.0.14/16: Stage 6 Reward (Chapter 1 Only: difficulty-based MAX HP bonus + FULL HEAL)
             if (store.chapterNum === '1' && stageNum === 6) {
@@ -2236,13 +2270,17 @@ export const useGameLoop = () => {
                 store.setHasStage6Bonus(true);
                 store.setPlayerMaxHp(maxHp);
                 setPlayerHp(maxHp); // FULL HEAL per user request
-            } else {
-                // Standard Heal for other stages (difficulty-based)
-                let healAmount = config.clearHpBonus;
-                // v2.3.0: Halved recovery for Chapter 2
-                if (store.chapterNum === '2A' || store.chapterNum === '2B') {
-                    healAmount = Math.floor(healAmount / 2);
-                }
+            } else if (!isFinalBoss) {
+                // Stage Clear Heal: 챕터별 기본 회복량 (NORMAL 기준)
+                // Ch1=40, Ch2=30, Ch3=20 (EASY ×1.5, HARD/HELL ×0.8)
+                const chapterHealBase: Record<string, number> = {
+                    '1': 40, '2A': 30, '2B': 30, '3A': 20, '3B': 20
+                };
+                const diffMultiplier = store.difficulty === Difficulty.EASY ? 1.5
+                    : (store.difficulty === Difficulty.HARD || store.difficulty === Difficulty.HELL) ? 0.8
+                    : 1.0;
+                const baseHeal = chapterHealBase[store.chapterNum] ?? 30;
+                const healAmount = Math.floor(baseHeal * diffMultiplier);
                 const newHp = Math.min(maxHp, currentHp + healAmount);
                 setPlayerHp(newHp);
             }
@@ -2273,13 +2311,13 @@ export const useGameLoop = () => {
                 }
             }
 
-            // v2.3.7: Chapter Transition Reward (120 HP heal when moving from Ch1 to Ch2)
-            if (store.chapterNum === '1' && stageNum === 10) {
+            // 챕터 마지막 보스 클리어 보상: +200 HP (모든 챕터 공통, 다음 챕터 연동)
+            if (isFinalBoss) {
                 const freshPlayer = useGameStore.getState().player;
-                const transitionHeal = 120;
+                const transitionHeal = 200;
                 setPlayerHp(Math.min(freshPlayer.maxHp, freshPlayer.hp + transitionHeal));
                 showDamageText('PLAYER', `+${transitionHeal}`, '#2ecc71');
-                setMessage(t.COMBAT.VICTORY + " (+120 HP)");
+                setMessage(t.COMBAT.VICTORY + ` (+${transitionHeal} HP)`);
             }
 
             // 2. Trophy Check — stage trophy in memory (NOT saved to localStorage yet)
