@@ -348,7 +348,7 @@ export const CONDITION_GUIDES: Record<string, GuidePopupData> = {
   'Swamping': {
     key: 'condition_swamping',
     category: 'CONDITION',
-    title: { KR: '💧 상태이상: 잠김(SWAP)', EN: '💧 Status: Swamping' },
+    title: { KR: '💧 상태이상: 잠김', EN: '💧 Status: Swamping' },
     body: {
       KR: '늪지대 환경에 의해 회피율이 감소합니다.\n\n보스의 공격을 받을수록 중첩이 쌓이며 회피율 패널티가 커집니다.',
       EN: 'Evasion chance is reduced due to the swamp environment.\n\nStacks increase as you take boss attacks, increasing the evasion penalty.'

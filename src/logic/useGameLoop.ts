@@ -636,6 +636,7 @@ export const useGameLoop = () => {
                     const currentBonus = handBonusesAll[handType] || 0;
                     const upgradeBonus = handBonusesAll[upgradeHand] || 0;
                     damage += (upgradeBonus - currentBonus);
+                    displayMessage = t.COMBAT.PATTERN_DISRUPTION_MSG;
                 }
             }
 

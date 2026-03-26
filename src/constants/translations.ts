@@ -141,6 +141,7 @@ export const TRANSLATIONS = {
             PLAYER_DECAY: "플레이어 부패 피해!",
             AREA_CLEARED: "{area} 구역 정화 완료!",
             NODE_CLEARED: "노드 정화 완료!",
+            PATTERN_DISRUPTION_MSG: "패턴 교란 발동: 족보 단계 승급!",
         },
         CONDITIONS: {
             BLEEDING: {
@@ -248,8 +249,8 @@ export const TRANSLATIONS = {
                 DESC: "피해를 입힐 때, 입힌 피해량의 {percent}%만큼 자신의 HP를 회복한다."
             },
             SWAMPING: {
-                NAME: "잠김(Swamping)",
-                DESC: "늪으로 인해, 플레이어의 회피율이 감소합니다. 5턴 이후부터는 더욱 감소하여, 회피가 어려워집니다. (챕터 진행동안, 영구 적용)"
+                NAME: "잠김",
+                DESC: "늪에 발이 묶입니다.\n5피격 이후 회피율이\n급감합니다."
             },
             STEM_CELL: {
                 NAME: "줄기세포",
@@ -544,6 +545,7 @@ export const TRANSLATIONS = {
             PLAYER_DECAY: "PLAYER DECAY DAMAGE!",
             AREA_CLEARED: "{area} Area Purified!",
             NODE_CLEARED: "Node Purified!",
+            PATTERN_DISRUPTION_MSG: "PATTERN DISRUPTED: TIER UP!",
         },
         CONDITIONS: {
             BLEEDING: {
