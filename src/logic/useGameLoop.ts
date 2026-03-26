@@ -521,9 +521,10 @@ export const useGameLoop = () => {
             // 3A-6/7: HONEY YUMMY/BRITTLE (+8 bonus condition)
             if (store.chapterNum === '3A') {
                 if (stageNum === 6) {
-                    // 단군신화: 3 또는 7 포함 시 +8
-                    if (selectedCards.some(c => c.rank === '3' || c.rank === '7')) {
-                         damage += 8;
+                    // 단군신화: 3 또는 7 포함 시 카드 장 당 +8
+                    const mysticCount = selectedCards.filter(c => c.rank === '3' || c.rank === '7').length;
+                    if (mysticCount > 0) {
+                         damage += mysticCount * 8;
                     }
                 } else if (stageNum === 7) {
                     // 취성: 다이아몬드 카드 한 장 당 +8
@@ -1390,8 +1391,8 @@ export const useGameLoop = () => {
                     AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');
                 }
             }
-            // 3A-4: POISON SPIDER (공격 시 20% 확률로 신경성맹독 부여)
-            if (store.chapterNum === '3A' && stageNum === 4 && finalDmg > 0 && Math.random() < 0.2) {
+            // 3A-4: POISON SPIDER (공격 시 40% 확률로 신경성맹독 부여)
+            if (store.chapterNum === '3A' && stageNum === 4 && finalDmg > 0 && Math.random() < 0.4) {
                 store.addPlayerCondition('Neurotoxicity', 3);
                 playConditionSound('Neurotoxicity');
                 setMessage(t.CONDITIONS.NEUROTOXICITY.NAME + "!");
