@@ -17,7 +17,7 @@ import { ALTAR_SKILLS } from '../../constants/altarSystem';
 import { AltarSkillSlots } from './AltarSkillSlots';
 import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 
-import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
+import { BattleMenuOverlay, ActiveMenuType } from './BattleMenuOverlay';
 import { BattleField } from './BattleField';
 import '../styles/BattleEffects.css';
 import '../styles/CardAfterimage.css';
@@ -60,8 +60,7 @@ export const BattleScreen: React.FC = () => {
     }, [player.hp, player.maxHp]);
 
     // Menu States
-    const [activeMenu, setActiveMenu] = useState<'NONE' | 'PAUSE' | 'SETTINGS' | 'SAVE' | 'LOAD' | 'CONFIRM_QUIT'>('NONE');
-
+    const [activeMenu, setActiveMenu] = useState<ActiveMenuType>('NONE');
     // v2.0.0.16: Removed local bgAudio logic as App.tsx handles BGM via AudioManager
 
     // Key Handler for ESC
@@ -462,58 +461,14 @@ export const BattleScreen: React.FC = () => {
             )}
 
             {/* Modals and Menus Overlay */}
-            {activeMenu !== 'NONE' && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.7)',
-                    zIndex: 10000,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    pointerEvents: 'auto'
-                }}>
-                    {activeMenu === 'PAUSE' && (
-                        <PauseMenu
-                            isOpen={true}
-                            onResume={() => setActiveMenu('NONE')}
-                            onSave={() => setActiveMenu('SAVE')}
-                            onSettings={() => setActiveMenu('SETTINGS')}
-                            onQuit={() => setActiveMenu('CONFIRM_QUIT')}
-                        />
-                    )}
-                    {activeMenu === 'SAVE' && (
-                        <SaveLoadMenu
-                            mode="SAVE"
-                            onAction={handleSaveGame}
-                            onClose={() => setActiveMenu('PAUSE')}
-                        />
-                    )}
-                    {activeMenu === 'LOAD' && (
-                        <SaveLoadMenu
-                            mode="LOAD"
-                            onAction={handleLoadGame}
-                            onClose={() => setActiveMenu('PAUSE')}
-                        />
-                    )}
-                    {activeMenu === 'SETTINGS' && (
-                        <SettingsMenu
-                            onClose={() => setActiveMenu('PAUSE')}
-                            onVolumeChange={(type, vol) => {
-                                if (type === 'bgm') AudioManager.setBGMVolume(vol);
-                                else AudioManager.setSFXVolume(vol);
-                            }}
-                        />
-                    )}
-                    {activeMenu === 'CONFIRM_QUIT' && (
-                        <ConfirmationPopup
-                            message={t.UI.QUIT_CONFIRM}
-                            onYes={handleMidGameQuit}
-                            onNo={() => setActiveMenu('PAUSE')}
-                        />
-                    )}
-                </div>
-            )}
+            <BattleMenuOverlay
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                onSaveGame={handleSaveGame}
+                onLoadGame={handleLoadGame}
+                onMidGameQuit={handleMidGameQuit}
+                t={t}
+            />
         </div>
     );
 };

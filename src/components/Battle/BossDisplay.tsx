@@ -4,6 +4,7 @@ import { ConditionIcon } from '../Common/ConditionIcon';
 import { Difficulty, DIFFICULTY_CONFIGS } from '../../constants/gameConfig';
 import { TRANSLATIONS } from '../../constants/translations';
 import { CHAPTERS } from '../../constants/stages';
+import { getBossImage } from '../../utils/bossImageMapper';
 import '../styles/BossWeakening.css';
 
 export const BossDisplay: React.FC = () => {
@@ -41,97 +42,7 @@ export const BossDisplay: React.FC = () => {
     if (bossRatio <= 0.20) bossWeakClass = 'boss-weak-4';
     else if (bossRatio <= 0.60) bossWeakClass = 'boss-weak-2';
 
-    // Map stage number to filename
-    const getBossImage = (chapter: string, stage: number) => {
-        if (isTutorial) return '/assets/boss_goblin/tutorial_bot.png';
-        if (chapter === '1') {
-            const mapping: Record<number, string> = {
-                1: '01_goblin.png',
-                2: '02_goblin skirmisher.png',
-                3: '03_goblin rider.png',
-                4: '04_hobgoblin.png',
-                5: '05_goblin shaman.png',
-                6: '06_golden goblin.png',
-                7: '07_elite goblin.png',
-                8: '08_troll.png',
-                9: '09_giant goblin.png',
-                10: '10_goblin lord.png'
-            };
-            const filename = mapping[stage] || '01_goblin.png';
-            return `/assets/boss_goblin/${filename}`;
-        }
-        if (chapter === '2A') {
-            const mapping: Record<number, string> = {
-                1: '01_mummy.png',
-                2: '02_sand snake.png',
-                3: '03_chimera snake human.png',
-                4: '04_sand niddle lizard.png',
-                5: '05_sand scorpion.png',
-                6: '06_desert vultures.png',
-                7: '07_sand golem.png',
-                8: '08_wyvern.png',
-                9: '09_sand deathworm.png',
-                10: '10_sphinx.png',
-                11: '2A_sand dragon.png'
-            };
-            const filename = mapping[stage] || '01_mummy.png';
-            return `/assets/boss_desert/${filename}`;
-        }
-        if (chapter === '2B') {
-            const mapping: Record<number, string> = {
-                1: '01_orc.png',
-                2: '02_orc savage.png',
-                3: '03_half orc.png',
-                4: '04_orc warrior.png',
-                5: '05_orc chieftain.png',
-                6: '06_high orc.png',
-                7: '07_high orc warrior.png',
-                8: '08_high orc assassin.png',
-                9: '09_high orc chieftain.png',
-                10: '10_high orc lord.png',
-                11: '2B_high orc shaman.png'
-            };
-            const filename = mapping[stage] || '01_orc.png';
-            return `/assets/boss_orc/${filename}`;
-        }
-        if (chapter === '3A') {
-            const mapping: Record<number, string> = {
-                1: '01_SLIME.png',
-                2: '02_VAMPIRE BAT.png',
-                3: '03_CAVE WORM.png',
-                4: '04_POISON SPIDER.png',
-                5: '05_WRAITH.png',
-                6: '06_CAVE BEAR.png',
-                7: '07_CRYSTAL GOLEM.png',
-                8: '08_DRAKE.png',
-                9: '09_BASILISK.png',
-                10: '10_HYDRA.png'
-            };
-            const filename = mapping[stage] || '01_SLIME.png';
-            return `/assets/boss_cave/${filename}`;
-        }
-        if (chapter === '3B') {
-            const mapping: Record<number, string> = {
-                1: '1B-1_Giant Toad.png',
-                2: '1B-2_Murlocs.png',
-                3: '1B-3_Mutant Slug.png',
-                4: '1B-4_Basilisk Skink.png',
-                5: '1B-5_Leech.png',
-                6: '1B-6_Mosquito.png',
-                7: '1B-7_Crocodile.png',
-                8: '1B-8_Giant Centipede.png',
-                9: '1B-9_Will-o-Wisp.png',
-                10: '1B-10_Lizard King.png',
-                11: '1B_SWAMP HYDRA.png'
-            };
-            const filename = mapping[stage] || '1B-1_Giant Toad.png';
-            if (stage === 11) return `/assets/boss_chapter_3b_swamp/${filename}`;
-            return `/assets/boss_chapter_3b_swamp/${filename}`;
-        }
-        return '/assets/boss_goblin/tutorial_bot.png';
-    };
-
-    const bossImg = getBossImage(chapterNum, stageNum);
+    const bossImg = getBossImage(chapterNum, stageNum, isTutorial);
 
     const mask80 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNMTAsMTggaDYgdjQgaC02IFogTTg0LDY2IGg2IHY0IGgtNiBaIi8+PC9zdmc+")';
     const mask60 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTEwLDE4IGg2IHY0IGgtNiBaIE04NCw2NiBoNiB2NCBoLTYgWiIvPjwvc3ZnPg==")';

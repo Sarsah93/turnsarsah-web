@@ -116,9 +116,20 @@ async function getDrawableSource(
     el: HTMLElement
 ): Promise<CanvasImageSource | null> {
     if (el instanceof HTMLImageElement) {
-        if (!el.complete) {
-            await new Promise<void>((r) => el.addEventListener("load", () => r(), { once: true }));
+        if (!el.complete || el.naturalWidth === 0) {
+            try {
+                await Promise.race([
+                    new Promise<void>((resolve, reject) => {
+                        el.addEventListener("load", () => resolve(), { once: true });
+                        el.addEventListener("error", () => reject(), { once: true });
+                    }),
+                    new Promise<void>((_, reject) => setTimeout(() => reject(), 3000))
+                ]);
+            } catch {
+                return null;
+            }
         }
+        if (el.naturalWidth === 0) return null;
         return el;
     }
     if (el instanceof HTMLCanvasElement) return el;

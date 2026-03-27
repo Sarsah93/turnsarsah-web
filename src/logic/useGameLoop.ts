@@ -9,7 +9,9 @@ import { TRANSLATIONS } from '../constants/translations';
 import { playCoreDeathFX } from '../utils/fxUtils';
 import { hasSeenGuide, CHAPTER_INTROS, SYSTEM_GUIDES, CONDITION_GUIDES, getGimmickGuide, GuidePopupData } from '../constants/guideData';
 import { CHAPTERS } from '../constants/stages';
-
+import { playConditionSound, getBossAttackSFX } from '../utils/audioMapper';
+import { applyChapterSpecialRules } from './specialRules';
+import { applyBotStatusEffects } from './botMechanics';
 export interface DamageTextData {
     id: number;
     x: number;
@@ -122,124 +124,7 @@ export const useGameLoop = () => {
         return incomingDmg;
     };
 
-    const playConditionSound = (condition: string) => {
-        let file = '';
-        switch (condition) {
-            case 'Awakening': file = 'Awakening.mp3'; break;
-            case 'Burn': file = '화상(burn).mp3'; break;
-            case 'Decay': file = '부패(decay).mp3'; break;
-            case 'Reflection': file = '데미지 반사(Damage reflection).mp3'; break;
-            case 'Bleeding': file = 'Bleeding.mp3'; break;
-            case 'Heavy Bleeding': file = 'Heavy Bleeding.mp3'; break;
-            case 'Poisoning': file = 'poisoning.mp3'; break;
-            case 'Regenerating': file = 'Regenerating.mp3'; break;
-            case 'Paralyzing': file = 'paralyzing.mp3'; break;
-            case 'Debilitating': file = 'Debilitating.mp3'; break;
-            case 'Avoiding': file = 'avoiding.mp3'; break;
-            case 'Damage recoiling': file = '데미지 반동(Damage recoiling).mp3'; break;
-            case 'Berserker': file = '버서커(Berserker).mp3'; break;
-            case 'Revival': file = '부활(Revival).mp3'; break;
-            case 'Invincible spirit': file = '불굴의 의지(Invincible Spirit).mp3'; break;
-            case 'Adrenaline secretion': file = '아드레날린 분비(Adrenaline secretion).mp3'; break;
-            case 'Neurotoxicity': file = '신경성 맹독(Neurotoxicity).mp3'; break;
-            case 'Dehydration': file = '탈수(Dehydration).mp3'; break;
-            case 'Decreasing accuracy': file = '명중률 저하(Decreasing accuracy).mp3'; break;
-            case 'Triple Attack':
-                AudioManager.playSFX('/assets/audio/combat/chapter 2a desert/06_desert vultures_2.mp3');
-                return;
-            default: return;
-        }
-        AudioManager.playSFX(`/assets/audio/conditions/${file}`);
-    };
-
-    const getBossAttackSFX = (chapter: string, stage: number) => {
-        if (chapter === '2A') {
-            const sfxMap: Record<number, string> = {
-                1: '01_mummy.mp3',
-                2: '02_sand snake.mp3',
-                3: '03_chimera snake human.mp3',
-                4: '04_sand niddle lizard.mp3',
-                5: '05_sand scorpion.mp3',
-                6: '06_desert vultures.mp3',
-                7: '07_sand golem.mp3',
-                8: '08_sand wyvern.mp3',
-                9: '09_sand deathworm.mp3',
-                10: '10_sphinx.mp3',
-                11: '2A_SAND DRAGON.mp3'
-            };
-            const filename = sfxMap[stage];
-            if (stage === 11) return `/assets/audio/combat/chapter 2a desert/${filename}`;
-            if (filename) return `/assets/audio/combat/chapter 2a desert/${filename}`;
-            return '';
-        }
-
-        if (chapter === '2B') {
-            const sfxMap: Record<number, string> = {
-                1: '01_orc.mp3',
-                2: '02_orc savage.mp3',
-                3: '03_half orc.mp3',
-                4: '04_orc warrior.mp3',
-                5: '05_orc chieftain.mp3',
-                6: '06_high orc.mp3',
-                7: '07_high orc warrior.mp3',
-                8: '08_high orc assassin.mp3',
-                9: '09_high orc chieftain.mp3',
-                10: '10_high orc lord.mp3',
-                11: '2B_HIGH ORC SHAMAN.mp3'
-            };
-            if (stage === 11) return `/assets/audio/combat/chapter 2b deep forest/${sfxMap[stage]}`;
-            return sfxMap[stage] ? `/assets/audio/combat/chapter 2b deep forest/${sfxMap[stage]}` : null;
-        }
-
-        if (chapter === '3A') {
-            const sfxMap: Record<number, string> = {
-                1: '01_slime.mp3',
-                2: '02_vampire bat.mp3',
-                3: '03_cave worm.mp3',
-                4: '04_poison spider.mp3',
-                5: '05_wraith.mp3',
-                6: '06_cave bear.mp3',
-                7: '07_crystal golem.mp3',
-                8: '08_drake.mp3',
-                9: '09_basilisk.mp3',
-                10: '10_hydra.mp3'
-            };
-            return sfxMap[stage] ? `/assets/audio/combat/chapter 3a cave/${sfxMap[stage]}` : null;
-        }
-
-        if (chapter === '3B') {
-            const sfxMap: Record<number, string> = {
-                1: '01_alligator snapping turtle.mp3',
-                2: '02_murloc.mp3',
-                3: '03_crocodile.mp3',
-                4: '04_lizard skink.mp3',
-                5: '05_lizard man.mp3',
-                6: '06_lizard slann.mp3',
-                7: '07_lizard saurus.mp3',
-                8: '08_troglodon.mp3',
-                9: '09_kroxigor.mp3',
-                10: '10_lizard king.mp3'
-            };
-            return sfxMap[stage] ? `/assets/audio/combat/chapter 3b swamp/${sfxMap[stage]}` : null;
-        }
-
-        if (chapter !== '1') return '';
-
-        const map: Record<number, string> = {
-            1: '01_sword hit_light.mp3',
-            2: '02_arrow_hit.mp3',
-            3: '03_spear_thrust.mp3',
-            4: '04_sword hit_heavy.mp3',
-            5: '05_magica.mp3',
-            6: '06_swing_ weapon.mp3',
-            7: '07_sword hit_heavy.mp3',
-            8: '08_blunt_light.mp3',
-            9: '09_blunt_hit_heavy.mp3',
-            10: '10_cruel_swing.mp3'
-        };
-        const file = map[stage] || '01_sword hit_light.mp3';
-        return `/assets/audio/combat/chapter 1 goblin/${file}`;
-    };
+    // Extracted playConditionSound and getBossAttackSFX to audioMapper.ts
 
     const applyBotStageMechanics = () => {
         const store = useGameStore.getState();
@@ -521,81 +406,13 @@ export const useGameLoop = () => {
         } else {
             damage = Math.floor(finalDamage);
 
-            // v2.3.2: 2A Hand Nullification Rules
-            if (store.chapterNum === '2A') {
-                const nullifiedHands: Record<number, string> = {
-                    1: 'Straight Flush', 2: 'One Pair', 3: 'Two Pair', 6: 'Three of a Kind',
-                    7: 'Full House', 8: 'Straight', 9: 'Flush'
-                };
-                const nullifiedHand = nullifiedHands[stageNum];
-                if (nullifiedHand && handType === nullifiedHand) {
-                    const handBonuses: Record<string, number> = {
-                        'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
-                        'Straight': 75, 'Flush': 100, 'Full House': 125, 'Straight Flush': 150
-                    };
-                    const bonus = handBonuses[handType] || 0;
-                    damage = Math.max(0, Math.floor((baseDamage - bonus) * (finalDamage / rawDamage)));
-                }
-            }
+            const ruleRes = applyChapterSpecialRules(
+                store.chapterNum, stageNum, handType, damage, finalDamage, rawDamage, baseDamage, displayMessage, selectedCards, store.currentTurn, store.holdBreathTurn3B
+            );
+            damage = ruleRes.damage;
+            displayMessage = ruleRes.displayMessage;
 
-            // 3A-5: GHOST (유체화 - 족보 데미지만 적용)
-            if (store.chapterNum === '3A' && stageNum === 5) {
-                const handBonusesAll: Record<string, number> = {
-                    'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
-                    'Straight': 75, 'Flush': 100, 'Full House': 125, 'Four of a Kind': 150,
-                    'Straight Flush': 175, 'Royal Flush': 300
-                };
-                const pokerBonusOnly = Math.floor((handBonusesAll[handType] || 0) * (finalDamage / rawDamage));
-                damage = pokerBonusOnly;
-                displayMessage = "유체화: 기본/카드 피해 적용 면역!";
-            }
-
-            // 3A-6/7: HONEY YUMMY/BRITTLE (+8 bonus condition)
-            if (store.chapterNum === '3A') {
-                if (stageNum === 6) {
-                    // 단군신화: 3 또는 7 포함 시 카드 장 당 +8
-                    const mysticCount = selectedCards.filter(c => c.rank === '3' || c.rank === '7').length;
-                    if (mysticCount > 0) {
-                         damage += mysticCount * 8;
-                    }
-                } else if (stageNum === 7) {
-                    // 취성: 다이아몬드 카드 한 장 당 +8
-                    const diamondCount = selectedCards.filter(c => c.suit === 'DIAMONDS').length;
-                    if (diamondCount > 0) {
-                         damage += diamondCount * 8;
-                    }
-                }
-            }
-
-            // ── 3B 챕터: 플레이어 공격 기믹 처리 ──────────────────────────
             if (store.chapterNum === '3B') {
-                // 3B-1: HARDNESS(단단함) - 투페어 이상 족보만 피해 적용
-                if (stageNum === 1) {
-                    const lowHands = ['High Card', 'One Pair'];
-                    if (lowHands.includes(handType)) {
-                        damage = 0;
-                        displayMessage = "단단함: 투페어 이상 족보만 피해를 줄 수 있습니다!";
-                    }
-                }
-
-                // 3B-4: AUTOTOMY(자절) - 매 2턴(2, 4, 6...)마다 플레이어 공격 피해 30% 감소
-                if (stageNum === 4 && (store.currentTurn + 1) % 2 === 0) {
-                    damage = Math.floor(damage * 0.7);
-                    displayMessage = "자절: 플레이어 공격 피해 30% 감소!";
-                }
-
-                // 3B-5: CAMOUFLAGE(위장) - 매 2턴 종료 후 1턴간(3, 6, 9...) 보스 무적
-                if (stageNum === 5 && (store.currentTurn + 1) % 3 === 0) {
-                    damage = 0;
-                    displayMessage = "위장: 보스가 투명 상태여서 공격이 통하지 않습니다!";
-                }
-
-                // 3B-7: HOLD BREATH(숨참기) - 보스 공격 2회 성공 시 다음 턴 무적 (v2.4.0)
-                if (stageNum === 7 && store.holdBreathTurn3B === store.currentTurn) {
-                    damage = 0;
-                    displayMessage = "숨참기: 보스가 무적 상태여서 피해를 줄 수 없습니다!";
-                }
-
                 // 3B-10: STEM CELL 파괴 로직 - 3회 연속 스트레이트 계열 공격 성공 시
                 if (stageNum === 10 && !store.lizardStemCellDestroyed && damage > 0) {
                     const straightHands = ['Straight', 'Straight Flush', 'Royal Flush'];
@@ -645,11 +462,7 @@ export const useGameLoop = () => {
                 }
             }
 
-            // v2.3.2: 2A-4 No damage under 30
-            if (store.chapterNum === '2A' && stageNum === 4 && damage < 30) {
-                damage = 0;
-                displayMessage = t.COMBAT.NO_DMG_UNDER_30_MSG;
-            }
+
 
             // 1B: Sharpen Cards (+25 fixed damage)
             if (store.equippedAltarSkills.includes('1B')) damage += 25;
@@ -1515,253 +1328,12 @@ export const useGameLoop = () => {
             await wait(600);
         }
 
-        // --- Status Effects (v2.3.2: Chapter 2A Adjustments) ---
-        if (store.chapterNum === '2A') {
-            if ([1, 2, 3, 6, 8, 9, 10].includes(stageNum)) {
-                if (Math.random() < config.poisonProbCh2A) {
-                    store.addPlayerCondition('Poisoning', 3);
-                    showConditionGuideIfNew('Poisoning');
-                }
-            }
-            if ([1, 2, 3, 6, 8, 9, 10].includes(stageNum)) {
-                if (Math.random() < 0.3) {
-                    store.addPlayerCondition('Debilitating', 3);
-                    showConditionGuideIfNew('Debilitating');
-                }
-            }
-            if ([3, 4, 6, 9, 10].includes(stageNum)) {
-                if (Math.random() < config.bleedProbCh2A) {
-                    store.addPlayerCondition('Bleeding', 6);
-                    showConditionGuideIfNew('Bleeding');
-                }
-            }
-            if (stageNum === 5) {
-                // Neurotoxicity: 3 turns (Applying Blind/Paralyze is handled via applyCondition side effects or here)
-                if (Math.random() < 0.40) {
-                    // Replaced neuroProbCh2A with explicit 40%
-                    store.addPlayerCondition('Neurotoxicity', 3);
-                    showConditionGuideIfNew('Neurotoxicity');
-                }
-            }
-            if (stageNum === 7) {
-                // Now 40% based on user request (down from 50%)
-                if (Math.random() < 0.4) {
-                    store.addPlayerCondition('Paralyzing', 2);
-                    showConditionGuideIfNew('Paralyzing');
-                }
-            }
-        } else if (store.chapterNum === '3A') {
-            // 3A 고정 피해 및 상태이상 (Acid, Mucus, Shooting Web, Roll Boulder)
-            const currentTurnMod = (store.currentTurn % 3);
-            const currentTurnMod2 = (store.currentTurn % 2);
-
-            // 3A-1: ACID ATTACK (매 3턴 15뎀 + 화상)
-            if (stageNum === 1 && currentTurnMod === 2) {
-                setMessage("산성 공격!");
-                setPlayerHp(Math.max(0, store.player.hp - 15));
-                showDamageText('PLAYER', `-15`, '#e74c3c');
-                if (Math.random() < 0.2) {
-                    store.addPlayerCondition('Burn', 3);
-                    showConditionGuideIfNew('Burn');
-                }
-            }
-            // 3A-3: MUCUS (매 2턴 20뎀 + 50% 중독 또는 명중저하)
-            if (stageNum === 3 && currentTurnMod2 === 1) {
-                setMessage("점액 분비!");
-                setPlayerHp(Math.max(0, store.player.hp - 20));
-                showDamageText('PLAYER', `-20`, '#e74c3c');
-                if (Math.random() < 0.5) {
-                    if (Math.random() < 0.5) {
-                        store.addPlayerCondition('Poisoning', 3);
-                        showConditionGuideIfNew('Poisoning');
-                    }
-                    else {
-                        store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 30 });
-                        showConditionGuideIfNew('Decreasing accuracy');
-                    }
-                }
-            }
-            // 3A-4: SHOOTING WEB (매 2턴 10뎀 + 거미줄)
-            if (stageNum === 4 && currentTurnMod2 === 1) {
-                setMessage("거미줄 투척!");
-                setPlayerHp(Math.max(0, store.player.hp - 10));
-                showDamageText('PLAYER', `-10`, '#e74c3c');
-                // 회피 5% 깎는 디버프 처리 (별도 관리 어려우므로 명중률 저하로 대체)
-                store.addPlayerCondition('Decreasing accuracy', 3, '', { percent: 5 });
-                showConditionGuideIfNew('Decreasing accuracy');
-            }
-            // 3A-8: ROLL BOULDER — 이제 executeBotTurn의 일반 공격 후에 실행됨
-            // (기존 독립 실행 로직 제거됨)
-            // 3A-7: BRITTLE 스택 리셋 체크
-            if (stageNum === 7) {
-                const brittCond = currentBot.conditions.get('Brittle');
-                if (brittCond) {
-                    const st = (brittCond.data as any)?.stackCount || 0;
-                    if (st >= 5) {
-                        setMessage("취성 파괴! (경감 초기화)");
-                        const freshBotC = new Map(currentBot.conditions);
-                        // 피해경감 10%부터 재시작
-                        const drCond = freshBotC.get('Damage Reducing');
-                        if (drCond && drCond.data) {
-                            freshBotC.set('Damage Reducing', { 
-                                ...drCond, 
-                                data: { ...(drCond.data as object), percent: 10 } 
-                            } as any);
-                        }
-                        freshBotC.set('Brittle', { ...brittCond, data: { ...(brittCond.data as any), stackCount: 0 } });
-                        store.setBot({ ...currentBot, conditions: freshBotC });
-                    }
-                }
-            }
-
-        } else if (store.chapterNum === '2B') {
-            // v2.3.9: Chapter 2B Special Stage (Stage 11) - 100% Status Application
-            if (stageNum === 11 && !currentBot.conditions.has('Awakening')) {
-                const freshP = useGameStore.getState().player;
-                if (!freshP.conditions.has('Bleeding')) {
-                    store.addPlayerCondition('Bleeding', 4);
-                    playConditionSound('Bleeding');
-                    setMessage(t.CONDITIONS.BLEEDING.NAME + "!");
-                    showConditionGuideIfNew('Bleeding');
-                } else {
-                    const effect = Math.random() < 0.5 ? 'Poisoning' : 'Debilitating';
-                    store.addPlayerCondition(effect, 4);
-                    playConditionSound(effect);
-                    const condKey = effect.toUpperCase();
-                    const condName = (t.CONDITIONS as any)[condKey]?.NAME || effect;
-                    setMessage(condName + "!");
-                    showConditionGuideIfNew(effect);
-                }
-                triggerScreenEffect('flash-red');
-            } else {
-                // Standard 2B Status Application logic
-                const bleedMap: Record<number, number> = { 1: 0.10, 2: 0.12, 3: 0.15, 4: 0.12, 5: 0, 6: 0.12, 7: 0.15, 8: 0.17, 9: 0.20, 10: 0.15 };
-                const bProb = bleedMap[stageNum] || 0.15;
-                if (bProb > 0 && Math.random() < bProb) {
-                    store.addPlayerCondition('Bleeding', 4);
-                    showConditionGuideIfNew('Bleeding');
-                }
-                if (stageNum === 8 && Math.random() < 0.25) {
-                    store.addPlayerCondition('Poisoning', 4);
-                    showConditionGuideIfNew('Poisoning');
-                }
-            }
-        } else if (store.chapterNum === '1') {
-            // v2.3.7: Restore Chapter 1 Status Application Mechanics
-            applyBotStageMechanics();
-        } else if (store.chapterNum === '3B') {
-            // ── 3B 보스 공격 후 상태이상 부여 ─────────────────────────────
-            const freshP3B = useGameStore.getState().player;
-            // 3B-1: 출혈 20%
-            if (stageNum === 1 && Math.random() < 0.2) {
-                store.addPlayerCondition('Bleeding', 4);
-                playConditionSound('Bleeding');
-                triggerScreenEffect('flash-red');
-                showConditionGuideIfNew('Bleeding');
-            }
-            // 3B-2: 진흙 뿌리기 40% (1장) + 중독 20%
-            if (stageNum === 2) {
-                if (Math.random() < 0.4) {
-                    store.applyMudStatus(1);
-                    setMessage("진흙 뿌리기: 카드 1장이 진흙 상태가 됩니다!");
-                    triggerScreenEffect('shake-small');
-                    showConditionGuideIfNew('Mudded');
-                }
-                if (Math.random() < 0.2) { 
-                    store.addPlayerCondition('Poisoning', 3); 
-                    showConditionGuideIfNew('Poisoning');
-                }
-            }
-            // 3B-3,4: 출혈 20% + 중독 10%
-            if ((stageNum === 3 || stageNum === 4)) {
-                if (Math.random() < 0.2) { 
-                    store.addPlayerCondition('Bleeding', 4); 
-                    playConditionSound('Bleeding'); 
-                    showConditionGuideIfNew('Bleeding');
-                }
-                if (Math.random() < 0.1) { 
-                    store.addPlayerCondition('Poisoning', 3); 
-                    showConditionGuideIfNew('Poisoning');
-                }
-            }
-            // 3B-5: 과출혈 30%
-            if (stageNum === 5 && Math.random() < 0.3) {
-                store.addPlayerCondition('Heavy Bleeding', 4);
-                playConditionSound('Heavy Bleeding');
-                triggerScreenEffect('flash-red');
-                showConditionGuideIfNew('Heavy Bleeding');
-            }
-            // 3B-6: 쇠약 30% + 중독 30%
-            if (stageNum === 6) {
-                if (Math.random() < 0.3) { 
-                    store.addPlayerCondition('Debilitating', 3); 
-                    showConditionGuideIfNew('Debilitating');
-                }
-                if (Math.random() < 0.3) { 
-                    store.addPlayerCondition('Poisoning', 3); 
-                    showConditionGuideIfNew('Poisoning');
-                }
-            }
-            // 3B-7: 과출혈 30%
-            if (stageNum === 7 && Math.random() < 0.3) {
-                store.addPlayerCondition('Heavy Bleeding', 4);
-                playConditionSound('Heavy Bleeding');
-                triggerScreenEffect('flash-red');
-                showConditionGuideIfNew('Heavy Bleeding');
-            }
-            // 3B-8: 진흙 뿌리기 40% (랜덤 2장) + 출혈 20% + 쇠약 30%
-            if (stageNum === 8) {
-                if (Math.random() < 0.4) {
-                    store.applyMudStatus(2);
-                    setMessage(`진흙 뿌리기: 카드 2장이 진흙 상태가 됩니다!`);
-                    triggerScreenEffect('shake-small');
-                    showConditionGuideIfNew('Mudded');
-                }
-                if (Math.random() < 0.2) { 
-                    store.addPlayerCondition('Bleeding', 4); 
-                    playConditionSound('Bleeding'); 
-                    showConditionGuideIfNew('Bleeding');
-                }
-                if (Math.random() < 0.3) { 
-                    store.addPlayerCondition('Debilitating', 3); 
-                    showConditionGuideIfNew('Debilitating');
-                }
-            }
-            // 3B-9: 출혈 40% + 쇠약 40%
-            if (stageNum === 9) {
-                if (Math.random() < 0.4) { 
-                    store.addPlayerCondition('Bleeding', 4); 
-                    playConditionSound('Bleeding'); 
-                    showConditionGuideIfNew('Bleeding');
-                }
-                if (Math.random() < 0.4) { 
-                    store.addPlayerCondition('Debilitating', 3); 
-                    showConditionGuideIfNew('Debilitating');
-                }
-            }
-            // 3B-10: 과출혈 20% + 중독 20%
-            if (stageNum === 10) {
-                if (Math.random() < 0.2) { 
-                    store.addPlayerCondition('Heavy Bleeding', 4); 
-                    playConditionSound('Bleeding'); 
-                    showConditionGuideIfNew('Heavy Bleeding');
-                }
-                if (Math.random() < 0.2) { 
-                    store.addPlayerCondition('Poisoning', 3); 
-                    showConditionGuideIfNew('Poisoning');
-                }
-            }
-
-            // 잠김(Swamping) 공격 카운터 (보스 공격 시)
-            const sCond = freshP3B.conditions.get('Swamping');
-            if (sCond) {
-                const prevCount = (sCond.data as any)?.attackCount || 0;
-                store.addPlayerCondition('Swamping', 9999, '', { attackCount: prevCount + 1 });
-            } else {
-                store.addPlayerCondition('Swamping', 9999, '', { attackCount: 1 });
-                showConditionGuideIfNew('Swamping');
-            }
-        }
+        // --- Status Effects (v2.3.2: Chapter 2A, 3A, 2B, 3B Adjustments) ---
+        applyBotStatusEffects({
+            store, stageNum, t, setMessage, setPlayerHp, showDamageText,
+            showConditionGuideIfNew, playConditionSound, triggerScreenEffect,
+            applyBotStageMechanics
+        });
 
         await wait(300);
         setBotAnimState('NONE');
@@ -2402,7 +1974,9 @@ export const useGameLoop = () => {
             const areaNames: Record<string, string> = {
                 '1': isKR ? '들판' : 'Field',
                 '2A': isKR ? '사막' : 'Desert',
-                '2B': isKR ? '깊은 숲' : 'Deep Forest'
+                '2B': isKR ? '깊은 숲' : 'Deep Forest',
+                '3A': isKR ? '동굴' : 'Cave',
+                '3B': isKR ? '늪지대' : 'Swamp'
             };
             const areaName = areaNames[store.chapterNum] || '';
             victoryMsg = t.COMBAT.AREA_CLEARED.replace('{area}', areaName);
