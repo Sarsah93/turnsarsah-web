@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { AudioManager } from '../utils/AudioManager';
 import { calculatePlayerDamage, calculateBotDamage, applyDamage } from './damageCalculation';
@@ -40,6 +40,7 @@ export const useGameLoop = () => {
 
     const [damageTexts, setDamageTexts] = useState<DamageTextData[]>([]);
     const [screenEffect, setScreenEffect] = useState<string>('');
+    const [fxClass, setFxClass] = useState<string>('');
 
     // v2.5.0: Game Speed Helpers
     const wait = (ms: number) => new Promise(r => setTimeout(r, ms / store.gameSpeed));
@@ -74,6 +75,37 @@ export const useGameLoop = () => {
         setScreenEffect(effect);
         scaledTimeout(() => setScreenEffect(''), 500);
     };
+
+    // v2.5.1: Attack FX Level Triggers
+    const triggerHitFx = useCallback((handType: string, damage: number) => {
+        let priorityLevel = '';
+        if (damage >= 151 || ['Royal Flush', 'Straight Flush', 'Five of a Kind'].includes(handType)) {
+             priorityLevel = 'critical';
+        } else if (damage >= 81 || ['Straight', 'Flush', 'Full House', 'Four of a Kind'].includes(handType)) {
+             priorityLevel = 'strong';
+        } else if (damage >= 31 || ['Two Pair', 'Three of a Kind'].includes(handType)) {
+             priorityLevel = 'medium';
+        } else if (handType === 'One Pair' || damage > 0) {
+             priorityLevel = 'light';
+        }
+        
+        if (priorityLevel) {
+            setFxClass(`hit-${priorityLevel}`);
+            scaledTimeout(() => setFxClass(''), 300);
+        }
+    }, [setFxClass]);
+
+    const triggerPlayerHitFx = useCallback((damage: number) => {
+        let level = '';
+        if (damage >= 50) level = 'critical';
+        else if (damage >= 25) level = 'strong';
+        else if (damage > 0) level = 'light';
+        
+        if (level) {
+            setFxClass(`player-hit-${level}`);
+            scaledTimeout(() => setFxClass(''), 700);
+        }
+    }, [setFxClass]);
 
     // 4B-2: Node Interference Helper (Generic Special Attack Reflection)
     const applyNodeInterference = (incomingDmg: number): number => {
@@ -729,9 +761,10 @@ export const useGameLoop = () => {
         AudioManager.playSFX('/assets/audio/player/whipping.mp3');
 
         // Boss Shake & Hit
+        // Boss Shake & Hit
         await wait(100);
-        triggerScreenEffect('shake');
         setBotAnimState('HIT');
+        triggerHitFx(handType, damage);
 
         // Damage Popup & Message
         if (isPuzzleCorrect) {
@@ -1353,6 +1386,7 @@ export const useGameLoop = () => {
 
             setPlayerHp(applyDamage(useGameStore.getState().player.hp, finalDmg));
             showDamageText('PLAYER', `-${finalDmg}`, '#e74c3c');
+            triggerPlayerHitFx(finalDmg);
 
             // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 성공 시 카운터 (2.4.0)
             if (store.chapterNum === '3B' && stageNum === 7 && finalDmg > 0) {
@@ -2583,6 +2617,7 @@ export const useGameLoop = () => {
         message,
         damageTexts,
         screenEffect,
+        fxClass,
         onDamageTextComplete,
         runCombatSequence,
         executeBotTurn,

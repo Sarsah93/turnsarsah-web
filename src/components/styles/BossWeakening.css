@@ -1,0 +1,24 @@
+/* ============================================================
+   BossWeakening.css - Boss HP-based visual degradation
+   ============================================================ */
+
+/* --- Stage 2: HP <= 60% --- */
+.boss-weak-2 img {
+  opacity: 0.95;
+  filter: saturate(0.9) brightness(0.97);
+  transition: filter 0.5s ease, opacity 0.5s ease;
+}
+
+/* --- Stage 4: HP <= 20% (flicker near death) --- */
+@keyframes boss-flicker {
+  0%   { opacity: 0.90; }
+  50%  { opacity: 0.50; }
+  100% { opacity: 0.90; }
+}
+
+.boss-weak-4 img {
+  opacity: 0.90;
+  filter: saturate(0.85) brightness(0.94);
+  animation: boss-flicker 1.8s ease-in-out infinite;
+  transition: filter 0.5s ease, opacity 0.5s ease;
+}

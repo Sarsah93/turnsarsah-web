@@ -1,0 +1,292 @@
+/* ============================================================
+   BattleEffects.css - Attack/Hit FX + Player Damage + Low HP
+   ============================================================ */
+
+/* ------- Base FX overlay container ------- */
+.battle-screen .fx-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2000;
+}
+
+.battle-screen .fx-overlay > div {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ------- Hit Spark (small radial glow at boss center) ------- */
+.battle-screen .fx-hit-spark {
+  width: 80px;
+  height: 80px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.6);
+  background: radial-gradient(circle, rgba(255,220,120,0.9) 0%, rgba(255,120,40,0.0) 70%);
+  inset: auto;
+}
+
+/* ------- Impact Ring ------- */
+.battle-screen .fx-impact-ring {
+  width: 200px;
+  height: 200px;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.4);
+  border: 2px solid rgba(255,220,120,0.9);
+  border-radius: 50%;
+  background: none;
+  inset: auto;
+}
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+
+/* Screen shake (light) */
+@keyframes screen-shake-light {
+  0%   { transform: translate(0,0); }
+  25%  { transform: translate(-2px,1px); }
+  50%  { transform: translate(2px,-1px); }
+  75%  { transform: translate(-1px,2px); }
+  100% { transform: translate(0,0); }
+}
+
+/* Screen shake (strong) */
+@keyframes screen-shake-strong {
+  0%   { transform: translate(0,0); }
+  20%  { transform: translate(-4px,2px); }
+  40%  { transform: translate(4px,-2px); }
+  60%  { transform: translate(-3px,3px); }
+  80%  { transform: translate(3px,-3px); }
+  100% { transform: translate(0,0); }
+}
+
+/* Zoom pulse */
+@keyframes screen-pulse {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Boss brightness flash */
+@keyframes boss-flash {
+  0%   { filter: brightness(1) contrast(1); }
+  40%  { filter: brightness(1.5) contrast(1.2); }
+  100% { filter: brightness(1) contrast(1); }
+}
+
+/* Impact ring expand */
+@keyframes impact-ring {
+  0%   { opacity: 0.9; transform: translate(-50%,-50%) scale(0.4); }
+  100% { opacity: 0;   transform: translate(-50%,-50%) scale(1.4); }
+}
+
+/* Hit spark pop */
+@keyframes hit-spark-pop {
+  0%   { opacity: 0.9; transform: translate(-50%,-50%) scale(0.5); }
+  100% { opacity: 0;   transform: translate(-50%,-50%) scale(1.3); }
+}
+
+/* Screen dim (critical) */
+@keyframes screen-dim {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+/* Speed lines (critical) */
+@keyframes speedlines {
+  0%   { opacity: 0;    transform: translateX(-10px); }
+  50%  { opacity: 0.45; }
+  100% { opacity: 0;    transform: translateX(10px); }
+}
+
+/* Crack flash (critical) */
+@keyframes crack-flash {
+  0%   { opacity: 0; filter: brightness(1); }
+  40%  { opacity: 1; filter: brightness(1.3); }
+  100% { opacity: 0; filter: brightness(1); }
+}
+
+/* ============================================================
+   PLAYER ATTACK LEVELS (applied on .battle-screen)
+   ============================================================ */
+
+/* --- Light (One Pair) --- */
+.battle-screen.hit-light {
+  animation: screen-shake-light 120ms ease !important;
+}
+.battle-screen.hit-light .boss-avatar-wrapper img {
+  animation: boss-flash 180ms ease;
+}
+.battle-screen.hit-light .fx-hit-spark {
+  animation: hit-spark-pop 180ms ease-out forwards;
+}
+
+/* --- Medium (Two Pair / Triple) --- */
+.battle-screen.hit-medium {
+  animation: screen-shake-light 160ms ease !important;
+}
+.battle-screen.hit-medium .boss-avatar-wrapper img {
+  animation: boss-flash 220ms ease;
+}
+.battle-screen.hit-medium .fx-impact-ring {
+  animation: impact-ring 320ms ease-out forwards;
+}
+.battle-screen.hit-medium .fx-hit-spark {
+  animation: hit-spark-pop 220ms ease-out forwards;
+}
+
+/* --- Strong (Straight / Flush / Full House / Four of a Kind) --- */
+.battle-screen.hit-strong {
+  animation: screen-shake-strong 220ms ease !important;
+}
+.battle-screen.hit-strong .battle-field-container {
+  animation: screen-pulse 180ms ease;
+}
+.battle-screen.hit-strong .boss-avatar-wrapper img {
+  animation: boss-flash 260ms ease;
+}
+.battle-screen.hit-strong .fx-impact-ring {
+  animation: impact-ring 350ms ease-out forwards;
+}
+.battle-screen.hit-strong .fx-hit-spark {
+  animation: hit-spark-pop 250ms ease-out forwards;
+}
+
+/* --- Critical (Straight Flush / Royal Flush) --- */
+.battle-screen.hit-critical {
+  animation: screen-shake-strong 260ms ease !important;
+}
+.battle-screen.hit-critical .fx-darken {
+  background: rgba(0,0,0,0.8);
+  animation: screen-dim 200ms ease forwards;
+}
+.battle-screen.hit-critical .fx-speedlines {
+  background-image: repeating-linear-gradient(
+    -20deg,
+    rgba(255,255,255,0.15) 0px,
+    rgba(255,255,255,0.15) 3px,
+    rgba(255,255,255,0.0) 6px,
+    rgba(255,255,255,0.0) 14px
+  );
+  animation: speedlines 200ms ease-out forwards;
+}
+.battle-screen.hit-critical .boss-avatar-wrapper img {
+  animation: boss-flash 280ms ease;
+}
+.battle-screen.hit-critical .fx-impact-ring {
+  animation: impact-ring 400ms ease-out forwards;
+}
+.battle-screen.hit-critical .fx-hit-spark {
+  animation: hit-spark-pop 300ms ease-out forwards;
+}
+
+/* ============================================================
+   PLAYER HIT (Boss attacks player)
+   ============================================================ */
+
+/* Red vignette */
+@keyframes red-vignette {
+  0%   { opacity: 0; }
+  30%  { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+.battle-screen .fx-vignette {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(180,20,20,0.7) 100%);
+}
+
+/* Red flash */
+@keyframes red-flash {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+.battle-screen .fx-flash {
+  background: rgba(200,20,20,0.3);
+}
+
+/* Slash overlay */
+@keyframes slash-fade {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+.battle-screen .fx-slash {
+  background: linear-gradient(135deg, transparent 30%, rgba(255,60,60,0.4) 45%, transparent 55%);
+}
+
+/* Desaturate hit */
+@keyframes desaturate-hit {
+  0%   { filter: saturate(1); }
+  40%  { filter: saturate(0.2); }
+  100% { filter: saturate(1); }
+}
+
+/* Camera drop */
+@keyframes hit-drop {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(4px); }
+  100% { transform: translateY(0); }
+}
+
+/* --- Player hit light --- */
+.battle-screen.player-hit-light {
+  animation: screen-shake-light 120ms ease !important;
+}
+.battle-screen.player-hit-light .fx-vignette {
+  animation: red-vignette 260ms ease forwards;
+}
+.battle-screen.player-hit-light .fx-flash {
+  animation: red-flash 140ms ease forwards;
+}
+
+/* --- Player hit strong --- */
+.battle-screen.player-hit-strong {
+  animation: screen-shake-strong 220ms ease !important;
+}
+.battle-screen.player-hit-strong .battle-field-container {
+  animation: hit-drop 200ms ease;
+}
+.battle-screen.player-hit-strong .fx-vignette {
+  animation: red-vignette 400ms ease forwards;
+}
+.battle-screen.player-hit-strong .fx-slash {
+  animation: slash-fade 420ms ease forwards;
+}
+
+/* --- Player hit critical --- */
+.battle-screen.player-hit-critical {
+  animation: screen-shake-strong 260ms ease, desaturate-hit 500ms ease !important;
+}
+.battle-screen.player-hit-critical .fx-vignette {
+  animation: red-vignette 700ms ease forwards;
+}
+.battle-screen.player-hit-critical .fx-slash {
+  animation: slash-fade 600ms ease forwards;
+}
+.battle-screen.player-hit-critical .fx-flash {
+  animation: red-flash 200ms ease forwards;
+}
+
+/* ============================================================
+   LOW HP PERSISTENT DANGER (HP <= 20%)
+   ============================================================ */
+
+@keyframes lowhp-pulse {
+  0%   { opacity: 0.2; }
+  50%  { opacity: 0.5; }
+  100% { opacity: 0.2; }
+}
+
+.battle-screen.player-low-hp .fx-vignette {
+  opacity: 0.35;
+  animation: lowhp-pulse 1.4s ease-in-out infinite;
+}
+
+.battle-screen.player-low-hp .player-hp-bar {
+  animation: lowhp-pulse 1.2s ease-in-out infinite;
+}

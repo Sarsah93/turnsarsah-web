@@ -58,6 +58,7 @@ export const CardHand: React.FC<CardHandProps> = ({
   } = useGameStore();
 
   const t = TRANSLATIONS[language];
+  const [afterimages, setAfterimages] = useState<{ id: number; x: number; y: number; card: Card }[]>([]);
 
   // Track if gathering animation has started (for two-phase animation)
   const [gatheringStarted, setGatheringStarted] = useState(false);
@@ -139,6 +140,38 @@ export const CardHand: React.FC<CardHandProps> = ({
     }
     prevGamePhase.current = gamePhase;
   }, [gamePhase]);
+
+  // v2.5.1: Card Ghost Trail effect
+  useEffect(() => {
+    if (gamePhase === 'THRUSTING') {
+      const newGhosts: { id: number; x: number; y: number; card: Card }[] = [];
+      const now = Date.now();
+      const container = document.querySelector('.battle-screen');
+      if (container) {
+        const cRect = container.getBoundingClientRect();
+        selectedCards.forEach((idx, i) => {
+          const slotEl = slotRefs.current[idx];
+          const cardData = cards[idx];
+          if (slotEl && cardData) {
+            const rect = slotEl.getBoundingClientRect();
+            newGhosts.push({ 
+              id: now + i, 
+              x: rect.left - cRect.left, 
+              y: rect.top - cRect.top, 
+              card: cardData 
+            });
+          }
+        });
+        setAfterimages(newGhosts);
+      }
+      
+      const timer = setTimeout(() => {
+        setAfterimages([]);
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [gamePhase, selectedCards, cards]);
+
 
   // Selection state is now controlled from parent
 
@@ -262,6 +295,21 @@ export const CardHand: React.FC<CardHandProps> = ({
           document.getElementById('battle-portal-root')!
         )
       )}
+
+      {/* Card Afterimages Layer */}
+      {document.getElementById('battle-portal-root') && afterimages.map(img => (
+        createPortal(
+          <React.Fragment key={img.id}>
+            <div className="card-afterimage ghost-1" style={{ left: img.x, top: img.y }}>
+              <CardComponent card={img.card} selected={false} onClick={() => {}} />
+            </div>
+            <div className="card-afterimage ghost-2" style={{ left: img.x, top: img.y }}>
+              <CardComponent card={img.card} selected={false} onClick={() => {}} />
+            </div>
+          </React.Fragment>,
+          document.getElementById('battle-portal-root')!
+        )
+      ))}
 
       {/* Action Buttons */}
       <div className="action-buttons">

@@ -4,6 +4,7 @@ import { ConditionIcon } from '../Common/ConditionIcon';
 import { Difficulty, DIFFICULTY_CONFIGS } from '../../constants/gameConfig';
 import { TRANSLATIONS } from '../../constants/translations';
 import { CHAPTERS } from '../../constants/stages';
+import '../styles/BossWeakening.css';
 
 export const BossDisplay: React.FC = () => {
     const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep, language } = useGameStore();
@@ -34,8 +35,11 @@ export const BossDisplay: React.FC = () => {
 
     const diffInfo = getDifficultyText(difficulty);
 
-    // Simple HP Bar calculation
     const hpPercent = Math.max(0, (bot.hp / bot.maxHp) * 100);
+    const bossRatio = bot.hp / bot.maxHp;
+    let bossWeakClass = '';
+    if (bossRatio <= 0.20) bossWeakClass = 'boss-weak-4';
+    else if (bossRatio <= 0.60) bossWeakClass = 'boss-weak-2';
 
     // Map stage number to filename
     const getBossImage = (chapter: string, stage: number) => {
@@ -108,22 +112,38 @@ export const BossDisplay: React.FC = () => {
         }
         if (chapter === '3B') {
             const mapping: Record<number, string> = {
-                1: '01_ALLIGATOR SNAPPING TURTLE.png',
-                2: '02_MULROC.png',
-                3: '03_CROCODILE.png',
-                4: '04_LIZARD SKINK.png',
-                5: '05_LIZARD MAN.png',
-                6: '06_LIZARD SLANN.png',
-                7: '07_LIZARD SAURUS.png',
-                8: '08_TROGLODON.png',
-                9: '09_LIZARD KROXIGOR.png',
-                10: '10_LIZARD KING.png'
+                1: '1B-1_Giant Toad.png',
+                2: '1B-2_Murlocs.png',
+                3: '1B-3_Mutant Slug.png',
+                4: '1B-4_Basilisk Skink.png',
+                5: '1B-5_Leech.png',
+                6: '1B-6_Mosquito.png',
+                7: '1B-7_Crocodile.png',
+                8: '1B-8_Giant Centipede.png',
+                9: '1B-9_Will-o-Wisp.png',
+                10: '1B-10_Lizard King.png',
+                11: '1B_SWAMP HYDRA.png'
             };
-            const filename = mapping[stage] || '01_ALLIGATOR SNAPPING TURTLE.png';
-            return `/assets/boss_swamp/${filename}`;
+            const filename = mapping[stage] || '1B-1_Giant Toad.png';
+            if (stage === 11) return `/assets/boss_chapter_3b_swamp/${filename}`;
+            return `/assets/boss_chapter_3b_swamp/${filename}`;
         }
-        return '/assets/boss_goblin/01_goblin.png';
+        return '/assets/boss_goblin/tutorial_bot.png';
     };
+
+    const bossImg = getBossImage(chapterNum, stageNum);
+
+    const mask80 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNMTAsMTggaDYgdjQgaC02IFogTTg0LDY2IGg2IHY0IGgtNiBaIi8+PC9zdmc+")';
+    const mask60 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTEwLDE4IGg2IHY0IGgtNiBaIE04NCw2NiBoNiB2NCBoLTYgWiIvPjwvc3ZnPg==")';
+    const mask40 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTQ4LDMwIGg2IHY1IGgtNiBaIE0xMCwxOCBoNiB2NCBoLTYgWiBNODQsNjYgaDYgdjQgaC02IFoiLz48L3N2Zz4=")';
+    const mask20 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTQ4LDMwIGg2IHY1IGgtNiBaIE0xMCwxOCBoNiB2NCBoLTYgWiBNODQsNjYgaDYgdjQgaC02IFogTTIyLDc4IGg3IHY1IGgtNyBaIE03OCwyMCBoNSB2NCBoLTUgWiIvPjwvc3ZnPg==")';
+
+    const holeMask =
+        bot.hp <= 0 ? 'none' :
+        bossRatio <= 0.20 ? mask20 :
+        bossRatio <= 0.40 ? mask40 :
+        bossRatio <= 0.60 ? mask60 :
+        bossRatio <= 0.80 ? mask80 : 'none';
 
     return (
         <div className="boss-display" style={{
@@ -166,7 +186,7 @@ export const BossDisplay: React.FC = () => {
             </div>
 
             {/* Boss Image (Center Top) */}
-            <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''}`}
+            <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''} ${bossWeakClass}`}
                 style={{
                     position: 'absolute',
                     top: '60px', // Even higher to maximize combat area
@@ -198,10 +218,24 @@ export const BossDisplay: React.FC = () => {
                         }}>
                             {bot.name.toUpperCase()}
                         </div>
+                        
                         <img
-                            src={getBossImage(chapterNum, stageNum)}
+                            src={bossImg}
                             alt={bot.name}
-                            style={{ width: '100%', height: 'auto', maxHeight: '100%', objectFit: 'contain' }}
+                            style={{ 
+                                width: '100%', 
+                                height: 'auto', 
+                                maxHeight: '100%', 
+                                objectFit: 'contain',
+                                WebkitMaskImage: holeMask,
+                                maskImage: holeMask,
+                                WebkitMaskRepeat: 'no-repeat',
+                                maskRepeat: 'no-repeat',
+                                WebkitMaskSize: 'contain',
+                                maskSize: 'contain',
+                                WebkitMaskPosition: 'center',
+                                maskPosition: 'center'
+                            }}
                         />
                     </>
                 )}

@@ -19,10 +19,12 @@ import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 
 import { PauseMenu, SaveLoadMenu, SettingsMenu, ConfirmationPopup } from '../Menu';
 import { BattleField } from './BattleField';
+import '../styles/BattleEffects.css';
+import '../styles/CardAfterimage.css';
 
 export const BattleScreen: React.FC = () => {
     const {
-        message, damageTexts, screenEffect, onDamageTextComplete,
+        message, damageTexts, screenEffect, fxClass, onDamageTextComplete,
         runCombatSequence, executeCardSwap, startInitialDraw
     } = useGameLoop();
     const store = useGameStore();
@@ -35,6 +37,7 @@ export const BattleScreen: React.FC = () => {
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
     const [bossPos, setBossPos] = useState({ centerX: 800, centerY: 285, bottom: 510 });
     const [cardsPos, setCardsPos] = useState({ topCenterX: 800, topCenterY: 700 });
+    const [lowHpClass, setLowHpClass] = useState(false);
     const handRef = React.useRef<HTMLDivElement | null>(null);
 
     // Trigger Initial Draw
@@ -49,6 +52,12 @@ export const BattleScreen: React.FC = () => {
             setSelectedCards([]);
         }
     }, [store.gameState, gamePhase]);
+
+    // Low HP Vignette logic
+    useEffect(() => {
+        const ratio = player.hp / player.maxHp;
+        setLowHpClass(ratio <= 0.2);
+    }, [player.hp, player.maxHp]);
 
     // Menu States
     const [activeMenu, setActiveMenu] = useState<'NONE' | 'PAUSE' | 'SETTINGS' | 'SAVE' | 'LOAD' | 'CONFIRM_QUIT'>('NONE');
@@ -245,10 +254,21 @@ export const BattleScreen: React.FC = () => {
     const handleProperGameEnd = () => window.location.reload();
 
     return (
-        <div className={`battle-screen ${screenEffect}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+        <div className={`battle-screen ${screenEffect} ${fxClass} ${lowHpClass ? 'player-low-hp' : ''}`} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
             <TrophyPopup />
             <GuidePopup />
             <ClearCongratulationsPopup />
+
+            {/* FX Overlays */}
+            <div className="fx-overlay">
+                <div className="fx-darken"></div>
+                <div className="fx-speedlines"></div>
+                <div className="fx-vignette"></div>
+                <div className="fx-flash"></div>
+                <div className="fx-slash"></div>
+                <div className="fx-impact-ring"></div>
+                <div className="fx-hit-spark"></div>
+            </div>
 
             {/* Entity Layer */}
             <div className={`battle-field-container ${isTutorial && tutorialStep < 10 ? 'tutorial-dim' : ''}`}>
