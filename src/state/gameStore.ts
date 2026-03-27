@@ -926,19 +926,23 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const bossAtk = bossOverride.atk ?? Math.floor(stageConfig.atk * config.atkScale);
 
       let activeSkills = state.equippedAltarSkills || [];
-      // v2.4.0: Fetch specific difficulty altar data
-      const altarData = AltarManager.getAltarData();
-      if (state.difficulty === Difficulty.HARD) {
-        activeSkills = altarData.hard?.equippedSkills || [];
-      } else if (state.difficulty === Difficulty.HELL) {
-        activeSkills = altarData.hell?.equippedSkills || [];
-      } else {
-        activeSkills = altarData.normal?.equippedSkills || [];
+
+      const isChapterTransition = stageId === 1 && state.chapterNum && state.chapterNum !== chapterId;
+
+      // v2.5.1: 새 게임 시작 시에만 제단 프리셋에서 스킬을 가져옴
+      // 스테이지/챕터 전환 시에는 현재 런 세션의 스킬을 유지 (프리셋 변경 악용 방지)
+      if (stageId === 1 && !isChapterTransition) {
+        const altarData = AltarManager.getAltarData();
+        if (state.difficulty === Difficulty.HARD) {
+          activeSkills = altarData.hard?.equippedSkills || [];
+        } else if (state.difficulty === Difficulty.HELL) {
+          activeSkills = altarData.hell?.equippedSkills || [];
+        } else {
+          activeSkills = altarData.normal?.equippedSkills || [];
+        }
       }
 
       let player: Character;
-
-      const isChapterTransition = stageId === 1 && state.chapterNum && state.chapterNum !== chapterId;
 
       if (stageId === 1 && !isChapterTransition) {
         // Start of Game - Reset Stats + Apply Altar Bonuses
@@ -1526,6 +1530,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         hasStage6Bonus: gameData.hasStage6Bonus ?? false,
         gameState: gameData.gameState || GameState.BATTLE,
         gamePhase: gameData.gamePhase || 'IDLE',
+        // v2.5.1: 세이브 파일의 장착 스킬 스냅샷 복원 (현재 제단 프리셋 무시)
+        equippedAltarSkills: gameData.equippedAltarSkills || [],
       });
 
       // Restore Deck State
