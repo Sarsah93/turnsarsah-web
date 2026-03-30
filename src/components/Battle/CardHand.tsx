@@ -346,7 +346,6 @@ export const CardHand: React.FC<CardHandProps> = ({
           const shouldRenderInPortal = isSelected && isAttacking;
 
           // Deal logic
-          const showDealAnim = !isAttacking;
           const slotX = (idx - 3.5) * 150;
           const deckX = 750;
           const offsetX = deckX - slotX;
@@ -484,7 +483,7 @@ export const CardHand: React.FC<CardHandProps> = ({
               )}
               {card && (
                 <div key={card.id}
-                  className={showDealAnim ? 'card-deal' : ''}
+                  className="card-deal"
                   style={{
                     width: '100%',
                     height: '100%',

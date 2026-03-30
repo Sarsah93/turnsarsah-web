@@ -142,8 +142,8 @@ export const BossDisplay: React.FC = () => {
                                 maskImage: holeMask,
                                 WebkitMaskRepeat: 'no-repeat',
                                 maskRepeat: 'no-repeat',
-                                WebkitMaskSize: 'contain',
-                                maskSize: 'contain',
+                                WebkitMaskSize: '100% 100%',
+                                maskSize: '100% 100%',
                                 WebkitMaskPosition: 'center',
                                 maskPosition: 'center'
                             }}
