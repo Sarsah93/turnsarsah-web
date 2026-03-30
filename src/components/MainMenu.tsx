@@ -9,8 +9,12 @@ import { TRANSLATIONS } from '../constants/translations';
 import { AltarSystem } from './AltarSystem';
 
 export const MainMenu: React.FC = () => {
-    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language } = useGameStore();
+    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize } = useGameStore();
     const t = TRANSLATIONS[language];
+    const isEnglish = language === 'EN';
+    const isLargeFont = fontSize === 'LARGE';
+    const menuButtonWidth = isEnglish ? (isLargeFont ? '22ch' : '20ch') : undefined;
+    const menuButtonStyle = isEnglish ? { whiteSpace: 'nowrap' as const } : undefined;
 
     useEffect(() => {
         AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
@@ -44,14 +48,14 @@ export const MainMenu: React.FC = () => {
 
             {/* Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
-                <BlockButton text={t.UI.NEW_GAME} onClick={() => setActiveMenu('DIFFICULTY')} />
-                <BlockButton text={t.UI.LOAD_GAME} onClick={() => setActiveMenu('LOAD')} />
+                <BlockButton text={t.UI.NEW_GAME} onClick={() => setActiveMenu('DIFFICULTY')} width={menuButtonWidth} style={menuButtonStyle} />
+                <BlockButton text={t.UI.LOAD_GAME} onClick={() => setActiveMenu('LOAD')} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.TUTORIAL} onClick={() => {
                     triggerTransition(() => initTutorial());
-                }} />
-                <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} />
-                <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} />
-                <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" />
+                }} width={menuButtonWidth} style={menuButtonStyle} />
+                <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} width={menuButtonWidth} style={menuButtonStyle} />
+                <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} width={menuButtonWidth} style={menuButtonStyle} />
+                <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" width={menuButtonWidth} style={menuButtonStyle} />
             </div>
 
 

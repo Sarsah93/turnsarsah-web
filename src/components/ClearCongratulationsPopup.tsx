@@ -58,7 +58,7 @@ export const ClearCongratulationsPopup: React.FC = () => {
             }}>
                 <h1 style={{
                     color: '#f1c40f',
-                    fontSize: '3rem',
+                    fontSize: '4.5rem',
                     margin: 0,
                     fontFamily: 'BebasNeue',
                     textShadow: '0 0 10px rgba(241, 196, 15, 0.5)'
@@ -68,8 +68,8 @@ export const ClearCongratulationsPopup: React.FC = () => {
 
                 <div style={{
                     color: '#ecf0f1',
-                    fontSize: '1.2rem',
-                    lineHeight: '1.8',
+                    fontSize: '2rem',
+                    lineHeight: '1.6',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'keep-all',
                     textAlign: 'center',

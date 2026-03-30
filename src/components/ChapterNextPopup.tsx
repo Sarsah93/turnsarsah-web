@@ -70,7 +70,7 @@ export const ChapterNextPopup: React.FC = () => {
                 {/* 클리어 메시지 */}
                 <h2 style={{
                     color: '#a8dadc',
-                    fontSize: '2rem',
+                    fontSize: '3rem',
                     margin: 0,
                     fontFamily: "'Bebas Neue', sans-serif",
                     letterSpacing: '2px',
@@ -87,7 +87,7 @@ export const ChapterNextPopup: React.FC = () => {
 
                 {/* 섹터 활성화 메시지 */}
                 <p style={{
-                    fontSize: '1.3rem',
+                    fontSize: '1.8rem',
                     margin: 0,
                     color: '#ecf0f1',
                     letterSpacing: '1px',
@@ -97,7 +97,7 @@ export const ChapterNextPopup: React.FC = () => {
 
                 {/* 다음 챕터 이름 */}
                 <div style={{
-                    fontSize: '2.6rem',
+                    fontSize: '3.6rem',
                     fontFamily: "'Bebas Neue', sans-serif",
                     color: '#f1c40f',
                     letterSpacing: '3px',

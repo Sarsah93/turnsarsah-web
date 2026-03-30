@@ -160,7 +160,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
                 return {
                     title: t.STEP_14.TITLE,
                     text: (
-                        <div style={{ textAlign: 'left', fontSize: '1.2rem', whiteSpace: 'pre-wrap' }}>
+                        <div style={{ textAlign: 'left', fontSize: '2.2rem', whiteSpace: 'pre-wrap' }}>
                             {(t as any).STEP_14_DESC}
                         </div>
                     ),
@@ -209,7 +209,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
                 border: '2px solid #f1c40f',
                 borderRadius: '15px',
                 padding: '30px',
-                width: '600px',
+                width: '640px',
                 textAlign: 'center',
                 boxShadow: '0 0 30px rgba(0,0,0,0.9)',
                 color: '#fff',
@@ -218,11 +218,20 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, 
                 display: 'flex',
                 flexDirection: 'column',
                 minHeight: '300px',
-                position: 'relative'
+                maxHeight: '450px',
+                position: 'relative',
+                transform: 'translateY(-140px)'
             }}>
-                <h2 style={{ color: '#f1c40f', fontSize: '2.5rem', marginBottom: '20px' }}>{content.title}</h2>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <p style={{ fontSize: '1.4rem', lineHeight: '1.6', marginBottom: '30px', fontFamily: 'sans-serif' }}>
+                <h2 style={{ color: '#f1c40f', fontSize: '3rem', marginBottom: '20px' }}>{content.title}</h2>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', marginBottom: '20px', padding: '0 10px' }}>
+                    <p style={{ 
+                        fontSize: '2.2rem', 
+                        lineHeight: '1.6', 
+                        margin: 'auto 0', 
+                        fontFamily: "'Noto Sans KR', sans-serif", 
+                        wordBreak: 'keep-all',
+                        whiteSpace: 'pre-wrap'
+                    }}>
                         {content.text}
                     </p>
                 </div>
