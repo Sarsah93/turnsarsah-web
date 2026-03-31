@@ -63,7 +63,6 @@ export const AltarSkillSlots: React.FC = () => {
                                 position: 'relative',
                                 transition: 'all 0.3s ease',
                                 cursor: skill ? 'pointer' : 'default',
-                                opacity: (skillId === '4A-1' && dyschromatopsiaUses >= 1) ? 0.5 : 1,
                             }}
                             onMouseEnter={() => skill && setHoveredSkill(skillId)}
                             onMouseLeave={() => setHoveredSkill(null)}
@@ -75,7 +74,13 @@ export const AltarSkillSlots: React.FC = () => {
                                     <img
                                         src={`/assets/altar skills/${skill.image}`}
                                         alt={skill.name[language]}
-                                        style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                                        style={{ 
+                                            width: '48px', 
+                                            height: '48px', 
+                                            objectFit: 'contain',
+                                            opacity: (skillId === '4A-1' && dyschromatopsiaUses >= 1) ? 0.5 : 1,
+                                            filter: (skillId === '4A-1' && dyschromatopsiaUses >= 1) ? 'grayscale(100%)' : 'none'
+                                        }}
                                         onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }}
                                     />
                                     {skillId === '4A-1' && (
@@ -88,8 +93,8 @@ export const AltarSkillSlots: React.FC = () => {
                                             fontSize: '0.7rem',
                                             padding: '2px 4px',
                                             borderRadius: '4px',
-                                            fontWeight: 'bold',
-                                            border: '1px solid #fff'
+                                            border: '1px solid #fff',
+                                            opacity: dyschromatopsiaUses >= 1 ? 0.5 : 1
                                         }}>
                                             {dyschromatopsiaUses}/1
                                         </div>
@@ -138,8 +143,16 @@ export const AltarSkillSlots: React.FC = () => {
                                             {skill.effect[language]}
                                         </div>
                                     </div>
-                                    <div style={{ fontSize: '1rem', color: '#f1c40f', fontWeight: 'bold', textAlign: 'right' }}>
-                                        [{skill.duration[language]}]
+                                    <div style={{ 
+                                        fontSize: '1rem', 
+                                        color: (skillId === '4A-1' && dyschromatopsiaUses >= 1) ? '#e74c3c' : '#f1c40f', 
+                                        fontWeight: 'bold', 
+                                        textAlign: 'right' 
+                                    }}>
+                                        {skillId === '4A-1' && dyschromatopsiaUses >= 1 
+                                            ? (language === 'KR' ? '[이미 사용함 (1/1)]' : '[Already Used (1/1)]')
+                                            : `[${skill.duration[language]}]`
+                                        }
                                     </div>
                                 </div>
                             )}
