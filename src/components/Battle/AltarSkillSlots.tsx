@@ -15,7 +15,7 @@ export const AltarSkillSlots: React.FC = () => {
 
     const handleSkillClick = (skillId: string) => {
         if (skillId === '4A-1') {
-            if (dyschromatopsiaUses >= 2) return;
+            if (dyschromatopsiaUses >= 1) return;
             setDyschromatopsiaActive(!isDyschromatopsiaActive);
             AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
         }
@@ -63,7 +63,7 @@ export const AltarSkillSlots: React.FC = () => {
                                 position: 'relative',
                                 transition: 'all 0.3s ease',
                                 cursor: skill ? 'pointer' : 'default',
-                                opacity: (skillId === '4A-1' && dyschromatopsiaUses >= 2) ? 0.5 : 1,
+                                opacity: (skillId === '4A-1' && dyschromatopsiaUses >= 1) ? 0.5 : 1,
                             }}
                             onMouseEnter={() => skill && setHoveredSkill(skillId)}
                             onMouseLeave={() => setHoveredSkill(null)}
@@ -91,7 +91,7 @@ export const AltarSkillSlots: React.FC = () => {
                                             fontWeight: 'bold',
                                             border: '1px solid #fff'
                                         }}>
-                                            {dyschromatopsiaUses}/2
+                                            {dyschromatopsiaUses}/1
                                         </div>
                                     )}
                                 </>

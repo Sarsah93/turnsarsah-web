@@ -311,10 +311,10 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Errors occur in the way card suit colors are perceived.'
         },
         effect: {
-            KR: '카드 족보 판정 시, 같은 색깔의 문양(하트/다이아몬드, 스페이드/클로버)을 동일한 문양으로 간주하여 계산한다. (플러시 및 스트레이트 플러시 판정 시 유리)',
-            EN: 'Treats suits of the same color (Heart/Diamond, Spade/Club) as the same suit for hand evaluation.'
+            KR: '스킬 활성화 시 카드 족보 판정에서 같은 색깔의 문양(하트/다이아몬드, 스페이드/클로버)을 동일한 문양으로 간주한다. (해당 효과로 색상 통합이 이뤄져 실제로 플러시 계열 족보가 발동되었을 때만 횟수가 차감됨)',
+            EN: 'When active, treats suits of the same color (Heart/Diamond, Spade/Club) as the same suit. (Consumes 1 use ONLY when a Flush-type hand is successfully formed using color integration)'
         },
-        duration: { KR: '영구(Permanent)', EN: 'Permanent' },
+        duration: { KR: '스테이지 당 1회(0/1)', EN: '1 Use per stage (0/1)' },
         cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
     },
     '4A-2': {

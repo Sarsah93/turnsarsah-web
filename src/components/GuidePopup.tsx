@@ -69,7 +69,10 @@ export const GuidePopup: React.FC = () => {
         GIMMICK: '#e67e22',
         CONDITION: '#e74c3c',
     };
-    const accent = accentColors[guidePopup.category] || '#a8dadc';
+    let accent = accentColors[guidePopup.category] || '#a8dadc';
+    if (guidePopup.key === 'condition_regenerating') {
+        accent = '#2ecc71';
+    }
 
     const scrollHintText = language === 'KR' ? '아래로 스크롤' : 'Scroll down';
 
@@ -93,7 +96,11 @@ export const GuidePopup: React.FC = () => {
                         {guidePopup.category === 'CHAPTER_INTRO' && (language === 'KR' ? '📜 챕터 안내' : '📜 Chapter Intro')}
                         {guidePopup.category === 'SYSTEM' && (language === 'KR' ? '📦 시스템 안내' : '📦 System Guide')}
                         {guidePopup.category === 'GIMMICK' && (language === 'KR' ? '⚔️ 기믹 안내' : '⚔️ Gimmick Guide')}
-                        {guidePopup.category === 'CONDITION' && (language === 'KR' ? '💊 상태이상 안내' : '💊 Status Guide')}
+                        {guidePopup.category === 'CONDITION' && (
+                            guidePopup.key === 'condition_regenerating' 
+                                ? (language === 'KR' ? '💚 상태이상 안내' : '💚 Status Guide')
+                                : (language === 'KR' ? '💊 상태이상 안내' : '💊 Status Guide')
+                        )}
                     </div>
 
                     {/* Title */}

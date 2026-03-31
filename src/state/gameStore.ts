@@ -449,7 +449,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   dyschromatopsiaUses: 0,
   isDyschromatopsiaActive: false,
   setDyschromatopsiaActive: (isDyschromatopsiaActive) => set({ isDyschromatopsiaActive }),
-  incrementDyschromatopsiaUses: () => set((state) => ({ dyschromatopsiaUses: Math.min(2, state.dyschromatopsiaUses + 1) })),
+  incrementDyschromatopsiaUses: () => set((state) => ({ dyschromatopsiaUses: Math.min(1, state.dyschromatopsiaUses + 1) })),
 
   // v2.5.0: Game Speed
   gameSpeed: Number(localStorage.getItem(storageKey('game_speed'))) || 1.0,
@@ -1022,6 +1022,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         equippedAltarSkills: activeSkills,
         player: player,
         altarSkillUses: newSkillUses,
+
         stageSkillsTriggered: [],
         consecutiveHandType: null,
         consecutiveHandStacks: 0,

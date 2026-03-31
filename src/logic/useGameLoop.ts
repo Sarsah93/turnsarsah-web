@@ -325,15 +325,17 @@ export const useGameLoop = () => {
             store.bannedRanks,
             store.bannedSuit,
             store.difficulty,
-            store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 2
+            store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 1
         );
 
-        // 4A-1: Dyschromatopsia - If active, consume a use
-        if (store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 2) {
-            store.incrementDyschromatopsiaUses();
-            // If uses reach 2, auto-deactivate
-            if (store.dyschromatopsiaUses + 1 >= 2) {
-                store.setDyschromatopsiaActive(false);
+        // 4A-1: Dyschromatopsia - If active, consume a use ONLY when a flush is formed
+        if (store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 1) {
+            if (handType.includes('Flush')) {
+                store.incrementDyschromatopsiaUses();
+                // If uses reach 1, auto-deactivate
+                if (store.dyschromatopsiaUses + 1 >= 1) {
+                    store.setDyschromatopsiaActive(false);
+                }
             }
         }
 

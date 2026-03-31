@@ -106,7 +106,7 @@ export function calculatePlayerDamage(
 ): DamageCalculationResult {
   const diff = difficulty ?? useGameStore.getState().difficulty;
   const config = DIFFICULTY_CONFIGS[diff];
-  const isDys = isDyschromatopsia || useGameStore.getState().equippedAltarSkills.includes('4A-1');
+  const isDys = isDyschromatopsia;
 
   // 1. Check Banned Hand (Stage Rule)
   const handEval = evaluateHand(cards, isDys);
