@@ -550,11 +550,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       // 3B-2: Acclimatization (Regen on debuff damage / debuff application)
       const isDebuff = ['Bleeding', 'Heavy Bleeding', 'Poisoning', 'Paralyzing', 'Debilitating', 'Decreasing accuracy', 'Neurotoxicity', 'Dehydration'].includes(name);
       if (isDebuff && state.equippedAltarSkills.includes('3B-2')) {
-        let healAmount = 5;
-        // 3A-1: Biorhythm Acceleration (+20% Regen/HP efficiency)
-        if (state.equippedAltarSkills.includes('3A-1')) {
-          healAmount = Math.floor(healAmount * 1.2); // 5 -> 6
-        }
+        let healAmount = Math.floor(state.player.maxHp * 0.05); // 5% of Max HP
         applyCondition(newConditions, 'Regenerating', 3, '', { amount: healAmount });
       }
 

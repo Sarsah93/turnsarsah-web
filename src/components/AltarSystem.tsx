@@ -154,7 +154,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                     backgroundColor: '#161625'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        <h1 style={{ color: '#fff', fontSize: '3rem', margin: 0, marginRight: '20px' }}>ALTAR SYSTEM</h1>
+                        <h1 style={{ color: '#fff', fontSize: '3rem', margin: 0, marginRight: '20px' }}>{language === 'KR' ? '제단 시스템' : 'ALTAR SYSTEM'}</h1>
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <Button
                                 variant={activeTab === Difficulty.NORMAL ? 'primary' : 'secondary'}
@@ -165,7 +165,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                     border: activeTab === Difficulty.NORMAL ? undefined : '2px solid #555',
                                 }}
                             >
-                                {language === 'KR' ? '보통 (NORMAL)' : 'NORMAL'}
+                                {language === 'KR' ? '보통' : 'NORMAL'}
                             </Button>
                             <Button
                                 variant={activeTab === Difficulty.HARD ? 'primary' : 'secondary'}
@@ -176,7 +176,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                     border: activeTab === Difficulty.HARD ? '#d35400' : '2px solid #555',
                                 }}
                             >
-                                {language === 'KR' ? '어려움 (HARD)' : 'HARD'}
+                                {language === 'KR' ? '어려움' : 'HARD'}
                             </Button>
                             <Button
                                 variant={activeTab === Difficulty.HELL ? 'primary' : 'secondary'}
@@ -187,7 +187,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                     border: activeTab === Difficulty.HELL ? '#c0392b' : '2px solid #555',
                                 }}
                             >
-                                {language === 'KR' ? '지옥 (HELL)' : 'HELL'}
+                                {language === 'KR' ? '지옥' : 'HELL'}
                             </Button>
                         </div>
                     </div>
@@ -219,7 +219,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                         padding: '20px', borderRight: '2px solid #555', backgroundColor: '#161625'
                     }}>
                         <h2 style={{ color: '#fff', fontSize: '2rem', margin: '0 0 20px 0', textAlign: 'center' }}>
-                            APPLICATION (<span style={{ color: equippedAltarSkills.length === 4 ? '#e74c3c' : '#2ecc71' }}>{equippedAltarSkills.length}</span>/4)
+                            {language === 'KR' ? '적용 슬롯' : 'APPLICATION'} (<span style={{ color: equippedAltarSkills.length === 4 ? '#e74c3c' : '#2ecc71' }}>{equippedAltarSkills.length}</span>/4)
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', alignItems: 'center' }}>
                             {[0, 1, 2, 3, 4].map(index => {
@@ -277,7 +277,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
 
                     {/* Center Panel: Skill Tree */}
                     <div style={{ flex: 1, padding: '16px', overflow: 'auto', backgroundColor: '#1a1a2e' }}>
-                        <h2 style={{ color: '#fff', fontSize: '2rem', margin: '0 0 10px 0' }}>ALTAR SKILL TREE</h2>
+                        <h2 style={{ color: '#fff', fontSize: '2rem', margin: '0 0 10px 0' }}>{language === 'KR' ? '제단 스킬 트리' : 'ALTAR SKILL TREE'}</h2>
                         <div style={{ position: 'relative', display: 'inline-block', width: SVG_W, height: SVG_H }}>
                             <svg style={{ position: 'absolute', top: 0, left: 0, width: SVG_W, height: SVG_H, pointerEvents: 'none', zIndex: 1 }}>
                                 {PATHS.map((path, idx) => {
@@ -335,7 +335,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                                     <span style={{ fontSize: '0.7rem', color: '#7f8c8d', position: 'relative', zIndex: 3 }}>{node.id}</span>
                                                 )}
                                             </div>
-                                            <span style={{ color: '#ecf0f1', fontSize: '1.2rem', marginTop: '6px', textAlign: 'center', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif", lineHeight: 1.1, maxWidth: `${CELL}px`, wordBreak: 'keep-all' }}>
+                                            <span style={{ color: '#ecf0f1', fontSize: '1.2rem', marginTop: '6px', textAlign: 'center', fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif", lineHeight: 1.1, maxWidth: `${CELL}px`, wordBreak: 'keep-all', whiteSpace: 'pre-wrap' }}>
                                                 {isImplemented ? skill.name[language] : `Skill ${node.id}`}
                                             </span>
                                         </div>
@@ -353,8 +353,17 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                     position: 'relative', paddingBottom: `calc(10px + env(safe-area-inset-bottom))`
                 }}>
                     <div style={{ width: '120px', color: '#fff', fontSize: '2.2rem', fontWeight: 'bold', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                        <span>TROPHY</span>
-                        <span>INVENTORY</span>
+                        {language === 'KR' ? (
+                            <>
+                                <span>전리품</span>
+                                <span>보관함</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>TROPHY</span>
+                                <span>INVENTORY</span>
+                            </>
+                        )}
                     </div>
                     {Array.from({ length: 15 }).map((_, i) => {
                         const trophyIds = Object.keys(TROPHIES);
@@ -388,8 +397,8 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                     <span style={{ color: '#7f8c8d', fontSize: '0.8rem' }}>LOCKED</span>
                                 )}
                                 {isUsed && (
-                                    <div style={{ position: 'absolute', bottom: 2, right: 2, color: '#e74c3c', fontWeight: 'bold', fontSize: '0.8rem', backgroundColor: 'rgba(0,0,0,0.8)', padding: '2px 4px', borderRadius: '4px' }}>
-                                        Used
+                                    <div style={{ position: 'absolute', bottom: 2, right: 2, color: '#e74c3c', fontWeight: 'bold', fontSize: 'calc(0.8rem + 2px)', backgroundColor: 'rgba(0,0,0,0.8)', padding: '2px 4px', borderRadius: '4px' }}>
+                                        {language === 'KR' ? '사용중' : 'Used'}
                                     </div>
                                 )}
                             </div>

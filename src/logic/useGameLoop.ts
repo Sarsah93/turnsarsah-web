@@ -1201,6 +1201,15 @@ export const useGameLoop = () => {
             showDamageText('PLAYER', `-${finalDmg}`, '#e74c3c');
             triggerPlayerHitFx(finalDmg);
 
+            // 3A-1: Biorhythm Acceleration (Gain Regeneration on boss damage)
+            if (store.equippedAltarSkills.includes('3A-1') && finalDmg > 0) {
+                if (!useGameStore.getState().player.conditions.has('Regenerating')) {
+                    store.addPlayerCondition('Regenerating', 3, '', { amount: 10 });
+                    setMessage("BIORHYTHM ACCELERATION!");
+                    showConditionGuideIfNew('Regenerating');
+                }
+            }
+
             // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 성공 시 카운터 (2.4.0)
             if (store.chapterNum === '3B' && stageNum === 7 && finalDmg > 0) {
                 const hbCount = store.holdBreathCount3B + 1;
@@ -1510,8 +1519,7 @@ export const useGameLoop = () => {
                 // 3B-2: Acclimatization (Regen on status damage)
                 if (store.equippedAltarSkills.includes('3B-2')) {
                     if (!playerConditions.has('Regenerating')) {
-                        let healAmt = 5;
-                        if (store.equippedAltarSkills.includes('3A-1')) healAmt = Math.floor(healAmt * 1.2);
+                        let healAmt = Math.floor(currentP.maxHp * 0.05);
                         store.addPlayerCondition('Regenerating', 3, '', { amount: healAmt });
                         setMessage("ACCLIMATIZATION!");
                         showConditionGuideIfNew('Regenerating');
@@ -1535,11 +1543,10 @@ export const useGameLoop = () => {
                 setPlayerHp(Math.max(0, freshHP - amount));
                 showDamageText('PLAYER', `-${amount}`, '#e74c3c');
 
-                // 2B-2: Acclimatization (Regen on status damage)
-                if (store.equippedAltarSkills.includes('2B-2')) {
+                // 3B-2: Acclimatization (Regen on status damage)
+                if (store.equippedAltarSkills.includes('3B-2')) {
                     if (!playerConditions.has('Regenerating')) {
-                        let healAmt = 5;
-                        if (store.equippedAltarSkills.includes('2A-1')) healAmt = Math.floor(healAmt * 1.2);
+                        let healAmt = Math.floor(currentP.maxHp * 0.05);
                         store.addPlayerCondition('Regenerating', 3, '', { amount: healAmt });
                         setMessage("ACCLIMATIZATION!");
                         showConditionGuideIfNew('Regenerating');
@@ -1570,10 +1577,6 @@ export const useGameLoop = () => {
                 playConditionSound('Regenerating');
 
                 let heal = data.data?.amount || 10;
-                // 3A-1: Biorhythm Acceleration (+20% Regen)
-                if (store.equippedAltarSkills.includes('3A-1')) {
-                    heal = Math.floor(heal * 1.2);
-                }
 
                 setPlayerHp(Math.min(currentP.maxHp, currentP.hp + heal));
                 showDamageText('PLAYER', `+${heal}`, '#2ecc71');
@@ -1598,11 +1601,10 @@ export const useGameLoop = () => {
                 setMessage(t.CONDITIONS.DEHYDRATION.NAME + "!");
                 playConditionSound('Dehydration');
 
-                // 2B-2: Acclimatization (Regen on status damage)
-                if (store.equippedAltarSkills.includes('2B-2')) {
+                // 3B-2: Acclimatization (Regen on status damage)
+                if (store.equippedAltarSkills.includes('3B-2')) {
                     if (!playerConditions.has('Regenerating')) {
-                        let healAmt = 5;
-                        if (store.equippedAltarSkills.includes('2A-1')) healAmt = Math.floor(healAmt * 1.2);
+                        let healAmt = Math.floor(freshP.maxHp * 0.05);
                         store.addPlayerCondition('Regenerating', 3, '', { amount: healAmt });
                         setMessage("ACCLIMATIZATION!");
                         showConditionGuideIfNew('Regenerating');
@@ -1657,8 +1659,7 @@ export const useGameLoop = () => {
                 // 4B-3: Symbiotic Relationship (Player also heals when boss regens)
                 if (store.equippedAltarSkills.includes('4B-3') && heal > 0) {
                     const freshPSymbiotic = useGameStore.getState().player;
-                    let playerHeal = heal;
-                    if (store.equippedAltarSkills.includes('3A-1')) playerHeal = Math.floor(playerHeal * 1.2);
+                    let playerHeal = Math.floor(heal * 0.8);
                     setPlayerHp(Math.min(freshPSymbiotic.maxHp, freshPSymbiotic.hp + playerHeal));
                     showDamageText('PLAYER', `+${playerHeal}`, '#2ecc71');
                     AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');

@@ -245,8 +245,8 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Adapts to energy flows, increasing recovery efficiency.'
         },
         effect: {
-            KR: '플레이어가 받는 상태이상 재생(Regeneration) 효과와 영구적으로 적용되는 최대 체력 증가 효과의 증가량을 +20% 향상하여 적용 받는다.',
-            EN: 'Increases the effectiveness of Regeneration and permanent Max HP bonuses by +20%.'
+            KR: "플레이어는 보스로부터 피해를 받았을 때, '재생(Regeneration)' 효과를 얻는다. 생체리듬가속에 의해 얻어진 '재생' 효과는 턴 종료 시 마다, +10씩 회복하는 효과로 적용받는다. 또한, 추가로 플레이어에게 영구적으로 적용되는 최대 체력 증가 효과의 증가량을 +20% 향상하여 적용 받는다.",
+            EN: "Gains 'Regeneration' when taking damage from the boss (+10 HP/turn). Also increases the effectiveness of permanent Max HP bonuses by +20%."
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2B_5', 'TR_2A_5']
@@ -293,8 +293,8 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Gradually adapts to abnormal states, triggering recovery reactions.'
         },
         effect: {
-            KR: "플레이어는 상태이상에 대한 피해를 받을 시, 3턴 동안 상태이상 '재생(Regeneration)' 효과를 얻으며, 한 번 회복될 때 +5씩 회복한다.",
-            EN: 'When taking status effect damage, gain "Regeneration" for 3 turns, restoring +5 HP each time.'
+            KR: "플레이어는 상태이상에 대한 피해 발생 시, 3턴 동안 최대 체력의 5%에 해당하는 수치만큼 회복(HP가 감소되는 디버프 상태이상이 유지되는 기간 동안)하는 '재생(Regeneration)' 효과를 얻는다. (단, 3턴 종료 후, 상태이상 피해가 발생하지 않는다면, 재생 효과는 발동되지 않는다.)",
+            EN: 'When taking status effect damage, gain "Regeneration" for 3 turns, restoring 5% of Max HP each turn.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2B_5', 'TR_2A_5']
@@ -305,7 +305,7 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
         id: '4A-1',
         tier: 4,
         image: '4A-1_색각이상(Dyschromatopsia).png',
-        name: { KR: '색각이상', EN: 'Dyschromatopsia' },
+        name: { KR: '색각이상', EN: 'DYSCHROMA-\nTOPSIA' },
         desc: {
             KR: '카드 문양의 색을 인지하는 방식에 오차가 발생한다.',
             EN: 'Errors occur in the way card suit colors are perceived.'
@@ -391,8 +391,8 @@ export const ALTAR_SKILLS: Record<string, AltarSkillDef> = {
             EN: 'Player core connects with surrounding energy flows.'
         },
         effect: {
-            KR: '보스가 상태이상(재생 등)으로 HP를 회복할 때, 플레이어도 보스와 동일한 양의 HP를 회복한다. (고정 수치 반영)',
-            EN: 'When the boss recovers HP via status effects, the player recovers the same flat amount.'
+            KR: '보스가 상태이상(재생 등)으로 HP를 회복할 때, 플레이어도 HP를 회복한다. (단, 회복량은 보스가 회복하는 수치의 80%만큼만 회복한다.)',
+            EN: 'When the boss recovers HP via status effects, the player also recovers HP equal to 80% of the boss\'s recovered amount.'
         },
         duration: { KR: '영구(Permanent)', EN: 'Permanent' },
         cost: ['TR_2B_10', 'TR_2A_10', 'TR_3A_07', 'TR_3B_06']
