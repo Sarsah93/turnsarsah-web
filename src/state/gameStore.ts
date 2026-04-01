@@ -17,6 +17,8 @@ import { GuidePopupData } from '../constants/guideData';
 const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
 import { TROPHIES, ALTAR_SKILLS, TrophyDef } from '../constants/altarSystem';
 import { AltarManager } from '../utils/AltarManager';
+import { preloadManager } from '../utils/AssetPreloadManager';
+import { getGameEntryAssets } from '../constants/assetManifest';
 
 /**
  * v2.3.9: Shared helper to calculate player stats with Altar skill bonuses
@@ -251,7 +253,13 @@ interface GameStoreState {
   unlockedDifficulties: Difficulty[];
   unlockDifficulty: (diff: Difficulty) => void;
   syncDifficulties: () => void; // v2.4.1: Method to refresh difficulty state after migration
-  initGameWithDifficulty: (chapterId: string, stageId: number, difficulty: Difficulty) => void;
+  initGameWithDifficulty: (chapterId: string, stageId: number, difficulty: Difficulty) => Promise<void>;
+
+  // Loading Phase
+  loadingPhase: 'NONE' | 'INITIAL' | 'GAME_ENTRY' | 'CHAPTER_TRANSITION';
+  loadingProgress: number;
+  setLoadingPhase: (phase: 'NONE' | 'INITIAL' | 'GAME_ENTRY' | 'CHAPTER_TRANSITION') => void;
+  setLoadingProgress: (progress: number) => void;
 
   // Localization
   language: Language;
@@ -363,6 +371,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   // v3.0: Hydra Revive Counter
   hydraReviveRemaining: 0,
   setHydraReviveRemaining: (hydraReviveRemaining) => set({ hydraReviveRemaining }),
+
+  // Loading Phase
+  loadingPhase: 'NONE',
+  loadingProgress: 0,
+  setLoadingPhase: (loadingPhase) => set({ loadingPhase }),
+  setLoadingProgress: (loadingProgress) => set({ loadingProgress }),
 
   // Tutorial System
   isTutorial: false,
@@ -1287,8 +1301,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       }
     } catch { }
   },
-  initGameWithDifficulty: (chapterId: string, stageId: number, difficulty?: Difficulty) => {
-    const diff = difficulty ?? (useGameStore.getState().difficulty as Difficulty);
+  initGameWithDifficulty: async (chapterId: string, stageId: number, difficulty?: Difficulty) => {
+    const store = get();
+    store.setLoadingPhase('GAME_ENTRY');
+    store.setLoadingProgress(0);
+
+    const diff = difficulty ?? (store.difficulty as Difficulty);
     const config = DIFFICULTY_CONFIGS[diff];
     const chapter = CHAPTERS[chapterId];
     const stageConfig = chapter?.stages[stageId];
@@ -1371,6 +1389,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }
 
     const player = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff, false); // New game starts without bonus
+
+    // Preload Assets for Game Entry
+    const assetsToLoad = getGameEntryAssets(chapterId, currentEquippedSkills);
+    try {
+      await preloadManager.preloadBatch(assetsToLoad, (progress) => {
+        set({ loadingProgress: progress });
+      });
+    } catch (e) {
+      console.warn("Preload failed partially, continuing game init", e);
+    }
+    
+    set({ loadingPhase: 'NONE' });
 
     set({
       chapterNum: chapterId,

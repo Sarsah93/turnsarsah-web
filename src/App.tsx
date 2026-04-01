@@ -16,6 +16,9 @@ import { FadeOverlay } from './components/Common/FadeOverlay';
 import { TRANSLATIONS } from './constants/translations';
 import { GameViewport } from './layouts/GameViewport/GameViewport';
 import { BUILD_TARGET, ENABLE_PWA, INTERNAL_FEATURES, STORAGE_PREFIX } from './utils/buildTarget';
+import { LoadingScreen } from './components/Common/LoadingScreen';
+import { preloadManager } from './utils/AssetPreloadManager';
+import { MAIN_MENU_ASSETS } from './constants/assetManifest';
 
 function App() {
   const gameState = useGameStore((state) => state.gameState);
@@ -23,10 +26,25 @@ function App() {
   const chapterNum = useGameStore((state) => state.chapterNum);
   const fontSize = useGameStore((state) => state.fontSize);
   const language = useGameStore((state) => state.language);
+  const loadingPhase = useGameStore((state) => state.loadingPhase);
+  const loadingProgress = useGameStore((state) => state.loadingProgress);
   const t = TRANSLATIONS[language];
 
   // Version migration popup state
   const [showVersionNotice, setShowVersionNotice] = useState(false);
+
+  // Phase 1: 앱 마운트 시 메인 메뉴 최소 자산 프리로드
+  useEffect(() => {
+    const store = useGameStore.getState();
+    store.setLoadingPhase('INITIAL');
+    store.setLoadingProgress(0);
+
+    preloadManager.preloadBatch(MAIN_MENU_ASSETS, (progress) => {
+      store.setLoadingProgress(progress);
+    }).finally(() => {
+      store.setLoadingPhase('NONE');
+    });
+  }, []);
 
   // Version check and Scroll reset on mount
   useEffect(() => {
@@ -158,6 +176,14 @@ function App() {
             <div>INTERNAL: {INTERNAL_FEATURES ? 'ON' : 'OFF'}</div>
             <div>STORAGE: {STORAGE_PREFIX}</div>
           </div>
+        )}
+
+        {/* 로딩 스크린 (Phase 1: INITIAL / Phase 2: GAME_ENTRY) */}
+        {loadingPhase !== 'NONE' && (
+          <LoadingScreen
+            progress={loadingProgress}
+            phase={loadingPhase === 'INITIAL' ? 'INITIAL' : 'GAME_ENTRY'}
+          />
         )}
 
         {/* Global Transition Overlay */}
