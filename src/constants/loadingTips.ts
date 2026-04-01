@@ -1,95 +1,95 @@
 // src/constants/loadingTips.ts
-// 로딩 화면에서 표시할 팁 문구 모음
+// 로딩 화면에서 표시할 팁 문구 모음 - 추상적이고 몰입감 있는 버전
 
 export type Language = 'KR' | 'EN';
 
 export const LOADING_TIPS: Record<Language, string[]> = {
   KR: [
-    // ─── 응용 팁 ───────────────────────────────────────────────────────
-    '💡 조커 카드는 뒤집혀 있어도(BLIND 상태) 조커임을 확인할 수 있어요.',
-    '💡 뒤집힌 카드를 다른 카드와 함께 선택하면, 족보 완성 여부를 슬쩍 확인할 수 있어요.',
-    '💡 최대 5장까지 선택하여 공격할 수 있어요. 원하지 않는 카드를 원페어 등 족보에 포함하고 공격하면, 다음 턴에 손패가 자동 보충돼요.',
-    '💡 교체(SWAP) 횟수가 남아있다면, 족보를 완성하기 어려울 때 과감히 교체하는 것이 유리할 수 있어요.',
-    '💡 조커는 어떤 카드도 대신할 수 있어요. 4장만 선택해도 조커가 포함되면 족보 완성 여부를 꼭 확인하세요!',
-    '💡 보스의 공격 패턴을 잘 읽으면 회피(AVOIDING) 상태이상의 가치가 크게 올라가요.',
-    '💡 데미지는 선택한 카드 숫자의 합 + 족보 보너스로 결정돼요. 높은 숫자 카드를 많이 포함할수록 유리해요.',
-    '💡 A(에이스)는 14로 계산돼요. 스트레이트에서는 1로도 사용 가능해요.',
-    '💡 SWAP 버튼을 눌러도 패를 모두 바꾸지 않아도 돼요. 특정 카드만 선택해서 교체하세요.',
-    '💡 족보 점수가 0이 되는 보스 룰에 걸린 경우, 해당 족보의 카드 숫자 합만큼은 데미지를 줄 수 있어요.',
+    // ─── 응용 및 시스템 팁 ──────────────────────────────────────────────
+    '💡 조커 카드는 눈을 감고 있어도(BLIND) 그 존재감을 숨기지 못해요. 뒤집힌 패 사이에서 조커를 찾아보세요!',
+    '💡 뒤집힌 카드가 무엇인지 궁금하다면 다른 카드와 함께 들어보세요. 족보가 완성되는 순간, 답을 알게 될지도 몰라요.',
+    '💡 한 번에 5장까지 공격할 수 있다는 점을 잊지 마세요! 가끔은 원치 않는 패를 족보에 섞어 버리는 것이 다음 기회를 위한 최고의 전략이 됩니다.',
+    '💡 교체(SWAP)는 단순한 기회가 아니라 전략이에요. 판세를 뒤집기 어렵다면 과감하게 패를 섞어보세요.',
+    '💡 조커는 무엇이든 될 수 있는 만능 열쇠예요. 4장만으로 부족할 때 조커가 당신의 공격을 완성해 줄 거예요.',
+    '💡 보스의 움직임에 귀를 기울이면 공격을 흘려보낼(AVOIDING) 타이밍이 보일 거예요.',
+    '💡 공격의 위력은 카드의 숫자 합과 족보의 조화로 결정돼요. 높은 숫자의 카드들이 모일수록 보스의 코어는 더 크게 흔들립니다.',
+    '💡 카드의 정점인 A(에이스)는 14로 계산되는 거 알고 계셨나요? 하지만 스트레이트의 시작인 1로도 쓰일 수 있는 유연함을 가졌답니다!',
+    '💡 패를 전부 바꿀 필요는 없어요. 남기고 싶은 소중한 한 장이 있다면 그것만 빼고 교체해 보세요.',
+    '💡 보스의 규칙으로 족보의 힘이 억눌려도, 당신이 선택한 카드의 숫자들까지 지워지지는 않아요.',
 
-    // ─── 챕터 특징 ─────────────────────────────────────────────────────
-    '🗺️ [챕터 1: 들판] 가장 기본적인 규칙들이 등장해요. 금지 숫자, 금지 모양, 블라인드 등 보스 룰에 적응하는 연습을 할 수 있어요.',
-    '🗺️ [챕터 2A: 사막] 탈수 상태이상으로 매 턴 체력이 소모돼요. 보스도 회피, 재생, 삼중공격 등 강력한 패시브를 가지고 있으니 주의하세요.',
-    '🗺️ [챕터 2B: 깊은 숲] 플레이어의 기본 회피율이 제한되는 환경이에요. 오크 계열 보스들은 저마다 독특한 전투 룰을 가져요.',
-    '🗺️ [챕터 3A: 동굴] 메아리(Echo) 챕터 규칙 적용 — 보스가 20% 확률로 추가 공격을 해요. 보스의 재생이나 흡혈 능력도 까다로워요.',
-    '🗺️ [챕터 3B: 늪지대] 잠김(Swamping) 챕터 규칙 적용 — 공격 횟수가 쌓일수록 회피율이 급감해요. 보스들은 강력한 재생 능력을 가져요.',
+    // ─── 구역(챕터) 및 환경 ───────────────────────────────────────────
+    '🗺️ 평화로워 보이는 들판에도 보스들의 고유한 규칙이 숨어 있어요. 금지된 숫자와 모양에 주의하며 전진하세요.',
+    '🗺️ 뜨거운 사막에서는 숨을 쉬는 것만으로도 기력이 소모(탈수)돼요. 보스들의 끈질긴 생명력에 대비해야 할 거예요.',
+    '🗺️ 깊은 숲의 나무들은 당신의 움직임을 방해해요. 이곳에서 살아가는 오크들은 저마다의 독특한 전투 방식을 고집한답니다.',
+    '🗺️ 동굴은 메아리가 울려서 두 번 맞을 수도 있어요! 재생과 흡혈로 버티는 까다로운 보스들의 공격을 조심하세요.',
+    '🗺️ 늪지대에 발이 묶이면(잠김) 점점 피하기가 힘들어질 거예요. 늪의 주인들이 보여주는 놀라운 회복력을 경계하세요.',
 
-    // ─── 보스 설명 ─────────────────────────────────────────────────────
-    '👾 [고블린: 챕터 1-1] 50% 확률로 출혈을 유발해요. 첫 스테이지지만 방심은 금물!',
-    '👾 [골든 고블린: 챕터 1-6] 체력이 낮고 공격력도 약하지만, 특정 족보를 금지해요. 승리 시 최대 체력 보너스를 받아요.',
-    '👾 [고블린 로드: 챕터 1-10] 매 턴 무작위 규칙이 적용돼요. 피해경감 15%와 각성 능력도 가지고 있는 최강 보스예요.',
-    '👾 [스핑크스: 챕터 2A-10] 퍼즐 타겟 숫자에 맞는 족보를 완성하면 추가 피해! 각성 능력도 가지고 있어요.',
-    '👾 [하이드라: 챕터 3A-10] 부활 4회! 4가지 문양 모두 포함한 플러시 성공 시 즉사시킬 수 있어요. (티폰전승)',
-    '👾 [리자드 킹: 챕터 3B-10] 매 턴 종료 시 최대 체력, 공격력, 회피율이 모두 성장해요. 빠르게 처리하는 것이 관건!',
-    '👾 [크리스탈 골렘: 챕터 3A-7] 매 턴 피해경감이 10%씩 누적되지만, 다이아몬드 포함 공격 시 +8 고정 데미지로 리셋돼요.',
-    '👾 [샌드 드래곤: 챕터 2A 스페셜] 모래폭풍 + 삼중공격 + 각성의 조합. 스페셜 스테이지 최강의 보스예요.',
+    // ─── 존재들(보스) ─────────────────────────────────────────────────
+    '👾 고블린은 날카로운 나이프로 출혈을 일으켜요! 작다고 무시하면 큰 코 다쳐요~ 방심은 금물!',
+    '👾 황금빛을 띠는 고블린은 약해 보이지만 당신의 손패를 제약할 거예요. 그를 정화하면 특별한 생명력을 얻을 수 있습니다.',
+    '👾 들판의 진정한 주인은 매 턴 규칙을 바꿔가며 당신을 혼란에 빠뜨릴 거예요. 그의 각성을 견뎌내세요.',
+    '👾 모래 속에 숨은 존재들은 당신의 눈을 가리고 패를 강제로 뒤섞어 버려요. 신경을 마비시키는 독을 조심하세요.',
+    '👾 고대의 구조물은 당신에게 수수께끼를 던질 거예요. 타겟 숫자에 맞는 족보를 완성하여 퍼즐을 풀어보세요.',
+    '👾 머리가 여럿 달린 전설 속 괴물은 쓰러뜨려도 다시 일어날 거예요. 하지만 네 가지 문양을 조화롭게 모은다면 단번에 처단할 길(티폰전승)이 보일지도 몰라요.',
+    '👾 늪지대의 왕은 시간이 흐를수록 점점 더 거대하고 강력해져요. 시스템이 과부하되기 전에 정화해야 합니다.',
+    '👾 어떤 구역에서는 평범한 방식으로는 만날 수 없는 특별한 존재가 당신을 기다리고 있을지도 몰라요. 특별한 루트를 찾아보세요!',
 
-    // ─── 전리품/제단 시스템 ─────────────────────────────────────────────
-    '🏆 보스를 처치하면 전리품을 얻을 수 있어요. 전리품은 메인 화면의 제단 시스템에서 스킬을 해금하는 데 사용돼요.',
-    '🏆 [생존주의자] 최대 체력 +25로 시작해요. 체력이 부족한 느낌이 든다면 좋은 첫 번째 선택이에요.',
-    '🏆 [날카로운 카드] 공격 시 고정 데미지 +25. 딜링을 강화하고 싶다면 선택해 보세요.',
-    '🏆 [위상전이] 스테이지당 1회, HP가 0이 될 때 HP 1로 생존 + 조커 1장 획득. 보험으로 꽤 강력해요.',
-    '🏆 [엔트로피제어] BLIND(카드 뒤집힘)와 BANNED(숫자/모양 금지) 룰에 완전 면역! 챕터 1 보스들이 훨씬 쉬워져요.',
-    '🏆 [과부하] 같은 족보를 연속 사용할수록 최대 +30% 데미지 증가. 한 가지 족보를 반복하는 플레이 스타일에 잘 맞아요.',
-    '🏆 [확률왜곡] 카드 교체 시 25% 확률로 교체 횟수 미소모. SWAP을 자주 사용하는 플레이에 강력해요.',
-    '🏆 [불안정 동조] 보스 HP가 낮을수록 데미지 증가. 후반부 딜링을 극대화할 수 있어요.',
-    '🏆 어려움/지옥 난이도에서는 제단 스킬 세트를 별도로 지정할 수 있어요. 난이도별 전략을 세워 보세요!',
+    // ─── 제단 및 스킬 ─────────────────────────────────────────────────
+    '🏆 보스를 정화하고 얻은 전리품은 메인 화면의 제단에서 강력한 힘으로 변환될 수 있습니다.',
+    '🏆 스킬 \'생존주의자\'는 최대 체력을 늘려주는 초반 제단 스킬이에요. 높은 코어 안정도로 시작하고 싶다면 좋은 선택이에요!',
+    '🏆 \'날카로운 카드\'를 선택하면 당신의 모든 공격에 날카로운 고정 피해가 실리게 됩니다.',
+    '🏆 위기의 순간, \'위상전이\'는 당신을 다른 차원으로 옮겨 생명을 보존하고 조커를 선사할 거예요.',
+    '🏆 \'엔트로피제어\'를 통해 보스가 가하는 시야 방해와 제약을 완전히 무시해 보세요. 전투가 한결 선명해질 거예요.',
+    '🏆 같은 족보를 반복해서 사용할수록 \'과부하\' 스킬이 공격력을 증폭시켜 줄 거예요. 한 우물만 파는 전략에 완벽하죠.',
+    '🏆 확률의 흐름을 비트는 \'확률왜곡\'은 당신이 더 자주 패를 교체할 수 있도록 도와줍니다.',
+    '🏆 보스의 코어가 비틀거릴 때, \'불안정 동조\'는 그 틈을 놓치지 않고 더 큰 피해를 입힙니다.',
+    '🏆 난이도가 높아질수록 제단의 스킬 조합이 승패를 가르는 열쇠가 됩니다. 당신만의 세트를 구성해 보세요.',
   ],
   EN: [
-    // ─── Advanced Tips ────────────────────────────────────────────────
-    '💡 JOKER cards are recognizable even when flipped (BLIND state)!',
-    '💡 Try selecting a BLIND card with others — you can check hand completion without revealing it.',
-    '💡 You can select up to 5 cards to attack. Include unwanted cards in a hand (e.g., ONE PAIR) to clear them from your hand next turn.',
-    '💡 If you\'re struggling to form a hand, don\'t hesitate to use SWAP — sometimes a fresh set of cards is the best move.',
-    '💡 Jokers substitute for any card. When you have a Joker, always check if selecting 4~5 cards completes a powerful hand!',
-    '💡 Learning the boss\'s attack pattern makes the AVOIDING status effect much more valuable.',
-    '💡 Damage = Sum of selected card values + Hand bonus. Including higher-numbered cards always helps.',
-    '💡 Ace (A) counts as 14. It can also count as 1 in Straights.',
-    '💡 SWAP doesn\'t have to replace the whole hand — just select the cards you want to replace.',
-    '💡 Even when a boss rule sets a hand\'s bonus to 0, you still deal damage equal to the sum of card values.',
+    // ─── Applied & System Tips ─────────────────────────────────────────
+    '💡 JOKER cards can\'t hide their presence even when BLINDED. Look closely between those face-down cards!',
+    '💡 Wondering what that face-down card is? Try picking it up with others. The moment a hand forms, the answer may reveal itself.',
+    '💡 Don\'t forget you can attack with up to 5 cards! Sometimes mixing unwanted cards into a hand is the best strategy for your next opportunity.',
+    '💡 SWAPPING isn\'t just a chance, it\'s a strategy. If the tide is hard to turn, don\'t hesitate to reshuffle your destiny.',
+    '💡 The JOKER is a master key that can become anything. When 4 cards aren\'t enough, the Joker will complete your strike.',
+    '💡 Listen to the boss\'s movements, and you might find the perfect timing to slip through (AVOIDING) their grasp.',
+    '💡 Your power comes from the harmony of card values and hand types. The higher the numbers, the more the boss\'s core will tremble.',
+    '💡 Did you know the Ace (A) counts as 14? Yet it possesses the flexibility to act as a 1 to start a Straight!',
+    '💡 You don\'t have to change everything. If there\'s one card you cherish, keep it and reshuffle the rest.',
+    '💡 Even if a boss\'s rule suppresses your hand\'s true power, the numbers on the cards you chose remain your own.',
 
-    // ─── Chapter Traits ───────────────────────────────────────────────
-    '🗺️ [Chapter 1: Fields] Learn the basics — banned ranks, banned suits, BLIND. Great for mastering boss rules.',
-    '🗺️ [Chapter 2A: Desert] Dehydration drains HP each turn. Bosses have strong passives like evasion, regeneration, and triple attacks.',
-    '🗺️ [Chapter 2B: Deep Forest] Player base evasion is environmentally restricted. Each Orc boss has a unique combat rule.',
-    '🗺️ [Chapter 3A: Cave] Echo Chapter Rule — bosses have a 20% chance to deal a bonus attack. Healing and lifesteal bosses are tricky.',
-    '🗺️ [Chapter 3B: Swamp] Swamping Chapter Rule — evasion drops sharply as you take hits. Bosses have powerful regeneration.',
+    // ─── Chapters & Environment ────────────────────────────────────────
+    '🗺️ Even the peaceful-looking fields hide unique rules. Watch out for banned numbers and suits as you proceed.',
+    '🗺️ In the scorching desert, merely breathing consumes your energy (Dehydration). Prepare for the bosses\' relentless vitality.',
+    '🗺️ The trees of the deep forest will hinder your every move. The Orcs living here each insist on their own unique ways of combat.',
+    '🗺️ In the caves, echoes might cause you to be struck twice! Beware of tricky bosses surviving through regeneration and lifesteal.',
+    '🗺️ If you get stuck in the swamp (Swamping), evasion will become harder and harder. Watch out for the incredible recovery shown by the swamp masters.',
 
-    // ─── Boss Descriptions ─────────────────────────────────────────────
-    '👾 [Goblin: Ch.1-1] 50% chance to inflict Bleeding. Don\'t underestimate the first stage!',
-    '👾 [Golden Goblin: Ch.1-6] Low HP and ATK, but bans a hand each turn. Defeat it for a Max HP bonus!',
-    '👾 [Goblin Lord: Ch.1-10] Random rules every turn + 15% damage reduction + Awakening. The toughest Chapter 1 boss.',
-    '👾 [Sphinx: Ch.2A-10] Hit the puzzle target hand for bonus damage! It also has Awakening ability.',
-    '👾 [Hydra: Ch.3A-10] Revives 4 times! Land a 4-suit Flush (Typhon Myth) to instantly defeat it.',
-    '👾 [Lizard King: Ch.3B-10] Grows stronger every turn — Max HP, ATK, and evasion all increase. Finish it fast!',
-    '👾 [Crystal Golem: Ch.3A-7] Damage reduction stacks +10% each turn, but Diamond cards deal +8 fixed damage and reset it.',
-    '👾 [Sand Dragon: 2A Special] Sand Storm + Triple Attack + Awakening. The ultimate Special Stage boss.',
+    // ─── Entities (Bosses) ──────────────────────────────────────────────
+    '👾 Goblins use sharp knives to make you bleed! Don\'t underestimate them just because they\'re small—careless mistakes can be costly!',
+    '👾 The golden-hued goblin looks weak, but it will restrict your hand. Purifying it grants you special vitality.',
+    '👾 The true master of the fields will confuse you by changing rules every turn. Endure their awakening.',
+    '👾 Creatures hidden in the sand will blind you and force your hand to shuffle. Beware of neurotoxic stinging!',
+    '👾 Ancient structures will throw riddles at you. Solve the puzzle by completing hands that match the target number.',
+    '👾 The multi-headed legendary monster will rise again even if struck down. But if you gather four suits in harmony (Typhon Myth), a path to instant defeat might appear.',
+    '👾 The King of the Swamp grows larger and stronger over time. You must purify it before the system overloads.',
+    '👾 In certain areas, a special existence you can\'t meet through ordinary means might be waiting. Look for a hidden route!',
 
-    // ─── Trophy / Altar System ────────────────────────────────────────
-    '🏆 Defeating bosses drops trophies. Use them in the Altar System to unlock powerful skills.',
-    '🏆 [Prepper] Start with +25 Max HP. Great pick if you find yourself running low on health.',
-    '🏆 [Sharpen Cards] Deal +25 fixed bonus damage on attack. Perfect for aggressive builds.',
-    '🏆 [Phase Transition] Once per stage — survive fatal damage with 1 HP and gain a Joker card. Very strong safety net.',
-    '🏆 [Entropy Control] Full immunity to BLIND and BANNED rules! Makes Chapter 1 bosses much easier.',
-    '🏆 [Overloaded] Using the same hand consecutively stacks up to +30% damage. Works great with consistent hand strategies.',
-    '🏆 [Probability Distortion] 25% chance not to consume a swap chance. Excellent if you swap cards frequently.',
-    '🏆 [Instability Resonance] Deal more damage as boss HP drops. Great for finishing off tough bosses.',
-    '🏆 In HARD/HELL difficulty, you can set separate Altar skill loadouts. Plan your strategy per difficulty!',
+    // ─── Altar & Skills ────────────────────────────────────────────────
+    '🏆 Trophies obtained by purifying bosses can be converted into powerful forces at the Altar.',
+    '🏆 The \'Prepper\' skill is an early Altar skill that increases your maximum HP. A great choice if you want to start with high core stability!',
+    '🏆 Selecting \'Sharpen Cards\' will add sharp, fixed damage to all your attacks.',
+    '🏆 In moments of crisis, \'Phase Transition\' will move you to another dimension, preserving your life and granting you a Joker.',
+    '🏆 Use \'Entropy Control\' to completely ignore the visual disturbances and restrictions imposed by bosses. Combat will become much clearer.',
+    '🏆 As you repeatedly use the same hand, the \'Overloaded\' skill will amplify your attack power. Ideal for a specialized strategy.',
+    '🏆 \'Probability Distortion\', which twists the flow of chance, helps you swap your hand more frequently.',
+    '🏆 When a boss\'s core falters, \'Instability Resonance\' won\'t miss the gap and will deal even greater damage.',
+    '🏆 As the difficulty increases, the combination of Altar skills becomes the key to victory. Configure your own unique set.',
   ]
 };
 
 /**
- * 현재 언어의 팁 목록에서 무작위로 하나 반환
+ * Returns a random tip from the tip list of the current language.
  */
 export function getRandomTip(language: Language): string {
   const tips = LOADING_TIPS[language];
