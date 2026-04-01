@@ -1,13 +1,26 @@
 // src/constants/assetManifest.ts
 
 import { getBossImage } from '../utils/bossImageMapper';
-import { ALTAR_SKILLS } from './altarSystem';
+import { ALTAR_SKILLS, TROPHIES } from './altarSystem';
 
-// Phase 1: 메인 메뉴 최소 자산
+// 제단 스킬 전체 이미지 (팝업 진입 시 즉시 렌더링 보장)
+export const ALTAR_SYSTEM_ASSETS: string[] = [
+  // 제단 스킬 이미지 (ALTAR_SKILLS 정의에서 자동 생성)
+  ...Object.values(ALTAR_SKILLS)
+    .filter(skill => skill.image)
+    .map(skill => `/assets/altar skills/${skill.image}`),
+  // 트로피 이미지 (TROPHIES 정의에서 자동 생성)
+  ...Object.values(TROPHIES)
+    .filter(trophy => trophy.image)
+    .map(trophy => `/assets/trophy/${trophy.image}`),
+];
+
+// Phase 1: 메인 메뉴 최소 자산 (로고 + HP바 + 제단 시스템 전체)
 export const MAIN_MENU_ASSETS: string[] = [
   '/assets/etc images/turnsarsah_logo_image.png',
   '/assets/etc images/HP BAR_RED_IMAGE.png',
   '/assets/etc images/HP BAR_BLUE_IMAGE.png',
+  ...ALTAR_SYSTEM_ASSETS,
 ];
 
 // 전체 카드 이미지 (55장)

@@ -1,65 +1,78 @@
 // src/components/Common/LoadingScreen.tsx
 
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useGameStore } from '../../state/gameStore';
+import { getRandomTip } from '../../constants/loadingTips';
 import './LoadingScreen.css';
 
 interface LoadingScreenProps {
   progress: number;         // 0~1
   phase: 'INITIAL' | 'GAME_ENTRY';
-  tipText?: string;
 }
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({
-  progress, phase, tipText
-}) => {
+const TIP_ROTATE_INTERVAL = 5000; // 5초마다 팁 교체
+
+export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase }) => {
   const percent = Math.floor(progress * 100);
+  const language = useGameStore((s) => s.language);
+
+  // 팁 상태: GAME_ENTRY 단계에서만 표시
+  const [currentTip, setCurrentTip] = useState<string>(() =>
+    phase === 'GAME_ENTRY' ? getRandomTip(language) : ''
+  );
+  const [tipFading, setTipFading] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (phase !== 'GAME_ENTRY') return;
+
+    // 첫 팁 설정
+    setCurrentTip(getRandomTip(language));
+
+    // 5초 주기로 팁 교체 (페이드 아웃 → 교체 → 페이드 인)
+    intervalRef.current = setInterval(() => {
+      setTipFading(true);
+      setTimeout(() => {
+        setCurrentTip(getRandomTip(language));
+        setTipFading(false);
+      }, 400);
+    }, TIP_ROTATE_INTERVAL);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [phase, language]);
 
   return (
-    <div className="loading-screen" style={{
-      position: 'absolute', inset: 0, zIndex: 999998,
-      background: 'linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%)',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Bebas Neue', sans-serif",
-    }}>
-      {/* 로고 (Phase 2에서만) */}
+    <div className="loading-screen">
+      {/* 로고 (Phase 2: GAME_ENTRY에서만) */}
       {phase === 'GAME_ENTRY' && (
-        <img src="/assets/etc images/turnsarsah_logo_image.png"
-             alt="Logo" style={{ width: '400px', marginBottom: '40px' }} />
+        <img
+          src="/assets/etc images/turnsarsah_logo_image.png"
+          alt="Turn Sarsah"
+          className="loading-logo"
+        />
       )}
 
+      {/* Phase 텍스트 */}
+      <div className="loading-phase-label">
+        {phase === 'INITIAL' ? 'LOADING...' : 'PREPARING BATTLE...'}
+      </div>
+
       {/* 프로그레스 바 */}
-      <div style={{
-        width: '500px', height: '12px',
-        background: 'rgba(255,255,255,0.1)',
-        borderRadius: '6px', overflow: 'hidden',
-        border: '1px solid rgba(241,196,15,0.3)',
-      }}>
-        <div style={{
-          width: `${percent}%`, height: '100%',
-          background: 'linear-gradient(90deg, #f39c12, #f1c40f)',
-          transition: 'width 0.3s ease-out',
-          borderRadius: '6px',
-          boxShadow: '0 0 10px rgba(241,196,15,0.5)',
-        }} />
+      <div className="loading-bar-track">
+        <div
+          className="loading-bar-fill"
+          style={{ width: `${percent}%` }}
+        />
       </div>
 
-      <div style={{
-        color: '#f1c40f', fontSize: '2.5rem',
-        marginTop: '16px', letterSpacing: '2px'
-      }}>
-        {percent}%
-      </div>
+      <div className="loading-percent">{percent}%</div>
 
-      {/* 팁 문구 */}
-      {tipText && (
-        <div style={{
-          color: '#ecf0f1', fontSize: '1.4rem',
-          marginTop: '30px', maxWidth: '600px',
-          textAlign: 'center', lineHeight: 1.5,
-          fontFamily: "'Noto Sans KR', sans-serif",
-        }}>
-          {tipText}
+      {/* 팁 문구 (GAME_ENTRY에서만) */}
+      {phase === 'GAME_ENTRY' && currentTip && (
+        <div className={`loading-tip ${tipFading ? 'tip-fading' : 'tip-visible'}`}>
+          {currentTip}
         </div>
       )}
     </div>
