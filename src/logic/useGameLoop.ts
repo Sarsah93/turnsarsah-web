@@ -12,6 +12,7 @@ import { CHAPTERS } from '../constants/stages';
 import { playConditionSound, getBossAttackSFX } from '../utils/audioMapper';
 import { applyChapterSpecialRules } from './specialRules';
 import { applyBotStatusEffects } from './botMechanics';
+import { evaluateHand } from './mechanics';
 export interface DamageTextData {
     id: number;
     x: number;
@@ -328,13 +329,26 @@ export const useGameLoop = () => {
             store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 1
         );
 
-        // 4A-1: Dyschromatopsia - If active, consume a use ONLY when a flush is formed
+        // 4A-1: Dyschromatopsia - If active, consume a use ONLY when a flux-type is formed AND it is better than natural hand
         if (store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 1) {
             if (handType.includes('Flush')) {
-                store.incrementDyschromatopsiaUses();
-                // If uses reach 1, auto-deactivate
-                if (store.dyschromatopsiaUses + 1 >= 1) {
-                    store.setDyschromatopsiaActive(false);
+                const naturalEval = evaluateHand(selectedCards, false);
+                const handRanks = [
+                    'Royal Flush', 'Straight Flush', 'Four of a Kind', 'Full House', 
+                    'Flush', 'Straight', 'Three of a Kind', 'Two Pair', 'One Pair', 'High Card'
+                ];
+                const getRank = (type: string) => {
+                    const idx = handRanks.indexOf(type);
+                    return idx === -1 ? 999 : idx;
+                };
+
+                // Consume only if effective hand is rank-wise better than natural hand
+                if (getRank(handType) < getRank(naturalEval.type)) {
+                    store.incrementDyschromatopsiaUses();
+                    // If uses reach 1, auto-deactivate
+                    if (store.dyschromatopsiaUses + 1 >= 1) {
+                        store.setDyschromatopsiaActive(false);
+                    }
                 }
             }
         }
