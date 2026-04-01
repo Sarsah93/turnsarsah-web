@@ -28,6 +28,16 @@ interface SaveData {
   equippedAltarSkills?: string[];
   pendingTrophies?: string[];
   puzzleTarget?: number;
+
+  // v2.5.3: Altar 스킬 내부 상태 및 전투 연속성 데이터
+  altarSkillUses?: Record<string, number>;
+  dyschromatopsiaUses?: number;
+  isDyschromatopsiaActive?: boolean;
+  stageSkillsTriggered?: string[];
+  consecutiveHandType?: string | null;
+  consecutiveHandStacks?: number;
+  stage10RuleText?: string;
+
   // Hidden Scenario
   ch1PerfectCount?: number;
   specialQualify?: boolean;

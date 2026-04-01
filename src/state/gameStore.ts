@@ -1205,6 +1205,15 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         gamePhase: gameData.gamePhase || 'IDLE',
         // v2.5.1: 세이브 파일의 장착 스킬 스냅샷 복원 (현재 제단 프리셋 무시)
         equippedAltarSkills: gameData.equippedAltarSkills || [],
+        
+        // v2.5.3: Altar 스킬 내부 상태 및 전투 연속성 데이터 복원
+        altarSkillUses: gameData.altarSkillUses || {},
+        dyschromatopsiaUses: gameData.dyschromatopsiaUses ?? 0,
+        isDyschromatopsiaActive: gameData.isDyschromatopsiaActive ?? false,
+        stageSkillsTriggered: gameData.stageSkillsTriggered || [],
+        consecutiveHandType: gameData.consecutiveHandType || null,
+        consecutiveHandStacks: gameData.consecutiveHandStacks ?? 0,
+        stage10RuleText: gameData.stage10RuleText || '',
       });
 
       // Restore Deck State
@@ -1428,6 +1437,14 @@ function buildSavePayload(state: GameStoreState) {
     equippedAltarSkills: state.equippedAltarSkills,
     pendingTrophies: AltarManager.getPendingTrophies(),
     puzzleTarget: state.puzzleTarget,
+    // v2.5.3: Altar 스킬 내부 상태 및 전투 연속성 데이터 추가
+    altarSkillUses: state.altarSkillUses,
+    dyschromatopsiaUses: state.dyschromatopsiaUses,
+    isDyschromatopsiaActive: state.isDyschromatopsiaActive,
+    stageSkillsTriggered: state.stageSkillsTriggered,
+    consecutiveHandType: state.consecutiveHandType,
+    consecutiveHandStacks: state.consecutiveHandStacks,
+    stage10RuleText: state.stage10RuleText,
     // Hidden Scenario
     ch1PerfectCount: state.ch1PerfectCount,
     specialQualify: state.specialQualify,
