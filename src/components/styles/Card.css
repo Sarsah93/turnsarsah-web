@@ -9,11 +9,14 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
   position: relative;
   user-select: none;
   overflow: hidden;
   background: #000;
+  transform-style: preserve-3d;
+  transform: translateZ(0px);
+  will-change: transform;
 }
 
 .card-image {
@@ -25,12 +28,14 @@
 
 .card:hover:not(.card-blind) {
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  transform: translateZ(18px) rotateX(-4deg);
 }
 
 .card-selected {
   border-color: #ffd700;
   border-width: 3px;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  transform: translateZ(26px) rotateX(-6deg);
 }
 
 .card-banned {

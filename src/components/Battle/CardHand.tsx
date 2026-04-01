@@ -275,8 +275,79 @@ export const CardHand: React.FC<CardHandProps> = ({
     }
   };
 
+  // ── Dynamic Keyframes for True 3D Leaf-Flutter ──
+  const flutterStyles = useMemo(() => {
+    if (gamePhase !== 'GATHERING') return '';
+    return selectedCards.map((idx, selectedIdxInQueue) => {
+      const card = cards[idx];
+      let cardSeed = idx % 7;
+      if (card?.id) {
+        const idStr = String(card.id);
+        let hash = 0;
+        for (let i = 0; i < idStr.length; i++) hash += idStr.charCodeAt(i);
+        cardSeed = hash % 7;
+      }
+      
+      const cardSlotOffset = (idx - 3.5) * 150;
+      const startX = cardSlotOffset;
+      const startY = 266; // Accurate math offset from canvasCenterY (450) to bottom(.cards-area) 
+      const startZ = -80 + (selectedIdxInQueue * 15);
+      
+      // Determine rotation direction and flips
+      const flips = 1 + (cardSeed % 2); // 1 to 2 full flips (360 or 720)
+      const spinDirY = selectedIdxInQueue % 2 === 0 ? 1 : -1;
+      const spinDirX = cardSeed % 2 === 0 ? 1 : -1;
+      
+      const startRotX = 12;
+      const startRotY = (idx - 3.5) * 1.2;
+      const startRotZ = (idx - 3.5) * 0.6;
+      
+      const endRotX = 6 + (360 * flips * spinDirX);
+      const endRotY = 360 * flips * spinDirY;
+      const endRotZ = (selectedIdxInQueue % 2 === 0 ? 12 : -12);
+      
+      // Midpoint calculations for arc:
+      // Cards should fan outwards slightly in X, and rise up in Y before grouping perfectly in the center
+      const midX = startX * 0.5 + (spinDirY * 80);
+      const midY = startY * 0.2 - 150; // Pop upwards
+      const midZ = startZ * 0.5 + 100;
+      
+      const midRotX = startRotX + (endRotX - startRotX) * 0.5;
+      const midRotY = startRotY + (endRotY - startRotY) * 0.6; // slightly offset rotation timing
+      const midRotZ = startRotZ + (endRotZ - startRotZ) * 0.5 + (spinDirY * 45); // whimsical Z tilt in mid-air
+      
+      return `
+        @keyframes leaf-flutter-${idx} {
+          0% {
+            opacity: 1;
+            transform:
+              translate(calc(-50% + ${startX}px), calc(-50% + ${startY}px))
+              translateZ(${startZ}px)
+              rotateX(${startRotX}deg) rotateY(${startRotY}deg) rotateZ(${startRotZ}deg)
+              scale(1);
+          }
+          50% {
+            transform:
+              translate(calc(-50% + ${midX}px), calc(-50% + ${midY}px))
+              translateZ(${midZ}px)
+              rotateX(${midRotX}deg) rotateY(${midRotY}deg) rotateZ(${midRotZ}deg)
+              scale(1.1);
+          }
+          100% {
+            transform:
+              translate(-50%, calc(-50% - 40px))
+              translateZ(220px)
+              rotateX(${endRotX}deg) rotateY(${endRotY}deg) rotateZ(${endRotZ}deg)
+              scale(1);
+          }
+        }
+      `;
+    }).join('\n');
+  }, [gamePhase, selectedCards, cards]);
+
   return (
-    <div className="card-hand-container">
+    <div className="card-hand-container card-hand-3d">
+      <style>{flutterStyles}</style>
       {comboPreview && isInteracting && document.getElementById('battle-portal-root') && (
         createPortal(
           <div
@@ -344,6 +415,22 @@ export const CardHand: React.FC<CardHandProps> = ({
           const selectedIdxInQueue = selectedCards.indexOf(idx);
           const isAttacking = ['GATHERING', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);
           const shouldRenderInPortal = isSelected && isAttacking;
+          const cardSeed = (Number(card?.id ?? idx)) % 7;
+          const idleRotX = 12;
+          const idleRotY = (idx - 3.5) * 1.2;
+          const idleRotZ = (idx - 3.5) * 0.6;
+
+          // ── Leaf-flutter parameters (per-card unique trajectory) ──
+          const flutterDir = (selectedIdxInQueue % 2 === 0 ? 1 : -1);
+          const flutterAmp = 50 + (cardSeed * 12);
+          const flutterRotX = 28 + (cardSeed * 5);
+          const flutterRotZ = 18 + ((selectedIdxInQueue * 7) % 20);
+          const flutterDur = 0.8 + (selectedIdxInQueue * 0.08);
+          const flutterDelay = selectedIdxInQueue * 0.1;
+          const cardSlotOffset = (idx - 3.5) * 150;
+          const flutterStartX = cardSlotOffset;
+          const flutterStartY = 280;
+          const flutterStartZ = -80 + (selectedIdxInQueue * 15);
 
           // Deal logic
           const slotX = (idx - 3.5) * 150;
@@ -357,71 +444,72 @@ export const CardHand: React.FC<CardHandProps> = ({
           // Determine phase-specific styles for attacking cards
           let portalStyle: React.CSSProperties = {};
           if (shouldRenderInPortal) {
+          // Add computed exact parameters here so we can access them in styles
+          let cdSeed = idx % 7;
+          if (card?.id) {
+            const sid = String(card.id);
+            let h = 0; for(let i=0; i<sid.length; i++) h += sid.charCodeAt(i);
+            cdSeed = h % 7;
+          }
+          const flp = 1 + (cdSeed % 2);
+          const sdY = selectedIdxInQueue % 2 === 0 ? 1 : -1;
+          const sdX = cdSeed % 2 === 0 ? 1 : -1;
+          const endXRot = 6 + (360 * flp * sdX);
+          const endYRot = 360 * flp * sdY;
+          const endZRot = (selectedIdxInQueue % 2 === 0 ? 12 : -12);
+
             const baseStyle: React.CSSProperties = {
-              position: 'absolute', // Changed from fixed to absolute
+              position: 'absolute',
               width: '120px',
               height: '168px',
               zIndex: 1000 + selectedIdxInQueue,
               left: `${canvasCenterX}px`,
-              transform: 'translateX(-50%)',
-              transition: `all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${selectedIdxInQueue * 0.2}s`,
-              pointerEvents: 'none'
+              top: `${canvasCenterY}px`,
+              transform: 'translate(-50%, -50%) translateZ(0px)',
+              pointerEvents: 'none',
+              transformStyle: 'preserve-3d'
             };
 
             if (gamePhase === 'GATHERING') {
-              const cardSlotOffset = (idx - 3.5) * 150;
-              const originalX = canvasCenterX + cardSlotOffset;
-              const originalBottom = 100 + 168;
-
-              if (!gatheringStarted) {
-                portalStyle = {
-                  ...baseStyle,
-                  left: `${originalX}px`,
-                  bottom: `${originalBottom}px`,
-                  top: 'auto',
-                  transform: 'translateX(-50%) rotate(0deg)',
-                  transition: 'none',
-                };
-              } else {
-                portalStyle = {
-                  ...baseStyle,
-                  left: `${canvasCenterX}px`,
-                  bottom: '30%',
-                  top: 'auto',
-                  transform: 'translateX(-50%) rotate(720deg)',
-                  transition: `all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) ${selectedIdxInQueue * 0.2}s`,
-                };
-              }
+              // Leaf-flutter: Use dynamic per-card injected keyframes
+              portalStyle = {
+                ...baseStyle,
+                bottom: 'auto',
+                animation: `leaf-flutter-${idx} ${flutterDur}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${flutterDelay}s forwards`,
+              };
             } else if (gamePhase === 'CHARGING') {
               portalStyle = {
                 ...baseStyle,
-                top: '65%',
                 bottom: 'auto',
-                transform: 'translate(-50%, -50%) scale(1.1) rotate(-5deg)',
-                transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0s',
-                filter: 'brightness(1.4) drop-shadow(0 0 15px #f1c40f)',
+                transform: `translate(-50%, calc(-50% - 40px)) translateZ(220px) rotateX(${endXRot}deg) rotateY(${endYRot}deg) rotateZ(${endZRot}deg)`,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0s',
+                filter: 'brightness(1.3) drop-shadow(0 0 12px #f1c40f)',
               };
             } else if (gamePhase === 'THRUSTING') {
+              // 3D perspective thrust: cards shrink + recede toward boss
               portalStyle = {
                 ...baseStyle,
                 left: `${bossCenterX}px`,
-                top: `${bossCenterY}px`, // Precise target center
+                top: `${bossCenterY}px`,
                 bottom: 'auto',
-                transform: 'translate(-50%, -50%) scale(0.8) rotate(10deg)',
-                transition: 'all 0.067s cubic-bezier(0.32, 0, 0.67, 0) 0s',
+                transform: `translate(-50%, -50%) scale(0.45) translateZ(600px) rotateX(25deg)`,
+                transition: 'all 0.12s cubic-bezier(0.7, 0, 1, 0.5) 0s',
+                filter: 'brightness(1.6)',
               };
             } else if (gamePhase === 'SCATTERED') {
               const shatterAngle = (selectedIdxInQueue * 60) - 90;
               const shatterDistance = 150 + (selectedIdxInQueue * 30);
               const shatterX = Math.cos(shatterAngle * Math.PI / 180) * shatterDistance;
               const shatterY = Math.sin(shatterAngle * Math.PI / 180) * shatterDistance;
+              const scatterRotX = 10 + selectedIdxInQueue * 8;
+              const scatterRotZ = shatterAngle * 1.5;
 
               portalStyle = {
                 ...baseStyle,
                 left: `${bossCenterX}px`,
-                top: `${bossCenterY}px`, // Precise target center
+                top: `${bossCenterY}px`,
                 bottom: 'auto',
-                transform: `translate(calc(-50% + ${shatterX}px), calc(-50% + ${shatterY}px)) scale(0.3) rotate(${shatterAngle * 2}deg)`,
+                transform: `translate(calc(-50% + ${shatterX}px), calc(-50% + ${shatterY}px)) scale(0.2) translateZ(400px) rotateX(${scatterRotX}deg) rotateZ(${scatterRotZ}deg)`,
                 opacity: 0,
                 filter: 'brightness(2) contrast(150%)',
                 transition: `all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${selectedIdxInQueue * 0.05}s`,
@@ -438,12 +526,23 @@ export const CardHand: React.FC<CardHandProps> = ({
                 <React.Fragment key={`slot-${idx}`}>
                   <div className="card-slot" style={{ width: '120px', height: '168px', margin: '0 10px', position: 'relative' }} />
                   {createPortal(
-                    <div style={portalStyle}>
-                      <CardComponent
-                        card={{ ...card, isBlind, isBanned }}
-                        selected={false}
-                        onClick={() => { }}
-                      />
+                    <div style={portalStyle} className={gamePhase === 'GATHERING' ? 'card-leaf-flutter' : ''}>
+                      <div className={`portal-spin ${gamePhase === 'CHARGING' ? 'active' : ''}`}>
+                        <div className="card-3d-flipbox">
+                          {/* Front face — actual card */}
+                          <div className="card-3d-face card-3d-front">
+                            <CardComponent
+                              card={{ ...card, isBlind, isBanned }}
+                              selected={false}
+                              onClick={() => { }}
+                            />
+                          </div>
+                          {/* Back face — brown Turnsarsah logo */}
+                          <div className="card-3d-face card-3d-back">
+                            <img src="/assets/cards/BACK2.png" alt="Card Back" />
+                          </div>
+                        </div>
+                      </div>
                     </div>,
                     portalRoot
                   )}
@@ -492,11 +591,23 @@ export const CardHand: React.FC<CardHandProps> = ({
                     ['--deal-offset-x' as any]: `${offsetX}px`,
                     ['--deal-offset-y' as any]: '100px'
                   }}>
-                  <CardComponent
-                    card={{ ...card, isBlind, isBanned }}
-                    selected={isSelected && isInteracting}
-                    onClick={() => handleCardClick(idx)}
-                  />
+                  <div className="card-hitbox" onClick={() => handleCardClick(idx)}>
+                    <div
+                      className="card-visual"
+                      style={{
+                        ['--card-tilt-x' as any]: `${idleRotX}deg`,
+                        ['--card-tilt-y' as any]: `${idleRotY}deg`,
+                        ['--card-tilt-z' as any]: `${idleRotZ}deg`,
+                        ['--card-tilt-zdepth' as any]: isSelected && isInteracting ? '26px' : '0px',
+                      }}
+                    >
+                      <CardComponent
+                        card={{ ...card, isBlind, isBanned }}
+                        selected={isSelected && isInteracting}
+                        onClick={() => { }}
+                      />
+                    </div>
+                  </div>
 
                   {/* v2.0.0.21: Tutorial Highlight Markers */}
                   {isInteracting && tutorialHighlights && tutorialHighlights.includes(idx) && (

@@ -14,6 +14,12 @@
   z-index: 20;
 }
 
+.card-hand-3d {
+  perspective: 1400px;
+  perspective-origin: 50% 85%;
+  transform-style: preserve-3d;
+}
+
 .action-buttons {
   position: absolute;
   bottom: 20px;
@@ -44,66 +50,97 @@
   /* Shifted slightly lower for larger cards */
 }
 
-/* Attack Animations */
-@keyframes fly-to-center {
+.card-hand-3d .cards-area {
+  transform-style: preserve-3d;
+  transform-origin: center bottom;
+  will-change: transform;
+}
+
+.card-hand-3d .card-slot {
+  transform-style: preserve-3d;
+  pointer-events: auto;
+}
+
+.card-visual {
+  transform-style: preserve-3d;
+  transform: rotateX(var(--card-tilt-x, 12deg)) rotateY(var(--card-tilt-y, 0deg)) rotateZ(var(--card-tilt-z, 0deg)) translateZ(var(--card-tilt-zdepth, 0px));
+  transform-origin: center bottom;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.card-hand-3d .card-hitbox {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  pointer-events: auto;
+}
+
+.portal-spin {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.portal-spin.active {
+  animation: portal-spin-y 0.5s ease-in-out;
+}
+
+@keyframes portal-spin-y {
   0% {
-    /* Starts from its layout position */
+    transform: rotateY(0deg) scale(1);
   }
-
+  50% {
+    transform: rotateY(90deg) scale(0.85);
+  }
   100% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(1.2) rotate(360deg);
+    transform: rotateY(180deg) scale(1);
   }
 }
 
-.gathering {
-  position: fixed !important;
-  /* left is set via inline style for accurate viewport centering */
-  bottom: 30% !important;
-  top: auto !important;
-  z-index: 1000 !important;
-  transform: translateX(-50%) rotate(360deg) !important;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* ── 3D Card Dual-Face (front + back) ─────────────── */
+
+.card-3d-flipbox {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
 }
 
-.charging {
-  position: fixed !important;
-  /* left is set via inline style for accurate viewport centering */
-  top: 65% !important;
-  /* Move backwards (down) */
-  bottom: auto !important;
-  transform: translate(-50%, -50%) scale(1.1) rotate(-5deg) !important;
-  z-index: 1001 !important;
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: brightness(1.4) drop-shadow(0 0 15px #f1c40f);
+.card-3d-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-.thrusting {
-  position: fixed !important;
-  /* left is set via inline style for accurate viewport centering */
-  top: 15% !important;
-  /* Hit boss center (boss is at top: 0) */
-  bottom: auto !important;
-  transform: translate(-50%, -50%) scale(0.8) rotate(10deg) !important;
-  opacity: 1;
-  z-index: 1002 !important;
-  transition: all 0.1s cubic-bezier(0.32, 0, 0.67, 0);
-  /* Sharp thrust */
+.card-3d-front {
+  z-index: 1;
 }
 
-.scattering {
-  position: fixed !important;
-  /* left is set via inline style for accurate viewport centering */
-  top: 15% !important;
-  bottom: auto !important;
-  transform: translate(-50%, -50%) scale(2.5) rotate(45deg) !important;
-  opacity: 0;
-  filter: blur(20px) brightness(4) contrast(150%);
-  z-index: 1003 !important;
-  transition: all 0.5s cubic-bezier(0.1, 0.7, 1.0, 0.1);
-  box-shadow: 0 0 50px #fff, 0 0 100px #f1c40f;
+.card-3d-back {
+  transform: rotateY(180deg);
+  z-index: 0;
 }
+
+.card-3d-back img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Leaf-Flutter: dynamically generated per-card in CardHand.tsx ── */
+/* Each card gets its own @keyframes with pre-computed rotation values */
+
+.card-leaf-flutter {
+  transform-style: preserve-3d;
+}
+
+/* (Legacy .gathering/.charging/.thrusting/.scattering removed – now handled via inline portal styles) */
 
 /* Fly-from-deck Animation with Dynamic Offsets */
 @keyframes fly-from-deck {

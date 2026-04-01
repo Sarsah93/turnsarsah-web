@@ -19,6 +19,7 @@ import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 
 import { BattleMenuOverlay, ActiveMenuType } from './BattleMenuOverlay';
 import { BattleField } from './BattleField';
+import { BattleFxCanvas } from './BattleFxCanvas';
 import '../styles/BattleEffects.css';
 import '../styles/CardAfterimage.css';
 
@@ -259,6 +260,7 @@ export const BattleScreen: React.FC = () => {
             <ClearCongratulationsPopup />
 
             {/* FX Overlays */}
+            <BattleFxCanvas fxClass={fxClass} />
             <div className="fx-overlay">
                 <div className="fx-darken"></div>
                 <div className="fx-speedlines"></div>
@@ -366,7 +368,10 @@ export const BattleScreen: React.FC = () => {
                 width: '100%', height: '100%',
                 zIndex: 2500,
                 pointerEvents: 'none',
-                overflow: 'hidden'
+                overflow: 'visible',
+                perspective: '1400px',
+                perspectiveOrigin: '50% 45%',
+                transformStyle: 'preserve-3d'
             }}>
                 {/* v2.4.4: Damage Texts moved into Portal for consistent layering and coordinate system */}
                 {damageTexts.map(dt => (

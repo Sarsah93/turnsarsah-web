@@ -217,12 +217,13 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                     <div style={{
                         width: '240px', flexShrink: 0,
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
-                        padding: '20px', borderRight: '2px solid #555', backgroundColor: '#161625'
+                        padding: '20px', borderRight: '2px solid #555', backgroundColor: '#161625',
+                        overflow: 'hidden'
                     }}>
                         <h2 style={{ color: '#fff', fontSize: '2rem', margin: '0 0 20px 0', textAlign: 'center' }}>
                             {language === 'KR' ? '적용 슬롯' : 'APPLICATION'} (<span style={{ color: equippedAltarSkills.length === 4 ? '#e74c3c' : '#2ecc71' }}>{equippedAltarSkills.length}</span>/4)
                         </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', alignItems: 'center' }}>
+                        <div className="custom-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', alignItems: 'center', overflowY: 'auto', paddingRight: '6px', flex: 1, minHeight: 0 }}>
                             {[0, 1, 2, 3, 4].map(index => {
                                 const isPadlocked = index === 4;
                                 const skillId = !isPadlocked ? equippedAltarSkills[index] : null;
@@ -236,7 +237,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                             }
                                         }}
                                             style={{
-                                                width: '72px', height: '72px',
+                                                width: '110px', height: '110px',
                                                 border: '2px solid #7f8c8d',
                                                 borderRadius: '8px',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -244,14 +245,14 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                                 cursor: (isPadlocked || !skillId || isTabDisabled) ? 'default' : 'pointer',
                                                 position: 'relative',
                                             }}>
-                                            <span style={{ position: 'absolute', top: 4, left: 5, color: '#bdc3c7', fontSize: '0.75rem' }}>
+                                            <span style={{ position: 'absolute', top: 4, left: 5, color: '#bdc3c7', fontSize: '0.75rem', zIndex: 2 }}>
                                                 {isPadlocked ? 'SLOT 5' : `SLOT ${index + 1}`}
                                             </span>
                                             {isPadlocked ? (
                                                 <span style={{ color: '#7f8c8d', fontSize: '1rem', fontWeight: 'bold' }}>LOCKED</span>
                                             ) : skill ? (
                                                 <img src={`/assets/altar skills/${skill.image}`} alt={skill.name[language]}
-                                                    style={{ width: '50px', height: '50px', objectFit: 'contain' }}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }}
                                                     onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.style.display = 'none'; }} />
                                             ) : (
                                                 <span style={{ color: '#bdc3c7', fontSize: '1rem' }}>EMPTY</span>

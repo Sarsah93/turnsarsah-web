@@ -21,8 +21,8 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   onClose,
   children,
-  width = 400,
-  height = 300,
+  width,
+  height,
   showCloseButton = true,
   showBackButton = false,
 }) => {
@@ -35,7 +35,10 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="modal-overlay">
       <div
         className="modal-content"
-        style={{ '--modal-width': `${width}px`, '--modal-height': `${height}px` } as React.CSSProperties}
+        style={{
+          ...(width ? { '--modal-width': `${width}px` } : {}),
+          ...(height ? { '--modal-height': `${height}px` } : {}),
+        } as React.CSSProperties}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

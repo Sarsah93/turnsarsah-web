@@ -10,7 +10,7 @@ interface LoadingScreenProps {
   phase: 'INITIAL' | 'GAME_ENTRY';
 }
 
-const TIP_ROTATE_INTERVAL = 5000; // 5초마다 팁 교체
+const TIP_ROTATE_INTERVAL = 6500; // 6.5초마다 팁 교체
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase }) => {
   const percent = Math.floor(progress * 100);

@@ -573,15 +573,15 @@ export const useGameLoop = () => {
             }
         }
 
-        // --- PHASE 1: GATHERING ---
+        // --- PHASE 1: GATHERING (leaf-flutter) ---
         store.setGamePhase('GATHERING');
         scaledTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
-        const gatheringDurationRaw = (selectedCards.length * 200) + 500;
+        const gatheringDurationRaw = (selectedCards.length * 200) + 700;
         await wait(gatheringDurationRaw);
 
-        // --- PHASE 2: CHARGING (0.8s) ---
+        // --- PHASE 2: CHARGING (Y-axis 180° spin) ---
         store.setGamePhase('CHARGING');
-        await wait(800);
+        await wait(900);
 
         // --- PHASE 3: THRUSTING ---
         store.setGamePhase('THRUSTING');
