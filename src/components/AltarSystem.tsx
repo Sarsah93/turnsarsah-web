@@ -6,6 +6,7 @@ import { Button } from './Common/Button';
 import { TROPHIES, ALTAR_SKILLS, ALTAR_PATHS } from '../constants/altarSystem';
 import { AltarManager } from '../utils/AltarManager';
 import { Difficulty } from '../constants/gameConfig';
+import './styles/Modal.css';
 
 interface AltarSystemProps {
     onClose: () => void;
@@ -50,12 +51,12 @@ const TREE_NODES = [
 
 const PATHS = ALTAR_PATHS;
 
-const CELL = 80;
-const COL_GAP = 12;
-const ROW_GAP = 12;
-const PAD = 10;
-const SVG_W = PAD + 8 * CELL + 7 * COL_GAP + PAD; // 744px
-const SVG_H = PAD + 11 * CELL + 10 * ROW_GAP + PAD; // (11*80) + (10*12) + 20 = 1020px
+const CELL = 120;
+const COL_GAP = 14;
+const ROW_GAP = 14;
+const PAD = 12;
+const SVG_W = PAD + 8 * CELL + 7 * COL_GAP + PAD; // 1122px
+const SVG_H = PAD + 11 * CELL + 10 * ROW_GAP + PAD; // (11*120) + (10*14) + 24 = 1484px
 
 const getNodeXY = (nodeId: string) => {
     const node = TREE_NODES.find(n => n.id === nodeId);
@@ -191,7 +192,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                             </Button>
                         </div>
                     </div>
-                    <BlockButton text="BACK" onClick={onClose} width="100px" height="40px" fontSize="1.2rem" />
+                    <button className="modal-back-btn" onClick={onClose}>{language === 'KR' ? '뒤로가기' : 'BACK'}</button>
                 </div>
 
                 {/* Main Body */}
@@ -276,7 +277,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                     </div>
 
                     {/* Center Panel: Skill Tree */}
-                    <div style={{ flex: 1, padding: '16px', overflow: 'auto', backgroundColor: '#1a1a2e' }}>
+                    <div className="custom-scrollbar" style={{ flex: 1, padding: '16px', overflow: 'auto', backgroundColor: '#1a1a2e' }}>
                         <h2 style={{ color: '#fff', fontSize: '2rem', margin: '0 0 10px 0' }}>{language === 'KR' ? '제단 스킬 트리' : 'ALTAR SKILL TREE'}</h2>
                         <div style={{ position: 'relative', display: 'inline-block', width: SVG_W, height: SVG_H }}>
                             <svg style={{ position: 'absolute', top: 0, left: 0, width: SVG_W, height: SVG_H, pointerEvents: 'none', zIndex: 1 }}>
@@ -347,7 +348,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                 </div>
 
                 {/* Bottom Panel: Trophy Inventory */}
-                <div style={{
+                <div className="custom-scrollbar" style={{
                     height: '130px', borderTop: '2px solid #555', backgroundColor: '#161625',
                     padding: '10px 20px', display: 'flex', alignItems: 'center', overflowX: 'auto', gap: '12px', flexShrink: 0,
                     position: 'relative', paddingBottom: `calc(10px + env(safe-area-inset-bottom))`

@@ -9,6 +9,7 @@ import { ChapterNextPopup } from './components/ChapterNextPopup';
 import './App.css';
 // import './responsive.css';
 import './styles/safe-area.css';
+import './styles/scrollbar.css';
 import { AudioManager } from './utils/AudioManager';
 import { SaveManager, SAVE_VERSION } from './utils/SaveManager';
 

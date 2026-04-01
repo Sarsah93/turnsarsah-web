@@ -34,26 +34,28 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
       isOpen={isOpen}
       onClose={onResume || onClose}
       showCloseButton={false}
-      width={400}
-      height={450}
+      showBackButton={true}
+      width={500}
+      height={520}
     >
-      <div className="pause-menu-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center', padding: '20px' }}>
-        <BlockButton text={t.UI.RESUME} onClick={onResume || onClose || (() => { })} width="220px" height="40px" />
+      <div className="pause-menu-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '18px', alignItems: 'center', padding: '24px' }}>
+        <BlockButton text={t.UI.RESUME} onClick={onResume || onClose || (() => { })} width="280px" height="50px" fontSize="1.5rem" />
         <BlockButton 
           text={t.UI.SAVE_GAME} 
           onClick={isProcessing ? (() => { }) : (onSave || (() => { }))} 
-          width="220px" 
-          height="40px" 
+          width="280px" 
+          height="50px" 
+          fontSize="1.5rem"
           disabled={isProcessing}
         />
-        <BlockButton text={t.SETTINGS.TITLE} onClick={onSettings || (() => { })} width="220px" height="40px" />
+        <BlockButton text={t.SETTINGS.TITLE} onClick={onSettings || (() => { })} width="280px" height="50px" fontSize="1.5rem" />
         {INTERNAL_FEATURES && (
           <>
-            <BlockButton text="INTERNAL: FORCE SAVE (SLOT 1)" onClick={() => forceSaveGame(0)} width="260px" height="40px" />
-            <BlockButton text="INTERNAL: FORCE LOAD (SLOT 1)" onClick={() => loadGame(0)} width="260px" height="40px" />
+            <BlockButton text="INTERNAL: FORCE SAVE (SLOT 1)" onClick={() => forceSaveGame(0)} width="300px" height="50px" fontSize="1.2rem" />
+            <BlockButton text="INTERNAL: FORCE LOAD (SLOT 1)" onClick={() => loadGame(0)} width="300px" height="50px" fontSize="1.2rem" />
           </>
         )}
-        <BlockButton text={t.UI.BACK_TO_MAIN} onClick={onQuit || (() => { })} width="220px" height="40px" fontSize="1.5rem" />
+        <BlockButton text={t.UI.BACK_TO_MAIN} onClick={onQuit || (() => { })} width="280px" height="50px" fontSize="1.5rem" />
       </div>
     </Modal>
   );

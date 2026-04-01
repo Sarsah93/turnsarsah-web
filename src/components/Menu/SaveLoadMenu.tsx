@@ -46,6 +46,9 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
   const handleSlotClick = (index: number) => {
     if (mode === 'SAVE' && slots[index] !== null) {
       setConfirmOverwriteSlot(index);
+    } else if (mode === 'LOAD' && slots[index] === null) {
+      // Empty slot in LOAD mode — do nothing
+      return;
     } else {
       onAction?.(index);
     }
@@ -76,9 +79,10 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
         title={mode === 'SAVE' ? t.UI.SAVE_GAME : t.UI.LOAD_GAME}
         onClose={onClose}
         isOpen={true}
-        width={650}
-        height={550}
+        width={750}
+        height={620}
         showCloseButton={false}
+        showBackButton={true}
       >
         <div className="save-load-slots">
           {slots.map((slot, index) => (
@@ -91,18 +95,15 @@ export const SaveLoadMenu: React.FC<SaveLoadMenuProps> = ({ mode, onAction, onCl
                 <BlockButton
                   text={t.UI.DELETE}
                   onClick={() => handleDelete(index)}
-                  width="55px"
-                  height="32px"
+                  width="70px"
+                  height="38px"
                   variant="danger"
-                  fontSize="1.6rem"
+                  fontSize="1.4rem"
                   style={{ marginLeft: 'auto', marginRight: '5px', flexShrink: 0 }}
                 />
               )}
             </div>
           ))}
-          <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
-            <BlockButton text={t.UI.CANCEL} onClick={() => onClose?.()} width="160px" />
-          </div>
         </div>
       </Modal>
 

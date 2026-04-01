@@ -42,24 +42,53 @@
   text-transform: uppercase;
 }
 
-.modal-close {
+/* Unified Back Button — used across all modals */
+.modal-back-btn {
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #f1c40f;
+  border-radius: 10px;
+  color: #f1c40f;
+  font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
+  font-size: 1.4rem;
+  font-weight: bold;
+  padding: 8px 22px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.modal-back-btn:hover {
+  background: rgba(241, 196, 15, 0.15);
+  border-color: #f39c12;
+  color: #f39c12;
+  transform: scale(1.05);
+}
+
+.modal-back-btn:active {
+  transform: scale(0.95);
+}
+
+/* Legacy close (×) button */
+.modal-close-btn {
   background: none;
-  border: none;
-  font-size: 24px;
+  border: 2px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 20px;
   color: #c8c8c8;
   cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
+  padding: 4px 10px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
-.modal-close:hover {
+.modal-close-btn:hover {
   background-color: #dc3232;
+  border-color: #dc3232;
   color: #fff;
 }
 
