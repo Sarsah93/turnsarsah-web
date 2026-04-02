@@ -1,0 +1,36 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="100%" height="100%" fill="#e6e6e6"/>
+  <rect x="560" y="120" width="480" height="300" fill="#f4c7a8" stroke="#000" stroke-width="2"/>
+  <text x="800" y="150" text-anchor="middle" font-family="sans-serif" font-size="20">보스 위치</text>
+  <line x1="800" y1="0" x2="800" y2="900" stroke="#888" stroke-dasharray="6,6"/>
+  <line x1="0" y1="450" x2="1600" y2="450" stroke="#888" stroke-dasharray="6,6"/>
+
+  <!-- Card slots -->
+  <g fill="#f5f5f5" stroke="#ccc">
+    <rect x="240" y="760" width="90" height="130"/>
+    <rect x="350" y="760" width="90" height="130"/>
+    <rect x="460" y="760" width="90" height="130"/>
+    <rect x="570" y="760" width="90" height="130"/>
+    <rect x="680" y="760" width="90" height="130"/>
+    <rect x="790" y="760" width="90" height="130"/>
+    <rect x="900" y="760" width="90" height="130"/>
+    <rect x="1010" y="760" width="90" height="130"/>
+  </g>
+
+  <!-- Left paths 1~4 (my interpretation) -->
+  <polyline points="285,825 220,640 260,520 320,420 420,330 520,260 640,220 740,220 820,240 900,260 980,230 1040,200" fill="none" stroke="#e74c3c" stroke-width="3"/>
+  <polyline points="395,825 320,650 380,560 520,500 660,520 760,580 820,500 900,420 980,330 1060,260 1120,230" fill="none" stroke="#f39c12" stroke-width="3"/>
+  <polyline points="505,825 420,700 360,600 280,520 240,420 300,320 420,280 560,320 680,260 760,200" fill="none" stroke="#27ae60" stroke-width="3"/>
+  <polyline points="615,825 520,720 620,620 700,520 760,420 820,340 900,280 980,240" fill="none" stroke="#2980b9" stroke-width="3"/>
+
+  <!-- Right paths 5~8 (mirrored) -->
+  <polyline points="1315,825 1380,640 1340,520 1280,420 1180,330 1080,260 960,220 860,220 780,240 700,260 620,230 560,200" fill="none" stroke="#2c3e50" stroke-width="3"/>
+  <polyline points="1205,825 1280,650 1220,560 1080,500 940,520 840,580 780,500 700,420 620,330 540,260 480,230" fill="none" stroke="#d35400" stroke-width="3"/>
+  <polyline points="1095,825 1180,700 1240,600 1320,520 1360,420 1300,320 1180,280 1040,320 920,260 840,200" fill="none" stroke="#16a085" stroke-width="3"/>
+  <polyline points="985,825 1080,720 980,620 900,520 840,420 780,340 700,280 620,240" fill="none" stroke="#8e44ad" stroke-width="3"/>
+
+  <text x="285" y="800" font-family="sans-serif" font-size="12" fill="#e74c3c">경로 1</text>
+  <text x="395" y="800" font-family="sans-serif" font-size="12" fill="#f39c12">경로 2</text>
+  <text x="505" y="800" font-family="sans-serif" font-size="12" fill="#27ae60">경로 3</text>
+  <text x="615" y="800" font-family="sans-serif" font-size="12" fill="#2980b9">경로 4</text>
+</svg>

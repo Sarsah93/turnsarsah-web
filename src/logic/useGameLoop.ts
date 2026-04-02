@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { AudioManager } from '../utils/AudioManager';
 import { calculatePlayerDamage, calculateBotDamage, applyDamage } from './damageCalculation';
@@ -13,6 +13,7 @@ import { playConditionSound, getBossAttackSFX } from '../utils/audioMapper';
 import { applyChapterSpecialRules } from './specialRules';
 import { applyBotStatusEffects } from './botMechanics';
 import { evaluateHand } from './mechanics';
+import { TitleManager } from '../utils/TitleManager';
 export interface DamageTextData {
     id: number;
     x: number;
@@ -118,8 +119,8 @@ export const useGameLoop = () => {
             const remaining = incomingDmg - reflected;
             setBotHp(Math.max(0, useGameStore.getState().bot.hp - reflected));
             showDamageText('BOT', `-${reflected}`, '#f39c12');
-            setMessage(language === 'KR' ? '노드간섭!' : "NODE INTERFERENCE!");
-            AudioManager.playSFX('/assets/audio/conditions/데미지 반사(Damage reflection).mp3');
+            setMessage(language === 'KR' ? '?몃뱶媛꾩꽠!' : "NODE INTERFERENCE!");
+            AudioManager.playSFX('/assets/audio/conditions/?곕?吏 諛섏궗(Damage reflection).mp3');
             return remaining;
         }
         return incomingDmg;
@@ -250,7 +251,7 @@ export const useGameLoop = () => {
         if (useGameStore.getState().gamePhase !== 'IDLE') return;
         store.setGamePhase('PLAYER_ATTACK');
 
-        // 1. 마비 체크 (Paralyzing)
+        // 1. 留덈퉬 泥댄겕 (Paralyzing)
         if (player.conditions.has('Paralyzing')) {
             setMessage(t.COMBAT.PARALYZED);
             playConditionSound('Paralyzing');
@@ -266,7 +267,7 @@ export const useGameLoop = () => {
         // MUDDED Check (Prevent Attack)
         const selectedCardsForStatusCheck = selectedIndices.map(idx => currentPlayerHand[idx]).filter(Boolean) as Card[];
         if (selectedCardsForStatusCheck.some(c => c.isMudded)) {
-            setMessage("진흙 카드가 포함되어 있습니다!");
+            setMessage("吏꾪쓾 移대뱶媛 ?ы븿?섏뼱 ?덉뒿?덈떎!");
             triggerScreenEffect('shake-small');
             store.setGamePhase('IDLE');
             return;
@@ -274,7 +275,7 @@ export const useGameLoop = () => {
 
         // PETRIFIED Check (Prevent Attack)
         if (selectedCardsForStatusCheck.some(c => c.isPetrified)) {
-            setMessage("석화된 카드가 포함되어 있습니다!");
+            setMessage("?앺솕??移대뱶媛 ?ы븿?섏뼱 ?덉뒿?덈떎!");
             triggerScreenEffect('shake-small');
             store.setGamePhase('IDLE');
             return;
@@ -306,7 +307,7 @@ export const useGameLoop = () => {
         const missChance = (accCond ? ((accCond.data as any)?.percent || 20) / 100 : 0) + (neuroCond ? 0.3 : 0);
 
         if (missChance > 0 && Math.random() < missChance) {
-            setMessage(t.COMBAT.ACCURACY_MISSED); // 명중률 저하 메시지 활용
+            setMessage(t.COMBAT.ACCURACY_MISSED); // 紐낆쨷瑜????硫붿떆吏 ?쒖슜
             triggerScreenEffect('shake-small');
             // 6A-1: Adaptive Calculation - Reset stacks on miss
             if (store.equippedAltarSkills.includes('6A-1')) {
@@ -328,6 +329,16 @@ export const useGameLoop = () => {
             store.difficulty,
             store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 1
         );
+
+        // Title Progress: One Pair Dance (local only for now)
+        let hasOnePairDance = store.hasOnePairDanceTitle || store.forceOnePairDance;
+        if (handType === 'One Pair' && baseDamage > 0) {
+            const res = TitleManager.incrementOnePairCount();
+            if (res.unlocked && !hasOnePairDance) {
+                store.setHasOnePairDanceTitle(true);
+                hasOnePairDance = true;
+            }
+        }
 
         // 4A-1: Dyschromatopsia - If active, consume a use ONLY when a flux-type is formed AND it is better than natural hand
         if (store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 1) {
@@ -429,7 +440,7 @@ export const useGameLoop = () => {
             displayMessage = ruleRes.displayMessage;
 
             if (store.chapterNum === '3B') {
-                // 3B-10: STEM CELL 파괴 로직 - 3회 연속 스트레이트 계열 공격 성공 시
+                // 3B-10: STEM CELL ?뚭눼 濡쒖쭅 - 3???곗냽 ?ㅽ듃?덉씠??怨꾩뿴 怨듦꺽 ?깃났 ??
                 if (stageNum === 10 && !store.lizardStemCellDestroyed && damage > 0) {
                     const straightHands = ['Straight', 'Straight Flush', 'Royal Flush'];
                     if (straightHands.includes(handType)) {
@@ -440,7 +451,7 @@ export const useGameLoop = () => {
                             store.setLizardStemCellDestroyed(true);
                             const freshBot10 = useGameStore.getState().bot;
                             
-                            // 보스 초기 스탯 롤백 (초기 배율 적용된 Base MaxHP 및 ATK)
+                            // 蹂댁뒪 珥덇린 ?ㅽ꺈 濡ㅻ갚 (珥덇린 諛곗쑉 ?곸슜??Base MaxHP 諛?ATK)
                             const diffConfig = DIFFICULTY_CONFIGS[store.difficulty];
                             const chapterConf = CHAPTERS['3B'];
                             const bossOverride = diffConfig.bossOverrides['3B']?.[10] || {};
@@ -455,7 +466,7 @@ export const useGameLoop = () => {
                             }
                             
                             const newConds10 = new Map(freshBot10.conditions);
-                            newConds10.delete('Stem Cell'); // 삭제 시 누적된 회피율(currentAvoid)도 함께 날아감
+                            newConds10.delete('Stem Cell'); // ??젣 ???꾩쟻???뚰뵾??currentAvoid)???④퍡 ?좎븘媛?
                             
                             const cappedHp = Math.min(freshBot10.hp, initHp);
                             useGameStore.getState().setBot({
@@ -466,13 +477,13 @@ export const useGameLoop = () => {
                                 conditions: newConds10
                             });
                             
-                            setMessage("텔로미어 단절! 줄기세포 효과 영구적 제거!");
+                            setMessage("?붾줈誘몄뼱 ?⑥젅! 以꾧린?명룷 ?④낵 ?곴뎄???쒓굅!");
                         } else {
-                            setMessage("텔로미어 가속 공격!");
+                            setMessage("?붾줈誘몄뼱 媛??怨듦꺽!");
                         }
                         triggerScreenEffect('flash-red');
                     } else {
-                        // 스트레이트 외 공격 성공 시 연속 스택 초기화
+                        // ?ㅽ듃?덉씠????怨듦꺽 ?깃났 ???곗냽 ?ㅽ깮 珥덇린??
                         store.setLizardKingStraightCount(0);
                     }
                 }
@@ -501,7 +512,7 @@ export const useGameLoop = () => {
                 }
             }
 
-            // 5A-2: Overloaded (same hand consecutively → +10% per stack, max 3)
+            // 5A-2: Overloaded (same hand consecutively ??+10% per stack, max 3)
             if (store.equippedAltarSkills.includes('5A-2')) {
                 if (store.consecutiveHandType === handType) {
                     const newStacks = Math.min(3, store.consecutiveHandStacks + 1);
@@ -573,27 +584,47 @@ export const useGameLoop = () => {
             }
         }
 
-        // --- PHASE 1: GATHERING (leaf-flutter) ---
-        store.setGamePhase('GATHERING');
-        scaledTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 200);
-        const gatheringDurationRaw = (selectedCards.length * 200) + 700;
-        await wait(gatheringDurationRaw);
+        // --- PHASE 1: GATHERING (leaf-flutter / one-pair dance) ---
+        const isOnePairDance = hasOnePairDance && handType === 'One Pair';
+        if (isOnePairDance) {
+            // Random order for special motion
+            const order = [...selectedIndices].sort(() => Math.random() - 0.5);
+            store.setAttackOrderIndices(order);
+            store.setSpecialAttackMode('ONE_PAIR_DANCE');
+            store.setGamePhase('GATHERING_SPECIAL');
+        } else {
+            store.setSpecialAttackMode('NONE');
+            store.setAttackOrderIndices([]);
+            store.setGamePhase('GATHERING');
+        }
+        scaledTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 100);
+        const specialDelayMs = 120;
+        if (!isOnePairDance) {
+            const gatheringDurationRaw = (selectedCards.length * 100) + 500;
+            await wait(gatheringDurationRaw);
 
-        // --- PHASE 2: CHARGING (Y-axis 180° spin) ---
-        store.setGamePhase('CHARGING');
-        await wait(900);
+            // --- PHASE 2: CHARGING (Y-axis 180째 spin) ---
+            store.setGamePhase('CHARGING');
+            await wait(500);
 
-        // --- PHASE 3: THRUSTING ---
-        store.setGamePhase('THRUSTING');
-        await wait(67);
-        await wait(133);
-        AudioManager.playSFX('/assets/audio/player/whipping.mp3');
+            // --- PHASE 3: THRUSTING ---
+            store.setGamePhase('THRUSTING');
+            await wait(67);
+            await wait(133);
+            AudioManager.playSFX('/assets/audio/player/whipping.mp3');
 
-        // Boss Shake & Hit
-        // Boss Shake & Hit
-        await wait(100);
-        setBotAnimState('HIT');
-        triggerHitFx(handType, damage);
+            // Boss Shake & Hit
+            await wait(100);
+            setBotAnimState('HIT');
+            triggerHitFx(handType, damage);
+        } else {
+            // One Pair Dance: fly to target (no GATHERING/CHARGING)
+            await wait(1130);
+            AudioManager.playSFX('/assets/audio/player/whipping.mp3');
+            await wait(100);
+            setBotAnimState('HIT');
+            triggerHitFx(handType, damage);
+        }
 
         // Damage Popup & Message
         if (isPuzzleCorrect) {
@@ -660,7 +691,7 @@ export const useGameLoop = () => {
             }
         }
 
-        // 3A-10 티폰 전승 타격 기믹 (Flush 4문양 완성 시 즉사)
+        // 3A-10 ?고룿 ?꾩듅 ?寃?湲곕? (Flush 4臾몄뼇 ?꾩꽦 ??利됱궗)
         if (store.chapterNum === '3A' && stageNum === 10 && handType.includes('Flush')) {
             const suit = selectedCards.find(c => !c.isJoker)?.suit;
             if (suit && !store.hydraFlushSuits.includes(suit)) {
@@ -670,9 +701,9 @@ export const useGameLoop = () => {
                 triggerScreenEffect('flash-red');
                 if (newSuits.length >= 4) {
                     await wait(1000);
-                    setMessage("티폰 전승: 거대 뱀의 심장을 찔렀습니다!");
+                    setMessage("?고룿 ?꾩듅: 嫄곕? 諭???ъ옣??李붾??듬땲??");
                     setBotHp(0);
-                    // 즉사이므로 부활 조건을 스킵/강제삭제
+                    // 利됱궗?대?濡?遺??議곌굔???ㅽ궢/媛뺤젣??젣
                     const killConds = new Map(useGameStore.getState().bot.conditions);
                     killConds.delete('Revival');
                     useGameStore.getState().setBot({ ...useGameStore.getState().bot, conditions: killConds });
@@ -687,7 +718,7 @@ export const useGameLoop = () => {
         if (store.equippedAltarSkills.includes('7A') && damage > 0 && !isPuzzleCorrect && !isAdrenalineNull) {
             if (Math.random() < 0.08) {
                 await wait(600);
-                setMessage(language === 'KR' ? '인과재배열!' : 'CAUSALITY REARRANGEMENT!');
+                setMessage(language === 'KR' ? '?멸낵?щ같??' : 'CAUSALITY REARRANGEMENT!');
                 triggerScreenEffect('shake');
                 playConditionSound('Triple Attack'); // Use same impactful sound
                 const freshBot7A = useGameStore.getState().bot;
@@ -744,16 +775,21 @@ export const useGameLoop = () => {
                 setBotHp(reviveHp);
                 store.addBotCondition('Revived', 9999);
                 setMessage(`${t.CONDITIONS.REVIVED.NAME}!`);
-                AudioManager.playSFX('/assets/audio/conditions/부활(Revival).mp3');
+                AudioManager.playSFX('/assets/audio/conditions/遺??Revival).mp3');
                 await wait(1000);
             }
         }
 
         // --- PHASE 4: SCATTERED ---
+        if (isOnePairDance) {
+            await wait(Math.max(0, selectedCards.length - 1) * specialDelayMs);
+        }
         store.setGamePhase('SCATTERED');
         await wait(400);
         setBotAnimState('NONE');
         store.removePlayerCards(selectedIndices);
+        store.setSpecialAttackMode('NONE');
+        store.setAttackOrderIndices([]);
 
         // Regenerating Logic
         const stagesWithRegen = [6, 8, 10];
@@ -802,23 +838,23 @@ export const useGameLoop = () => {
             }
         }
 
-        // ── 3B-9 각성(AWAKENING) 트리거 ──────────────────────────────
+        // ?? 3B-9 媛곸꽦(AWAKENING) ?몃━嫄???????????????????????????????
         const freshBot3B9 = useGameStore.getState().bot;
         if (store.chapterNum === '3B' && stageNum === 9) {
             if (freshBot3B9.hp > 0 && freshBot3B9.hp <= freshBot3B9.maxHp * 0.4 && !freshBot3B9.conditions.has('Awakening')) {
-                setMessage("각성: 보스가 기운을 되찾고 모든 방해를 떨쳐내며 더욱 흉포해집니다!");
+                setMessage("媛곸꽦: 蹂댁뒪媛 湲곗슫???섏갼怨?紐⑤뱺 諛⑺빐瑜??⑥퀜?대ŉ ?붿슧 ?됲룷?댁쭛?덈떎!");
                 playConditionSound('Awakening');
                 triggerScreenEffect('flash-red');
                 
-                // v2.5.0: 사용자 요구사항 - 기존 버프(피해경감, 재생 등) 모두 제거
+                // v2.5.0: ?ъ슜???붽뎄?ы빆 - 湲곗〈 踰꾪봽(?쇳빐寃쎄컧, ?ъ깮 ?? 紐⑤몢 ?쒓굅
                 const newBotConds = new Map<string, any>(); 
-                // Awakening은 중복 발동 방지를 위해 새로 추가
+                // Awakening? 以묐났 諛쒕룞 諛⑹?瑜??꾪빐 ?덈줈 異붽?
                 newBotConds.set('Awakening', { name: TRANSLATIONS.KR.CONDITIONS.AWAKENING.NAME, duration: 9999, elapsed: 0, data: {} });
 
                 const awakenedBot = {
                     ...freshBot3B9,
                     hp: freshBot3B9.maxHp,
-                    atk: freshBot3B9.atk + 20, // 사용자 요구사항: ATK +20
+                    atk: freshBot3B9.atk + 20, // ?ъ슜???붽뎄?ы빆: ATK +20
                     conditions: newBotConds
                 };
                 store.setBot(awakenedBot);
@@ -831,7 +867,7 @@ export const useGameLoop = () => {
 
         const freshBotEndCheck = useGameStore.getState().bot;
         if (freshBotEndCheck.hp <= 0) {
-            // 보스 부활 기믹 (3A-10 HYDRA 등)
+            // 蹂댁뒪 遺??湲곕? (3A-10 HYDRA ??
             const revivalCond = freshBotEndCheck.conditions.get('Revival');
             if (revivalCond) {
                 const limit = (revivalCond.data as any)?.limit ?? (revivalCond.data as any)?.count ?? 1;
@@ -856,11 +892,11 @@ export const useGameLoop = () => {
                     
                     await wait(1500);
                     
-                    // "부활 직후 1턴 공격 불가"
-                    setMessage("보스가 행동을 회복 중입니다...");
+                    // "遺??吏곹썑 1??怨듦꺽 遺덇?"
+                    setMessage("蹂댁뒪媛 ?됰룞???뚮났 以묒엯?덈떎...");
                     await wait(1000);
                     await proceedToEndTurn();
-                    return; // 승리/봇턴 분기 스킵
+                    return; // ?밸━/遊뉙꽩 遺꾧린 ?ㅽ궢
                 }
             }
 
@@ -952,8 +988,8 @@ export const useGameLoop = () => {
         }
 
         if (store.chapterNum === '3B' && stageNum === 7 && store.holdBreathInvulnerable3B) {
-            setMessage("숨참기: 보스가 이번 턴에 공격하지 않습니다.");
-            store.setHoldBreathInvulnerable3B(false); // 플래그 해제
+            setMessage("?⑥갭湲? 蹂댁뒪媛 ?대쾲 ?댁뿉 怨듦꺽?섏? ?딆뒿?덈떎.");
+            store.setHoldBreathInvulnerable3B(false); // ?뚮옒洹??댁젣
             await wait(1000);
             await proceedToEndTurn();
             return;
@@ -967,9 +1003,9 @@ export const useGameLoop = () => {
             return;
         }
 
-        // 3A-6 Cave Bear: Honey Yummy 꿀섭취 (20% 스킵)
+        // 3A-6 Cave Bear: Honey Yummy 轅??랬 (20% ?ㅽ궢)
         if (store.chapterNum === '3A' && stageNum === 6 && Math.random() < 0.20) {
-            setMessage("꿀 섭취 중! (공격 스킵 & 체력 회복)");
+            setMessage("轅 ??랬 以? (怨듦꺽 ?ㅽ궢 & 泥대젰 ?뚮났)");
             setBotHp(Math.min(currentBot.maxHp, currentBot.hp + 20));
             showDamageText('BOT', `+20`, '#2ecc71');
             await wait(1000);
@@ -982,13 +1018,13 @@ export const useGameLoop = () => {
             const cycleTurn = (store.currentTurn % 3);
             if (cycleTurn === 1) {
                 // Turn 2 of 3 (indices 1, 4, 7...): Skip/Setup
-                setMessage("’특수 공격: 모래폭풍’을 준비 중입니다…");
+                setMessage("특수 공격: 모래 폭풍을 준비중입니다!");
                 await wait(1200);
                 await proceedToEndTurn();
                 return;
             } else if (cycleTurn === 2) {
                 // Turn 3 of 3 (indices 2, 5, 8...): Special Attack
-                setMessage("모래 폭풍 피해를 받습니다!");
+                setMessage("紐⑤옒 ??뭾 ?쇳빐瑜?諛쏆뒿?덈떎!");
                 setBotAnimState('ATTACK');
                 AudioManager.playSFX('/assets/audio/combat/chapter 2a desert/2A_SAND DRAGON_SAND STORM.mp3');
                 let dmg = 70;
@@ -1015,7 +1051,7 @@ export const useGameLoop = () => {
                 const cycleTurn = (awakenTurn % 4);
                 if (cycleTurn === 2) {
                     // Skip turn before special
-                    setMessage("’특수 공격: 부패 폭발’을 준비 중입니다…");
+                    setMessage("특수 공격: 부패 폭발을 준비중입니다!");
                     await wait(1200);
                     await proceedToEndTurn();
                     return;
@@ -1050,11 +1086,11 @@ export const useGameLoop = () => {
 
 
 
-        // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 2회 성공 후 다음 턴 100% 차단
+        // 3B-7: HOLD_BREATH(?⑥갭湲? - 蹂댁뒪 怨듦꺽 2???깃났 ???ㅼ쓬 ??100% 李⑤떒
         if (store.chapterNum === '3B' && stageNum === 7) {
             const holdBreathActive = store.holdBreathTurn3B === store.currentTurn;
             if (holdBreathActive) {
-                setMessage("숨참기: 보스가 공격을 완전히 막고 행동을 회복 중입니다...");
+                setMessage("?⑥갭湲? 蹂댁뒪媛 怨듦꺽???꾩쟾??留됯퀬 ?됰룞???뚮났 以묒엯?덈떎...");
                 triggerScreenEffect('flash-red');
                 await wait(1000);
                 await proceedToEndTurn();
@@ -1062,7 +1098,7 @@ export const useGameLoop = () => {
             }
         }
 
-        // ────────── 잠김(Swamping) 회피 패널티 계산 ──────────────────────
+        // ?????????? ?좉?(Swamping) ?뚰뵾 ?⑤꼸??怨꾩궛 ??????????????????????
         let swampAvoidPenalty = 0;
         if (store.chapterNum === '3B') {
             const swampCond = currentPlayer.conditions.get('Swamping');
@@ -1085,7 +1121,7 @@ export const useGameLoop = () => {
         let finalAvoidChance = avoidCond ? ((avoidCond.data as any)?.chance ?? config.avoidChance) : config.avoidChance;
         if (has2B) finalAvoidChance += 0.05;
 
-        // 3B: 잠김(Swamping) 회피 패널티 적용 (최저 0%)
+        // 3B: ?좉?(Swamping) ?뚰뵾 ?⑤꼸???곸슜 (理쒖? 0%)
         finalAvoidChance = Math.max(0, finalAvoidChance - swampAvoidPenalty);
 
         // v2.3.6: Chapter 2B Environmental Rule - Player Avoiding is DISABLED (unless 2B skill is equipped)
@@ -1129,7 +1165,7 @@ export const useGameLoop = () => {
             }
         }
 
-        // 3A Echo (메아리 보스 패시브) 공격 횟수 추가 로직 적용
+        // 3A Echo (硫붿븘由?蹂댁뒪 ?⑥떆釉? 怨듦꺽 ?잛닔 異붽? 濡쒖쭅 ?곸슜
         const botEchoCond = currentBot.conditions.get('Echo');
         let hasEchoAdded = false;
         let echoDamage = 0;
@@ -1191,14 +1227,14 @@ export const useGameLoop = () => {
                 triggerScreenEffect('flash-red');
             }
 
-            // Echo 특수타격 오버라이드 (추가된 마지막 타격일 경우)
+            // Echo ?뱀닔?寃??ㅻ쾭?쇱씠??(異붽???留덉?留??寃⑹씪 寃쎌슦)
             if (hasEchoAdded && i === attackCount - 1) {
                 finalDmg = echoDamage;
-                setMessage("메아리 추가 타격!");
+                setMessage("硫붿븘由?異붽? ?寃?");
                 triggerScreenEffect('shake');
             }
 
-            // 3A-9 Basilisk Petrify 기믹
+            // 3A-9 Basilisk Petrify 湲곕?
             if (store.chapterNum === '3A' && stageNum === 9 && Math.random() < 0.40) {
                 const pHand = store.playerHand;
                 const petrifyTargets = pHand.map((c, idx) => c && !c.isPetrified ? idx : -1).filter(idx => idx !== -1);
@@ -1207,8 +1243,8 @@ export const useGameLoop = () => {
                     const newHand = [...pHand];
                     newHand[rndIdx] = { ...(newHand[rndIdx] as Card), isPetrified: true, petrifyDuration: 2 };
                     useGameStore.getState().setPlayerHand(newHand);
-                    setMessage("카드가 석화되었습니다!");
-                    playConditionSound('Paralyzing'); // 석화 효과음
+                    setMessage("移대뱶媛 ?앺솕?섏뿀?듬땲??");
+                    playConditionSound('Paralyzing'); // ?앺솕 ?④낵??
                     showConditionGuideIfNew('Petrified');
                 }
             }
@@ -1226,14 +1262,14 @@ export const useGameLoop = () => {
                 }
             }
 
-            // 3B-7: HOLD_BREATH(숨참기) - 보스 공격 성공 시 카운터 (2.4.0)
+            // 3B-7: HOLD_BREATH(?⑥갭湲? - 蹂댁뒪 怨듦꺽 ?깃났 ??移댁슫??(2.4.0)
             if (store.chapterNum === '3B' && stageNum === 7 && finalDmg > 0) {
                 const hbCount = store.holdBreathCount3B + 1;
                 if (hbCount >= 2) {
                     store.setHoldBreathTurn3B(store.currentTurn + 1);
                     store.setHoldBreathInvulnerable3B(true);
                     store.setHoldBreathCount3B(0);
-                    setMessage("숨참기: 보스가 공격을 멈추고 다음 턴 무적 상태가 됩니다!");
+                    setMessage("?⑥갭湲? 蹂댁뒪媛 怨듦꺽??硫덉텛怨??ㅼ쓬 ??臾댁쟻 ?곹깭媛 ?⑸땲??");
                 } else {
                     store.setHoldBreathCount3B(hbCount);
                 }
@@ -1256,8 +1292,8 @@ export const useGameLoop = () => {
 
             if (store.chapterNum === '2B' && stageNum === 2 && Math.random() < 0.4) {
                 // Damage Recoiling logi: +10 dmg, 12 recoil
-                // wait, user said "보스 공격 시... 발생 확률 40%". Does it mean it applies a status or just happens once?
-                // "본인에게도 12데미지... 데미지 반동 상태이상 발생" 
+                // wait, user said "蹂댁뒪 怨듦꺽 ??.. 諛쒖깮 ?뺣쪧 40%". Does it mean it applies a status or just happens once?
+                // "蹂몄씤?먭쾶??12?곕?吏... ?곕?吏 諛섎룞 ?곹깭?댁긽 諛쒖깮" 
                 // I'll apply the status effect 'Damage recoiling' with data if not present, 
                 // and maybe apply the immediate effect too.
                 if (!freshBotAfterHit.conditions.has('Damage recoiling')) {
@@ -1288,7 +1324,7 @@ export const useGameLoop = () => {
                 showDamageText('BOT', `-${recoil}`, '#e74c3c');
             }
 
-            // 3A-2: HEMATOPHAGY (흡혈 30%)
+            // 3A-2: HEMATOPHAGY (?≫삁 30%)
             if (store.chapterNum === '3A' && stageNum === 2 && finalDmg > 0) {
                 const heal = Math.floor(finalDmg * 0.3);
                 if (heal > 0) {
@@ -1297,15 +1333,15 @@ export const useGameLoop = () => {
                     AudioManager.playSFX('/assets/audio/conditions/Regenerating.mp3');
                 }
             }
-            // 3A-4: POISON SPIDER (공격 시 40% 확률로 신경성맹독 부여)
+            // 3A-4: POISON SPIDER (怨듦꺽 ??40% ?뺣쪧濡??좉꼍?깅㏏??遺??
             if (store.chapterNum === '3A' && stageNum === 4 && finalDmg > 0 && Math.random() < 0.4) {
                 store.addPlayerCondition('Neurotoxicity', 3);
                 playConditionSound('Neurotoxicity');
                 setMessage(t.CONDITIONS.NEUROTOXICITY.NAME + "!");
                 showConditionGuideIfNew('Neurotoxicity');
             }
-            // 3A-9: 중복 석화 로직 삭제 (공격 적중 시 즉시 40% 발동이 올바른 사양 — Line 1273)
-            // (기존 30% 추가 발동 코드 제거됨)
+            // 3A-9: 以묐났 ?앺솕 濡쒖쭅 ??젣 (怨듦꺽 ?곸쨷 ??利됱떆 40% 諛쒕룞???щ컮瑜??ъ뼇 ??Line 1273)
+            // (湲곗〈 30% 異붽? 諛쒕룞 肄붾뱶 ?쒓굅??
 
             await wait(i < attackCount - 1 ? 800 : 400); // Delay between multi-attacks
 
@@ -1324,10 +1360,10 @@ export const useGameLoop = () => {
             }
         }
 
-        // 3A-8: ROLL BOULDER — 일반 공격 후, 2턴마다 특수 공격 (20 고정피해, 40% 회피)
+        // 3A-8: ROLL BOULDER ???쇰컲 怨듦꺽 ?? 2?대쭏???뱀닔 怨듦꺽 (20 怨좎젙?쇳빐, 40% ?뚰뵾)
         if (store.chapterNum === '3A' && stageNum === 8 && (store.currentTurn % 2) === 1) {
             await wait(600);
-            setMessage("바위 굴리기!");
+            setMessage("諛붿쐞 援대━湲?");
             triggerScreenEffect('shake-heavy');
             await wait(400);
             
@@ -1396,7 +1432,7 @@ export const useGameLoop = () => {
 
         if (store.chapterNum === '3B') {
             if (stageNum === 6) {
-                setMessage("초기의식: 핸드 초기화 및 패턴 붕괴!");
+                setMessage("珥덇린?섏떇: ?몃뱶 珥덇린??諛??⑦꽩 遺뺢눼!");
                 triggerScreenEffect('flash-red');
                 setPlayerHand(new Array(8).fill(null));
                 const newDeck = store.deck;
@@ -1416,7 +1452,7 @@ export const useGameLoop = () => {
                 newBotConds.set('Stem Cell', { ...scCond!, data: { ...(scCond?.data as any), currentAvoid: nextAvoid } });
                 newBotConds.set('Avoiding', { name: t.CONDITIONS.AVOIDING.NAME, duration: 9999, elapsed: 0, data: { chance: nextAvoid / 100 } } as any);
                 store.setBot({ ...updatedBot, conditions: newBotConds });
-                setMessage("줄기세포: 보스가 급격히 성장합니다!");
+                setMessage("以꾧린?명룷: 蹂댁뒪媛 湲됯꺽???깆옣?⑸땲??");
                 showDamageText('BOT', `+${healAmt}`, '#2ecc71');
                 await wait(1000);
             }
@@ -1428,7 +1464,7 @@ export const useGameLoop = () => {
                 const currentHand = store.playerHand;
                 const jokerHand = currentHand.map((c: any) => c ? { ...CardFactory.create(null, null, true), isJoker: true } : null);
                 store.setPlayerHand(jokerHand);
-                setMessage(store.language === 'KR' ? '시스템 과부하!' : 'SYSTEM OVERLOAD!');
+                setMessage(store.language === 'KR' ? '?쒖뒪??怨쇰???' : 'SYSTEM OVERLOAD!');
                 AudioManager.playSFX('/assets/audio/conditions/Awakening.mp3');
                 await wait(1500);
             }
@@ -1651,7 +1687,7 @@ export const useGameLoop = () => {
                 setMessage(toastMsg);
                 playConditionSound(cond);
                 const dmg = 10;
-                setBotHp(Math.max(0, useGameStore.getState().bot.hp - dmg)); // Stale bot.hp -> 최신 상태 조회
+                setBotHp(Math.max(0, useGameStore.getState().bot.hp - dmg)); // Stale bot.hp -> 理쒖떊 ?곹깭 議고쉶
                 showDamageText('BOT', `-${dmg}`, '#c0392b');
                 await wait(800);
             } else if (cond === 'Regenerating') {
@@ -1705,7 +1741,7 @@ export const useGameLoop = () => {
             }
         }
 
-        // 3A-7: BRITTLE 스택 매 턴 증가 (보스 페이즈 종료 시점)
+        // 3A-7: BRITTLE ?ㅽ깮 留???利앷? (蹂댁뒪 ?섏씠利?醫낅즺 ?쒖젏)
         if (botConditions.has('Brittle')) {
             const brittCond = botConditions.get('Brittle') as any;
             const currentDR = botConditions.get('Damage Reducing') as any;
@@ -1713,7 +1749,7 @@ export const useGameLoop = () => {
             const currentStack = brittCond.data?.stackCount || 0;
             const nextStack = currentStack + 1;
             
-            // Damage Reducing 퍼센트 10 상승 (최대 50% 상한)
+            // Damage Reducing ?쇱꽱??10 ?곸듅 (理쒕? 50% ?곹븳)
             if (currentDR) {
                 const currentPercent = currentDR.data?.percent || 10;
                 const newPercent = Math.min(currentPercent + 10, 50); // 50% cap
@@ -1724,7 +1760,7 @@ export const useGameLoop = () => {
                 });
             }
             
-            // 5회 누적 시 경감 10%로 초기화 + 스택 리셋
+            // 5???꾩쟻 ??寃쎄컧 10%濡?珥덇린??+ ?ㅽ깮 由ъ뀑
             if (nextStack >= 5) {
                 if (currentDR) {
                     botConditions.set('Damage Reducing', {
@@ -1737,7 +1773,7 @@ export const useGameLoop = () => {
                     ...brittCond,
                     data: { ...brittCond.data, stackCount: 0 }
                 });
-                setMessage("취성 파괴! (경감 초기화)");
+                setMessage("痍⑥꽦 ?뚭눼! (寃쎄컧 珥덇린??");
             } else {
                 botConditions.set('Brittle', {
                     ...brittCond,
@@ -1808,7 +1844,7 @@ export const useGameLoop = () => {
         // PETRIFIED Check (Prevent Swap)
         const selectedCardsForSwapCheck = selectedIndices.map(idx => store.playerHand[idx]).filter(Boolean) as Card[];
         if (selectedCardsForSwapCheck.some(c => c.isPetrified)) {
-            setMessage("석화된 카드는 교체할 수 없습니다!");
+            setMessage("?앺솕??移대뱶??援먯껜?????놁뒿?덈떎!");
             triggerScreenEffect('shake-small');
             store.setGamePhase('IDLE');
             return;
@@ -1820,7 +1856,7 @@ export const useGameLoop = () => {
         if (store.equippedAltarSkills.includes('5B-3') && p.hp <= p.maxHp * 0.25 && !store.stageSkillsTriggered.includes('5B-3')) {
             bonusDraws = 2;
             store.setStageSkillTriggered('5B-3');
-            setMessage(store.language === 'KR' ? '파편회수!' : 'FRAGMENTS RECOVERY!');
+            setMessage(store.language === 'KR' ? '?뚰렪?뚯닔!' : 'FRAGMENTS RECOVERY!');
             AudioManager.playSFX('/assets/audio/player/shuffling.mp3');
         }
 
@@ -1832,12 +1868,12 @@ export const useGameLoop = () => {
             useGameStore.getState().setDrawsRemaining(newDraws);
             setMessage(t.COMBAT.CARDS_SWAPPED);
 
-            // 3B-3: DEATHROLL(데스롤) - 플레이어 SWAP 시 즉시 보스 1회 공격
+            // 3B-3: DEATHROLL(?곗뒪濡? - ?뚮젅?댁뼱 SWAP ??利됱떆 蹂댁뒪 1??怨듦꺽
             if (store.chapterNum === '3B' && stageNum === 3) {
-                setMessage("데스롤: SWAP에 반응하여 보스가 즉시 공격합니다!");
+                setMessage("?곗뒪濡? SWAP??諛섏쓳?섏뿬 蹂댁뒪媛 利됱떆 怨듦꺽?⑸땲??");
                 triggerScreenEffect('shake');
                 await wait(1000);
-                // SWAP 단계 종료 후 보스 턴 실행
+                // SWAP ?④퀎 醫낅즺 ??蹂댁뒪 ???ㅽ뻾
                 await executeBotTurn();
                 return; 
             }
@@ -1845,7 +1881,7 @@ export const useGameLoop = () => {
             // 4A-3: Probability Distortion (25% chance for +1 extra swap)
             if (store.equippedAltarSkills.includes('4A-3') && Math.random() < 0.25) {
                 useGameStore.getState().setDrawsRemaining(newDraws + 1);
-                setMessage(store.language === 'KR' ? '확률왜곡 +1' : 'Probability Distortion +1');
+                setMessage(store.language === 'KR' ? '?뺣쪧?쒓끝 +1' : 'Probability Distortion +1');
             }
         } else {
             setMessage(t.COMBAT.NO_SWAPS);
@@ -1877,10 +1913,10 @@ export const useGameLoop = () => {
         }
 
         if (wasBattle) {
-            // 1. 상태 정리 (Heal + Clear Conditions)
+            // 1. ?곹깭 ?뺣━ (Heal + Clear Conditions)
             store.clearPlayerConditions();
             if (store.chapterNum === '3A' && store.stageNum === 10) {
-                store.resetHydraFlushSuits(); // 히드라용 전승 카운터 리셋
+                store.resetHydraFlushSuits(); // ?덈뱶?쇱슜 ?꾩듅 移댁슫??由ъ뀑
             }
 
             const currentHp = store.player.hp;
@@ -1895,8 +1931,8 @@ export const useGameLoop = () => {
                 store.setPlayerMaxHp(maxHp);
                 setPlayerHp(maxHp); // FULL HEAL per user request
             } else if (!isFinalBoss) {
-                // Stage Clear Heal: 챕터별 기본 회복량 (NORMAL 기준)
-                // Ch1=40, Ch2=30, Ch3=20 (EASY ×1.5, HARD/HELL ×0.8)
+                // Stage Clear Heal: 梨뺥꽣蹂?湲곕낯 ?뚮났??(NORMAL 湲곗?)
+                // Ch1=40, Ch2=30, Ch3=20 (EASY 횞1.5, HARD/HELL 횞0.8)
                 const chapterHealBase: Record<string, number> = {
                     '1': 40, '2A': 30, '2B': 30, '3A': 20, '3B': 20
                 };
@@ -1935,7 +1971,7 @@ export const useGameLoop = () => {
                 }
             }
 
-            // 챕터 마지막 보스 클리어 보상: +200 HP (모든 챕터 공통, 다음 챕터 연동)
+            // 梨뺥꽣 留덉?留?蹂댁뒪 ?대━??蹂댁긽: +200 HP (紐⑤뱺 梨뺥꽣 怨듯넻, ?ㅼ쓬 梨뺥꽣 ?곕룞)
             if (isFinalBoss) {
                 const freshPlayer = useGameStore.getState().player;
                 const transitionHeal = 200;
@@ -1944,7 +1980,7 @@ export const useGameLoop = () => {
                 setMessage(t.COMBAT.VICTORY + ` (+${transitionHeal} HP)`);
             }
 
-            // 2. Trophy Check — stage trophy in memory (NOT saved to localStorage yet)
+            // 2. Trophy Check ??stage trophy in memory (NOT saved to localStorage yet)
             const trophyIdMap: Record<string, Record<number, string>> = {
                 '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
                 '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
@@ -1961,7 +1997,7 @@ export const useGameLoop = () => {
                     const staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
                     AltarManager.commitPendingTrophies(); // v2.4.9: Commit immediately for better persistence
                     if (staged) {
-                        // ─── Guide Popup: Loot & Altar System (first trophy only) ──
+                        // ??? Guide Popup: Loot & Altar System (first trophy only) ??
                         if (!hasSeenGuide(SYSTEM_GUIDES.LOOT_SYSTEM.key)) {
                             await showGuidePopup(SYSTEM_GUIDES.LOOT_SYSTEM);
                             await showGuidePopup(SYSTEM_GUIDES.ALTAR_SYSTEM);
@@ -2038,7 +2074,7 @@ export const useGameLoop = () => {
         if (stageNum >= 10) {
             if (store.chapterNum === '1') {
                 if (store.difficulty === Difficulty.EASY) {
-                    // EASY: Chapter 1 only → unlock NORMAL, show congratulations popup
+                    // EASY: Chapter 1 only ??unlock NORMAL, show congratulations popup
                     store.unlockDifficulty(Difficulty.NORMAL);
                     store.setClearPopupDifficulty(Difficulty.EASY);
                 } else {
@@ -2055,7 +2091,7 @@ export const useGameLoop = () => {
                 setGameState(GameState.CHAPTER_NEXT);
             } else if (store.chapterNum === '3A' || store.chapterNum === '3B') {
                 // Final Chapter 3 Clear: Unlock next Difficulty & Show Congratulations Popup
-                // (EASY never reaches Chapter 3 — it ends at Chapter 1)
+                // (EASY never reaches Chapter 3 ??it ends at Chapter 1)
                 if (store.difficulty === Difficulty.NORMAL) {
                     store.unlockDifficulty(Difficulty.HARD);
                     store.setClearPopupDifficulty(Difficulty.NORMAL);
@@ -2099,7 +2135,7 @@ export const useGameLoop = () => {
         setPlayerHand(new Array(8).fill(null));
         await refillHandSequentially(1500);
 
-        // ─── Guide Popup: Chapter Intro (Stage 1 only) ───────────────────
+        // ??? Guide Popup: Chapter Intro (Stage 1 only) ???????????????????
         const freshStore = useGameStore.getState();
         if (freshStore.stageNum === 1 && !freshStore.isTutorial) {
             const introData = CHAPTER_INTROS[freshStore.chapterNum];
@@ -2108,7 +2144,7 @@ export const useGameLoop = () => {
             }
         }
 
-        // ─── Guide Popup: Gimmick Guide ──────────────────────────────────
+        // ??? Guide Popup: Gimmick Guide ??????????????????????????????????
         if (!freshStore.isTutorial) {
             const stageConfig = CHAPTERS[freshStore.chapterNum]?.stages[freshStore.stageNum];
             if (stageConfig?.rule) {
@@ -2134,7 +2170,7 @@ export const useGameLoop = () => {
                     });
                     useGameStore.setState({ playerHand: jokerHand });
                     store.setStageSkillTriggered('8');
-                    setMessage("연산 오류 감지! 카드 패턴이 붕괴되었습니다!");
+                    setMessage("?곗궛 ?ㅻ쪟 媛먯?! 移대뱶 ?⑦꽩??遺뺢눼?섏뿀?듬땲??");
                     triggerScreenEffect('flash-red');
                     AudioManager.playSFX('/assets/audio/common/UI_ALTAR_UPGRADE.mp3');
                     await wait(1500);
@@ -2154,7 +2190,7 @@ export const useGameLoop = () => {
             store.setDeck(d);
         }
 
-        // 1. 상태 정리
+        // 1. ?곹깭 ?뺣━
         setGameState(GameState.GAMEOVER);
         setMessage(t.COMBAT.DEFEAT);
         AudioManager.playSFX('/assets/audio/stages/defeat/defeat.mp3');
@@ -2178,7 +2214,7 @@ export const useGameLoop = () => {
         }
     };
 
-    // ─── Guide Popup Helper ──────────────────────────────────────────
+    // ??? Guide Popup Helper ??????????????????????????????????????????
     const showGuidePopup = async (data: GuidePopupData) => {
         const store = useGameStore.getState();
         store.setGuidePopup(data);
@@ -2196,7 +2232,7 @@ export const useGameLoop = () => {
         await wait(300);
     };
 
-    // ─── Guide Popup: Condition Guide (on first status effect) ───────
+    // ??? Guide Popup: Condition Guide (on first status effect) ???????
     const showConditionGuideIfNew = async (conditionName: string) => {
         const guide = CONDITION_GUIDES[conditionName];
         if (guide && !hasSeenGuide(guide.key)) {

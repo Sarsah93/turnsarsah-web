@@ -1,4 +1,4 @@
-// state/gameStore.ts
+﻿// state/gameStore.ts
 
 import { create } from 'zustand';
 import { Card, CardFactory } from '../types/Card';
@@ -19,6 +19,7 @@ import { TROPHIES, ALTAR_SKILLS, TrophyDef } from '../constants/altarSystem';
 import { AltarManager } from '../utils/AltarManager';
 import { preloadManager } from '../utils/AssetPreloadManager';
 import { getGameEntryAssets } from '../constants/assetManifest';
+import { TitleManager } from '../utils/TitleManager';
 
 /**
  * v2.3.9: Shared helper to calculate player stats with Altar skill bonuses
@@ -58,7 +59,7 @@ const calculateInitialPlayer = (
   // Evasion (Avoiding) - 2B Oneness with Nature (+5% Evasion, ignore env)
   const isOnenessWithNature = activeSkills.includes('2B');
   const bonus = isOnenessWithNature ? 0.05 : 0;
-  // 2B를 제외한 모든 챕터에서 회피 적용 (또는 2B에서 OnenessWithNature 스킬 있을 때)
+  // 2B占??占쎌쇅??紐⑤뱺 梨뺥꽣?占쎌꽌 ?占쏀뵾 ?占쎌슜 (?占쎈뒗 2B?占쎌꽌 OnenessWithNature ?占쏀궗 ?占쎌쓣 ??
   if ((chapterId !== '2B' || isOnenessWithNature) && (config.avoidChance + bonus) > 0) {
     applyCondition(playerConditions, 'Avoiding', 9999, '', { chance: config.avoidChance + bonus });
   }
@@ -261,6 +262,16 @@ interface GameStoreState {
   setLoadingPhase: (phase: 'NONE' | 'INITIAL' | 'GAME_ENTRY' | 'CHAPTER_TRANSITION') => void;
   setLoadingProgress: (progress: number) => void;
 
+  // Special Attack Animations
+  specialAttackMode: 'NONE' | 'ONE_PAIR_DANCE';
+  setSpecialAttackMode: (mode: 'NONE' | 'ONE_PAIR_DANCE') => void;
+  attackOrderIndices: number[];
+  setAttackOrderIndices: (indices: number[]) => void;
+  hasOnePairDanceTitle: boolean;
+  setHasOnePairDanceTitle: (val: boolean) => void;
+  forceOnePairDance: boolean;
+  setForceOnePairDance: (val: boolean) => void;
+
   // Localization
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -300,15 +311,15 @@ interface GameStoreState {
   setIsVictoryFanfareActive: (active: boolean) => void;
 
   // v3.0: Chapter Next Popup
-  nextChapterId: string;          // 다음에 진입할 체터 ID
+  nextChapterId: string;          // ?占쎌쓬??吏꾩엯??泥댄꽣 ID
   setNextChapterId: (id: string) => void;
 
-  // v3.0: Hydra Flush Counter (티폰전승)
-  hydraFlushSuits: string[];      // 성공한 다른 문양 목록
+  // v3.0: Hydra Flush Counter (?占쏀룿?占쎌듅)
+  hydraFlushSuits: string[];      // ?占쎄났???占쎈Ⅸ 臾몄뼇 紐⑸줉
   setHydraFlushSuits: (suits: string[]) => void;
   resetHydraFlushSuits: () => void;
 
-  // v3.0: Hydra Revive Counter (HUD 표시용)
+  // v3.0: Hydra Revive Counter (HUD ?占쎌떆??
   hydraReviveRemaining: number;
   setHydraReviveRemaining: (count: number) => void;
 
@@ -377,6 +388,16 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   loadingProgress: 0,
   setLoadingPhase: (loadingPhase) => set({ loadingPhase }),
   setLoadingProgress: (loadingProgress) => set({ loadingProgress }),
+
+  // Special Attack Animations
+  specialAttackMode: 'NONE',
+  setSpecialAttackMode: (specialAttackMode) => set({ specialAttackMode }),
+  attackOrderIndices: [],
+  setAttackOrderIndices: (attackOrderIndices) => set({ attackOrderIndices }),
+  hasOnePairDanceTitle: TitleManager.ensureOnePairDanceUnlocked(),
+  setHasOnePairDanceTitle: (hasOnePairDanceTitle) => set({ hasOnePairDanceTitle }),
+  forceOnePairDance: false,
+  setForceOnePairDance: (forceOnePairDance) => set({ forceOnePairDance }),
 
   // Tutorial System
   isTutorial: false,
@@ -841,85 +862,85 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           applyCondition(botConditions, 'Reflection', 9999, '', { chance: 30, percent: 10 });
         }
       } else if (chapterId === '3A') {
-        // ── 챕터 3A 공통: 메아리(Echo) 조건 부여 ──────────────────────
+        // ?占?占?梨뺥꽣 3A 怨듯넻: 硫붿븘占?Echo) 議곌굔 遺???占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?
         applyCondition(botConditions, 'Echo', 9999, '', { chance: 0.20, damageScale: 0.70 });
 
-        // ── 스테이지별 패시브 ────────────────────────────────────────────
-        // 3A-1 SLIME: 재생 +2/턴
+        // ?占?占??占쏀뀒?占쏙옙?占??占쎌떆占??占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?
+        // 3A-1 SLIME: ?占쎌깮 +2/??
         if (stageId === 1) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 2 });
         }
-        // 3A-2 VAMPIRE BAT: 흡혈 30%
+        // 3A-2 VAMPIRE BAT: ?占쏀삁 30%
         if (stageId === 2) {
           applyCondition(botConditions, 'Hematophagy', 9999, '', { percent: 30 });
         }
-        // 3A-6 CAVE BEAR: 피해경감 15%
+        // 3A-6 CAVE BEAR: ?占쏀빐寃쎄컧 15%
         if (stageId === 6) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
         }
-        // 3A-7 CRYSTAL GOLEM: 초기 피해경감 10% (brittle 스택 카운터: stackCount)
+        // 3A-7 CRYSTAL GOLEM: 珥덇린 ?占쏀빐寃쎄컧 10% (brittle ?占쏀깮 移댁슫?? stackCount)
         if (stageId === 7) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 10 });
           applyCondition(botConditions, 'Brittle', 9999, '', { stackCount: 0, maxStacks: 5 });
         }
-        // 3A-8 DRAKE: 피해경감 15%
+        // 3A-8 DRAKE: ?占쏀빐寃쎄컧 15%
         if (stageId === 8) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
         }
-        // 3A-9 BASILISK: 피해경감 15%
+        // 3A-9 BASILISK: ?占쏀빐寃쎄컧 15%
         if (stageId === 9) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
         }
-        // 3A-10 HYDRA: 피해경감 15% + 부활 4회 (60% HP)
+        // 3A-10 HYDRA: ?占쏀빐寃쎄컧 15% + 遺??4??(60% HP)
         if (stageId === 10) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
           applyCondition(botConditions, 'Revival', 9999, '', { count: 4, limit: 4, percent: 60 });
           set({ hydraReviveRemaining: 4 });
         }
       } else if (chapterId === '3B') {
-        // ── 챕터 3B 공통: 잠김(Swamping) 플레이어 상태이상 부여 ────────
-        // (플레이어 conditions는 아래 player 초기화 시 추가)
+        // ?占?占?梨뺥꽣 3B 怨듯넻: ?占쏙옙?(Swamping) ?占쎈젅?占쎌뼱 ?占쏀깭?占쎌긽 遺???占?占?占?占?占?占?占?占?
+        // (?占쎈젅?占쎌뼱 conditions???占쎈옒 player 珥덇린????異뷂옙?)
 
-        // ── 스테이지별 패시브 ────────────────────────────────────────────
-        // 3B-1 SWAMP WOLFTURTLE: 재생+5, 피해경감 15%, 데미지반사 10%
+        // ?占?占??占쏀뀒?占쏙옙?占??占쎌떆占??占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?
+        // 3B-1 SWAMP WOLFTURTLE: ?占쎌깮+5, ?占쏀빐寃쎄컧 15%, ?占쏙옙?吏諛섏궗 10%
         if (stageId === 1) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 5 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
           applyCondition(botConditions, 'Reflection', 9999, '', { chance: 1.0, percent: 10 });
         }
-        // 3B-2 MURLOC: 재생+10, 피해경감 10%
+        // 3B-2 MURLOC: ?占쎌깮+10, ?占쏀빐寃쎄컧 10%
         if (stageId === 2) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 10 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 10 });
         }
-        // 3B-3 CROCODILE: 재생+15, 피해경감 12%
+        // 3B-3 CROCODILE: ?占쎌깮+15, ?占쏀빐寃쎄컧 12%
         if (stageId === 3) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 12 });
         }
-        // 3B-4 LIZARD SKINK: 재생+15, 피해경감 10%
+        // 3B-4 LIZARD SKINK: ?占쎌깮+15, ?占쏀빐寃쎄컧 10%
         if (stageId === 4) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 10 });
         }
-        // 3B-5 LIZARD MAN: 재생+15, 피해경감 12%
+        // 3B-5 LIZARD MAN: ?占쎌깮+15, ?占쏀빐寃쎄컧 12%
         if (stageId === 5) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 12 });
         }
-        // 3B-6 LIZARD SLANN: 패시브 없음
-        // 3B-7 LIZARD SAURUS: 패시브 없음
-        // 3B-8 TROGLODON: 재생(매 턴 종료 시 마다, +15), 피해경감(12%)
+        // 3B-6 LIZARD SLANN: ?占쎌떆占??占쎌쓬
+        // 3B-7 LIZARD SAURUS: ?占쎌떆占??占쎌쓬
+        // 3B-8 TROGLODON: ?占쎌깮(占???醫낅즺 ??留덈떎, +15), ?占쏀빐寃쎄컧(12%)
         if (stageId === 8) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 15 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 12 });
         }
-        // 3B-9 LIZARD KROXIGOR: 재생+20, 피해경감 15%
+        // 3B-9 LIZARD KROXIGOR: ?占쎌깮+20, ?占쏀빐寃쎄컧 15%
         if (stageId === 9) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 20 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
         }
-        // 3B-10 LIZARD KING: 줄기세포 (매 턴 종료: maxHp+10, 20% 회복, ATK+2, 회피+2%)
+        // 3B-10 LIZARD KING: 以꾧린?占쏀룷 (占???醫낅즺: maxHp+10, 20% ?占쎈났, ATK+2, ?占쏀뵾+2%)
         if (stageId === 10) {
           applyCondition(botConditions, 'Stem Cell', 9999, '', {
             maxHpGrowth: 10,
@@ -940,8 +961,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       const isChapterTransition = stageId === 1 && state.chapterNum && state.chapterNum !== chapterId;
 
-      // v2.5.1: 새 게임 시작 시에만 제단 프리셋에서 스킬을 가져옴
-      // 스테이지/챕터 전환 시에는 현재 런 세션의 스킬을 유지 (프리셋 변경 악용 방지)
+      // v2.5.1: ??寃뚯엫 ?占쎌옉 ?占쎌뿉占??占쎈떒 ?占쎈━?占쎌뿉???占쏀궗??媛?占쎌샂
+      // ?占쏀뀒?占쏙옙?/梨뺥꽣 ?占쏀솚 ?占쎌뿉???占쎌옱 ???占쎌뀡???占쏀궗???占쏙옙? (?占쎈━??蹂占??占쎌슜 諛⑼옙?)
       if (stageId === 1 && !isChapterTransition) {
         const altarData = AltarManager.getAltarData();
         if (state.difficulty === Difficulty.HARD) {
@@ -995,13 +1016,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           applyCondition(player.conditions, 'Dehydration', 9999, '', { amount: dehydrationDmg });
         }
 
-        // 3B 챕터 진입 시 기존 Swamping 제거 후 재부여 (스테이지마다 초기화)
+        // 3B 梨뺥꽣 吏꾩엯 ??湲곗〈 Swamping ?占쎄굅 ???占쏙옙???(?占쏀뀒?占쏙옙?留덈떎 珥덇린??
         if (chapterId === '3B') {
           player.conditions.delete('Swamping');
         }
       }
 
-      // 3B 챕터: 스테이지 시작 시마다 플레이어에게 Swamping 부여
+      // 3B 梨뺥꽣: ?占쏀뀒?占쏙옙? ?占쎌옉 ?占쎈쭏???占쎈젅?占쎌뼱?占쎄쾶 Swamping 遺??
       if (chapterId === '3B') {
         applyCondition(player.conditions, 'Swamping', 9999, '', { attackCount: 0 });
       }
@@ -1130,7 +1151,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       return;
     }
     if (state.isProcessing) {
-      const msg = state.language === 'KR' ? "전투 중에는 저장할 수 없습니다." : "Cannot save during combat.";
+      const msg = state.language === 'KR' ? "?占쏀닾 以묒뿉???占?占쏀븷 ???占쎌뒿?占쎈떎." : "Cannot save during combat.";
       state.setMessage(msg);
       console.log(msg);
       return;
@@ -1197,6 +1218,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     // Preload assets before restoring state to avoid render pop-in
     set({ loadingPhase: 'GAME_ENTRY', loadingProgress: 0 });
+    set({ forceOnePairDance: false });
     const preloadChapter = gameData.chapterNum || '1';
     const preloadSkills = gameData.equippedAltarSkills || [];
     try {
@@ -1232,10 +1254,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         hasStage6Bonus: gameData.hasStage6Bonus ?? false,
         gameState: gameData.gameState || GameState.BATTLE,
         gamePhase: gameData.gamePhase || 'IDLE',
-        // v2.5.1: 세이브 파일의 장착 스킬 스냅샷 복원 (현재 제단 프리셋 무시)
+        // v2.5.1: ?占쎌씠占??占쎌씪???占쎌갑 ?占쏀궗 ?占쎈깄??蹂듭썝 (?占쎌옱 ?占쎈떒 ?占쎈━??臾댁떆)
         equippedAltarSkills: gameData.equippedAltarSkills || [],
         
-        // v2.5.3: Altar 스킬 내부 상태 및 전투 연속성 데이터 복원
+        // v2.5.3: Altar ?占쏀궗 ?占쏙옙? ?占쏀깭 占??占쏀닾 ?占쎌냽???占쎌씠??蹂듭썝
         altarSkillUses: gameData.altarSkillUses || {},
         dyschromatopsiaUses: gameData.dyschromatopsiaUses ?? 0,
         isDyschromatopsiaActive: gameData.isDyschromatopsiaActive ?? false,
@@ -1360,9 +1382,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       applyCondition(botConditions, 'Triple Attack', 9999);
     }
 
-    // ── 챕터 3A 보스 패시브 (initGameWithDifficulty) ──
+    // ?占?占?梨뺥꽣 3A 蹂댁뒪 ?占쎌떆占?(initGameWithDifficulty) ?占?占?
     if (chapterId === '3A') {
-      // 공통: 메아리(Echo)
+      // 怨듯넻: 硫붿븘占?Echo)
       applyCondition(botConditions, 'Echo', 9999, '', { chance: 0.20, damageScale: 0.70 });
 
       if (stageId === 1) {
@@ -1481,7 +1503,7 @@ function buildSavePayload(state: GameStoreState) {
     equippedAltarSkills: state.equippedAltarSkills,
     pendingTrophies: AltarManager.getPendingTrophies(),
     puzzleTarget: state.puzzleTarget,
-    // v2.5.3: Altar 스킬 내부 상태 및 전투 연속성 데이터 추가
+    // v2.5.3: Altar ?占쏀궗 ?占쏙옙? ?占쏀깭 占??占쏀닾 ?占쎌냽???占쎌씠??異뷂옙?
     altarSkillUses: state.altarSkillUses,
     dyschromatopsiaUses: state.dyschromatopsiaUses,
     isDyschromatopsiaActive: state.isDyschromatopsiaActive,

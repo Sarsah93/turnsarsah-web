@@ -9,7 +9,7 @@ import { TRANSLATIONS } from '../constants/translations';
 import { AltarSystem } from './AltarSystem';
 
 export const MainMenu: React.FC = () => {
-    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize } = useGameStore();
+    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize, setForceOnePairDance } = useGameStore();
     const t = TRANSLATIONS[language];
     const isEnglish = language === 'EN';
     const isLargeFont = fontSize === 'LARGE';
@@ -22,12 +22,18 @@ export const MainMenu: React.FC = () => {
 
     const handleDifficultySelect = (difficulty: Difficulty) => {
         setActiveMenu('NONE');
+        setForceOnePairDance(false);
         triggerTransition(() => initGameWithDifficulty('1', 1, difficulty)); // Chapter 1, Stage 1
     };
 
     const handleLoadAction = (slot: number) => {
         loadGame(slot); // Ensure loadGame(slot) is supported in store
         setActiveMenu('NONE');
+    };
+
+    const handleDebugOnePairDance = () => {
+        setForceOnePairDance(true);
+        triggerTransition(() => initGameWithDifficulty('1', 1, Difficulty.NORMAL));
     };
 
     const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT' | 'DIFFICULTY' | 'ALTAR'>('NONE');
@@ -53,6 +59,7 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text={t.UI.TUTORIAL} onClick={() => {
                     triggerTransition(() => initTutorial());
                 }} width={menuButtonWidth} style={menuButtonStyle} />
+                <BlockButton text="DEBUG: ONE PAIR DANCE" onClick={handleDebugOnePairDance} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" width={menuButtonWidth} style={menuButtonStyle} />

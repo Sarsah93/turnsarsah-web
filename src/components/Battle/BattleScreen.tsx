@@ -267,8 +267,20 @@ export const BattleScreen: React.FC = () => {
                 <div className="fx-vignette"></div>
                 <div className="fx-flash"></div>
                 <div className="fx-slash"></div>
-                <div className="fx-impact-ring"></div>
-                <div className="fx-hit-spark"></div>
+                <div
+                    className="fx-impact-ring"
+                    style={{
+                        left: `${bossPos.centerX}px`,
+                        top: `${bossPos.centerY}px`,
+                    }}
+                ></div>
+                <div
+                    className="fx-hit-spark"
+                    style={{
+                        left: `${bossPos.centerX}px`,
+                        top: `${bossPos.centerY}px`,
+                    }}
+                ></div>
             </div>
 
             {/* Entity Layer */}

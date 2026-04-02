@@ -1,0 +1,22 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900' style='background:#fff'>
+<rect x='0' y='0' width='1600' height='900' fill='#fff' />
+<rect x='620' y='150' width='360' height='260' fill='#eac5a8' stroke='#000' stroke-width='2' />
+<line x1='0' y1='450' x2='1600' y2='450' stroke='#888' stroke-dasharray='6,6' />
+<line x1='800' y1='0' x2='800' y2='900' stroke='#888' stroke-dasharray='6,6' />
+<polyline fill='none' stroke='#f57c00' stroke-width='4' points='320,740 330,650 360,580 420,520 520,500 610,470 690,420 660,340 610,260 700,230 840,240 980,280 940,310 880,320 840,300' />
+<circle cx='320' cy='740' r='5' fill='#f57c00' />
+<circle cx='840' cy='300' r='5' fill='#f57c00' />
+<text x='310' y='760' font-size='12' fill='#111'>1st</text>
+<polyline fill='none' stroke='#ec407a' stroke-width='4' points='480,740 500,640 560,580 640,540 760,520 920,520 1080,520 1220,520 1280,460 1240,380 1100,360 960,360 900,420 960,520 1140,600 1280,660 1380,620 1340,520 1180,500' />
+<circle cx='480' cy='740' r='5' fill='#ec407a' />
+<circle cx='1180' cy='500' r='5' fill='#ec407a' />
+<text x='470' y='760' font-size='12' fill='#111'>2nd</text>
+<polyline fill='none' stroke='#8e24aa' stroke-width='4' points='600,740 520,680 440,620 320,560 200,520 140,470 160,390 260,340 400,320 520,330 580,380 600,460 540,520 620,500 700,460 760,420 780,320' />
+<circle cx='600' cy='740' r='5' fill='#8e24aa' />
+<circle cx='780' cy='320' r='5' fill='#8e24aa' />
+<text x='590' y='760' font-size='12' fill='#111'>3rd</text>
+<polyline fill='none' stroke='#1e88e5' stroke-width='4' points='700,740 660,650 600,580 520,520 420,480 340,430 400,380 520,360 640,350 780,330 920,300 1060,280 1200,260 1320,300 1300,420 1180,520 1040,560 900,520 820,480' />
+<circle cx='700' cy='740' r='5' fill='#1e88e5' />
+<circle cx='820' cy='480' r='5' fill='#1e88e5' />
+<text x='690' y='760' font-size='12' fill='#111'>4th</text>
+</svg>
