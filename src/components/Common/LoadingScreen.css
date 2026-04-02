@@ -13,6 +13,15 @@
   animation: loadingFadeIn 0.35s ease-in-out;
 }
 
+.loading-content-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  transform: translateY(clamp(80px, 12vh, 180px));
+}
+
 @keyframes loadingFadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }

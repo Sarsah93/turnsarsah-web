@@ -216,7 +216,7 @@ interface GameStoreState {
 
   // Save/Load
   saveGame: (slot: number) => void;
-  loadGame: (slot: number) => void;
+  loadGame: (slot: number) => Promise<void>;
   forceSaveGame: (slot: number) => void;
 
   // New: Stage 6 Restoration
@@ -1191,10 +1191,25 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     });
   },
 
-  loadGame: (slot: number) => {
+  loadGame: async (slot: number) => {
     const gameData = SaveManager.loadGame(slot);
-    if (gameData) {
-      set({
+    if (!gameData) return;
+
+    // Preload assets before restoring state to avoid render pop-in
+    set({ loadingPhase: 'GAME_ENTRY', loadingProgress: 0 });
+    const preloadChapter = gameData.chapterNum || '1';
+    const preloadSkills = gameData.equippedAltarSkills || [];
+    try {
+      const assetsToLoad = getGameEntryAssets(preloadChapter, preloadSkills);
+      await preloadManager.preloadBatch(assetsToLoad, (progress) => {
+        set({ loadingProgress: progress });
+      });
+    } catch (e) {
+      console.warn("Preload failed partially, continuing load", e);
+    }
+    set({ loadingPhase: 'NONE' });
+
+    set({
         chapterNum: gameData.chapterNum || '1',
         stageNum: gameData.stageNum,
         difficulty: gameData.difficulty,
@@ -1228,29 +1243,28 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         consecutiveHandType: gameData.consecutiveHandType || null,
         consecutiveHandStacks: gameData.consecutiveHandStacks ?? 0,
         stage10RuleText: gameData.stage10RuleText || '',
-      });
+    });
 
-      // Restore Deck State
-      if (gameData.deckState) {
-        const restoredDeck = new Deck(gameData.deckState.jokerProbability);
-        restoredDeck.cards = gameData.deckState.cards;
-        restoredDeck.consecutiveJokers = gameData.deckState.consecutiveJokers;
-        restoredDeck.consecutiveRoyals = gameData.deckState.consecutiveRoyals;
+    // Restore Deck State
+    if (gameData.deckState) {
+      const restoredDeck = new Deck(gameData.deckState.jokerProbability);
+      restoredDeck.cards = gameData.deckState.cards;
+      restoredDeck.consecutiveJokers = gameData.deckState.consecutiveJokers;
+      restoredDeck.consecutiveRoyals = gameData.deckState.consecutiveRoyals;
 
-        // Critical Fix: Shuffle deck upon load to ensure non-deterministic RNG for future draws (SWAP)
-        restoredDeck.shuffle();
+      // Critical Fix: Shuffle deck upon load to ensure non-deterministic RNG for future draws (SWAP)
+      restoredDeck.shuffle();
 
-        set({ deck: restoredDeck });
-      }
-
-      // Restore pending trophies
-      if (gameData.pendingTrophies) {
-        AltarManager.setPendingTrophies(gameData.pendingTrophies);
-      }
-
-      // Re-apply rules to populate UI states (especially for Stage 10 rule text)
-      get().applyStageRules(gameData.chapterNum || '1', gameData.stageNum, gameData.currentTurn);
+      set({ deck: restoredDeck });
     }
+
+    // Restore pending trophies
+    if (gameData.pendingTrophies) {
+      AltarManager.setPendingTrophies(gameData.pendingTrophies);
+    }
+
+    // Re-apply rules to populate UI states (especially for Stage 10 rule text)
+    get().applyStageRules(gameData.chapterNum || '1', gameData.stageNum, gameData.currentTurn);
   },
 
   stage6EntryHp: 200,

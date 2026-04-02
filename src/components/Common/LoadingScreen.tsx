@@ -6,17 +6,16 @@ import { getRandomTip } from '../../constants/loadingTips';
 import './LoadingScreen.css';
 
 interface LoadingScreenProps {
-  progress: number;         // 0~1
+  progress: number; // 0~1
   phase: 'INITIAL' | 'GAME_ENTRY';
 }
 
-const TIP_ROTATE_INTERVAL = 6500; // 6.5초마다 팁 교체
+const TIP_ROTATE_INTERVAL = 6500; // 6.5s
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase }) => {
   const percent = Math.floor(progress * 100);
   const language = useGameStore((s) => s.language);
 
-  // 팁 상태: GAME_ENTRY 단계에서만 표시
   const [currentTip, setCurrentTip] = useState<string>(() =>
     phase === 'GAME_ENTRY' ? getRandomTip(language) : ''
   );
@@ -26,10 +25,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase })
   useEffect(() => {
     if (phase !== 'GAME_ENTRY') return;
 
-    // 첫 팁 설정
     setCurrentTip(getRandomTip(language));
 
-    // 5초 주기로 팁 교체 (페이드 아웃 → 교체 → 페이드 인)
     intervalRef.current = setInterval(() => {
       setTipFading(true);
       setTimeout(() => {
@@ -45,36 +42,26 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase })
 
   return (
     <div className="loading-screen">
-      {/* 로고 (Phase 2: GAME_ENTRY에서만) */}
-      {phase === 'GAME_ENTRY' && (
-        <img
-          src="/assets/etc images/turnsarsah_logo_image.png"
-          alt="Turn Sarsah"
-          className="loading-logo"
-        />
-      )}
-
-      {/* Phase 텍스트 */}
-      <div className="loading-phase-label">
-        {phase === 'INITIAL' ? 'LOADING...' : 'PREPARING BATTLE...'}
-      </div>
-
-      {/* 프로그레스 바 */}
-      <div className="loading-bar-track">
-        <div
-          className="loading-bar-fill"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-
-      <div className="loading-percent">{percent}%</div>
-
-      {/* 팁 문구 (GAME_ENTRY에서만) */}
-      {phase === 'GAME_ENTRY' && currentTip && (
-        <div className={`loading-tip ${tipFading ? 'tip-fading' : 'tip-visible'}`}>
-          {currentTip}
+      <div className="loading-content-wrap">
+        <div className="loading-phase-label">
+          {phase === 'INITIAL' ? 'LOADING...' : 'PREPARING BATTLE...'}
         </div>
-      )}
+
+        <div className="loading-bar-track">
+          <div
+            className="loading-bar-fill"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+
+        <div className="loading-percent">{percent}%</div>
+
+        {phase === 'GAME_ENTRY' && currentTip && (
+          <div className={`loading-tip ${tipFading ? 'tip-fading' : 'tip-visible'}`}>
+            {currentTip}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
