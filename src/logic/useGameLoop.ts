@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { AudioManager } from '../utils/AudioManager';
 import { calculatePlayerDamage, calculateBotDamage, applyDamage } from './damageCalculation';
@@ -618,12 +618,31 @@ export const useGameLoop = () => {
             setBotAnimState('HIT');
             triggerHitFx(handType, damage);
         } else {
-            // One Pair Dance: fly to target (no GATHERING/CHARGING)
-            await wait(1130);
-            AudioManager.playSFX('/assets/audio/player/whipping.mp3');
-            await wait(100);
-            setBotAnimState('HIT');
-            triggerHitFx(handType, damage);
+            // One Pair Dance: Overlapping flights, progressive impacts
+            const cardCount = selectedCards.length;
+
+            // Wait for first card to reach boss (0.85s flight time)
+            await wait(850);
+
+            // Sequential hit impacts with progressive intervals
+            for (let hitIdx = 0; hitIdx < cardCount; hitIdx++) {
+                AudioManager.playSFX('/assets/audio/player/whipping.mp3');
+                setBotAnimState('HIT');
+
+                if (hitIdx === cardCount - 1) {
+                    // ★ Final card: Heavy impact particles + screen shake
+                    setFxClass(`hit-strong-dance${Date.now()}`);
+                    triggerScreenEffect('shake');
+                } else {
+                    // Intermediate cards: Light impact particles per hit
+                    setFxClass(`hit-light-dance${Date.now()}`);
+                    // Progressive interval: 400ms shrinking by 30ms per card
+                    const interval = Math.max(280, 400 - hitIdx * 30);
+                    await wait(interval * 0.4);
+                    setBotAnimState('NONE');
+                    await wait(interval * 0.6);
+                }
+            }
         }
 
         // Damage Popup & Message
@@ -782,7 +801,8 @@ export const useGameLoop = () => {
 
         // --- PHASE 4: SCATTERED ---
         if (isOnePairDance) {
-            await wait(Math.max(0, selectedCards.length - 1) * specialDelayMs);
+            // Sequential hit loop already consumed all animation time
+            await wait(200);
         }
         store.setGamePhase('SCATTERED');
         await wait(400);

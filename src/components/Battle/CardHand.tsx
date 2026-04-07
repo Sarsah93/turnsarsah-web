@@ -56,7 +56,8 @@ export const CardHand: React.FC<CardHandProps> = ({
     lizardKingStraightCount,
     lizardStemCellDestroyed,
     specialAttackMode,
-    attackOrderIndices
+    attackOrderIndices,
+    gameSpeed
   } = useGameStore();
 
   const t = TRANSLATIONS[language];
@@ -349,176 +350,157 @@ export const CardHand: React.FC<CardHandProps> = ({
   }, [gamePhase, selectedCards, cards]);
 
   // One Pair Dance: Special Gathering Path (1.13s total)
+  // Absolute-coordinate waypoints with multi-axis 3D tumbling
   const onePairDanceStyles = useMemo(() => {
     if (!isSpecialGathering) return '';
 
     const canvasCenterX = 800;
     const canvasCenterY = 450;
-    const bossOffsetX = bossCenterX - canvasCenterX;
-    const bossOffsetY = bossCenterY - canvasCenterY;
+    const bossX = bossCenterX - canvasCenterX;  // ~0
+    const bossY = bossCenterY - canvasCenterY;  // ~-165
 
-    const pointTimes = [
-      0.00, 0.17, 0.34, 0.45, 0.56, 0.6625, 0.765, 0.8675, 0.97, 1.01, 1.05, 1.09, 1.13
-    ].map(t => (t / 1.13) * 100);
+    const FLIGHT_DUR = 0.85; // seconds
+
+    // Non-linear timing: points 0-10 over 82%, pause at 92%, thrust at 100%
+    const pointTimes: number[] = [
+      0, 8.2, 16.4, 24.6, 32.8, 41.0, 49.2, 57.4, 65.6, 73.8, 82.0,
+      92.0,  // approach: brief pause here
+      100.0  // thrust: rapid final strike
+    ];
 
     type DancePoint = { x: number; y: number; z: number; rx: number; ry: number; rz: number; scale: number; };
-    type KeyPoint = { dx: number; dy: number; rx: number; rz: number; face: 'F' | 'B'; spin: number; };
 
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
     const lerpPoint = (a: DancePoint, b: DancePoint, t: number): DancePoint => ({
-      x: lerp(a.x, b.x, t),
-      y: lerp(a.y, b.y, t),
-      z: lerp(a.z, b.z, t),
-      rx: lerp(a.rx, b.rx, t),
-      ry: lerp(a.ry, b.ry, t),
-      rz: lerp(a.rz, b.rz, t),
+      x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), z: lerp(a.z, b.z, t),
+      rx: lerp(a.rx, b.rx, t), ry: lerp(a.ry, b.ry, t), rz: lerp(a.rz, b.rz, t),
       scale: lerp(a.scale, b.scale, t),
     });
-
     const interpolate = (a: DancePoint, b: DancePoint, steps: number): DancePoint[] => {
-      const points: DancePoint[] = [];
-      for (let i = 0; i <= steps; i++) {
-        points.push(lerpPoint(a, b, i / steps));
-      }
-      return points;
+      const pts: DancePoint[] = [];
+      for (let i = 0; i <= steps; i++) pts.push(lerpPoint(a, b, i / steps));
+      return pts;
     };
 
-    const depthForIndex = (i: number) => {
-      if (i <= 4) {
-        return { z: 40 * i, scale: 1 - (i * 0.02) };
-      }
-      if (i <= 9) {
-        const t = (i - 5) / 4;
-        return { z: 220 + (t * 200), scale: 0.72 - (t * 0.18) };
-      }
-      {
-        const t = (i - 10) / 3;
-        return { z: 520 + (t * 260), scale: 0.45 - (t * 0.18) };
-      }
-    };
+    // Waypoints in ABSOLUTE canvas-center coordinates.
+    // First point (index 0) and last 2 points (11,12) are set dynamically per card.
+    // Intermediate points (1-10) describe the artistic trajectory shape.
+    // For mirrored cards (5-8), only intermediate X and rotateY/Z are negated.
+    type AbsWP = { x: number; y: number; z: number; rx: number; ry: number; rz: number; scale: number; };
 
-    const toPoint = (startX: number, startY: number, kp: KeyPoint, i: number): DancePoint => {
-      const base = kp.face === 'F' ? 0 : 180;
-      const ry = base + (kp.spin * 360);
-      const depth = depthForIndex(i);
-      return {
-        x: startX + kp.dx,
-        y: startY + kp.dy,
-        z: depth.z,
-        rx: kp.rx,
-        ry,
-        rz: kp.rz,
-        scale: depth.scale,
-      };
-    };
-
-    // Paths from approved v4 sketch (relative to each card center).
-    // Points are approximated and scaled to logical 1600x900 space; right side is mirrored.
-    const path1: KeyPoint[] = [
-      { dx: 0, dy: 0, rx: 8, rz: -10, face: 'F', spin: 0 },
-      { dx: 20, dy: -120, rx: 16, rz: -16, face: 'F', spin: 0 },
-      { dx: 110, dy: -180, rx: 22, rz: -22, face: 'F', spin: 0 },
-      { dx: 240, dy: -220, rx: 18, rz: -28, face: 'B', spin: 1 },
-      { dx: 330, dy: -280, rx: 10, rz: -18, face: 'F', spin: 1 },
-      { dx: 290, dy: -340, rx: 6, rz: -8, face: 'B', spin: 1 },
-      { dx: 200, dy: -380, rx: 14, rz: 10, face: 'F', spin: 2 },
-      { dx: 180, dy: -480, rx: 18, rz: 20, face: 'F', spin: 2 },
-      { dx: 380, dy: -480, rx: 8, rz: 8, face: 'F', spin: 2 },
-      { dx: 510, dy: -440, rx: -6, rz: 16, face: 'B', spin: 3 },
-      { dx: 610, dy: -380, rx: 0, rz: 10, face: 'B', spin: 3 },
-      { dx: 720, dy: -410, rx: 6, rz: -8, face: 'B', spin: 3 },
-      { dx: 560, dy: -490, rx: 0, rz: 0, face: 'F', spin: 4 },
+    // Path 1 (Ref image 1): Right sweep arc
+    // Card rises up-left, crosses boss going right, sweeps far right, loops back to hit
+    const path1Mid: AbsWP[] = [
+      { x: -350, y:  -50, z: -40,  rx:  75, ry:  130, rz: -25, scale: 1.00 },
+      { x: -200, y: -180, z: -90,  rx: 180, ry:  310, rz: -40, scale: 0.75 },
+      { x:    0, y: -220, z:-150,  rx: 290, ry:  480, rz: -20, scale: 0.62 },
+      { x:  200, y: -250, z:-200,  rx: 400, ry:  670, rz:  15, scale: 0.50 },
+      { x:  380, y: -200, z:-220,  rx: 520, ry:  850, rz:  35, scale: 0.45 },
+      { x:  400, y: -140, z:-180,  rx: 640, ry: 1020, rz:  20, scale: 0.50 },
+      { x:  320, y: -100, z:-140,  rx: 760, ry: 1190, rz: -10, scale: 0.58 },
+      { x:  220, y: -130, z:-100,  rx: 870, ry: 1350, rz: -25, scale: 0.68 },
+      { x:  120, y: -170, z: -60,  rx: 960, ry: 1470, rz: -15, scale: 0.78 },
+      { x:   60, y: -180, z: -30,  rx:1040, ry: 1560, rz:  -5, scale: 0.88 },
     ];
 
-    const path2: KeyPoint[] = [
-      { dx: 0, dy: 0, rx: 8, rz: 10, face: 'F', spin: 0 },
-      { dx: 20, dy: -130, rx: 18, rz: 18, face: 'F', spin: 0 },
-      { dx: 80, dy: -220, rx: 22, rz: 26, face: 'F', spin: 0 },
-      { dx: 260, dy: -280, rx: 12, rz: 12, face: 'B', spin: 1 },
-      { dx: 480, dy: -280, rx: 6, rz: -6, face: 'F', spin: 1 },
-      { dx: 610, dy: -220, rx: -6, rz: -16, face: 'F', spin: 1 },
-      { dx: 680, dy: -120, rx: 12, rz: -24, face: 'B', spin: 2 },
-      { dx: 550, dy: -60, rx: 18, rz: -6, face: 'B', spin: 2 },
-      { dx: 430, dy: -140, rx: 8, rz: 10, face: 'B', spin: 2 },
-      { dx: 600, dy: -360, rx: 6, rz: 0, face: 'F', spin: 3 },
-      { dx: 520, dy: -360, rx: 0, rz: 10, face: 'B', spin: 3 },
-      { dx: 440, dy: -360, rx: -6, rz: -4, face: 'B', spin: 3 },
-      { dx: 360, dy: -360, rx: 0, rz: 0, face: 'B', spin: 4 },
+    // Path 2 (Ref image 2): Zigzag right
+    // Card rises through boss diagonally, zigzags right, comes back
+    const path2Mid: AbsWP[] = [
+      { x: -200, y:  -80, z: -30,  rx:  60, ry:  110, rz:  25, scale: 1.02 },
+      { x:  -50, y: -190, z: -70,  rx: 150, ry:  280, rz:  40, scale: 0.78 },
+      { x:  100, y: -250, z:-130,  rx: 280, ry:  450, rz:  18, scale: 0.65 },
+      { x:  300, y: -220, z:-180,  rx: 380, ry:  620, rz: -12, scale: 0.52 },
+      { x:  380, y: -140, z:-200,  rx: 480, ry:  790, rz: -30, scale: 0.48 },
+      { x:  330, y:  -80, z:-170,  rx: 600, ry:  940, rz: -18, scale: 0.52 },
+      { x:  240, y: -120, z:-130,  rx: 720, ry: 1100, rz:  10, scale: 0.60 },
+      { x:  150, y: -180, z: -90,  rx: 830, ry: 1260, rz:  20, scale: 0.70 },
+      { x:   80, y: -210, z: -55,  rx: 930, ry: 1400, rz:   8, scale: 0.80 },
+      { x:   30, y: -190, z: -25,  rx:1010, ry: 1510, rz:  -5, scale: 0.90 },
     ];
 
-    const path3: KeyPoint[] = [
-      { dx: 0, dy: 0, rx: 6, rz: -8, face: 'F', spin: 0 },
-      { dx: -80, dy: -120, rx: 16, rz: -18, face: 'F', spin: 0 },
-      { dx: -180, dy: -180, rx: 22, rz: -26, face: 'F', spin: 0 },
-      { dx: -340, dy: -220, rx: 10, rz: -30, face: 'B', spin: 1 },
-      { dx: -420, dy: -280, rx: 6, rz: -36, face: 'B', spin: 1 },
-      { dx: -400, dy: -380, rx: 12, rz: -18, face: 'B', spin: 1 },
-      { dx: -260, dy: -420, rx: 16, rz: 6, face: 'F', spin: 2 },
-      { dx: -120, dy: -440, rx: 14, rz: 18, face: 'F', spin: 2 },
-      { dx: 0, dy: -430, rx: 10, rz: 20, face: 'F', spin: 2 },
-      { dx: 120, dy: -420, rx: -8, rz: 12, face: 'F', spin: 3 },
-      { dx: 180, dy: -370, rx: -4, rz: -6, face: 'B', spin: 3 },
-      { dx: 160, dy: -340, rx: 4, rz: -8, face: 'B', spin: 3 },
-      { dx: 420, dy: -420, rx: 0, rz: 0, face: 'B', spin: 4 },
+    // Path 3 (Ref image 3): Vertical spiral / pentagonal loop
+    // Card shoots up, spirals around boss area in a star pattern, hits from front
+    const path3Mid: AbsWP[] = [
+      { x:  -80, y: -100, z: -30,  rx:  85, ry:  145, rz: -22, scale: 1.00 },
+      { x: -150, y: -230, z: -80,  rx: 190, ry:  330, rz: -38, scale: 0.75 },
+      { x: -100, y: -320, z:-150,  rx: 310, ry:  510, rz: -50, scale: 0.60 },
+      { x:   30, y: -310, z:-200,  rx: 430, ry:  700, rz: -30, scale: 0.48 },
+      { x:  150, y: -250, z:-200,  rx: 540, ry:  870, rz:  -8, scale: 0.48 },
+      { x:  130, y: -150, z:-160,  rx: 660, ry: 1040, rz:  20, scale: 0.55 },
+      { x:   30, y: -100, z:-120,  rx: 780, ry: 1200, rz:  30, scale: 0.62 },
+      { x:  -80, y: -160, z: -80,  rx: 890, ry: 1350, rz:  15, scale: 0.72 },
+      { x:  -40, y: -220, z: -45,  rx: 980, ry: 1480, rz:   0, scale: 0.82 },
+      { x:   10, y: -190, z: -20,  rx:1050, ry: 1580, rz:  -5, scale: 0.90 },
     ];
 
-    const path4: KeyPoint[] = [
-      { dx: 0, dy: 0, rx: 8, rz: 12, face: 'F', spin: 0 },
-      { dx: -40, dy: -140, rx: 18, rz: 22, face: 'F', spin: 0 },
-      { dx: -100, dy: -220, rx: 24, rz: 30, face: 'F', spin: 0 },
-      { dx: -180, dy: -280, rx: 10, rz: 38, face: 'B', spin: 1 },
-      { dx: -280, dy: -320, rx: 6, rz: 20, face: 'B', spin: 1 },
-      { dx: -340, dy: -370, rx: 12, rz: 10, face: 'F', spin: 1 },
-      { dx: -280, dy: -420, rx: 18, rz: 0, face: 'F', spin: 2 },
-      { dx: -160, dy: -440, rx: 10, rz: -10, face: 'F', spin: 2 },
-      { dx: -40, dy: -450, rx: 6, rz: 10, face: 'B', spin: 2 },
-      { dx: 100, dy: -470, rx: -6, rz: 16, face: 'B', spin: 3 },
-      { dx: 240, dy: -500, rx: 0, rz: -8, face: 'F', spin: 3 },
-      { dx: 380, dy: -520, rx: 4, rz: -10, face: 'F', spin: 3 },
-      { dx: 520, dy: -540, rx: 0, rz: 0, face: 'F', spin: 4 },
+    // Path 4 (Ref image 4): Left grand arc
+    // Card sweeps far left in a large loop/arc, then flies back across to hit
+    const path4Mid: AbsWP[] = [
+      { x: -150, y:    0, z: -30,  rx:  70, ry:  160, rz:  28, scale: 1.02 },
+      { x: -280, y:  -60, z: -80,  rx: 170, ry:  350, rz:  42, scale: 0.78 },
+      { x: -380, y: -150, z:-150,  rx: 290, ry:  530, rz:  30, scale: 0.62 },
+      { x: -400, y: -260, z:-200,  rx: 410, ry:  720, rz:  12, scale: 0.50 },
+      { x: -340, y: -320, z:-210,  rx: 530, ry:  890, rz:  -8, scale: 0.48 },
+      { x: -220, y: -330, z:-170,  rx: 650, ry: 1060, rz: -20, scale: 0.52 },
+      { x: -100, y: -300, z:-130,  rx: 770, ry: 1220, rz: -10, scale: 0.60 },
+      { x:    0, y: -260, z: -80,  rx: 870, ry: 1380, rz:   8, scale: 0.72 },
+      { x:   60, y: -220, z: -40,  rx: 960, ry: 1510, rz:  12, scale: 0.82 },
+      { x:   30, y: -190, z: -15,  rx:1030, ry: 1600, rz:   3, scale: 0.90 },
     ];
 
-    const paths: Record<number, KeyPoint[]> = {
-      0: path1,
-      1: path2,
-      2: path3,
-      3: path4,
-    };
-
+    const allMids = [path1Mid, path2Mid, path3Mid, path4Mid];
     const container = document.querySelector('.battle-screen') as HTMLElement | null;
 
     return selectedCards.map((idx) => {
-      let startX = -Math.abs((idx - 3.5) * 150);
-      let startY = 280;
+      // Compute card start position (offset from canvas center)
+      let startX = (idx - 3.5) * 150;
+      let startY = 130;
       if (container && slotRefs.current[idx]) {
         const cRect = container.getBoundingClientRect();
         const sRect = slotRefs.current[idx]!.getBoundingClientRect();
         const currentScale = cRect.width / 1600;
         const centerX = (sRect.left - cRect.left) + (sRect.width / 2);
         const centerY = (sRect.top - cRect.top) + (sRect.height / 2);
-        const logicalX = centerX / currentScale;
-        const logicalY = centerY / currentScale;
-        startX = logicalX - canvasCenterX;
-        startY = logicalY - canvasCenterY;
+        startX = (centerX / currentScale) - canvasCenterX;
+        startY = (centerY / currentScale) - canvasCenterY;
       }
 
+      // Pattern: card 0→path1, 1→path2, 2→path3, 3→path4, 4→path4(mir), 5→path3(mir), 6→path2(mir), 7→path1(mir)
       const pattern = idx <= 3 ? idx : 7 - idx;
       const isMirrored = idx >= 4;
-      const base = paths[pattern];
-      const points13 = base.map((kp, i) => toPoint(startX, startY, kp, i));
-      let points = points13;
+      const midWaypoints = allMids[pattern];
 
+      // Build 13 absolute DancePoints: [start, 10 mid waypoints, approach, hit]
+      const startPt: DancePoint = { x: startX, y: startY, z: 0, rx: 0, ry: 0, rz: 0, scale: 1.2 };
+      const approachPt: DancePoint = {
+        x: lerp(midWaypoints[9].x, bossX, 0.7),
+        y: lerp(midWaypoints[9].y, bossY, 0.7),
+        z: -8, rx: 1100, ry: 1660, rz: 0, scale: 0.96
+      };
+      const hitPt: DancePoint = { x: bossX, y: bossY, z: 0, rx: 1140, ry: 1720, rz: 0, scale: 0.85 };
+
+      let points: DancePoint[] = [
+        startPt,
+        ...midWaypoints.map(wp => ({ ...wp })),
+        approachPt,
+        hitPt,
+      ];
+
+      // Mirror for cards 5-8: negate X of intermediate waypoints, keep start/end correct
       if (isMirrored) {
-        points = points.map(p => ({
-          ...p,
-          x: -p.x,
-          ry: -p.ry,
-          rz: -p.rz
-        }));
+        points = points.map((p, i) => {
+          if (i === 0) return p; // start is already at this card's actual position
+          if (i >= 12) return p; // approach & hit go to boss (same position)
+          // Mirror approach point too
+          if (i === 11) return { ...p, x: lerp(-midWaypoints[9].x, bossX, 0.7), ry: -p.ry, rz: -p.rz };
+          // Mirror intermediate waypoints around screen center
+          return { ...p, x: -p.x, ry: -p.ry, rz: -p.rz };
+        });
       }
 
+      // Generate smooth keyframes
       const keyframes: string[] = [];
-      const stepsPerSegment = 30;
+      const stepsPerSegment = 20;
       for (let i = 0; i < points.length - 1; i++) {
         const a = points[i];
         const b = points[i + 1];
@@ -531,35 +513,34 @@ export const CardHand: React.FC<CardHandProps> = ({
           const p = seg[s];
           keyframes.push(
             `${pct.toFixed(2)}% {` +
-            ` transform: translate(calc(-50% + ${p.x.toFixed(2)}px), calc(-50% + ${p.y.toFixed(2)}px))` +
-            ` translateZ(${p.z.toFixed(2)}px) rotateX(${p.rx.toFixed(2)}deg) rotateY(${p.ry.toFixed(2)}deg) rotateZ(${p.rz.toFixed(2)}deg)` +
+            ` transform: translate(calc(-50% + ${p.x.toFixed(1)}px), calc(-50% + ${p.y.toFixed(1)}px))` +
+            ` translateZ(${p.z.toFixed(1)}px) rotateX(${p.rx.toFixed(1)}deg) rotateY(${p.ry.toFixed(1)}deg) rotateZ(${p.rz.toFixed(1)}deg)` +
             ` scale(${p.scale.toFixed(3)}); opacity: 1; }`
           );
         }
       }
 
+      // Scatter keyframes (after hit)
       const orderIndex = attackOrderIndices.length > 0 ? attackOrderIndices.indexOf(idx) : selectedCards.indexOf(idx);
       const safeOrderIndex = orderIndex >= 0 ? orderIndex : 0;
-      const shatterAngle = (safeOrderIndex * 60) - 90;
-      const shatterDistance = 150 + (safeOrderIndex * 30);
-      const shatterX = Math.cos(shatterAngle * Math.PI / 180) * shatterDistance;
-      const shatterY = Math.sin(shatterAngle * Math.PI / 180) * shatterDistance;
-      const scatterRotX = 10 + safeOrderIndex * 8;
-      const scatterRotZ = shatterAngle * 1.5;
-      const lastPoint = points[points.length - 1];
+      const shatterAngle = (safeOrderIndex * 72) - 90;
+      const shatterDist = 140 + (safeOrderIndex * 25);
+      const shatterX = Math.cos(shatterAngle * Math.PI / 180) * shatterDist;
+      const shatterY = Math.sin(shatterAngle * Math.PI / 180) * shatterDist;
+      const lastPt = points[points.length - 1];
       const scatterKeyframes = `
         0% {
-          transform: translate(calc(-50% + ${lastPoint.x.toFixed(2)}px), calc(-50% + ${lastPoint.y.toFixed(2)}px))
-            translateZ(${(lastPoint.z + 40).toFixed(2)}px)
-            rotateX(${lastPoint.rx.toFixed(2)}deg) rotateY(${lastPoint.ry.toFixed(2)}deg) rotateZ(${lastPoint.rz.toFixed(2)}deg)
-            scale(${lastPoint.scale.toFixed(3)});
+          transform: translate(calc(-50% + ${lastPt.x.toFixed(1)}px), calc(-50% + ${lastPt.y.toFixed(1)}px))
+            translateZ(${lastPt.z.toFixed(1)}px)
+            rotateX(${lastPt.rx.toFixed(1)}deg) rotateY(${lastPt.ry.toFixed(1)}deg) rotateZ(${lastPt.rz.toFixed(1)}deg)
+            scale(${lastPt.scale.toFixed(3)});
           opacity: 1;
         }
         100% {
-          transform: translate(calc(-50% + ${(lastPoint.x + shatterX).toFixed(2)}px), calc(-50% + ${(lastPoint.y + shatterY).toFixed(2)}px))
-            translateZ(${(lastPoint.z + 200).toFixed(2)}px)
-            rotateX(${scatterRotX.toFixed(2)}deg) rotateY(${lastPoint.ry.toFixed(2)}deg) rotateZ(${scatterRotZ.toFixed(2)}deg)
-            scale(0.2);
+          transform: translate(calc(-50% + ${(lastPt.x + shatterX).toFixed(1)}px), calc(-50% + ${(lastPt.y + shatterY).toFixed(1)}px))
+            translateZ(${(lastPt.z + 200).toFixed(1)}px)
+            rotateX(${(lastPt.rx + 120).toFixed(1)}deg) rotateY(${lastPt.ry.toFixed(1)}deg) rotateZ(${(shatterAngle * 1.5).toFixed(1)}deg)
+            scale(0.15);
           opacity: 0;
         }
       `;
@@ -704,14 +685,18 @@ export const CardHand: React.FC<CardHandProps> = ({
                 animation: `leaf-flutter-${idx} ${flutterDur}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${flutterDelay}s both`,
               };
             } else if (gamePhase === 'GATHERING_SPECIAL') {
-              const specialDelay = safeOrderIndex * 0.12;
-              const scatterDelay = specialDelay + 1.13;
+              const specialDelay = safeOrderIndex * (0.4 / gameSpeed);
+              // Progressive speed: each card 8% faster than previous
+              const baseDur = 0.85;
+              const cardDur = (baseDur / (1 + safeOrderIndex * 0.08)) / gameSpeed;
+              const scatterDelay = specialDelay + cardDur;
               portalStyle = {
                 ...baseStyle,
                 left: '800px',
                 top: '450px',
                 bottom: 'auto',
-                animation: `onepair-dance-${idx} 1.13s cubic-bezier(0.22, 0.61, 0.36, 1) ${specialDelay}s both, onepair-scatter-${idx} 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${scatterDelay}s forwards`,
+                animation: `onepair-dance-${idx} ${cardDur.toFixed(3)}s cubic-bezier(0.22, 0.61, 0.36, 1) ${specialDelay.toFixed(3)}s both, onepair-scatter-${idx} ${(0.35 / gameSpeed).toFixed(3)}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${scatterDelay.toFixed(3)}s forwards`,
+                filter: 'drop-shadow(0 0 6px rgba(255, 200, 60, 0.7)) drop-shadow(0 0 14px rgba(255, 140, 20, 0.4))',
               };
             } else if (gamePhase === 'CHARGING') {
               portalStyle = {
