@@ -57,7 +57,8 @@ export const CardHand: React.FC<CardHandProps> = ({
     lizardStemCellDestroyed,
     specialAttackMode,
     attackOrderIndices,
-    gameSpeed
+    gameSpeed,
+    twoPairGroups
   } = useGameStore();
 
   const t = TRANSLATIONS[language];
@@ -549,9 +550,82 @@ export const CardHand: React.FC<CardHandProps> = ({
     }).join('\n');
   }, [isSpecialGathering, selectedCards, bossCenterX, bossCenterY, attackOrderIndices]);
 
+  const isTwoPairTaeguekGathering = gamePhase === 'GATHERING_SPECIAL' && specialAttackMode === 'TWO_PAIR_TAEGUEK';
+
+  const twoPairTaeguekStyles = useMemo(() => {
+    if (!isTwoPairTaeguekGathering) return '';
+
+    const canvasCenterX = 800;
+    const canvasCenterY = 580;
+    const gX = bossCenterX - canvasCenterX;
+    const gY = bossCenterY - canvasCenterY;
+
+    // Timing
+    const gatherDur = 0.6 / gameSpeed;
+    const orbitDur = 1.0 / gameSpeed;
+    const convergeDur = 0.4 / gameSpeed;
+    
+    // Group 1: Gather top, sweep right/down into red globe
+    const p1GatherX = gX;
+    const p1GatherY = gY - 120;
+    const p1RedGlobeX = gX + 180;
+    const p1RedGlobeY = gY;
+    
+    // Group 2: Gather bottom, sweep left/up into blue globe
+    const p2GatherX = gX;
+    const p2GatherY = gY + 80;
+    const p2BlueGlobeX = gX - 180;
+    const p2BlueGlobeY = gY;
+
+    const generateGroupAnim = (indices: number[], gatherX: number, gatherY: number, endGlobeX: number, endGlobeY: number, isPair1: boolean) => {
+      return indices.map((idx, i) => {
+        const startX = (idx - 3.5) * 85; 
+        const startY = 320;
+        const ctrl1X = gatherX + (isPair1 ? 150 : -150);
+        const ctrl1Y = gatherY;
+        const ctrl2X = endGlobeX + (isPair1 ? 50 : -50);
+        const ctrl2Y = endGlobeY + (isPair1 ? -80 : 80);
+
+        return `
+          @keyframes tp-taeguek-gather-${idx} {
+            0% { transform: translate(calc(-50% + ${startX}px), calc(-50% + ${startY}px)) translateZ(0px) scale(1.0); }
+            100% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) translateZ(-50px) rotateX(${isPair1 ? 180 : -180}deg) rotateY(180deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
+          }
+          @keyframes tp-taeguek-orbit-${idx} {
+            0% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) translateZ(-50px) rotateX(${isPair1 ? 180 : -180}deg) rotateY(180deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
+            25% { transform: translate(calc(-50% + ${ctrl1X}px), calc(-50% + ${ctrl1Y}px)) translateZ(-20px) rotateX(${isPair1 ? 360 : 0}deg) rotateY(360deg) rotateZ(180deg) scale(0.4); }
+            75% { transform: translate(calc(-50% + ${ctrl2X}px), calc(-50% + ${ctrl2Y}px)) translateZ(20px) rotateX(${isPair1 ? 720 : 360}deg) rotateY(720deg) rotateZ(540deg) scale(0.3); }
+            100% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) translateZ(50px) rotateX(${isPair1 ? 1080 : 720}deg) rotateY(1080deg) rotateZ(720deg) scale(0.25); }
+          }
+          @keyframes tp-taeguek-converge-${idx} {
+            0% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) translateZ(50px) rotateX(${isPair1 ? 1080 : 720}deg) rotateY(1080deg) rotateZ(720deg) scale(0.25); }
+            95% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) translateZ(150px) rotateX(1800deg) rotateY(1800deg) rotateZ(1440deg) scale(0.1); }
+            100% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) translateZ(200px) scale(0); opacity: 0; }
+          }
+        `;
+      }).join('\n');
+    };
+
+    const p1Anim = generateGroupAnim(twoPairGroups.pair1, p1GatherX, p1GatherY, p1RedGlobeX, p1RedGlobeY, true);
+    const p2Anim = generateGroupAnim(twoPairGroups.pair2, p2GatherX, p2GatherY, p2BlueGlobeX, p2BlueGlobeY, false);
+
+    const soloAnim = twoPairGroups.solo.map(idx => {
+      return `
+        @keyframes tp-taeguek-burn-${idx} {
+          0% { transform: scale(1.0); filter: brightness(1) sepia(0) drop-shadow(0 0 0px #ff0000); opacity: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+          25% { filter: brightness(0.6) sepia(1) hue-rotate(-30deg) saturate(4) drop-shadow(0 0 30px #ff3b00); opacity: 1; transform: scale(0.95); clip-path: polygon(0 5%, 95% 0, 100% 95%, 5% 100%); }
+          65% { filter: brightness(0.2) sepia(1) hue-rotate(-50deg) saturate(5) drop-shadow(0 0 40px #ff0000); opacity: 1; transform: scale(0.9) rotateZ(4deg); clip-path: polygon(10% 10%, 90% 5%, 85% 90%, 5% 85%); }
+          100% { transform: scale(0.8) rotateZ(-2deg); filter: brightness(0) sepia(1) hue-rotate(-50deg) saturate(0); opacity: 0; clip-path: polygon(40% 40%, 60% 45%, 55% 60%, 45% 55%); }
+        }
+      `;
+    }).join('\n');
+
+    return p1Anim + '\n' + p2Anim + '\n' + soloAnim;
+  }, [isTwoPairTaeguekGathering, gameSpeed, bossCenterX, bossCenterY, twoPairGroups]);
+
   return (
     <div className="card-hand-container card-hand-3d">
-      <style>{flutterStyles}{onePairDanceStyles}</style>
+      <style>{flutterStyles}{onePairDanceStyles}{twoPairTaeguekStyles}</style>
       {comboPreview && isInteracting && document.getElementById('battle-portal-root') && (
         createPortal(
           <div
@@ -618,7 +692,9 @@ export const CardHand: React.FC<CardHandProps> = ({
 
           const selectedIdxInQueue = selectedCards.indexOf(idx);
           const isAttacking = ['GATHERING', 'GATHERING_SPECIAL', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);
-          const shouldRenderInPortal = isSelected && isAttacking;
+          const isTaeguekSolo = specialAttackMode === 'TWO_PAIR_TAEGUEK' && twoPairGroups && twoPairGroups.solo.includes(idx);
+          
+          const shouldRenderInPortal = isSelected && isAttacking && !isTaeguekSolo;
           const cardSeed = (Number(card?.id ?? idx)) % 7;
           const idleRotX = 12;
           const idleRotY = (idx - 3.5) * 1.2;
@@ -684,7 +760,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                 bottom: 'auto',
                 animation: `leaf-flutter-${idx} ${flutterDur}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${flutterDelay}s both`,
               };
-            } else if (gamePhase === 'GATHERING_SPECIAL') {
+            } else if (gamePhase === 'GATHERING_SPECIAL' && specialAttackMode === 'ONE_PAIR_DANCE') {
               const specialDelay = safeOrderIndex * (0.4 / gameSpeed);
               // Progressive speed: each card 8% faster than previous
               const baseDur = 0.85;
@@ -692,11 +768,25 @@ export const CardHand: React.FC<CardHandProps> = ({
               const scatterDelay = specialDelay + cardDur;
               portalStyle = {
                 ...baseStyle,
-                left: '800px',
-                top: '450px',
                 bottom: 'auto',
                 animation: `onepair-dance-${idx} ${cardDur.toFixed(3)}s cubic-bezier(0.22, 0.61, 0.36, 1) ${specialDelay.toFixed(3)}s both, onepair-scatter-${idx} ${(0.35 / gameSpeed).toFixed(3)}s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${scatterDelay.toFixed(3)}s forwards`,
                 filter: 'drop-shadow(0 0 6px rgba(255, 200, 60, 0.7)) drop-shadow(0 0 14px rgba(255, 140, 20, 0.4))',
+              };
+            } else if (gamePhase === 'GATHERING_SPECIAL' && specialAttackMode === 'TWO_PAIR_TAEGUEK') {
+              const gatherDur = 0.6 / gameSpeed;
+              const orbitDur = 1.0 / gameSpeed;
+              const convergeDur = 0.4 / gameSpeed;
+              
+              const isPair1 = twoPairGroups.pair1.includes(idx);
+              const colorGlow = isPair1 
+                ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255, 30, 30, 1)) drop-shadow(0 0 40px rgba(255, 10, 10, 0.9)) drop-shadow(0 0 60px rgba(255, 0, 0, 0.8))'
+                : 'brightness(1.5) drop-shadow(0 0 20px rgba(30, 100, 255, 1)) drop-shadow(0 0 40px rgba(10, 80, 255, 0.9)) drop-shadow(0 0 60px rgba(0, 50, 255, 0.8))';
+              
+              portalStyle = {
+                ...baseStyle,
+                bottom: 'auto',
+                animation: `tp-taeguek-gather-${idx} ${gatherDur.toFixed(3)}s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, tp-taeguek-orbit-${idx} ${orbitDur.toFixed(3)}s cubic-bezier(0.4, 0, 0.2, 1) ${gatherDur.toFixed(3)}s forwards, tp-taeguek-converge-${idx} ${convergeDur.toFixed(3)}s cubic-bezier(0.8, 0, 0.2, 1) ${(gatherDur + orbitDur).toFixed(3)}s forwards`,
+                filter: colorGlow,
               };
             } else if (gamePhase === 'CHARGING') {
               portalStyle = {
@@ -718,7 +808,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                 filter: 'brightness(1.6)',
               };
             } else if (gamePhase === 'SCATTERED') {
-              if (specialAttackMode === 'ONE_PAIR_DANCE') {
+              if (specialAttackMode === 'ONE_PAIR_DANCE' || specialAttackMode === 'TWO_PAIR_TAEGUEK') {
                 portalStyle = {
                   ...baseStyle,
                   bottom: 'auto',
@@ -788,6 +878,36 @@ export const CardHand: React.FC<CardHandProps> = ({
                  zIndex: 3900 + selectedIdxInQueue
               } : { display: 'none' };
 
+              // Taeguek Orbit Ghosts
+              const isTaeguekOrb = gamePhase === 'GATHERING_SPECIAL' && specialAttackMode === 'TWO_PAIR_TAEGUEK' && !twoPairGroups.solo.includes(idx);
+              const tGatherDur = 0.6 / gameSpeed;
+              const tOrbitDur = 1.0 / gameSpeed;
+              const taeguekDelay = (offset: number) => `${offset}s, ${tGatherDur + offset}s, ${tGatherDur + tOrbitDur + offset}s`;
+              
+              const tGhost1Style = isTaeguekOrb ? {
+                opacity: 0.6,
+                transform: 'scale(1.2)',
+                filter: (portalStyle.filter as string).replace('brightness(1.5)', 'brightness(1.0)'),
+                zIndex: 3000,
+                animationDelay: taeguekDelay(0.04)
+              } : { display: 'none' };
+              
+              const tGhost2Style = isTaeguekOrb ? {
+                opacity: 0.3,
+                transform: 'scale(1.1)',
+                filter: (portalStyle.filter as string).replace('brightness(1.5)', 'brightness(0.8)'),
+                zIndex: 2900,
+                animationDelay: taeguekDelay(0.08)
+              } : { display: 'none' };
+
+              const tGhost3Style = isTaeguekOrb ? {
+                opacity: 0.1,
+                transform: 'scale(0.9)',
+                filter: (portalStyle.filter as string).replace('brightness(1.5)', 'brightness(0.5)'),
+                zIndex: 2800,
+                animationDelay: taeguekDelay(0.12)
+              } : { display: 'none' };
+
               return (
                 <React.Fragment key={`slot-${idx}`}>
                   <div className="card-slot" style={{ width: '120px', height: '168px', margin: '0 10px', position: 'relative' }} />
@@ -795,6 +915,9 @@ export const CardHand: React.FC<CardHandProps> = ({
                     <>
                       {gamePhase === 'GATHERING' && renderPortalCard(ghost2Style, 'g2')}
                       {gamePhase === 'GATHERING' && renderPortalCard(ghost1Style, 'g1')}
+                      {isTaeguekOrb && renderPortalCard(tGhost3Style, 'tg3')}
+                      {isTaeguekOrb && renderPortalCard(tGhost2Style, 'tg2')}
+                      {isTaeguekOrb && renderPortalCard(tGhost1Style, 'tg1')}
                       {renderPortalCard({}, 'main')}
                     </>,
                     portalRoot
@@ -851,12 +974,15 @@ export const CardHand: React.FC<CardHandProps> = ({
                         ['--card-tilt-x' as any]: `${idleRotX}deg`,
                         ['--card-tilt-y' as any]: `${idleRotY}deg`,
                         ['--card-tilt-z' as any]: `${idleRotZ}deg`,
-                        ['--card-tilt-zdepth' as any]: isSelected && isInteracting ? '26px' : '0px',
+                        ['--card-tilt-zdepth' as any]: isSelected && (isInteracting || isTaeguekSolo) ? '26px' : '0px',
+                        animation: (gamePhase === 'GATHERING_SPECIAL' && isTaeguekSolo) 
+                          ? `tp-taeguek-burn-${idx} ${1.2 / gameSpeed}s ease-in forwards` 
+                          : 'none',
                       }}
                     >
                       <CardComponent
                         card={{ ...card, isBlind, isBanned }}
-                        selected={isSelected && isInteracting}
+                        selected={isSelected && (isInteracting || isTaeguekSolo)}
                         onClick={() => { }}
                       />
                     </div>

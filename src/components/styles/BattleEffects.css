@@ -290,3 +290,49 @@
 .battle-screen.player-low-hp .player-hp-bar {
   animation: lowhp-pulse 1.2s ease-in-out infinite;
 }
+
+/* ============================================================
+   TAEGUEK SPECIAL EFFECTS
+   ============================================================ */
+
+/* --- Taeguek Medium (Spark) --- */
+.battle-screen[class*="hit-medium-taeguek"] {
+  animation: screen-shake-strong 300ms ease !important;
+}
+.battle-screen[class*="hit-medium-taeguek"] .fx-hit-spark {
+  animation: hit-spark-pop 300ms ease-out forwards;
+}
+
+/* --- Taeguek Critical (Big Bang) --- */
+@keyframes taeguek-bigbang {
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.1); filter: brightness(5) hue-rotate(0deg); border-width: 100px; }
+  10%  { opacity: 1; transform: translate(-50%,-50%) scale(1.5); filter: brightness(3) hue-rotate(45deg); border-width: 60px; }
+  40%  { opacity: 0.8; transform: translate(-50%,-50%) scale(3.5); filter: brightness(1.5) hue-rotate(90deg); border-width: 20px; }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(6.0); filter: brightness(1) hue-rotate(180deg); border-width: 2px; }
+}
+
+@keyframes taeguek-flash {
+  0%   { opacity: 1; background: #fff; }
+  5%   { opacity: 1; background: #fff; }
+  100% { opacity: 0; background: #fff; }
+}
+
+.battle-screen[class*="hit-critical-taeguek"] {
+  animation: screen-shake-strong 600ms cubic-bezier(.36,.07,.19,.97) !important;
+}
+.battle-screen[class*="hit-critical-taeguek"] .fx-darken {
+  background: rgba(0,0,0,0.9);
+  animation: screen-dim 800ms ease forwards;
+}
+.battle-screen[class*="hit-critical-taeguek"] .fx-flash {
+  animation: taeguek-flash 400ms ease-out forwards;
+}
+.battle-screen[class*="hit-critical-taeguek"] .boss-avatar-wrapper img {
+  animation: boss-flash 500ms ease;
+}
+.battle-screen[class*="hit-critical-taeguek"] .fx-impact-ring {
+  border-color: #fff;
+  border-width: 10px;
+  box-shadow: inset 0 0 50px #f00, 0 0 50px #00f;
+  animation: taeguek-bigbang 800ms cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}

@@ -1,4 +1,4 @@
-﻿// state/gameStore.ts
+// state/gameStore.ts
 
 import { create } from 'zustand';
 import { Card, CardFactory } from '../types/Card';
@@ -263,14 +263,18 @@ interface GameStoreState {
   setLoadingProgress: (progress: number) => void;
 
   // Special Attack Animations
-  specialAttackMode: 'NONE' | 'ONE_PAIR_DANCE';
-  setSpecialAttackMode: (mode: 'NONE' | 'ONE_PAIR_DANCE') => void;
+  specialAttackMode: 'NONE' | 'ONE_PAIR_DANCE' | 'TWO_PAIR_TAEGUEK';
+  setSpecialAttackMode: (mode: 'NONE' | 'ONE_PAIR_DANCE' | 'TWO_PAIR_TAEGUEK') => void;
   attackOrderIndices: number[];
   setAttackOrderIndices: (indices: number[]) => void;
   hasOnePairDanceTitle: boolean;
   setHasOnePairDanceTitle: (val: boolean) => void;
   forceOnePairDance: boolean;
   setForceOnePairDance: (val: boolean) => void;
+  forceTwoPairTaeguek: boolean;
+  setForceTwoPairTaeguek: (val: boolean) => void;
+  twoPairGroups: { pair1: number[]; pair2: number[]; solo: number[] };
+  setTwoPairGroups: (groups: { pair1: number[]; pair2: number[]; solo: number[] }) => void;
 
   // Localization
   language: Language;
@@ -398,6 +402,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setHasOnePairDanceTitle: (hasOnePairDanceTitle) => set({ hasOnePairDanceTitle }),
   forceOnePairDance: false,
   setForceOnePairDance: (forceOnePairDance) => set({ forceOnePairDance }),
+  forceTwoPairTaeguek: false,
+  setForceTwoPairTaeguek: (forceTwoPairTaeguek) => set({ forceTwoPairTaeguek }),
+  twoPairGroups: { pair1: [], pair2: [], solo: [] },
+  setTwoPairGroups: (twoPairGroups) => set({ twoPairGroups }),
 
   // Tutorial System
   isTutorial: false,

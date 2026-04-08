@@ -9,7 +9,7 @@ import { TRANSLATIONS } from '../constants/translations';
 import { AltarSystem } from './AltarSystem';
 
 export const MainMenu: React.FC = () => {
-    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize, setForceOnePairDance } = useGameStore();
+    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize, setForceOnePairDance, setForceTwoPairTaeguek } = useGameStore();
     const t = TRANSLATIONS[language];
     const isEnglish = language === 'EN';
     const isLargeFont = fontSize === 'LARGE';
@@ -23,6 +23,7 @@ export const MainMenu: React.FC = () => {
     const handleDifficultySelect = (difficulty: Difficulty) => {
         setActiveMenu('NONE');
         setForceOnePairDance(false);
+        setForceTwoPairTaeguek(false);
         triggerTransition(() => initGameWithDifficulty('1', 1, difficulty)); // Chapter 1, Stage 1
     };
 
@@ -33,6 +34,13 @@ export const MainMenu: React.FC = () => {
 
     const handleDebugOnePairDance = () => {
         setForceOnePairDance(true);
+        setForceTwoPairTaeguek(false);
+        triggerTransition(() => initGameWithDifficulty('1', 1, Difficulty.NORMAL));
+    };
+
+    const handleDebugTwoPairTaeguek = () => {
+        setForceOnePairDance(false);
+        setForceTwoPairTaeguek(true);
         triggerTransition(() => initGameWithDifficulty('1', 1, Difficulty.NORMAL));
     };
 
@@ -60,6 +68,7 @@ export const MainMenu: React.FC = () => {
                     triggerTransition(() => initTutorial());
                 }} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text="DEBUG: ONE PAIR DANCE" onClick={handleDebugOnePairDance} width={menuButtonWidth} style={menuButtonStyle} />
+                <BlockButton text="DEBUG: TWO PAIR TAEGUEK" onClick={handleDebugTwoPairTaeguek} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" width={menuButtonWidth} style={menuButtonStyle} />

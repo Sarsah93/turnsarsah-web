@@ -584,13 +584,41 @@ export const useGameLoop = () => {
             }
         }
 
-        // --- PHASE 1: GATHERING (leaf-flutter / one-pair dance) ---
+        // --- PHASE 1: GATHERING (leaf-flutter / one-pair dance / two-pair taeguek) ---
         const isOnePairDance = hasOnePairDance && handType === 'One Pair';
+
+        // Two Pair Taeguek: classify pair groups
+        const isTwoPairTaeguek = (store.forceTwoPairTaeguek || false) && handType === 'Two Pair';
+        let twoPairGroups = { pair1: [] as number[], pair2: [] as number[], solo: [] as number[] };
+        if (isTwoPairTaeguek) {
+            // Find pairs by rank
+            const rankMap: Record<string, number[]> = {};
+            selectedCards.forEach((card, i) => {
+                const rank = card.rank || (card.isJoker ? 'JOKER' : 'X');
+                if (!rankMap[rank]) rankMap[rank] = [];
+                rankMap[rank].push(selectedIndices[i]);
+            });
+            const pairs = Object.entries(rankMap)
+                .filter(([, indices]) => indices.length >= 2)
+                .map(([, indices]) => indices.slice(0, 2));
+            // Shuffle and assign
+            const shuffled = pairs.sort(() => Math.random() - 0.5);
+            twoPairGroups.pair1 = shuffled[0] || [];
+            twoPairGroups.pair2 = shuffled[1] || [];
+            // Solo cards (not in any pair)
+            const pairIndices = new Set([...twoPairGroups.pair1, ...twoPairGroups.pair2]);
+            twoPairGroups.solo = selectedIndices.filter(i => !pairIndices.has(i));
+            store.setTwoPairGroups(twoPairGroups);
+        }
+
         if (isOnePairDance) {
-            // Random order for special motion
             const order = [...selectedIndices].sort(() => Math.random() - 0.5);
             store.setAttackOrderIndices(order);
             store.setSpecialAttackMode('ONE_PAIR_DANCE');
+            store.setGamePhase('GATHERING_SPECIAL');
+        } else if (isTwoPairTaeguek) {
+            store.setAttackOrderIndices(selectedIndices);
+            store.setSpecialAttackMode('TWO_PAIR_TAEGUEK');
             store.setGamePhase('GATHERING_SPECIAL');
         } else {
             store.setSpecialAttackMode('NONE');
@@ -599,11 +627,11 @@ export const useGameLoop = () => {
         }
         scaledTimeout(() => AudioManager.playSFX('/assets/audio/player/shuffling.mp3'), 100);
         const specialDelayMs = 120;
-        if (!isOnePairDance) {
+        if (!isOnePairDance && !isTwoPairTaeguek) {
             const gatheringDurationRaw = (selectedCards.length * 100) + 500;
             await wait(gatheringDurationRaw);
 
-            // --- PHASE 2: CHARGING (Y-axis 180째 spin) ---
+            // --- PHASE 2: CHARGING (Y-axis 180° spin) ---
             store.setGamePhase('CHARGING');
             await wait(500);
 
@@ -617,6 +645,33 @@ export const useGameLoop = () => {
             await wait(100);
             setBotAnimState('HIT');
             triggerHitFx(handType, damage);
+        } else if (isTwoPairTaeguek) {
+            // === TWO PAIR TAEGUEK: 6-Phase Animation Sequence ===
+
+            // Phase 1: Gathering — cards fly to upper/lower gathering points (~0.6s)
+            await wait(600);
+
+            // Phase 2: Taeguek Orbit — S-curve yin-yang motion (~1.0s)
+            // CSS handles the animation; JS just waits
+            await wait(1000);
+
+            // Phase 3: Convergence — both orbs rush to center (~0.4s)
+            AudioManager.playSFX('/assets/audio/player/whipping.mp3');
+            await wait(400);
+
+            // Phase 4: Spark Impact — radial spark at boss center
+            setBotAnimState('HIT');
+            setFxClass(`hit-medium-taeguek${Date.now()}`);
+            AudioManager.playSFX('/assets/audio/player/whipping.mp3');
+            await wait(300);
+
+            // Phase 5: Big Bang Explosion — massive VFX + damage
+            setFxClass(`hit-critical-taeguek${Date.now()}`);
+            triggerScreenEffect('shake');
+            await wait(800);
+
+            // Phase 6: Fade-out
+            await wait(400);
         } else {
             // One Pair Dance: Overlapping flights, progressive impacts
             const cardCount = selectedCards.length;
