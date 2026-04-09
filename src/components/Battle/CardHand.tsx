@@ -560,11 +560,6 @@ export const CardHand: React.FC<CardHandProps> = ({
     const gX = bossCenterX - canvasCenterX;
     const gY = bossCenterY - canvasCenterY;
 
-    // Timing
-    const gatherDur = 0.6 / gameSpeed;
-    const orbitDur = 1.0 / gameSpeed;
-    const convergeDur = 0.4 / gameSpeed;
-    
     // Group 1: Gather top, sweep right/down into red globe
     const p1GatherX = gX;
     const p1GatherY = gY - 120;
@@ -577,6 +572,8 @@ export const CardHand: React.FC<CardHandProps> = ({
     const p2BlueGlobeX = gX - 180;
     const p2BlueGlobeY = gY;
 
+    // Mobile-optimized: Reduced rotation values (max ~360deg/axis), removed translateZ,
+    // fewer keyframe stops to minimize GPU compositing overhead
     const generateGroupAnim = (indices: number[], gatherX: number, gatherY: number, endGlobeX: number, endGlobeY: number, isPair1: boolean) => {
       return indices.map((idx, i) => {
         const startX = (idx - 3.5) * 85; 
@@ -588,19 +585,19 @@ export const CardHand: React.FC<CardHandProps> = ({
 
         return `
           @keyframes tp-taeguek-gather-${idx} {
-            0% { transform: translate(calc(-50% + ${startX}px), calc(-50% + ${startY}px)) translateZ(0px) scale(1.0); }
-            100% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) translateZ(-50px) rotateX(${isPair1 ? 180 : -180}deg) rotateY(180deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
+            0% { transform: translate(calc(-50% + ${startX}px), calc(-50% + ${startY}px)) scale(1.0); will-change: transform; }
+            100% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) rotateX(${isPair1 ? 90 : -90}deg) rotateY(90deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
           }
           @keyframes tp-taeguek-orbit-${idx} {
-            0% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) translateZ(-50px) rotateX(${isPair1 ? 180 : -180}deg) rotateY(180deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
-            25% { transform: translate(calc(-50% + ${ctrl1X}px), calc(-50% + ${ctrl1Y}px)) translateZ(-20px) rotateX(${isPair1 ? 360 : 0}deg) rotateY(360deg) rotateZ(180deg) scale(0.4); }
-            75% { transform: translate(calc(-50% + ${ctrl2X}px), calc(-50% + ${ctrl2Y}px)) translateZ(20px) rotateX(${isPair1 ? 720 : 360}deg) rotateY(720deg) rotateZ(540deg) scale(0.3); }
-            100% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) translateZ(50px) rotateX(${isPair1 ? 1080 : 720}deg) rotateY(1080deg) rotateZ(720deg) scale(0.25); }
+            0% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) rotateX(${isPair1 ? 90 : -90}deg) rotateY(90deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
+            25% { transform: translate(calc(-50% + ${ctrl1X}px), calc(-50% + ${ctrl1Y}px)) rotateX(${isPair1 ? 180 : 0}deg) rotateY(180deg) rotateZ(120deg) scale(0.4); }
+            75% { transform: translate(calc(-50% + ${ctrl2X}px), calc(-50% + ${ctrl2Y}px)) rotateX(${isPair1 ? 270 : 90}deg) rotateY(270deg) rotateZ(240deg) scale(0.3); }
+            100% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) rotateX(${isPair1 ? 360 : 180}deg) rotateY(360deg) rotateZ(360deg) scale(0.25); }
           }
           @keyframes tp-taeguek-converge-${idx} {
-            0% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) translateZ(50px) rotateX(${isPair1 ? 1080 : 720}deg) rotateY(1080deg) rotateZ(720deg) scale(0.25); }
-            95% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) translateZ(150px) rotateX(1800deg) rotateY(1800deg) rotateZ(1440deg) scale(0.1); }
-            100% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) translateZ(200px) scale(0); opacity: 0; }
+            0% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) rotateX(${isPair1 ? 360 : 180}deg) rotateY(360deg) rotateZ(360deg) scale(0.25); }
+            95% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) rotateX(${isPair1 ? 540 : 360}deg) rotateY(540deg) rotateZ(540deg) scale(0.1); }
+            100% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) scale(0); opacity: 0; }
           }
         `;
       }).join('\n');
@@ -609,13 +606,15 @@ export const CardHand: React.FC<CardHandProps> = ({
     const p1Anim = generateGroupAnim(twoPairGroups.pair1, p1GatherX, p1GatherY, p1RedGlobeX, p1RedGlobeY, true);
     const p2Anim = generateGroupAnim(twoPairGroups.pair2, p2GatherX, p2GatherY, p2BlueGlobeX, p2BlueGlobeY, false);
 
+    // Mobile-optimized burn: removed clip-path (expensive per-frame compositing),
+    // simplified filter chain, rely on opacity + sepia for visual effect
     const soloAnim = twoPairGroups.solo.map(idx => {
       return `
         @keyframes tp-taeguek-burn-${idx} {
-          0% { transform: scale(1.0); filter: brightness(1) sepia(0) drop-shadow(0 0 0px #ff0000); opacity: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
-          25% { filter: brightness(0.6) sepia(1) hue-rotate(-30deg) saturate(4) drop-shadow(0 0 30px #ff3b00); opacity: 1; transform: scale(0.95); clip-path: polygon(0 5%, 95% 0, 100% 95%, 5% 100%); }
-          65% { filter: brightness(0.2) sepia(1) hue-rotate(-50deg) saturate(5) drop-shadow(0 0 40px #ff0000); opacity: 1; transform: scale(0.9) rotateZ(4deg); clip-path: polygon(10% 10%, 90% 5%, 85% 90%, 5% 85%); }
-          100% { transform: scale(0.8) rotateZ(-2deg); filter: brightness(0) sepia(1) hue-rotate(-50deg) saturate(0); opacity: 0; clip-path: polygon(40% 40%, 60% 45%, 55% 60%, 45% 55%); }
+          0% { transform: scale(1.0); filter: brightness(1) sepia(0); opacity: 1; }
+          30% { filter: brightness(0.5) sepia(1) hue-rotate(-30deg) saturate(3); opacity: 0.9; transform: scale(0.95); }
+          70% { filter: brightness(0.2) sepia(1) hue-rotate(-50deg) saturate(4); opacity: 0.5; transform: scale(0.88) rotateZ(3deg); }
+          100% { transform: scale(0.75) rotateZ(-2deg); filter: brightness(0) saturate(0); opacity: 0; }
         }
       `;
     }).join('\n');
@@ -777,16 +776,14 @@ export const CardHand: React.FC<CardHandProps> = ({
               const orbitDur = 1.0 / gameSpeed;
               const convergeDur = 0.4 / gameSpeed;
               
-              const isPair1 = twoPairGroups.pair1.includes(idx);
-              const colorGlow = isPair1 
-                ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255, 30, 30, 1)) drop-shadow(0 0 40px rgba(255, 10, 10, 0.9)) drop-shadow(0 0 60px rgba(255, 0, 0, 0.8))'
-                : 'brightness(1.5) drop-shadow(0 0 20px rgba(30, 100, 255, 1)) drop-shadow(0 0 40px rgba(10, 80, 255, 0.9)) drop-shadow(0 0 60px rgba(0, 50, 255, 0.8))';
-              
+              // Mobile-optimized: replaced expensive multi-layer drop-shadow filter
+              // with a single brightness boost. Glow effect handled via box-shadow CSS class.
               portalStyle = {
                 ...baseStyle,
                 bottom: 'auto',
+                willChange: 'transform, opacity',
                 animation: `tp-taeguek-gather-${idx} ${gatherDur.toFixed(3)}s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, tp-taeguek-orbit-${idx} ${orbitDur.toFixed(3)}s cubic-bezier(0.4, 0, 0.2, 1) ${gatherDur.toFixed(3)}s forwards, tp-taeguek-converge-${idx} ${convergeDur.toFixed(3)}s cubic-bezier(0.8, 0, 0.2, 1) ${(gatherDur + orbitDur).toFixed(3)}s forwards`,
-                filter: colorGlow,
+                filter: 'brightness(1.4)',
               };
             } else if (gamePhase === 'CHARGING') {
               portalStyle = {
@@ -841,8 +838,11 @@ export const CardHand: React.FC<CardHandProps> = ({
             const portalRoot = document.getElementById('battle-portal-root');
             if (portalRoot) {
               
-              const renderPortalCard = (styleOverride: React.CSSProperties, keySuffix: string) => (
-                <div key={`portal-${idx}-${keySuffix}`} style={{...portalStyle, ...styleOverride}} className={gamePhase === 'GATHERING' ? 'card-leaf-flutter' : ''}>
+              const renderPortalCard = (styleOverride: React.CSSProperties & { className?: string }, keySuffix: string) => {
+                const extraClass = styleOverride.className || '';
+                const { className: _c, ...styleOnly } = styleOverride;
+                return (
+                <div key={`portal-${idx}-${keySuffix}`} style={{...portalStyle, ...styleOnly}} className={`${gamePhase === 'GATHERING' ? 'card-leaf-flutter' : ''} ${extraClass}`.trim()}>
                   <div className={`portal-spin ${gamePhase === 'CHARGING' ? 'active' : ''}`}>
                     <div className="card-3d-flipbox">
                       {/* Front face ??actual card */}
@@ -860,7 +860,7 @@ export const CardHand: React.FC<CardHandProps> = ({
                     </div>
                   </div>
                 </div>
-              );
+              )};
 
               // 1. Ghost Trail 2 (delayed more) - lowest opacity
               const ghost2Style = gamePhase === 'GATHERING' ? { 
@@ -878,35 +878,23 @@ export const CardHand: React.FC<CardHandProps> = ({
                  zIndex: 3900 + selectedIdxInQueue
               } : { display: 'none' };
 
-              // Taeguek Orbit Ghosts
+              // Taeguek Orbit Ghosts — Mobile-optimized: reduced from 3 ghosts to 1
+              // to cut animated DOM elements from 16 to 8 for 4 pair cards
               const isTaeguekOrb = gamePhase === 'GATHERING_SPECIAL' && specialAttackMode === 'TWO_PAIR_TAEGUEK' && !twoPairGroups.solo.includes(idx);
               const tGatherDur = 0.6 / gameSpeed;
               const tOrbitDur = 1.0 / gameSpeed;
               const taeguekDelay = (offset: number) => `${offset}s, ${tGatherDur + offset}s, ${tGatherDur + tOrbitDur + offset}s`;
               
               const tGhost1Style = isTaeguekOrb ? {
-                opacity: 0.6,
-                transform: 'scale(1.2)',
-                filter: (portalStyle.filter as string).replace('brightness(1.5)', 'brightness(1.0)'),
+                opacity: 0.35,
+                filter: 'brightness(0.8) blur(1px)',
                 zIndex: 3000,
-                animationDelay: taeguekDelay(0.04)
-              } : { display: 'none' };
-              
-              const tGhost2Style = isTaeguekOrb ? {
-                opacity: 0.3,
-                transform: 'scale(1.1)',
-                filter: (portalStyle.filter as string).replace('brightness(1.5)', 'brightness(0.8)'),
-                zIndex: 2900,
-                animationDelay: taeguekDelay(0.08)
+                animationDelay: taeguekDelay(0.06)
               } : { display: 'none' };
 
-              const tGhost3Style = isTaeguekOrb ? {
-                opacity: 0.1,
-                transform: 'scale(0.9)',
-                filter: (portalStyle.filter as string).replace('brightness(1.5)', 'brightness(0.5)'),
-                zIndex: 2800,
-                animationDelay: taeguekDelay(0.12)
-              } : { display: 'none' };
+              // Determine glow class for taeguek cards (box-shadow instead of drop-shadow filter)
+              const isPair1Card = isTaeguekOrb && twoPairGroups.pair1.includes(idx);
+              const taeguekGlowClass = isTaeguekOrb ? (isPair1Card ? 'taeguek-glow-red' : 'taeguek-glow-blue') : '';
 
               return (
                 <React.Fragment key={`slot-${idx}`}>
@@ -915,10 +903,8 @@ export const CardHand: React.FC<CardHandProps> = ({
                     <>
                       {gamePhase === 'GATHERING' && renderPortalCard(ghost2Style, 'g2')}
                       {gamePhase === 'GATHERING' && renderPortalCard(ghost1Style, 'g1')}
-                      {isTaeguekOrb && renderPortalCard(tGhost3Style, 'tg3')}
-                      {isTaeguekOrb && renderPortalCard(tGhost2Style, 'tg2')}
                       {isTaeguekOrb && renderPortalCard(tGhost1Style, 'tg1')}
-                      {renderPortalCard({}, 'main')}
+                      {renderPortalCard({ className: taeguekGlowClass }, 'main')}
                     </>,
                     portalRoot
                   )}

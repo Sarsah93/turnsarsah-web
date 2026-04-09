@@ -140,7 +140,25 @@
   transform-style: preserve-3d;
 }
 
-/* (Legacy .gathering/.charging/.thrusting/.scattering removed – now handled via inline portal styles) */
+/* ── Taeguek Glow: box-shadow based (GPU-composited, mobile-friendly) ── */
+/* Replaces expensive drop-shadow() filter chains that cause per-frame rasterization */
+.taeguek-glow-red {
+  border-radius: 8px;
+  box-shadow:
+    0 0 20px 8px rgba(255, 30, 30, 0.9),
+    0 0 40px 16px rgba(255, 10, 10, 0.6),
+    0 0 60px 24px rgba(255, 0, 0, 0.3);
+}
+
+.taeguek-glow-blue {
+  border-radius: 8px;
+  box-shadow:
+    0 0 20px 8px rgba(30, 100, 255, 0.9),
+    0 0 40px 16px rgba(10, 80, 255, 0.6),
+    0 0 60px 24px rgba(0, 50, 255, 0.3);
+}
+
+/* (Legacy .gathering/.charging/.thrusting/.scattering removed - now handled via inline portal styles) */
 
 /* Fly-from-deck Animation with Dynamic Offsets */
 @keyframes fly-from-deck {
