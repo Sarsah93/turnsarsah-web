@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end; /* 하단 기준 */
   font-family: 'Bebas Neue', sans-serif;
   animation: loadingFadeIn 0.35s ease-in-out;
 }
@@ -16,10 +16,11 @@
 .loading-content-wrap {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  transform: translateY(clamp(80px, 12vh, 180px));
+  align-items: stretch;
+  width: clamp(480px, 62%, 800px);
+  max-width: 92%;
+  padding-bottom: clamp(40px, 7vh, 100px);
+  gap: 0;
 }
 
 @keyframes loadingFadeIn {
@@ -27,74 +28,118 @@
   to   { opacity: 1; }
 }
 
-/* 로고 */
-.loading-logo {
-  width: 380px;
-  max-width: 80%;
-  margin-bottom: 44px;
-  filter: drop-shadow(0 0 18px rgba(241, 196, 15, 0.35));
-  animation: logoPulse 3s ease-in-out infinite;
+/* ──────────────────────────────
+   로딩 바 영역
+   ────────────────────────────── */
+
+.loading-bar-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 10px;
 }
 
-@keyframes logoPulse {
-  0%, 100% { filter: drop-shadow(0 0 18px rgba(241, 196, 15, 0.35)); }
-  50%       { filter: drop-shadow(0 0 30px rgba(241, 196, 15, 0.65)); }
+/* 상단 퍼센트 + 라벨 행 */
+.loading-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
 }
 
-/* Phase 텍스트 */
 .loading-phase-label {
-  color: rgba(241, 196, 15, 0.55);
-  font-size: 1.4rem;
-  letter-spacing: 5px;
-  margin-bottom: 18px;
+  color: rgba(241, 196, 15, 0.7);
+  font-size: 0.95rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
 }
 
-/* 프로그레스 바 트랙 */
-.loading-bar-track {
-  width: 520px;
-  max-width: 85%;
-  height: 10px;
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid rgba(241, 196, 15, 0.25);
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
-}
-
-/* 프로그레스 바 채움 */
-.loading-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #e67e22 0%, #f1c40f 60%, #fffde1 100%);
-  border-radius: 6px;
-  transition: width 0.3s ease-out;
-  box-shadow: 0 0 12px rgba(241, 196, 15, 0.6), 0 0 4px #fff;
-}
-
-/* 퍼센트 텍스트 */
 .loading-percent {
   color: #f1c40f;
-  font-size: 2.6rem;
-  margin-top: 14px;
-  letter-spacing: 3px;
-  text-shadow: 0 0 12px rgba(241, 196, 15, 0.5);
+  font-size: 1.05rem;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
 }
 
-/* 팁 문구 */
+/* 바 트랙 */
+.loading-bar-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(241, 196, 15, 0.18);
+  overflow: visible; /* 글로우가 넘치도록 */
+}
+
+/* 트랙 내부 채움 */
+.loading-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg,
+    #b8650a 0%,
+    #e0920f 25%,
+    #f1c40f 70%,
+    #fff5a8 100%
+  );
+  transition: width 0.35s ease-out;
+  /* 밝은 글로우 */
+  box-shadow:
+    0 0 6px 1px rgba(241, 196, 15, 0.75),
+    0 0 16px 2px rgba(241, 196, 15, 0.35),
+    0 0 2px 0px #fff inset;
+}
+
+/* 바 위를 흐르는 쉬머(shimmer) 효과 */
+.loading-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  animation: barShimmer 2s ease-in-out infinite;
+}
+
+@keyframes barShimmer {
+  0%   { left: -60%; }
+  100% { left: 120%; }
+}
+
+/* ──────────────────────────────
+   팁 박스
+   ────────────────────────────── */
+
 .loading-tip {
-  margin-top: 40px;
-  max-width: 600px;
-  width: 85%;
-  text-align: center;
-  color: #c8cfe0;
-  font-size: 1.35rem;
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  color: #d8dce8;
+  font-size: 1.05rem;
   font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
   font-weight: 400;
-  line-height: 1.65;
-  padding: 18px 24px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  line-height: 1.6;
+  padding: 13px 18px;
+  background: rgba(0, 0, 0, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.02em;
   transition: opacity 0.4s ease;
+}
+
+.loading-tip::before {
+  content: '* Tip  ';
+  color: #f1c40f;
+  font-weight: 700;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 3px;
+  font-size: 1.1rem;
+  margin-right: 4px;
 }
 
 .tip-visible {

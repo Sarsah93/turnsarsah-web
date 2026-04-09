@@ -43,24 +43,30 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase })
   return (
     <div className="loading-screen">
       <div className="loading-content-wrap">
-        <div className="loading-phase-label">
-          {phase === 'INITIAL' ? 'LOADING...' : 'PREPARING BATTLE...'}
+
+        {/* 바 영역 */}
+        <div className="loading-bar-wrapper">
+          <div className="loading-bar-header">
+            <span className="loading-phase-label">
+              {phase === 'INITIAL' ? 'LOADING...' : 'PREPARING BATTLE...'}
+            </span>
+            <span className="loading-percent">({percent}%/100%)</span>
+          </div>
+          <div className="loading-bar-track">
+            <div
+              className="loading-bar-fill"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
         </div>
 
-        <div className="loading-bar-track">
-          <div
-            className="loading-bar-fill"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-
-        <div className="loading-percent">{percent}%</div>
-
+        {/* 팁 */}
         {phase === 'GAME_ENTRY' && currentTip && (
           <div className={`loading-tip ${tipFading ? 'tip-fading' : 'tip-visible'}`}>
             {currentTip}
           </div>
         )}
+
       </div>
     </div>
   );
