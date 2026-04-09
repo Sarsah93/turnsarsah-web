@@ -12,9 +12,24 @@ interface LoadingScreenProps {
 
 const TIP_ROTATE_INTERVAL = 6500; // 6.5s
 
+const LOADING_BG_IMAGES = [
+  '/assets/backgrounds/loading/loading_cave.png',
+  '/assets/backgrounds/loading/loading_deep forest.png',
+  '/assets/backgrounds/loading/loading_desert.png',
+  '/assets/backgrounds/loading/loading_meadow.png',
+  '/assets/backgrounds/loading/loading_swamp.png',
+];
+
+function pickRandomBg(): string {
+  return LOADING_BG_IMAGES[Math.floor(Math.random() * LOADING_BG_IMAGES.length)];
+}
+
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase }) => {
   const percent = Math.floor(progress * 100);
   const language = useGameStore((s) => s.language);
+
+  // 로딩 화면이 마운트될 때 배경을 한 번만 고정
+  const [bgImage] = useState<string>(() => pickRandomBg());
 
   const [currentTip, setCurrentTip] = useState<string>(() =>
     phase === 'GAME_ENTRY' ? getRandomTip(language) : ''
@@ -41,7 +56,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase })
   }, [phase, language]);
 
   return (
-    <div className="loading-screen">
+    <div
+      className="loading-screen"
+      style={{ backgroundImage: `url("${bgImage}")` }}
+    >
+      {/* 배경 위 어두운 오버레이 */}
+      <div className="loading-bg-overlay" />
+
       <div className="loading-content-wrap">
 
         {/* 바 영역 */}

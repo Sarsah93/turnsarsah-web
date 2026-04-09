@@ -4,16 +4,36 @@
   position: absolute;
   inset: 0;
   z-index: 999998;
-  background: linear-gradient(180deg, #07070f 0%, #0f0f22 50%, #130d1e 100%);
+  /* 인라인 style로 backgroundImage가 설정됨 */
+  background-color: #07070f;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end; /* 하단 기준 */
   font-family: 'Bebas Neue', sans-serif;
-  animation: loadingFadeIn 0.35s ease-in-out;
+  animation: loadingFadeIn 0.5s ease-in-out;
+}
+
+/* 배경 이미지 위 어두운 오버레이 */
+.loading-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.25) 60%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .loading-content-wrap {
+  position: relative;
+  z-index: 1; /* 오버레이 위에 표시 */
   display: flex;
   flex-direction: column;
   align-items: stretch;
