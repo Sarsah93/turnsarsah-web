@@ -560,23 +560,26 @@ export const CardHand: React.FC<CardHandProps> = ({
     const gX = bossCenterX - canvasCenterX;
     const gY = bossCenterY - canvasCenterY;
 
-    // Group 1: Gather top, sweep right/down into red globe
+    // Randomly flip top/bottom position each attack (deterministic from card indices → feels random)
+    const isFlipped = twoPairGroups.pair1[0] % 2 === 1;
+
+    // Group 1: gather top or bottom depending on flip
     const p1GatherX = gX;
-    const p1GatherY = gY - 120;
-    const p1RedGlobeX = gX + 180;
-    const p1RedGlobeY = gY;
-    
-    // Group 2: Gather bottom, sweep left/up into blue globe
+    const p1GatherY = isFlipped ? gY + 80 : gY - 120;
+    const p1EndGlobeX = isFlipped ? gX - 180 : gX + 180;
+    const p1EndGlobeY = gY;
+
+    // Group 2: gather bottom or top (opposite of group 1)
     const p2GatherX = gX;
-    const p2GatherY = gY + 80;
-    const p2BlueGlobeX = gX - 180;
-    const p2BlueGlobeY = gY;
+    const p2GatherY = isFlipped ? gY - 120 : gY + 80;
+    const p2EndGlobeX = isFlipped ? gX + 180 : gX - 180;
+    const p2EndGlobeY = gY;
 
     // Mobile-optimized: Reduced rotation values (max ~360deg/axis), removed translateZ,
     // fewer keyframe stops to minimize GPU compositing overhead
     const generateGroupAnim = (indices: number[], gatherX: number, gatherY: number, endGlobeX: number, endGlobeY: number, isPair1: boolean) => {
       return indices.map((idx, i) => {
-        const startX = (idx - 3.5) * 85; 
+        const startX = (idx - 3.5) * 85;
         const startY = 320;
         const ctrl1X = gatherX + (isPair1 ? 150 : -150);
         const ctrl1Y = gatherY;
@@ -585,41 +588,53 @@ export const CardHand: React.FC<CardHandProps> = ({
 
         return `
           @keyframes tp-taeguek-gather-${idx} {
-            0% { transform: translate(calc(-50% + ${startX}px), calc(-50% + ${startY}px)) scale(1.0); will-change: transform; }
+            0%   { transform: translate(calc(-50% + ${startX}px), calc(-50% + ${startY}px)) scale(1.0); will-change: transform; }
+            70%  { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY + (isPair1 ? -20 : 20)}px)) rotateX(${isPair1 ? 60 : -60}deg) rotateY(60deg) scale(0.7); }
             100% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) rotateX(${isPair1 ? 90 : -90}deg) rotateY(90deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
           }
           @keyframes tp-taeguek-orbit-${idx} {
-            0% { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) rotateX(${isPair1 ? 90 : -90}deg) rotateY(90deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
-            25% { transform: translate(calc(-50% + ${ctrl1X}px), calc(-50% + ${ctrl1Y}px)) rotateX(${isPair1 ? 180 : 0}deg) rotateY(180deg) rotateZ(120deg) scale(0.4); }
-            75% { transform: translate(calc(-50% + ${ctrl2X}px), calc(-50% + ${ctrl2Y}px)) rotateX(${isPair1 ? 270 : 90}deg) rotateY(270deg) rotateZ(240deg) scale(0.3); }
+            0%   { transform: translate(calc(-50% + ${gatherX}px), calc(-50% + ${gatherY}px)) rotateX(${isPair1 ? 90 : -90}deg) rotateY(90deg) rotateZ(${i === 0 ? 45 : -45}deg) scale(0.5); }
+            25%  { transform: translate(calc(-50% + ${ctrl1X}px), calc(-50% + ${ctrl1Y}px)) rotateX(${isPair1 ? 180 : 0}deg) rotateY(180deg) rotateZ(120deg) scale(0.4); }
+            75%  { transform: translate(calc(-50% + ${ctrl2X}px), calc(-50% + ${ctrl2Y}px)) rotateX(${isPair1 ? 270 : 90}deg) rotateY(270deg) rotateZ(240deg) scale(0.3); }
             100% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) rotateX(${isPair1 ? 360 : 180}deg) rotateY(360deg) rotateZ(360deg) scale(0.25); }
           }
           @keyframes tp-taeguek-converge-${idx} {
-            0% { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) rotateX(${isPair1 ? 360 : 180}deg) rotateY(360deg) rotateZ(360deg) scale(0.25); }
-            95% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) rotateX(${isPair1 ? 540 : 360}deg) rotateY(540deg) rotateZ(540deg) scale(0.1); }
+            0%   { transform: translate(calc(-50% + ${endGlobeX}px), calc(-50% + ${endGlobeY}px)) rotateX(${isPair1 ? 360 : 180}deg) rotateY(360deg) rotateZ(360deg) scale(0.25); }
+            95%  { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) rotateX(${isPair1 ? 540 : 360}deg) rotateY(540deg) rotateZ(540deg) scale(0.1); }
             100% { transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY}px)) scale(0); opacity: 0; }
           }
         `;
       }).join('\n');
     };
 
-    const p1Anim = generateGroupAnim(twoPairGroups.pair1, p1GatherX, p1GatherY, p1RedGlobeX, p1RedGlobeY, true);
-    const p2Anim = generateGroupAnim(twoPairGroups.pair2, p2GatherX, p2GatherY, p2BlueGlobeX, p2BlueGlobeY, false);
+    const p1Anim = generateGroupAnim(twoPairGroups.pair1, p1GatherX, p1GatherY, p1EndGlobeX, p1EndGlobeY, true);
+    const p2Anim = generateGroupAnim(twoPairGroups.pair2, p2GatherX, p2GatherY, p2EndGlobeX, p2EndGlobeY, false);
 
-    // Mobile-optimized burn: removed clip-path (expensive per-frame compositing),
-    // simplified filter chain, rely on opacity + sepia for visual effect
+    // Yin-yang ink overlay: taeguek2.png rotates above boss during orbit, fades before explosion
+    // Sized and timed to cover the entire orbit arc then naturally dissolves into the convergence flash
+    const yinYangKeyframe = `
+      @keyframes tp-taeguek-yin-yang {
+        0%   { opacity: 0;    transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY - 20}px)) scale(0.15) rotate(0deg); }
+        12%  { opacity: 0.52; transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY - 20}px)) scale(0.78) rotate(48deg); }
+        55%  { opacity: 0.68; transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY - 20}px)) scale(1.05) rotate(240deg); }
+        80%  { opacity: 0.45; transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY - 20}px)) scale(1.10) rotate(320deg); }
+        100% { opacity: 0;    transform: translate(calc(-50% + ${gX}px), calc(-50% + ${gY - 20}px)) scale(0.7)  rotate(360deg); }
+      }
+    `;
+
+    // Mobile-optimized burn: removed clip-path (expensive per-frame compositing)
     const soloAnim = twoPairGroups.solo.map(idx => {
       return `
         @keyframes tp-taeguek-burn-${idx} {
-          0% { transform: scale(1.0); filter: brightness(1) sepia(0); opacity: 1; }
-          30% { filter: brightness(0.5) sepia(1) hue-rotate(-30deg) saturate(3); opacity: 0.9; transform: scale(0.95); }
-          70% { filter: brightness(0.2) sepia(1) hue-rotate(-50deg) saturate(4); opacity: 0.5; transform: scale(0.88) rotateZ(3deg); }
+          0%   { transform: scale(1.0); filter: brightness(1) sepia(0); opacity: 1; }
+          30%  { filter: brightness(0.5) sepia(1) hue-rotate(-30deg) saturate(3); opacity: 0.9; transform: scale(0.95); }
+          70%  { filter: brightness(0.2) sepia(1) hue-rotate(-50deg) saturate(4); opacity: 0.5; transform: scale(0.88) rotateZ(3deg); }
           100% { transform: scale(0.75) rotateZ(-2deg); filter: brightness(0) saturate(0); opacity: 0; }
         }
       `;
     }).join('\n');
 
-    return p1Anim + '\n' + p2Anim + '\n' + soloAnim;
+    return p1Anim + '\n' + p2Anim + '\n' + yinYangKeyframe + '\n' + soloAnim;
   }, [isTwoPairTaeguekGathering, gameSpeed, bossCenterX, bossCenterY, twoPairGroups]);
 
   return (
@@ -693,7 +708,10 @@ export const CardHand: React.FC<CardHandProps> = ({
           const isAttacking = ['GATHERING', 'GATHERING_SPECIAL', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);
           const isTaeguekSolo = specialAttackMode === 'TWO_PAIR_TAEGUEK' && twoPairGroups && twoPairGroups.solo.includes(idx);
           
-          const shouldRenderInPortal = isSelected && isAttacking && !isTaeguekSolo;
+          // Fix: TWO_PAIR_TAEGUEK cards vanish via their converge animation (scale→0, opacity→0)
+          // Excluding SCATTERED phase prevents a flicker of all cards clumped at canvas center
+          const shouldRenderInPortal = isSelected && isAttacking && !isTaeguekSolo &&
+            !(gamePhase === 'SCATTERED' && specialAttackMode === 'TWO_PAIR_TAEGUEK');
           const cardSeed = (Number(card?.id ?? idx)) % 7;
           const idleRotX = 12;
           const idleRotY = (idx - 3.5) * 1.2;
@@ -772,17 +790,16 @@ export const CardHand: React.FC<CardHandProps> = ({
                 filter: 'drop-shadow(0 0 6px rgba(255, 200, 60, 0.7)) drop-shadow(0 0 14px rgba(255, 140, 20, 0.4))',
               };
             } else if (gamePhase === 'GATHERING_SPECIAL' && specialAttackMode === 'TWO_PAIR_TAEGUEK') {
-              const gatherDur = 0.6 / gameSpeed;
+              // gatherDur bumped 0.6→1.0 so cards are clearly visible settling into position
+              const gatherDur = 1.0 / gameSpeed;
               const orbitDur = 1.0 / gameSpeed;
               const convergeDur = 0.4 / gameSpeed;
-              
-              // Mobile-optimized: replaced expensive multi-layer drop-shadow filter
-              // with a single brightness boost. Glow effect handled via box-shadow CSS class.
+
               portalStyle = {
                 ...baseStyle,
                 bottom: 'auto',
                 willChange: 'transform, opacity',
-                animation: `tp-taeguek-gather-${idx} ${gatherDur.toFixed(3)}s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, tp-taeguek-orbit-${idx} ${orbitDur.toFixed(3)}s cubic-bezier(0.4, 0, 0.2, 1) ${gatherDur.toFixed(3)}s forwards, tp-taeguek-converge-${idx} ${convergeDur.toFixed(3)}s cubic-bezier(0.8, 0, 0.2, 1) ${(gatherDur + orbitDur).toFixed(3)}s forwards`,
+                animation: `tp-taeguek-gather-${idx} ${gatherDur.toFixed(3)}s cubic-bezier(0.15, 0.85, 0.25, 1) forwards, tp-taeguek-orbit-${idx} ${orbitDur.toFixed(3)}s cubic-bezier(0.4, 0, 0.2, 1) ${gatherDur.toFixed(3)}s forwards, tp-taeguek-converge-${idx} ${convergeDur.toFixed(3)}s cubic-bezier(0.8, 0, 0.2, 1) ${(gatherDur + orbitDur).toFixed(3)}s forwards`,
                 filter: 'brightness(1.4)',
               };
             } else if (gamePhase === 'CHARGING') {
@@ -878,13 +895,13 @@ export const CardHand: React.FC<CardHandProps> = ({
                  zIndex: 3900 + selectedIdxInQueue
               } : { display: 'none' };
 
-              // Taeguek Orbit Ghosts — Mobile-optimized: reduced from 3 ghosts to 1
-              // to cut animated DOM elements from 16 to 8 for 4 pair cards
+              // Taeguek Orbit Ghosts — Mobile-optimized: 1 ghost per card
               const isTaeguekOrb = gamePhase === 'GATHERING_SPECIAL' && specialAttackMode === 'TWO_PAIR_TAEGUEK' && !twoPairGroups.solo.includes(idx);
-              const tGatherDur = 0.6 / gameSpeed;
-              const tOrbitDur = 1.0 / gameSpeed;
+              // Match gatherDur bump (0.6→1.0) so ghost delays are synchronized
+              const tGatherDur = 1.0 / gameSpeed;
+              const tOrbitDur  = 1.0 / gameSpeed;
               const taeguekDelay = (offset: number) => `${offset}s, ${tGatherDur + offset}s, ${tGatherDur + tOrbitDur + offset}s`;
-              
+
               const tGhost1Style = isTaeguekOrb ? {
                 opacity: 0.35,
                 filter: 'brightness(0.8) blur(1px)',
@@ -892,9 +909,25 @@ export const CardHand: React.FC<CardHandProps> = ({
                 animationDelay: taeguekDelay(0.06)
               } : { display: 'none' };
 
-              // Determine glow class for taeguek cards (box-shadow instead of drop-shadow filter)
+              // Glow class for taeguek cards (box-shadow instead of drop-shadow filter)
               const isPair1Card = isTaeguekOrb && twoPairGroups.pair1.includes(idx);
               const taeguekGlowClass = isTaeguekOrb ? (isPair1Card ? 'taeguek-glow-red' : 'taeguek-glow-blue') : '';
+
+              // Yin-yang ink overlay: taeguek2.png spinning image shown once (for first pair1 card)
+              // Appears at orbit start, fades naturally before the convergence explosion
+              const isFirstPair1Card = isTaeguekOrb && idx === twoPairGroups.pair1[0];
+              const yinYangStyle: React.CSSProperties = {
+                position: 'absolute',
+                width: '290px',
+                height: '290px',
+                left: '800px',   // canvasCenterX
+                top:  '580px',   // canvasCenterY  — keyframe handles boss offset via translate()
+                opacity: 0,
+                pointerEvents: 'none',
+                zIndex: 3300,
+                userSelect: 'none',
+                animation: `tp-taeguek-yin-yang ${tOrbitDur.toFixed(3)}s ease-in-out ${tGatherDur.toFixed(3)}s forwards`,
+              };
 
               return (
                 <React.Fragment key={`slot-${idx}`}>
@@ -905,6 +938,16 @@ export const CardHand: React.FC<CardHandProps> = ({
                       {gamePhase === 'GATHERING' && renderPortalCard(ghost1Style, 'g1')}
                       {isTaeguekOrb && renderPortalCard(tGhost1Style, 'tg1')}
                       {renderPortalCard({ className: taeguekGlowClass }, 'main')}
+                      {/* Ink overlay: one taeguek2.png per attack, spins above boss during orbit */}
+                      {isFirstPair1Card && (
+                        <img
+                          key="taeguek-yinyang-overlay"
+                          src="/assets/etc%20images/taeguek2.png"
+                          alt=""
+                          draggable={false}
+                          style={yinYangStyle}
+                        />
+                      )}
                     </>,
                     portalRoot
                   )}

@@ -648,8 +648,8 @@ export const useGameLoop = () => {
         } else if (isTwoPairTaeguek) {
             // === TWO PAIR TAEGUEK: 6-Phase Animation Sequence ===
 
-            // Phase 1: Gathering — cards fly to upper/lower gathering points (~0.6s)
-            await wait(600);
+            // Phase 1: Gathering — cards fly to upper/lower gathering points (~1.0s, bumped for visibility)
+            await wait(1000);
 
             // Phase 2: Taeguek Orbit — S-curve yin-yang motion (~1.0s)
             // CSS handles the animation; JS just waits
