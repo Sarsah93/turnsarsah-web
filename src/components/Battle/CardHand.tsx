@@ -708,10 +708,14 @@ export const CardHand: React.FC<CardHandProps> = ({
           const isAttacking = ['GATHERING', 'GATHERING_SPECIAL', 'CHARGING', 'THRUSTING', 'SCATTERED'].includes(gamePhase);
           const isTaeguekSolo = specialAttackMode === 'TWO_PAIR_TAEGUEK' && twoPairGroups && twoPairGroups.solo.includes(idx);
           
-          // Fix: TWO_PAIR_TAEGUEK cards vanish via their converge animation (scale→0, opacity→0)
-          // Excluding SCATTERED phase prevents a flicker of all cards clumped at canvas center
+          // Fix: Special attack cards complete their exit animation during GATHERING_SPECIAL.
+          // When gamePhase flips to SCATTERED the portalStyle resets to baseStyle (canvas center),
+          // causing a brief clump flash. Exclude both special modes from SCATTERED portal rendering.
           const shouldRenderInPortal = isSelected && isAttacking && !isTaeguekSolo &&
-            !(gamePhase === 'SCATTERED' && specialAttackMode === 'TWO_PAIR_TAEGUEK');
+            !(gamePhase === 'SCATTERED' && (
+              specialAttackMode === 'TWO_PAIR_TAEGUEK' ||
+              specialAttackMode === 'ONE_PAIR_DANCE'
+            ));
           const cardSeed = (Number(card?.id ?? idx)) % 7;
           const idleRotX = 12;
           const idleRotY = (idx - 3.5) * 1.2;
