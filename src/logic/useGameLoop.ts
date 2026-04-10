@@ -858,16 +858,23 @@ export const useGameLoop = () => {
         if (isOnePairDance) {
             // Sequential hit loop already consumed all animation time
             await wait(200);
+        } else if (isTwoPairTaeguek) {
+            // Taeguek converge animation ends at opacity:0 / scale:0,
+            // but we still need a brief pause so cards are fully invisible
+            await wait(200);
         }
         store.setGamePhase('SCATTERED');
         await wait(400);
         setBotAnimState('NONE');
         store.removePlayerCards(selectedIndices);
-        // Note: setSpecialAttackMode('NONE') is intentionally called AFTER removePlayerCards.
-        // Calling it before would briefly re-render the attacking cards in their default
-        // portal position before the null-slot update propagates, causing a visible flicker.
-        await wait(50);
+        // Note: setSpecialAttackMode('NONE') is intentionally called AFTER removePlayerCards
+        // AND after a microtask yield (wait(0)). This prevents a single intermediate render
+        // frame where the card portal exclusion lifts before the null-slot has propagated,
+        // which would cause a brief card re-flash at the canvas center position.
+        // This fix applies to both ONE_PAIR_DANCE and TWO_PAIR_TAEGUEK.
+        await wait(0);
         store.setSpecialAttackMode('NONE');
+        store.setTwoPairGroups({ pair1: [], pair2: [], solo: [] });
         store.setAttackOrderIndices([]);
 
         // Regenerating Logic
