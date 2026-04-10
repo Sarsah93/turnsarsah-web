@@ -863,6 +863,10 @@ export const useGameLoop = () => {
         await wait(400);
         setBotAnimState('NONE');
         store.removePlayerCards(selectedIndices);
+        // Note: setSpecialAttackMode('NONE') is intentionally called AFTER removePlayerCards.
+        // Calling it before would briefly re-render the attacking cards in their default
+        // portal position before the null-slot update propagates, causing a visible flicker.
+        await wait(50);
         store.setSpecialAttackMode('NONE');
         store.setAttackOrderIndices([]);
 

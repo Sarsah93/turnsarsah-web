@@ -37,7 +37,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: clamp(480px, 62%, 800px);
+  width: clamp(560px, 68%, 920px); /* 2.2: 글자 커진 만큼 가로 폭 확장 */
   max-width: 92%;
   padding-bottom: clamp(40px, 7vh, 100px);
   gap: 0;
@@ -68,14 +68,14 @@
 
 .loading-phase-label {
   color: rgba(241, 196, 15, 0.7);
-  font-size: 0.95rem;
+  font-size: 1.25rem;    /* 2.2: +4pt (0.95→1.25rem) */
   letter-spacing: 4px;
   text-transform: uppercase;
 }
 
 .loading-percent {
   color: #f1c40f;
-  font-size: 1.05rem;
+  font-size: 1.35rem;    /* 2.2: +4pt (1.05→1.35rem) */
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
 }
@@ -84,10 +84,14 @@
 .loading-bar-track {
   position: relative;
   width: 100%;
-  height: 6px;
+  height: 12px;          /* 2.1: 두께 2배 (6→12px) */
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(241, 196, 15, 0.18);
-  overflow: visible; /* 글로우가 넘치도록 */
+  overflow: hidden;      /* 2.3: shimmer가 바 밖으로 나가지 않도록 */
+  /* 글로우는 overflow:hidden이 fill의 shadow를 잘라내므로 track에 적용 */
+  box-shadow:
+    0 0 8px 2px rgba(241, 196, 15, 0.3),
+    0 0 18px 3px rgba(241, 196, 15, 0.15);
 }
 
 /* 트랙 내부 채움 */
@@ -103,11 +107,6 @@
     #fff5a8 100%
   );
   transition: width 0.35s ease-out;
-  /* 밝은 글로우 */
-  box-shadow:
-    0 0 6px 1px rgba(241, 196, 15, 0.75),
-    0 0 16px 2px rgba(241, 196, 15, 0.35),
-    0 0 2px 0px #fff inset;
 }
 
 /* 바 위를 흐르는 쉬머(shimmer) 효과 */
@@ -141,11 +140,11 @@
   box-sizing: border-box;
   text-align: left;
   color: #d8dce8;
-  font-size: 1.05rem;
+  font-size: 1.35rem;    /* 2.2: +4pt (1.05→1.35rem) */
   font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
   font-weight: 400;
   line-height: 1.6;
-  padding: 13px 18px;
+  padding: 14px 20px;
   background: rgba(0, 0, 0, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.1);
   letter-spacing: 0.02em;
