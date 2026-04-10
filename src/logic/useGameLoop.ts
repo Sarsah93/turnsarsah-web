@@ -855,27 +855,31 @@ export const useGameLoop = () => {
         }
 
         // --- PHASE 4: SCATTERED ---
-        if (isOnePairDance) {
-            // Sequential hit loop already consumed all animation time
-            await wait(200);
-        } else if (isTwoPairTaeguek) {
-            // Taeguek converge animation ends at opacity:0 / scale:0,
-            // but we still need a brief pause so cards are fully invisible
-            await wait(200);
+        // 특수 공격(ONE_PAIR_DANCE / TWO_PAIR_TAEGUEK)은 setGamePhase('SCATTERED')와
+        // removePlayerCards를 동시에 호출하여 슬롯 재등장 플래시를 원천 차단합니다.
+        // 이유: SCATTERED 페이즈로 전환되는 순간 shouldRenderInPortal이 false가 되어
+        // 포탈 렌더링이 즉시 중단되지만, removePlayerCards가 400ms 뒤에 호출되면
+        // 그 사이에 슬롯의 card 데이터가 남아있어 카드가 원래 위치에 재등장합니다.
+        // CSS 애니메이션이 이미 카드를 opacity:0 / scale:0으로 만들어 놨으므로
+        // 즉시 null 처리해도 시각적 차이가 없습니다.
+        if (isOnePairDance || isTwoPairTaeguek) {
+            // 특수 공격: setGamePhase('SCATTERED')와 동시에 카드를 null 처리
+            store.setGamePhase('SCATTERED');
+            store.removePlayerCards(selectedIndices);
+            await wait(0);
+            store.setSpecialAttackMode('NONE');
+            store.setTwoPairGroups({ pair1: [], pair2: [], solo: [] });
+            store.setAttackOrderIndices([]);
+            await wait(400);
+            setBotAnimState('NONE');
+        } else {
+            // 일반 공격: SCATTERED 포탈 scatter 애니메이션 후 카드 제거 (기존 방식 유지)
+            store.setGamePhase('SCATTERED');
+            await wait(400);
+            setBotAnimState('NONE');
+            store.removePlayerCards(selectedIndices);
+            await wait(0);
         }
-        store.setGamePhase('SCATTERED');
-        await wait(400);
-        setBotAnimState('NONE');
-        store.removePlayerCards(selectedIndices);
-        // Note: setSpecialAttackMode('NONE') is intentionally called AFTER removePlayerCards
-        // AND after a microtask yield (wait(0)). This prevents a single intermediate render
-        // frame where the card portal exclusion lifts before the null-slot has propagated,
-        // which would cause a brief card re-flash at the canvas center position.
-        // This fix applies to both ONE_PAIR_DANCE and TWO_PAIR_TAEGUEK.
-        await wait(0);
-        store.setSpecialAttackMode('NONE');
-        store.setTwoPairGroups({ pair1: [], pair2: [], solo: [] });
-        store.setAttackOrderIndices([]);
 
         // Regenerating Logic
         const stagesWithRegen = [6, 8, 10];
