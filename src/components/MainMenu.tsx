@@ -67,12 +67,19 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text={t.UI.TUTORIAL} onClick={() => {
                     triggerTransition(() => initTutorial());
                 }} width={menuButtonWidth} style={menuButtonStyle} />
-                <BlockButton text="DEBUG: ONE PAIR DANCE" onClick={handleDebugOnePairDance} width={menuButtonWidth} style={menuButtonStyle} />
-                <BlockButton text="DEBUG: TWO PAIR TAEGUEK" onClick={handleDebugTwoPairTaeguek} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.SETTINGS.TITLE} onClick={() => setActiveMenu('SETTINGS')} width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.QUIT} onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" width={menuButtonWidth} style={menuButtonStyle} />
+
+                {/* 디버그 버튼 — DEV 환경에서만 노출, 가로 정렬 */}
+                {import.meta.env.DEV && (
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center', marginTop: '4px' }}>
+                        <BlockButton text="DEBUG: ONE PAIR DANCE"   onClick={handleDebugOnePairDance}   width="auto" style={{ ...menuButtonStyle, fontSize: '0.85em', padding: '6px 14px', opacity: 0.75 }} />
+                        <BlockButton text="DEBUG: TWO PAIR TAEGUEK" onClick={handleDebugTwoPairTaeguek} width="auto" style={{ ...menuButtonStyle, fontSize: '0.85em', padding: '6px 14px', opacity: 0.75 }} />
+                    </div>
+                )}
             </div>
+
 
 
 

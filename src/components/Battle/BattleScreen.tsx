@@ -16,6 +16,7 @@ import { GuidePopup } from '../GuidePopup';
 import { ALTAR_SKILLS } from '../../constants/altarSystem';
 import { AltarSkillSlots } from './AltarSkillSlots';
 import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
+import { WorldMapPopup } from '../WorldMapPopup';
 
 import { BattleMenuOverlay, ActiveMenuType } from './BattleMenuOverlay';
 import { BattleField } from './BattleField';
@@ -36,6 +37,7 @@ export const BattleScreen: React.FC = () => {
     const t = (TRANSLATIONS as any)[language];
 
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
+    const [isMapOpen, setIsMapOpen] = useState(false);
     const [bossPos, setBossPos] = useState({ centerX: 800, centerY: 285, bottom: 510 });
     const [cardsPos, setCardsPos] = useState({ topCenterX: 800, topCenterY: 700 });
     const [lowHpClass, setLowHpClass] = useState(false);
@@ -259,6 +261,14 @@ export const BattleScreen: React.FC = () => {
             <GuidePopup />
             <ClearCongratulationsPopup />
 
+            {/* 월드맵 팝업 */}
+            {isMapOpen && (
+                <WorldMapPopup
+                    currentChapter={chapterNum}
+                    onClose={() => setIsMapOpen(false)}
+                />
+            )}
+
             {/* FX Overlays */}
             <BattleFxCanvas fxClass={fxClass} />
             <div className="fx-overlay">
@@ -416,6 +426,29 @@ export const BattleScreen: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* 맵 아이콘 버튼 (좌상단 HUD 우측) */}
+            {(() => {
+                const mapDisabled = gamePhase !== 'IDLE';
+                return (
+                    <button
+                        className="map-icon-btn"
+                        onClick={() => { if (!mapDisabled) setIsMapOpen(true); }}
+                        title={mapDisabled ? '' : '세계 지도 열기'}
+                        aria-label="세계 지도 열기"
+                        disabled={mapDisabled}
+                        style={{
+                            opacity: mapDisabled ? 0.45 : 1,
+                            cursor: mapDisabled ? 'not-allowed' : 'pointer',
+                            transform: mapDisabled ? 'scale(0.92)' : 'scale(1)',
+                            transition: 'opacity 0.2s ease, transform 0.2s ease',
+                        }}
+                    >
+                        <img src="/assets/worldmap/map_icon.png" alt="지도" />
+                    </button>
+                );
+            })()}
+
 
             {/* Interaction Overlays */}
             <Button
