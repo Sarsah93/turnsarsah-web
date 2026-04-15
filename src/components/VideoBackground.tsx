@@ -4,17 +4,17 @@ interface VideoBackgroundProps {
     source: string;
 }
 
-// 배경 비디오 소스 → 정적 폴백 이미지 매핑
-const FALLBACK_IMAGES: Record<string, string> = {
-    '/assets/backgrounds/video/wilderness_background.mp4':   '/assets/backgrounds/video/wilderness_background.mp4',
-    '/assets/backgrounds/video/desert_background.mp4':       '/assets/backgrounds/video/desert_background.mp4',
-    '/assets/backgrounds/video/deep forest.mp4':             '/assets/backgrounds/video/deep forest.mp4',
-    '/assets/backgrounds/video/cave_background.mp4':         '/assets/backgrounds/video/cave_background.mp4',
-    '/assets/backgrounds/video/swamp_background.mp4':        '/assets/backgrounds/video/swamp_background.mp4',
-    '/assets/backgrounds/video/meadow field_background.mp4': '/assets/backgrounds/video/meadow field_background.mp4',
+// 배경 비디오 소스 → 포스터 이미지 매핑 (영상 로드 전 즉시 표시)
+const POSTER_IMAGES: Record<string, string> = {
+    '/assets/backgrounds/video/wilderness_background.mp4':   '/assets/backgrounds/video/wilderness_poster.jpg',
+    '/assets/backgrounds/video/desert_background.mp4':       '/assets/backgrounds/video/desert_poster.jpg',
+    '/assets/backgrounds/video/deep forest.mp4':             '/assets/backgrounds/video/deep_forest_poster.jpg',
+    '/assets/backgrounds/video/cave_background.mp4':         '/assets/backgrounds/video/cave_poster.jpg',
+    '/assets/backgrounds/video/swamp_background.mp4':        '/assets/backgrounds/video/swamp_poster.jpg',
+    '/assets/backgrounds/video/meadow field_background.mp4': '/assets/backgrounds/video/meadow_field_poster.jpg',
 };
 
-// 폴백 그라디언트 색상 (비디오 + 정적 이미지 모두 실패 시)
+// 폴백 그라디언트 색상 — 비디오 로딩 전에도 즉시 표시
 const FALLBACK_GRADIENTS: Record<string, string> = {
     '/assets/backgrounds/video/wilderness_background.mp4':   'linear-gradient(180deg, #1a2f1a 0%, #2d4a1e 100%)',
     '/assets/backgrounds/video/desert_background.mp4':       'linear-gradient(180deg, #3d2b1a 0%, #6b4a1e 100%)',
@@ -31,6 +31,7 @@ export const VideoBackground: React.FC<VideoBackgroundProps> = ({ source }) => {
     const stalledTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const fallbackGradient = FALLBACK_GRADIENTS[source] ?? 'linear-gradient(180deg, #0a0a1a 0%, #1a1a2e 100%)';
+    const posterImage = POSTER_IMAGES[source];
 
     // 소스 변경 시 폴백 상태 초기화
     useEffect(() => {
@@ -83,18 +84,21 @@ export const VideoBackground: React.FC<VideoBackgroundProps> = ({ source }) => {
                 height: '100%',
                 overflow: 'hidden',
                 zIndex: 0,
-                background: showFallback ? fallbackGradient : '#000',
+                // 비디오 로딩 전·실패 시 모두 그라디언트 표시 (검정 화면 방지)
+                background: fallbackGradient,
                 transition: 'background 1.5s ease',
             }}
         >
-            {/* 비디오 (실패 시에도 DOM에 유지하되 숨김) */}
+            {/* 비디오: 준비 완료(videoReady) 전에는 투명, 완료 후 페이드인 */}
             <video
                 ref={videoRef}
                 src={source}
+                poster={posterImage}   /* 로드 전 즉시 첫 프레임 정지 이미지 표시 */
                 autoPlay
                 loop
                 muted
                 playsInline
+                preload="auto"
                 onError={handleVideoError}
                 onStalled={handleStalled}
                 onWaiting={handleStalled}
@@ -107,7 +111,7 @@ export const VideoBackground: React.FC<VideoBackgroundProps> = ({ source }) => {
                     height: '100%',
                     objectFit: 'cover',
                     transform: 'translate(-50%, -50%)',
-                    opacity: showFallback ? 0 : 1,
+                    opacity: showFallback ? 0 : 1,  /* poster 덕분에 처음부터 표시 가능 */
                     transition: 'opacity 0.8s ease',
                 }}
             />
