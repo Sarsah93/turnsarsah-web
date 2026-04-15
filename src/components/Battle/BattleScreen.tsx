@@ -427,8 +427,8 @@ export const BattleScreen: React.FC = () => {
                 </div>
             )}
 
-            {/* 맵 아이콘 버튼 (좌상단 HUD 우측) */}
-            {(() => {
+            {/* 맵 아이콘 버튼 (좌상단 HUD 우측) — 튜토리얼 중 숨김 */}
+            {!isTutorial && (() => {
                 const mapDisabled = gamePhase !== 'IDLE';
                 return (
                     <button

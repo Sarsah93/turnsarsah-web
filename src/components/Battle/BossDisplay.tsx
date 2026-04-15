@@ -1,11 +1,14 @@
+import React, { useRef } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { HPBar } from '../Common/HPBar';
 import { ConditionIcon } from '../Common/ConditionIcon';
 import { Difficulty, DIFFICULTY_CONFIGS } from '../../constants/gameConfig';
 import { TRANSLATIONS } from '../../constants/translations';
 import { CHAPTERS } from '../../constants/stages';
-import { getBossImage } from '../../utils/bossImageMapper';
+import { getBossImage, getBossAttackSprite } from '../../utils/bossImageMapper';
 import '../styles/BossWeakening.css';
+
+
 
 export const BossDisplay: React.FC = () => {
     const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep, language } = useGameStore();
@@ -15,7 +18,7 @@ export const BossDisplay: React.FC = () => {
     const chapterConfig = CHAPTERS[chapterNum];
     let maxStages = chapterConfig ? Object.keys(chapterConfig.stages).filter(s => parseInt(s) < 90 && parseInt(s) <= 10).length : 10;
     const isSpecialStage = stageNum > 10;
-    
+
     const specialText = language === 'KR' ? '스페셜 스테이지' : 'SPECIAL STAGE';
     const stageInfoText = isTutorial
         ? `TUTORIAL ${t.UI.STAGE_NUM}`
@@ -43,6 +46,25 @@ export const BossDisplay: React.FC = () => {
     else if (bossRatio <= 0.60) bossWeakClass = 'boss-weak-2';
 
     const bossImg = getBossImage(chapterNum, stageNum, isTutorial);
+    const attackSprite = getBossAttackSprite(chapterNum, stageNum);
+    const isAttacking = bot.animState === 'ATTACK' && attackSprite !== null;
+
+    // 연속 공격(triple attack) 시에도 스프라이트를 재시작하기 위한 key
+    const attackKeyRef = useRef(0);
+    const prevAnimState = useRef<string | undefined>(undefined);
+    if (bot.animState === 'ATTACK' && prevAnimState.current !== 'ATTACK') {
+        attackKeyRef.current += 1;
+    }
+    prevAnimState.current = bot.animState;
+
+    // 스테이지별 스프라이트 크기 보정 (이미지 자체 크기 차이가 있을 경우)
+    // 02_goblin skirmisher 스프라이트는 다른 보스보다 크게 생성되어 scale 조정
+    const spriteScaleOverride: React.CSSProperties =
+        chapterNum === '1' && stageNum === 2
+            ? { transform: 'scale(0.8)', transformOrigin: 'center center' }
+            : chapterNum === '1' && stageNum === 10
+            ? { transform: 'scale(1.2)', transformOrigin: 'center center' }
+            : {};
 
     const mask80 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNMTAsMTggaDYgdjQgaC02IFogTTg0LDY2IGg2IHY0IGgtNiBaIi8+PC9zdmc+")';
     const mask60 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTEwLDE4IGg2IHY0IGgtNiBaIE04NCw2NiBoNiB2NCBoLTYgWiIvPjwvc3ZnPg==")';
@@ -51,10 +73,10 @@ export const BossDisplay: React.FC = () => {
 
     const holeMask =
         bot.hp <= 0 ? 'none' :
-        bossRatio <= 0.20 ? mask20 :
-        bossRatio <= 0.40 ? mask40 :
-        bossRatio <= 0.60 ? mask60 :
-        bossRatio <= 0.80 ? mask80 : 'none';
+            bossRatio <= 0.20 ? mask20 :
+                bossRatio <= 0.40 ? mask40 :
+                    bossRatio <= 0.60 ? mask60 :
+                        bossRatio <= 0.80 ? mask80 : 'none';
 
     return (
         <div className="boss-display" style={{
@@ -97,7 +119,7 @@ export const BossDisplay: React.FC = () => {
             </div>
 
             {/* Boss Image (Center Top) */}
-            <div className={`boss-avatar-wrapper ${bot.animState === 'ATTACK' ? 'animate-thrust-down' : bot.animState === 'HIT' ? 'animate-hit-shake' : ''} ${bossWeakClass}`}
+            <div className={`boss-avatar-wrapper ${bot.animState === 'HIT' ? 'animate-hit-shake' : ''} ${bossWeakClass}`}
                 style={{
                     position: 'absolute',
                     top: '60px', // Even higher to maximize combat area
@@ -129,25 +151,42 @@ export const BossDisplay: React.FC = () => {
                         }}>
                             {bot.name.toUpperCase()}
                         </div>
-                        
-                        <img
-                            src={bossImg}
-                            alt={bot.name}
-                            style={{ 
-                                width: '100%', 
-                                height: 'auto', 
-                                maxHeight: '100%', 
-                                objectFit: 'contain',
-                                WebkitMaskImage: holeMask,
-                                maskImage: holeMask,
-                                WebkitMaskRepeat: 'no-repeat',
-                                maskRepeat: 'no-repeat',
-                                WebkitMaskSize: '100% 100%',
-                                maskSize: '100% 100%',
-                                WebkitMaskPosition: 'center',
-                                maskPosition: 'center'
-                            }}
-                        />
+
+                        {/* 챕터1 ATTACK: 스프라이트 시트 div */}
+                        {isAttacking && (
+                            <div
+                                key={attackKeyRef.current}
+                                className="boss-sprite-attack"
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    backgroundImage: `url('${attackSprite}')`,
+                                    ...spriteScaleOverride,
+                                }}
+                            />
+                        )}
+
+                        {/* 정지 이미지: ATTACK 중에는 숨김 */}
+                        {!isAttacking && (
+                            <img
+                                src={bossImg}
+                                alt={bot.name}
+                                style={{
+                                    width: '100%',
+                                    height: 'auto',
+                                    maxHeight: '100%',
+                                    objectFit: 'contain',
+                                    WebkitMaskImage: holeMask,
+                                    maskImage: holeMask,
+                                    WebkitMaskRepeat: 'no-repeat',
+                                    maskRepeat: 'no-repeat',
+                                    WebkitMaskSize: '100% 100%',
+                                    maskSize: '100% 100%',
+                                    WebkitMaskPosition: 'center',
+                                    maskPosition: 'center'
+                                }}
+                            />
+                        )}
                     </>
                 )}
             </div>

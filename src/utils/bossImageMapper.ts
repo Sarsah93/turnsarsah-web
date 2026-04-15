@@ -84,3 +84,26 @@ export const getBossImage = (chapter: string, stage: number, isTutorial: boolean
     }
     return '/assets/boss_goblin/tutorial_bot.png';
 };
+
+/**
+ * 챕터1 스테이지1~10 전용: 보스 공격 애니메이션 스프라이트 시트 경로 반환.
+ * 챕터1이 아니거나 스프라이트가 없으면 null 반환.
+ */
+export const getBossAttackSprite = (chapter: string, stage: number): string | null => {
+    if (chapter !== '1') return null;
+    const mapping: Record<number, string> = {
+        1:  '01_goblin_transparent.png',
+        2:  '02_goblin skirmisher_transparent.png',
+        3:  '03_goblin rider_transparent.png',
+        4:  '04_hobgoblin_transparent.png',
+        5:  '05_goblin shaman_transparent.png',
+        6:  '06_golden goblin_transparent.png',
+        7:  '07_elite goblin_transparent.png',
+        8:  '08_troll_transparent.png',
+        9:  '09_giant goblin_transparent.png',
+        10: '10_goblin lord_transparent.png',
+    };
+    const filename = mapping[stage];
+    if (!filename) return null;
+    return `/assets/boss_goblin/${filename}`;
+};
