@@ -1,6 +1,6 @@
 # 보스 공격 애니메이션 (스프라이트 시트) 구현 가이드
 
-> 마지막 업데이트: 2026-04-15
+> 마지막 업데이트: 2026-04-15 (v2 — 모바일 WebKit 버그 수정)
 > 적용 완료: 챕터1 (스테이지 1~10)
 
 ---
@@ -96,6 +96,19 @@ export const getBossAttackSprite = (chapter: string, stage: number): string | nu
 파일 하단에 추가한다:
 
 ```css
+/* 모바일 Safari 호환을 위해 @-webkit-keyframes도 함께 선언 */
+@-webkit-keyframes ch1-boss-attack {
+  0%     { background-position: 0%   0%; }
+  11.11% { background-position: 50%  0%; }
+  22.22% { background-position: 100% 0%; }
+  33.33% { background-position: 0%   50%; }
+  44.44% { background-position: 50%  50%; }
+  55.55% { background-position: 100% 50%; }
+  66.66% { background-position: 0%   100%; }
+  77.77% { background-position: 50%  100%; }
+  88.88% { background-position: 100% 100%; }
+  100%   { background-position: 100% 100%; }
+}
 @keyframes ch1-boss-attack {
   0%     { background-position: 0%   0%; }
   11.11% { background-position: 50%  0%; }
@@ -113,15 +126,19 @@ export const getBossAttackSprite = (chapter: string, stage: number): string | nu
   background-repeat: no-repeat;
   background-size: 300% 300%; /* 3×3 그리드 */
   background-position: 0% 0%;
+  -webkit-animation: ch1-boss-attack 0.6s steps(1, end) forwards; /* iOS Safari */
   animation: ch1-boss-attack 0.6s steps(1, end) forwards;
   image-rendering: auto;
+  will-change: background-position; /* GPU 레이어 사전 턨트 */
 
-  /* 검정 테두리 제거: PNG 외곽 캔버스가 검정일 경우를 대비해 4px 잘라냄 */
-  clip-path: inset(4px);
+  /*
+   * ⚠️ clip-path 미사용 이유:
+   * CSS animation이 적용된 요소에 clip-path를 함께 쓰면
+   * 모바일 WebKit(iOS Safari)에서 GPU compositing 실패로 인해
+   * 요소가 완전히 투명하게 렌더링되는 버그가 발생한다.
+   * 검정 테두리 시 PNG 재생성(투명 배경)으로 해결할 것.
+   */
 }
-```
-
-> ⚠️ **주의**: 전역 `transform: scale()`은 정지 이미지와의 위치 불일치를 유발하므로 사용하지 않는다. 크기 보정은 `BossDisplay.tsx`에서 개별 인라인 스타일로 처리한다.
 ```
 
 > ℹ️ 다른 챕터의 스프라이트를 추가할 경우, `@keyframes`와 클래스명에 챕터 접두사를 붙인다.
@@ -239,3 +256,30 @@ const spriteScaleOverride: React.CSSProperties =
 - 보스 `animState === 'ATTACK'` 지속 시간: 약 **600ms** (`wait(200)` + `wait(400)`)
 - 스프라이트 재생 시간: `0.6s` — 게임 루프와 동기화됨
 - 연속 공격 시: `ATTACK → NONE → ATTACK` 전환 시마다 `attackKeyRef` 증가 → 재시작 보장
+
+---
+
+## 트러블슈팅
+
+### 모바일에서 스프라이트가 투명/안보임
+
+**원인**: `clip-path` + CSS `animation`의 조합이 iOS Safari / Android WebKit에서
+ GPU compositing 실패를 유발해 요소가 투명하게 렌더링됩니다.
+
+**해결책**:
+1. `.boss-sprite-attack`에서 `clip-path` 종류 삭제
+2. `-webkit-animation` 및 `@-webkit-keyframes` 접두사 추가
+3. `will-change: background-position` 추가
+
+```css
+/* 트러블: clip-path 제거 후 항상 -webkit- 접두사와 will-change 함께 사용 */
+.boss-sprite-attack {
+  -webkit-animation: ch1-boss-attack 0.6s steps(1, end) forwards;
+  animation: ch1-boss-attack 0.6s steps(1, end) forwards;
+  will-change: background-position;
+  /* clip-path: inset(4px); ← 모바일에서 투명 현상 유발하므로 사용 금지 */
+}
+```
+
+> ⚠️ 검정 테두리가 다시 보인다면, 이는 PNG 자체의 외곽 쾔버스가 검정으로 저장된 것입니다.
+> 근본 수정은 스프라이트 시트 PNG를 **투명 배경**으로 재생성하는 것입니다.
