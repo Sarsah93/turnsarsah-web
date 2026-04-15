@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { HPBar } from '../Common/HPBar';
 import { ConditionIcon } from '../Common/ConditionIcon';
@@ -48,6 +48,15 @@ export const BossDisplay: React.FC = () => {
     const bossImg = getBossImage(chapterNum, stageNum, isTutorial);
     const attackSprite = getBossAttackSprite(chapterNum, stageNum);
     const isAttacking = bot.animState === 'ATTACK' && attackSprite !== null;
+
+    // 스프라이트 이미지 프리로드 — 첫 공격 시 이미지가 미캐시 상태여서
+    // 애니메이션 재생 중 로드되어 투명하게 보이는 문제를 방지한다.
+    useEffect(() => {
+        if (attackSprite) {
+            const img = new Image();
+            img.src = attackSprite;
+        }
+    }, [attackSprite]);
 
     // 연속 공격(triple attack) 시에도 스프라이트를 재시작하기 위한 key
     const attackKeyRef = useRef(0);
