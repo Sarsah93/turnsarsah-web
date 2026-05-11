@@ -21,7 +21,7 @@ export const getBossImage = (chapter: string, stage: number, isTutorial: boolean
             1: '01_mummy.png',
             2: '02_sand snake.png',
             3: '03_chimera snake human.png',
-            4: '04_sand niddle lizard.png',
+            4: '04_sand needle lizard.png',
             5: '05_sand scorpion.png',
             6: '06_desert vultures.png',
             7: '07_sand golem.png',
@@ -86,24 +86,62 @@ export const getBossImage = (chapter: string, stage: number, isTutorial: boolean
 };
 
 /**
- * 챕터1 스테이지1~10 전용: 보스 공격 애니메이션 스프라이트 시트 경로 반환.
- * 챕터1이 아니거나 스프라이트가 없으면 null 반환.
+ * 챕터별 보스 공격 애니메이션 스프라이트 시트 경로 반환.
+ * 해당 스프라이트가 없으면 null 반환.
  */
 export const getBossAttackSprite = (chapter: string, stage: number): string | null => {
-    if (chapter !== '1') return null;
-    const mapping: Record<number, string> = {
-        1:  '01_goblin_transparent.png',
-        2:  '02_goblin skirmisher_transparent.png',
-        3:  '03_goblin rider_transparent.png',
-        4:  '04_hobgoblin_transparent.png',
-        5:  '05_goblin shaman_transparent.png',
-        6:  '06_golden goblin_transparent.png',
-        7:  '07_elite goblin_transparent.png',
-        8:  '08_troll_transparent.png',
-        9:  '09_giant goblin_transparent.png',
-        10: '10_goblin lord_transparent.png',
-    };
-    const filename = mapping[stage];
-    if (!filename) return null;
-    return `/assets/boss_goblin/${filename}`;
+    if (chapter === '1') {
+        const mapping: Record<number, string> = {
+            1:  '01_goblin_transparent.png',
+            2:  '02_goblin skirmisher_transparent.png',
+            3:  '03_goblin rider_transparent.png',
+            4:  '04_hobgoblin_transparent.png',
+            5:  '05_goblin shaman_transparent.png',
+            6:  '06_golden goblin_transparent.png',
+            7:  '07_elite goblin_transparent.png',
+            8:  '08_troll_transparent.png',
+            9:  '09_giant goblin_transparent.png',
+            10: '10_goblin lord_transparent.png',
+        };
+        const filename = mapping[stage];
+        if (!filename) return null;
+        return `/assets/boss_goblin/${filename}`;
+    }
+    if (chapter === '2A') {
+        const mapping: Record<number, string> = {
+            1:  '01_mummy_transparent.png',
+            2:  '02_sand snake_transparent.png',
+            3:  '03_chimera snake human_transparent.png',
+            4:  '04_sand needle lizard_transparent.png',
+            5:  '05_sand scorpion_transparent.png',
+            6:  '06_desert vultures_transparent.png',
+            7:  '07_sand golem_transparent.png',
+            8:  '08_wyvern_transparent.png',
+            9:  '09_sand deathworm_transparent.png',
+            10: '10_sphinx_transparent.png',
+            11: '2A_sand dragon_transparent.png',
+        };
+        const filename = mapping[stage];
+        if (!filename) return null;
+        return `/assets/boss_desert/${filename}`;
+    }
+    if (chapter === '2B') {
+        const mapping: Record<number, string> = {
+            1:  '01_orc_transparent.png',
+            2:  '02_orc savage_transparent.png',
+            3:  '03_half orc_transparent.png',
+            4:  '04_orc warrior_transparent.png',
+            5:  '05_orc chieftain_transparent.png',
+            6:  '06_high orc_transparent.png',
+            7:  '07_high orc warrior_transparent.png',
+            8:  '08_high orc assassin_transparent.png',
+            9:  '09_high orc chieftain_transparent.png',
+            10: '10_high orc lord_transparent.png',
+            11: '2B_high orc shaman_transparent.png',
+        };
+        const filename = mapping[stage];
+        if (!filename) return null;
+        return `/assets/boss_orc/${filename}`;
+    }
+    return null;
 };

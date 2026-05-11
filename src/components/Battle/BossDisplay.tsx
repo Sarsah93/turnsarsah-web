@@ -161,7 +161,7 @@ export const BossDisplay: React.FC = () => {
                             {bot.name.toUpperCase()}
                         </div>
 
-                        {/* 챕터1 ATTACK: 스프라이트 시트 div */}
+                        {/* ATTACK: 보스 공격 스프라이트 시트 div */}
                         {isAttacking && (
                             <div
                                 key={attackKeyRef.current}
