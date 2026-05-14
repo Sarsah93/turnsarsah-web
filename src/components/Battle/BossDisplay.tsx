@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { HPBar } from '../Common/HPBar';
 import { ConditionIcon } from '../Common/ConditionIcon';
 import { Difficulty, DIFFICULTY_CONFIGS } from '../../constants/gameConfig';
 import { TRANSLATIONS } from '../../constants/translations';
 import { CHAPTERS } from '../../constants/stages';
-import { getBossImage, getBossAttackSprite } from '../../utils/bossImageMapper';
+import { getBossImage, getBossAttackSpriteInfo, BossAttackSpriteInfo } from '../../utils/bossImageMapper';
 import '../styles/BossWeakening.css';
 
 
@@ -46,17 +46,17 @@ export const BossDisplay: React.FC = () => {
     else if (bossRatio <= 0.60) bossWeakClass = 'boss-weak-2';
 
     const bossImg = getBossImage(chapterNum, stageNum, isTutorial);
-    const attackSprite = getBossAttackSprite(chapterNum, stageNum);
-    const isAttacking = bot.animState === 'ATTACK' && attackSprite !== null;
+    const spriteInfo = getBossAttackSpriteInfo(chapterNum, stageNum);
+    const isAttacking = bot.animState === 'ATTACK' && spriteInfo !== null;
 
     // 스프라이트 이미지 프리로드 — 첫 공격 시 이미지가 미캐시 상태여서
     // 애니메이션 재생 중 로드되어 투명하게 보이는 문제를 방지한다.
     useEffect(() => {
-        if (attackSprite) {
+        if (spriteInfo) {
             const img = new Image();
-            img.src = attackSprite;
+            img.src = spriteInfo.path;
         }
-    }, [attackSprite]);
+    }, [spriteInfo?.path]);
 
     // 연속 공격(triple attack) 시에도 스프라이트를 재시작하기 위한 key
     const attackKeyRef = useRef(0);
@@ -161,17 +161,12 @@ export const BossDisplay: React.FC = () => {
                             {bot.name.toUpperCase()}
                         </div>
 
-                        {/* ATTACK: 보스 공격 스프라이트 시트 div */}
-                        {isAttacking && (
-                            <div
+                        {/* ATTACK: 보스 공격 스프라이트 시트 — JS 프레임 스텝핑 */}
+                        {isAttacking && spriteInfo && (
+                            <BossAttackAnimation
                                 key={attackKeyRef.current}
-                                className="boss-sprite-attack"
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    backgroundImage: `url('${attackSprite}')`,
-                                    ...spriteScaleOverride,
-                                }}
+                                spriteInfo={spriteInfo}
+                                scaleOverride={spriteScaleOverride}
                             />
                         )}
 
@@ -257,5 +252,53 @@ export const BossDisplay: React.FC = () => {
                     ))}
             </div>
         </div>
+    );
+};
+
+// =======================================================
+//  BossAttackAnimation — 다양한 그리드(N×M)를 지원하는
+//  JS 프레임 스텝핑 보스 공격 애니메이션 컴포넌트.
+//  key 가 바뀔 때마다 리마운트되어 첫 프레임부터 재시작된다.
+// =======================================================
+const BossAttackAnimation: React.FC<{
+    spriteInfo: BossAttackSpriteInfo;
+    scaleOverride?: React.CSSProperties;
+}> = ({ spriteInfo, scaleOverride }) => {
+    const { cols, rows, path } = spriteInfo;
+    const totalFrames = cols * rows;
+    const [frame, setFrame] = useState(0);
+
+    useEffect(() => {
+        // 전체 재생 시간 0.6s 를 프레임 수로 나눠 간격 결정
+        const frameDuration = Math.max(30, Math.floor(600 / totalFrames));
+        let current = 0;
+        const id = setInterval(() => {
+            current++;
+            if (current >= totalFrames) {
+                clearInterval(id);
+                return;
+            }
+            setFrame(current);
+        }, frameDuration);
+        return () => clearInterval(id);
+    }, []); // 마운트 시 1회 실행 (key 교체로 재마운트)
+
+    // 현재 프레임 → background-position 계산
+    // background-size: cols*100% rows*100% 기준
+    const col = frame % cols;
+    const row = Math.floor(frame / cols);
+    const bgX = cols === 1 ? 0 : (col / (cols - 1)) * 100;
+    const bgY = rows === 1 ? 0 : (row / (rows - 1)) * 100;
+
+    return (
+        <div
+            className="boss-sprite-attack"
+            style={{
+                backgroundImage: `url('${path}')`,
+                backgroundSize: `${cols * 100}% ${rows * 100}%`,
+                backgroundPosition: `${bgX}% ${bgY}%`,
+                ...scaleOverride,
+            }}
+        />
     );
 };

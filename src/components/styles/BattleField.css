@@ -182,31 +182,22 @@
 }
 
 .boss-sprite-attack {
+  /* 레이아웃: 보스 아바타 컨테이너를 꽉 채움 */
+  width: 100%;
+  height: 100%;
+
+  /*
+   * background-size / background-position 은
+   * BossAttackAnimation 컴포넌트가 cols×rows 기반으로
+   * 동적으로 계산하여 인라인 스타일로 주입합니다.
+   * → CSS 에서 고정값을 지정하지 않습니다.
+   */
   background-repeat: no-repeat;
-  background-size: 300% 300%;  /* 3×3 그리드 */
-  background-position: 0% 0%;
-  -webkit-animation: ch1-boss-attack 0.6s steps(1, end) forwards;
-  animation: ch1-boss-attack 0.6s steps(1, end) forwards;
   image-rendering: auto;
 
   /*
-   * will-change: 모바일 브라우저에 background-position 애니메이션을
+   * will-change: 모바일 브라우저에 background-position 변화를
    * 미리 알려 GPU 레이어를 올바르게 준비하도록 힌트를 줍니다.
    */
   will-change: background-position;
-
-  /*
-   * ─── clip-path 제거 이유 ───────────────────────────────────────────
-   * 모바일 WebKit(iOS Safari)에서 CSS animation이 적용된 요소에
-   * clip-path를 함께 사용하면 GPU compositing 실패로 인해
-   * 요소 전체가 투명하게 렌더링되는 버그가 발생합니다.
-   * 검정 테두리 제거가 필요하다면 PNG 재생성(투명 배경)으로 해결하세요.
-   * ─────────────────────────────────────────────────────────────────
-   */
-
-  /*
-   * ─── 크기 보정은 스테이지별 인라인 스타일로 개별 처리 ─────────────
-   * (BossDisplay.tsx의 spriteScaleOverride 참고)
-   * ─────────────────────────────────────────────────────────────────
-   */
 }
