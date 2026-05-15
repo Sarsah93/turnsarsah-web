@@ -1433,7 +1433,7 @@ export const useGameLoop = () => {
             // 3A-9: 以묐났 ?앺솕 濡쒖쭅 ??젣 (怨듦꺽 ?곸쨷 ??利됱떆 40% 諛쒕룞???щ컮瑜??ъ뼇 ??Line 1273)
             // (湲곗〈 30% 異붽? 諛쒕룞 肄붾뱶 ?쒓굅??
 
-            await wait(i < attackCount - 1 ? 800 : 400); // Delay between multi-attacks
+            await wait(i < attackCount - 1 ? 800 : 1100); // Delay between multi-attacks (1100ms: 36-frame sprite @ 30ms/frame needs ~1080ms)
 
             // Reset anim for next hit
             setBotAnimState('NONE');
