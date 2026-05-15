@@ -106,15 +106,15 @@ export const getBossAttackSpriteInfo = (chapter: string, stage: number): BossAtt
     if (chapter === '1') {
         // 챕터 1 고블린: 3×3 = 9프레임 (확인됨)
         const mapping: Record<number, string> = {
-            1:  '01_goblin_transparent.png',
-            2:  '02_goblin skirmisher_transparent.png',
-            3:  '03_goblin rider_transparent.png',
-            4:  '04_hobgoblin_transparent.png',
-            5:  '05_goblin shaman_transparent.png',
-            6:  '06_golden goblin_transparent.png',
-            7:  '07_elite goblin_transparent.png',
-            8:  '08_troll_transparent.png',
-            9:  '09_giant goblin_transparent.png',
+            1: '01_goblin_transparent.png',
+            2: '02_goblin skirmisher_transparent.png',
+            3: '03_goblin rider_transparent.png',
+            4: '04_hobgoblin_transparent.png',
+            5: '05_goblin shaman_transparent.png',
+            6: '06_golden goblin_transparent.png',
+            7: '07_elite goblin_transparent.png',
+            8: '08_troll_transparent.png',
+            9: '09_giant goblin_transparent.png',
             10: '10_goblin lord_transparent.png',
         };
         const filename = mapping[stage];
@@ -125,17 +125,17 @@ export const getBossAttackSpriteInfo = (chapter: string, stage: number): BossAtt
         // 챕터 2A 사막: 이미지 실측 기반 그리드
         // ※ 실제 파일과 다를 경우 cols/rows를 수정하세요.
         const mapping: Record<number, { file: string; cols: number; rows: number }> = {
-            1:  { file: '01_mummy_transparent.png',              cols: 6,  rows: 6  }, // 2352×4080
-            2:  { file: '02_sand snake_transparent.png',         cols: 6,  rows: 6  }, // 3288×2496
-            3:  { file: '03_chimera snake human_transparent.png',cols: 6,  rows: 6  }, // 2664×3972
-            4:  { file: '04_sand needle lizard_transparent.png', cols: 6,  rows: 6  }, // 3840×2664
-            5:  { file: '05_sand scorpion_transparent.png',      cols: 6,  rows: 6  }, // 2784×2376
-            6:  { file: '06_desert vultures_transparent.png',    cols: 6,  rows: 6  }, // 3840×2880
-            7:  { file: '07_sand golem_transparent.png',         cols: 6,  rows: 6  }, // 3840×3840 → 640×640/frame
-            8:  { file: '08_wyvern_transparent.png',             cols: 6,  rows: 6  }, // 3840×3840 → 640×640/frame
-            9:  { file: '09_sand deathworm_transparent.png',     cols: 6,  rows: 6  }, // 3264×3732
-            10: { file: '10_sphinx_transparent.png',             cols: 6,  rows: 6  }, // 3840×3840 → 640×640/frame
-            11: { file: '2A_sand dragon_transparent.png',        cols: 6,  rows: 6  }, // 3840×3840 → 640×640/frame
+            1: { file: '01_mummy_transparent.png', cols: 6, rows: 6 }, // 2352×4080 → 588×582/frame
+            2: { file: '02_sand snake_transparent.png', cols: 6, rows: 6 }, // 3288×2496 → 822×832/frame
+            3: { file: '03_chimera snake human_transparent.png', cols: 6, rows: 6 }, // 2664×3972 → 1332×1324/frame
+            4: { file: '04_sand needle lizard_transparent.png', cols: 6, rows: 6 }, // 3840×2664 → 1280×1332/frame
+            5: { file: '05_sand scorpion_transparent.png', cols: 6, rows: 6 }, // 2784×2376 → 928×792/frame
+            6: { file: '06_desert vultures_transparent.png', cols: 6, rows: 6 }, // 3840×2880 → 960×960/frame (완전 정방형)
+            7: { file: '07_sand golem_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
+            8: { file: '08_wyvern_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
+            9: { file: '09_sand deathworm_transparent.png', cols: 6, rows: 6 }, // 3264×3732 → 466×466/frame
+            10: { file: '10_sphinx_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
+            11: { file: '2A_sand dragon_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
         };
         const entry = mapping[stage];
         if (!entry) return null;
@@ -145,17 +145,17 @@ export const getBossAttackSpriteInfo = (chapter: string, stage: number): BossAtt
         // 챕터 2B 깊은 숲 오크: 이미지 실측 기반 그리드
         // ※ 실제 파일과 다를 경우 cols/rows를 수정하세요.
         const mapping: Record<number, { file: string; cols: number; rows: number }> = {
-            1:  { file: '01_orc_transparent.png',              cols: 6,  rows: 6  }, // 2688×3696
-            2:  { file: '02_orc savage_transparent.png',       cols: 4,  rows: 4  }, // 1700×2400
-            3:  { file: '03_half orc_transparent.png',         cols: 4,  rows: 4  }, // 1360×2072
-            4:  { file: '04_orc warrior_transparent.png',      cols: 10, rows: 1  }, // 2970×272  → 수평 스트립 10프레임
-            5:  { file: '05_orc chieftain_transparent.png',    cols: 6,  rows: 6  }, // 3840×3840 → 640×640/frame
-            6:  { file: '06_high orc_transparent.png',         cols: 6,  rows: 6  }, // 2592×3840
-            7:  { file: '07_high orc warrior_transparent.png', cols: 6,  rows: 6  }, // 3840×3840 → 640×640/frame
-            8:  { file: '08_high orc assassin_transparent.png',cols: 6,  rows: 6  }, // 3840×3840 → 640×640/frame
-            9:  { file: '09_high orc chieftain_transparent.png',cols: 6, rows: 6  }, // 3840×3840 → 640×640/frame
-            10: { file: '10_high orc lord_transparent.png',    cols: 6,  rows: 6  }, // 3840×3732
-            11: { file: '2B_high orc shaman_transparent.png',  cols: 6,  rows: 6  }, // 3840×3744
+            1: { file: '01_orc_transparent.png', cols: 6, rows: 6 }, // 2688×3696 → 672×616/frame
+            2: { file: '02_orc savage_transparent.png', cols: 4, rows: 4 }, // 1700×2400 → 340×343/frame
+            3: { file: '03_half orc_transparent.png', cols: 4, rows: 4 }, // 1360×2072 → 227×230/frame
+            4: { file: '04_orc warrior_transparent.png', cols: 10, rows: 1 }, // 2970×272  → 수평 스트립 11프레임
+            5: { file: '05_orc chieftain_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
+            6: { file: '06_high orc_transparent.png', cols: 6, rows: 6 }, // 2592×3840 → 432×427/frame
+            7: { file: '07_high orc warrior_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
+            8: { file: '08_high orc assassin_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
+            9: { file: '09_high orc chieftain_transparent.png', cols: 6, rows: 6 }, // 3840×3840 → 640×640/frame
+            10: { file: '10_high orc lord_transparent.png', cols: 6, rows: 6 }, // 3840×3732 → 640×622/frame
+            11: { file: '2B_high orc shaman_transparent.png', cols: 6, rows: 6 }, // 3840×3744 → 640×624/frame
         };
         const entry = mapping[stage];
         if (!entry) return null;
@@ -172,15 +172,15 @@ export const getBossAttackSpriteInfo = (chapter: string, stage: number): BossAtt
 export const getBossAttackSprite = (chapter: string, stage: number): string | null => {
     if (chapter === '1') {
         const mapping: Record<number, string> = {
-            1:  '01_goblin_transparent.png',
-            2:  '02_goblin skirmisher_transparent.png',
-            3:  '03_goblin rider_transparent.png',
-            4:  '04_hobgoblin_transparent.png',
-            5:  '05_goblin shaman_transparent.png',
-            6:  '06_golden goblin_transparent.png',
-            7:  '07_elite goblin_transparent.png',
-            8:  '08_troll_transparent.png',
-            9:  '09_giant goblin_transparent.png',
+            1: '01_goblin_transparent.png',
+            2: '02_goblin skirmisher_transparent.png',
+            3: '03_goblin rider_transparent.png',
+            4: '04_hobgoblin_transparent.png',
+            5: '05_goblin shaman_transparent.png',
+            6: '06_golden goblin_transparent.png',
+            7: '07_elite goblin_transparent.png',
+            8: '08_troll_transparent.png',
+            9: '09_giant goblin_transparent.png',
             10: '10_goblin lord_transparent.png',
         };
         const filename = mapping[stage];
@@ -189,15 +189,15 @@ export const getBossAttackSprite = (chapter: string, stage: number): string | nu
     }
     if (chapter === '2A') {
         const mapping: Record<number, string> = {
-            1:  '01_mummy_transparent.png',
-            2:  '02_sand snake_transparent.png',
-            3:  '03_chimera snake human_transparent.png',
-            4:  '04_sand needle lizard_transparent.png',
-            5:  '05_sand scorpion_transparent.png',
-            6:  '06_desert vultures_transparent.png',
-            7:  '07_sand golem_transparent.png',
-            8:  '08_wyvern_transparent.png',
-            9:  '09_sand deathworm_transparent.png',
+            1: '01_mummy_transparent.png',
+            2: '02_sand snake_transparent.png',
+            3: '03_chimera snake human_transparent.png',
+            4: '04_sand needle lizard_transparent.png',
+            5: '05_sand scorpion_transparent.png',
+            6: '06_desert vultures_transparent.png',
+            7: '07_sand golem_transparent.png',
+            8: '08_wyvern_transparent.png',
+            9: '09_sand deathworm_transparent.png',
             10: '10_sphinx_transparent.png',
             11: '2A_sand dragon_transparent.png',
         };
@@ -207,15 +207,15 @@ export const getBossAttackSprite = (chapter: string, stage: number): string | nu
     }
     if (chapter === '2B') {
         const mapping: Record<number, string> = {
-            1:  '01_orc_transparent.png',
-            2:  '02_orc savage_transparent.png',
-            3:  '03_half orc_transparent.png',
-            4:  '04_orc warrior_transparent.png',
-            5:  '05_orc chieftain_transparent.png',
-            6:  '06_high orc_transparent.png',
-            7:  '07_high orc warrior_transparent.png',
-            8:  '08_high orc assassin_transparent.png',
-            9:  '09_high orc chieftain_transparent.png',
+            1: '01_orc_transparent.png',
+            2: '02_orc savage_transparent.png',
+            3: '03_half orc_transparent.png',
+            4: '04_orc warrior_transparent.png',
+            5: '05_orc chieftain_transparent.png',
+            6: '06_high orc_transparent.png',
+            7: '07_high orc warrior_transparent.png',
+            8: '08_high orc assassin_transparent.png',
+            9: '09_high orc chieftain_transparent.png',
             10: '10_high orc lord_transparent.png',
             11: '2B_high orc shaman_transparent.png',
         };
