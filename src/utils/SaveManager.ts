@@ -4,8 +4,9 @@ import { Character } from '../types/Character';
 import { Card } from '../types/Card';
 import { Difficulty, GameState } from '../constants/gameConfig';
 import { storageKey } from './buildTarget';
+import { StageMapProgress } from '../constants/chapterRoutes';
 
-export const SAVE_VERSION = 'v2.5.0';
+export const SAVE_VERSION = 'v3.0.0';
 const VERSION_KEY = storageKey('save_version');
 const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
 
@@ -14,6 +15,7 @@ interface SaveData {
   stageNum: number;
   difficulty: Difficulty;
   gameState: GameState;
+  stageMapProgress?: StageMapProgress | null;
   gamePhase: string;
   currentTurn: number;
   player: Character;

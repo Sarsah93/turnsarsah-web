@@ -1,9 +1,12 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import './styles/WorldMapPopup.css';
+import { useGameStore } from '../state/gameStore';
+import { GameState } from '../constants/gameConfig';
 
 interface WorldMapPopupProps {
   currentChapter: string; // '1', '2A', '2B', '3A', '3B'
   onClose: () => void;
+  onOpenStageMap?: () => void;
 }
 
 interface SectorDef {
@@ -344,10 +347,35 @@ const dbBtn = (color: string): React.CSSProperties => ({
 // =====================================================================
 // 메인 WorldMapPopup
 // =====================================================================
-export const WorldMapPopup: React.FC<WorldMapPopupProps> = ({ currentChapter, onClose }) => {
+export const WorldMapPopup: React.FC<WorldMapPopupProps> = ({ currentChapter, onClose, onOpenStageMap }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [debugMode, setDebugMode] = useState(false);
   const IS_DEV = import.meta.env.DEV;
+
+  const handleSectorClick = (sectorId: string) => {
+    if (sectorId !== currentChapter) return;
+    const store = useGameStore.getState();
+
+    // v3.1: 전투 진행 중에는 스테이지 지도를 읽기 전용 팝업으로 띄우도록 함
+    const isBattle = store.gameState === GameState.BATTLE || store.gameState === GameState.TUTORIAL;
+    if (isBattle) {
+      if (onOpenStageMap) {
+        onOpenStageMap();
+      }
+      onClose();
+      return;
+    }
+
+    store.triggerTransition(() => {
+      // 이미 진행 중인 스테이지 맵이 있다면 진행 상황을 보존하며 복귀
+      if (store.stageMapProgress && store.stageMapProgress.chapterId === sectorId) {
+        store.returnToStageMap();
+      } else {
+        store.enterStageMap(sectorId);
+      }
+    });
+    onClose();
+  };
 
   return (
     <div className="world-map-backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -357,7 +385,7 @@ export const WorldMapPopup: React.FC<WorldMapPopupProps> = ({ currentChapter, on
         <img className="world-map-img" src="/assets/worldmap/worldmap.png" alt="세계 지도" draggable={false} />
 
         {/* SVG 구역 오버레이 */}
-        <svg className="world-map-svg" viewBox={`0 0 ${SVG_W} ${SVG_H}`} preserveAspectRatio="none" aria-hidden="true" style={{ pointerEvents: 'none' }}>
+        <svg className="world-map-svg" viewBox={`0 0 ${SVG_W} ${SVG_H}`} preserveAspectRatio="none" aria-hidden="true">
           {SECTORS.map((sector) => {
             const isCurrent = sector.implemented && sector.id === currentChapter;
             return (
@@ -365,21 +393,26 @@ export const WorldMapPopup: React.FC<WorldMapPopupProps> = ({ currentChapter, on
                 key={sector.id}
                 className={['sector-path', isCurrent ? 'sector-current' : '', !sector.implemented ? 'sector-unimplemented' : ''].filter(Boolean).join(' ')}
                 d={sector.svgPath}
+                onClick={() => isCurrent && handleSectorClick(sector.id)}
               />
             );
           })}
         </svg>
 
         {/* 챕터명 레이블 */}
-        {SECTORS.filter(s => s.implemented).map(sector => (
-          <div
-            key={`label-${sector.id}`}
-            className={`sector-label ${sector.id === currentChapter ? 'current' : ''}`}
-            style={{ left: `${(sector.labelX / SVG_W) * 100}%`, top: `${(sector.labelY / SVG_H) * 100}%` }}
-          >
-            {sector.label}
-          </div>
-        ))}
+        {SECTORS.filter(s => s.implemented).map(sector => {
+          const isCurrent = sector.id === currentChapter;
+          return (
+            <div
+              key={`label-${sector.id}`}
+              className={`sector-label ${isCurrent ? 'current' : ''}`}
+              style={{ left: `${(sector.labelX / SVG_W) * 100}%`, top: `${(sector.labelY / SVG_H) * 100}%` }}
+              onClick={() => isCurrent && handleSectorClick(sector.id)}
+            >
+              {sector.label}
+            </div>
+          );
+        })}
 
         {/* 현재 위치 핀 */}
         {(() => {

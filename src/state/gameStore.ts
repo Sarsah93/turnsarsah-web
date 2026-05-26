@@ -13,6 +13,7 @@ import { storageKey } from '../utils/buildTarget';
 import { SaveManager } from '../utils/SaveManager';
 import { Language, TRANSLATIONS } from '../constants/translations';
 import { GuidePopupData } from '../constants/guideData';
+import { StageMapProgress, CHAPTER_ROUTES } from '../constants/chapterRoutes';
 
 const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
 import { TROPHIES, ALTAR_SKILLS, TrophyDef } from '../constants/altarSystem';
@@ -334,6 +335,15 @@ interface GameStoreState {
   setHoldBreathTurn3B: (turn: number) => void;
   holdBreathInvulnerable3B: boolean;
   setHoldBreathInvulnerable3B: (active: boolean) => void;
+
+  // Stage Map
+  stageMapProgress: StageMapProgress | null;
+  setStageMapProgress: (progress: StageMapProgress | null) => void;
+  enterStageMap: (chapterId: string) => Promise<void>;
+  returnToStageMap: () => void;
+  completeMapNode: (nodeId: string) => void;
+  chooseMapFork: (forkGroup: string, chosenNodeId: string) => void;
+  advanceToMapNode: (nodeId: string) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -870,7 +880,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           applyCondition(botConditions, 'Reflection', 9999, '', { chance: 30, percent: 10 });
         }
       } else if (chapterId === '3A') {
-        // ?占?占?梨뺥꽣 3A 怨듯넻: 硫붿븘占?Echo) 議곌굔 遺???占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?
+        // ?占?占?梨뺥꽣 3A 怨듯넻: 硫붿븘占?Echo) 議곌굔 遺€???占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?
         applyCondition(botConditions, 'Echo', 9999, '', { chance: 0.20, damageScale: 0.70 });
 
         // ?占?占??占쏀뀒?占쏙옙?占??占쎌떆占??占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?
@@ -899,18 +909,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         if (stageId === 9) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
         }
-        // 3A-10 HYDRA: ?占쏀빐寃쎄컧 15% + 遺??4??(60% HP)
+        // 3A-10 HYDRA: ?占쏀빐寃쎄컧 15% + 遺€??4??(60% HP)
         if (stageId === 10) {
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
           applyCondition(botConditions, 'Revival', 9999, '', { count: 4, limit: 4, percent: 60 });
           set({ hydraReviveRemaining: 4 });
         }
       } else if (chapterId === '3B') {
-        // ?占?占?梨뺥꽣 3B 怨듯넻: ?占쏙옙?(Swamping) ?占쎈젅?占쎌뼱 ?占쏀깭?占쎌긽 遺???占?占?占?占?占?占?占?占?
+        // ?占?占?梨뺥꽣 3B 怨듯넻: ?占쏙옙?(Swamping) ?占쎈젅?占쎌뼱 ?占쏀깭?占쎌긽 遺€???占?占?占?占?占?占?占?占?
         // (?占쎈젅?占쎌뼱 conditions???占쎈옒 player 珥덇린????異뷂옙?)
 
         // ?占?占??占쏀뀒?占쏙옙?占??占쎌떆占??占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?占?
-        // 3B-1 SWAMP WOLFTURTLE: ?占쎌깮+5, ?占쏀빐寃쎄컧 15%, ?占쏙옙?吏諛섏궗 10%
+        // 3B-1 SWAMP WOLFTURTLE: ?占쎌깮+5, ?占쏀빐寃쎄컧 15%, ?占쏙옙?吏€諛섏궗 10%
         if (stageId === 1) {
           applyCondition(botConditions, 'Regenerating', 9999, '', { amount: 5 });
           applyCondition(botConditions, 'Damage Reducing', 9999, '', { percent: 15 });
@@ -969,8 +979,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       const isChapterTransition = stageId === 1 && state.chapterNum && state.chapterNum !== chapterId;
 
-      // v2.5.1: ??寃뚯엫 ?占쎌옉 ?占쎌뿉占??占쎈떒 ?占쎈━?占쎌뿉???占쏀궗??媛?占쎌샂
-      // ?占쏀뀒?占쏙옙?/梨뺥꽣 ?占쏀솚 ?占쎌뿉???占쎌옱 ???占쎌뀡???占쏀궗???占쏙옙? (?占쎈━??蹂占??占쎌슜 諛⑼옙?)
+      // v2.5.1: ??寃뚯엫 ?占쎌옉 ?占쎌뿉占??占쎈떒 ?占쎈━?占쎌뿉???占쏀궗??媛€?占쎌샂
+      // ?占쏀뀒?占쏙옙?/梨뺥꽣 ?占쏀솚 ?占쎌뿉???占쎌옱 ???占쎌뀡???占쏀궗???占쏙옙? (?占쎈━??蹂€占??占쎌슜 諛⑼옙?)
       if (stageId === 1 && !isChapterTransition) {
         const altarData = AltarManager.getAltarData();
         if (state.difficulty === Difficulty.HARD) {
@@ -1030,7 +1040,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         }
       }
 
-      // 3B 梨뺥꽣: ?占쏀뀒?占쏙옙? ?占쎌옉 ?占쎈쭏???占쎈젅?占쎌뼱?占쎄쾶 Swamping 遺??
+      // 3B 梨뺥꽣: ?占쏀뀒?占쏙옙? ?占쎌옉 ?占쎈쭏???占쎈젅?占쎌뼱?占쎄쾶 Swamping 遺€??
       if (chapterId === '3B') {
         applyCondition(player.conditions, 'Swamping', 9999, '', { attackCount: 0 });
       }
@@ -1142,6 +1152,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       },
       message: '',
       isGameLoaded: false,
+      stageMapProgress: null,
       // Hidden Scenario Reset
       ch1PerfectCount: 0,
       specialQualify: false,
@@ -1153,9 +1164,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   saveGame: (slot: number) => {
     const state = get();
-    // Block saving during tutorial or active combat processing
-    if (state.isTutorial) {
-      console.log("Saving is blocked during tutorial.");
+    // Block saving during tutorial, active combat, or battle state
+    if (state.isTutorial || state.gameState === GameState.BATTLE) {
+      console.log("Saving is blocked during tutorial or battle.");
       return;
     }
     if (state.isProcessing) {
@@ -1260,8 +1271,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
         message: "Game Loaded.",
         hasStage6Bonus: gameData.hasStage6Bonus ?? false,
-        gameState: gameData.gameState || GameState.BATTLE,
+        gameState: gameData.stageMapProgress ? GameState.STAGE_MAP : (gameData.gameState || GameState.BATTLE),
         gamePhase: gameData.gamePhase || 'IDLE',
+        stageMapProgress: gameData.stageMapProgress || null,
         // v2.5.1: ?占쎌씠占??占쎌씪???占쎌갑 ?占쏀궗 ?占쎈깄??蹂듭썝 (?占쎌옱 ?占쎈떒 ?占쎈━??臾댁떆)
         equippedAltarSkills: gameData.equippedAltarSkills || [],
         
@@ -1485,6 +1497,82 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     get().applyStageRules(chapterId, stageId, 0);
   },
 
+  // ─── Stage Map Progress State & Actions (v3.0) ───
+  stageMapProgress: null as StageMapProgress | null,
+
+  setStageMapProgress: (progress: StageMapProgress | null) => set({ stageMapProgress: progress }),
+
+  enterStageMap: async (chapterId: string) => {
+    const route = CHAPTER_ROUTES[chapterId];
+    if (!route) return;
+    set({ loadingPhase: 'CHAPTER_TRANSITION', loadingProgress: 0 });
+    const assets = [route.mapImage];
+    if (route.bgm) assets.push(route.bgm);
+    try {
+      await preloadManager.preloadBatch(assets, (progress) => {
+        set({ loadingProgress: progress });
+      });
+    } catch (e) {
+      console.warn("Failed to preload map assets:", e);
+    }
+    set({
+      stageMapProgress: {
+        chapterId,
+        completedNodes: [],
+        currentNodeId: route.startNodeId,
+        chosenForks: {},
+      },
+      chapterNum: chapterId,
+      gameState: GameState.STAGE_MAP,
+      loadingPhase: 'NONE',
+    });
+  },
+
+  returnToStageMap: () => {
+    const state = get();
+    if (!state.stageMapProgress) return;
+    set({ gameState: GameState.STAGE_MAP });
+  },
+
+  completeMapNode: (nodeId: string) => {
+    const state = get();
+    if (!state.stageMapProgress) return;
+    const completed = [...state.stageMapProgress.completedNodes];
+    if (!completed.includes(nodeId)) completed.push(nodeId);
+    set({
+      stageMapProgress: {
+        ...state.stageMapProgress,
+        completedNodes: completed,
+        currentNodeId: nodeId,
+      },
+    });
+  },
+
+  chooseMapFork: (forkGroup: string, chosenNodeId: string) => {
+    const state = get();
+    if (!state.stageMapProgress) return;
+    set({
+      stageMapProgress: {
+        ...state.stageMapProgress,
+        chosenForks: {
+          ...state.stageMapProgress.chosenForks,
+          [forkGroup]: chosenNodeId,
+        },
+      },
+    });
+  },
+
+  advanceToMapNode: (nodeId: string) => {
+    const state = get();
+    if (!state.stageMapProgress) return;
+    set({
+      stageMapProgress: {
+        ...state.stageMapProgress,
+        currentNodeId: nodeId,
+      },
+    });
+  },
+
 }));
 
 function buildSavePayload(state: GameStoreState) {
@@ -1529,5 +1617,6 @@ function buildSavePayload(state: GameStoreState) {
     hasStage6Bonus: state.hasStage6Bonus,
     gameState: state.gameState,
     gamePhase: finalGamePhase,
+    stageMapProgress: state.stageMapProgress,
   };
 }

@@ -8,7 +8,7 @@ import { TRANSLATIONS } from '../constants/translations';
 import { Button } from './Common/Button';
 
 export const ChapterNextPopup: React.FC = () => {
-    const { nextChapterId, initGame, triggerTransition, setGameState, language, chapterNum } = useGameStore();
+    const { nextChapterId, enterStageMap, triggerTransition, language, chapterNum } = useGameStore();
     const t = TRANSLATIONS[language] as any;
 
     // 이전 챕터명 결정 (어디서 왔는지)
@@ -27,8 +27,7 @@ export const ChapterNextPopup: React.FC = () => {
 
     const handleEnter = () => {
         triggerTransition(() => {
-            initGame(nextChapterId, 1);
-            setGameState(GameState.BATTLE);
+            enterStageMap(nextChapterId);
         });
     };
 

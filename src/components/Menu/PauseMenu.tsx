@@ -12,6 +12,7 @@ interface PauseMenuProps {
   isOpen: boolean;
   onClose?: () => void;
   onSave?: () => void;
+  onLoad?: () => void;
   onSettings?: () => void;
   onResume?: () => void;
   onQuit?: () => void;
@@ -21,12 +22,14 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
   isOpen,
   onClose,
   onSave,
+  onLoad,
   onSettings,
   onResume,
   onQuit,
 }) => {
-  const { language, isProcessing, forceSaveGame, loadGame } = useGameStore();
+  const { language, isProcessing, forceSaveGame, loadGame, gameState } = useGameStore();
   const t = TRANSLATIONS[language];
+  const isBattle = gameState === 'BATTLE';
 
   return (
     <Modal
@@ -36,18 +39,27 @@ export const PauseMenu: React.FC<PauseMenuProps> = ({
       showCloseButton={false}
       showBackButton={true}
       width={500}
-      height={520}
+      height={onLoad ? 580 : 520}
     >
       <div className="pause-menu-buttons" style={{ display: 'flex', flexDirection: 'column', gap: '18px', alignItems: 'center', padding: '24px' }}>
         <BlockButton text={t.UI.RESUME} onClick={onResume || onClose || (() => { })} width="280px" height="50px" fontSize="1.5rem" />
         <BlockButton 
           text={t.UI.SAVE_GAME} 
-          onClick={isProcessing ? (() => { }) : (onSave || (() => { }))} 
+          onClick={isProcessing || isBattle ? (() => { }) : (onSave || (() => { }))} 
           width="280px" 
           height="50px" 
           fontSize="1.5rem"
-          disabled={isProcessing}
+          disabled={isProcessing || isBattle}
         />
+        {onLoad && (
+          <BlockButton 
+            text={t.UI.LOAD_GAME} 
+            onClick={onLoad} 
+            width="280px" 
+            height="50px" 
+            fontSize="1.5rem"
+          />
+        )}
         <BlockButton text={t.SETTINGS.TITLE} onClick={onSettings || (() => { })} width="280px" height="50px" fontSize="1.5rem" />
         {INTERNAL_FEATURES && (
           <>

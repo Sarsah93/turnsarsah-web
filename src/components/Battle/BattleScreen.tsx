@@ -17,6 +17,7 @@ import { ALTAR_SKILLS } from '../../constants/altarSystem';
 import { AltarSkillSlots } from './AltarSkillSlots';
 import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 import { WorldMapPopup } from '../WorldMapPopup';
+import { StageMapScreen } from '../StageMapScreen';
 
 import { BattleMenuOverlay, ActiveMenuType } from './BattleMenuOverlay';
 import { BattleField } from './BattleField';
@@ -38,6 +39,7 @@ export const BattleScreen: React.FC = () => {
 
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
     const [isMapOpen, setIsMapOpen] = useState(false);
+    const [isStageMapOpen, setIsStageMapOpen] = useState(false);
     const [bossPos, setBossPos] = useState({ centerX: 800, centerY: 285, bottom: 510 });
     const [cardsPos, setCardsPos] = useState({ topCenterX: 800, topCenterY: 700 });
     const [lowHpClass, setLowHpClass] = useState(false);
@@ -180,10 +182,11 @@ export const BattleScreen: React.FC = () => {
     }, [bossPos, cardsPos, store.scorePreviewHUDPos.x, store.scorePreviewHUDPos.y]);
 
     const handleSaveGame = (slot: number) => {
-        if (store.isProcessing) return; // gameStore.saveGame에서 이미 메시지를 처리하므로 여기서 중단
-        store.saveGame(slot);
+        const errorMsg = language === 'KR' 
+            ? '전투 중에는 저장할 수 없습니다.' 
+            : 'Saving is not allowed during battle.';
+        store.setMessage(errorMsg);
         setActiveMenu('NONE');
-        store.setMessage(t.UI.SAVE_SUCCESS);
     };
 
     const handleLoadGame = (slot: number) => {
@@ -266,7 +269,15 @@ export const BattleScreen: React.FC = () => {
                 <WorldMapPopup
                     currentChapter={chapterNum}
                     onClose={() => setIsMapOpen(false)}
+                    onOpenStageMap={() => setIsStageMapOpen(true)}
                 />
+            )}
+
+            {/* 스테이지 맵 오버레이 (전투 중 뷰 전용) */}
+            {isStageMapOpen && (
+                <div style={{ position: 'absolute', inset: 0, zIndex: 6000 }}>
+                    <StageMapScreen readOnly={true} onClose={() => setIsStageMapOpen(false)} />
+                </div>
             )}
 
             {/* FX Overlays */}

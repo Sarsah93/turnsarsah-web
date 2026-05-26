@@ -7,7 +7,7 @@ import './LoadingScreen.css';
 
 interface LoadingScreenProps {
   progress: number; // 0~1
-  phase: 'INITIAL' | 'GAME_ENTRY';
+  phase: 'INITIAL' | 'GAME_ENTRY' | 'CHAPTER_TRANSITION';
 }
 
 const TIP_ROTATE_INTERVAL = 6500; // 6.5s
@@ -32,13 +32,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase })
   const [bgImage] = useState<string>(() => pickRandomBg());
 
   const [currentTip, setCurrentTip] = useState<string>(() =>
-    phase === 'GAME_ENTRY' ? getRandomTip(language) : ''
+    phase !== 'INITIAL' ? getRandomTip(language) : ''
   );
   const [tipFading, setTipFading] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (phase !== 'GAME_ENTRY') return;
+    if (phase === 'INITIAL') return;
 
     setCurrentTip(getRandomTip(language));
 
@@ -69,7 +69,11 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase })
         <div className="loading-bar-wrapper">
           <div className="loading-bar-header">
             <span className="loading-phase-label">
-              {phase === 'INITIAL' ? 'LOADING...' : 'PREPARING BATTLE...'}
+              {phase === 'INITIAL' 
+                ? 'LOADING...' 
+                : phase === 'CHAPTER_TRANSITION' 
+                  ? (language === 'KR' ? '챕터 이동 중...' : 'TRANSITIONING CHAPTER...') 
+                  : 'PREPARING BATTLE...'}
             </span>
             <span className="loading-percent">({percent}%/100%)</span>
           </div>
@@ -82,7 +86,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ progress, phase })
         </div>
 
         {/* 팁 */}
-        {phase === 'GAME_ENTRY' && currentTip && (
+        {phase !== 'INITIAL' && currentTip && (
           <div className={`loading-tip ${tipFading ? 'tip-fading' : 'tip-visible'}`}>
             {currentTip}
           </div>

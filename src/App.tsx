@@ -6,6 +6,7 @@ import { MainMenu } from './components/MainMenu';
 import { BattleScreen } from './components/Battle/BattleScreen';
 import { ChapterSelect } from './components/ChapterSelect';
 import { ChapterNextPopup } from './components/ChapterNextPopup';
+import { StageMapScreen } from './components/StageMapScreen';
 import './App.css';
 // import './responsive.css';
 import './styles/safe-area.css';
@@ -81,7 +82,7 @@ function App() {
   useEffect(() => {
     if (gameState === GameState.MENU) {
       AudioManager.playBGM('/assets/backgrounds/audio sounds/medieval_music_openning.mp3');
-    } else if (gameState === GameState.BATTLE || gameState === GameState.TUTORIAL) {
+    } else if (gameState === GameState.BATTLE || gameState === GameState.TUTORIAL || gameState === GameState.STAGE_MAP) {
       let bgm = 'meadow field_background.mp3';
       if (chapterNum === '2A') bgm = 'desert_background.mp3';
       else if (chapterNum === '2B') bgm = 'deep forest.mp3';
@@ -179,11 +180,11 @@ function App() {
           </div>
         )}
 
-        {/* 로딩 스크린 (Phase 1: INITIAL / Phase 2: GAME_ENTRY) */}
+        {/* 로딩 스크린 */}
         {loadingPhase !== 'NONE' && (
           <LoadingScreen
             progress={loadingProgress}
-            phase={loadingPhase === 'INITIAL' ? 'INITIAL' : 'GAME_ENTRY'}
+            phase={loadingPhase}
           />
         )}
 
@@ -198,6 +199,7 @@ function App() {
           {gameState === GameState.MENU && <MainMenu />}
           {gameState === GameState.CHAPTER_SELECT && <ChapterSelect />}
           {gameState === GameState.CHAPTER_NEXT && <ChapterNextPopup />}
+          {gameState === GameState.STAGE_MAP && <StageMapScreen />}
           {(gameState === GameState.BATTLE || gameState === GameState.TUTORIAL || gameState === GameState.VICTORY || gameState === GameState.GAMEOVER) && <BattleScreen />}
         </div>
 

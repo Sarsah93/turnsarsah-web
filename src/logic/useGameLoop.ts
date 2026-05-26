@@ -2013,27 +2013,15 @@ export const useGameLoop = () => {
             let maxHp = store.player.maxHp;
             const isFinalBoss = stageNum === 10 || stageNum === 11;
 
-            // v2.0.0.14/16: Stage 6 Reward (Chapter 1 Only: difficulty-based MAX HP bonus + FULL HEAL)
+            // v3.0: Stage 6 Max HP Bonus (Chapter 1 only) - no heal, bonus only
             if (store.chapterNum === '1' && stageNum === 6) {
                 const bonus = Math.floor(maxHp * config.stage6MaxHpBonus);
                 maxHp += bonus;
                 store.setHasStage6Bonus(true);
                 store.setPlayerMaxHp(maxHp);
-                setPlayerHp(maxHp); // FULL HEAL per user request
-            } else if (!isFinalBoss) {
-                // Stage Clear Heal: 梨뺥꽣蹂?湲곕낯 ?뚮났??(NORMAL 湲곗?)
-                // Ch1=40, Ch2=30, Ch3=20 (EASY 횞1.5, HARD/HELL 횞0.8)
-                const chapterHealBase: Record<string, number> = {
-                    '1': 40, '2A': 30, '2B': 30, '3A': 20, '3B': 20
-                };
-                const diffMultiplier = store.difficulty === Difficulty.EASY ? 1.5
-                    : (store.difficulty === Difficulty.HARD || store.difficulty === Difficulty.HELL) ? 0.8
-                    : 1.0;
-                const baseHeal = chapterHealBase[store.chapterNum] ?? 30;
-                const healAmount = Math.floor(baseHeal * diffMultiplier);
-                const newHp = Math.min(maxHp, currentHp + healAmount);
-                setPlayerHp(newHp);
+                // HP heal removed - healing only at rest nodes (v3.0)
             }
+            // v3.0: No post-battle HP heal (replaced by rest node system)
 
             // Hidden Scenario: Perfect Clear Tracking
             const currentHpPercent = currentHp / maxHp;
@@ -2062,13 +2050,7 @@ export const useGameLoop = () => {
             }
 
             // 梨뺥꽣 留덉?留?蹂댁뒪 ?대━??蹂댁긽: +200 HP (紐⑤뱺 梨뺥꽣 怨듯넻, ?ㅼ쓬 梨뺥꽣 ?곕룞)
-            if (isFinalBoss) {
-                const freshPlayer = useGameStore.getState().player;
-                const transitionHeal = 200;
-                setPlayerHp(Math.min(freshPlayer.maxHp, freshPlayer.hp + transitionHeal));
-                showDamageText('PLAYER', `+${transitionHeal}`, '#2ecc71');
-                setMessage(t.COMBAT.VICTORY + ` (+${transitionHeal} HP)`);
-            }
+            // v3.0: Chapter transition HP heal removed (rest nodes only)
 
             // 2. Trophy Check ??stage trophy in memory (NOT saved to localStorage yet)
             const trophyIdMap: Record<string, Record<number, string>> = {
@@ -2138,70 +2120,37 @@ export const useGameLoop = () => {
         store.setIsVictoryFanfareActive(false);
         setMessage("");
 
-        // 5. Transition to next stage or unlock difficulty on final stage clear
-        const nextStage = stageNum + 1;
-
-        // Hidden Scenario Stage Redirection
-        let targetStage = nextStage;
-        if ((store.chapterNum === '2A' || store.chapterNum === '2B') && stageNum === 9 && store.specialQualify && store.ch2SpecialQualify) {
-            let hasSpecialTrophy = false;
-            try {
-                const { AltarManager } = await import('../utils/AltarManager');
-                const trophyId = store.chapterNum === '2A' ? 'TR_2A_SP' : 'TR_2B_SP';
-                hasSpecialTrophy = AltarManager.hasTrophy(trophyId, store.difficulty);
-            } catch (e) {
-                console.error("Failed to check special trophy", e);
-            }
-
-            if (!hasSpecialTrophy) {
-                targetStage = 11; // Special Stage
-            }
+        // 5. v3.0: Return to Stage Map after victory
+        // Mark current node as completed
+        const currentNodeId = store.stageMapProgress?.currentNodeId;
+        if (currentNodeId) {
+            store.completeMapNode(currentNodeId);
         }
 
-        // v2.3.8: Fix chapter transition for Chapter 1 (Standard nextStage is 11, which failed the !== 11 check)
-        // v2.4.0: Simplified check to just stageNum >= 10. If player clears stage 10 or 11, the game ends.
-        // v2.4.2: Revised Victory & Difficulty Unlock Logic with Popup
+        // Difficulty unlock on final boss clear
         if (stageNum >= 10) {
-            if (store.chapterNum === '1') {
-                if (store.difficulty === Difficulty.EASY) {
-                    // EASY: Chapter 1 only ??unlock NORMAL, show congratulations popup
-                    store.unlockDifficulty(Difficulty.NORMAL);
-                    store.setClearPopupDifficulty(Difficulty.EASY);
-                } else {
-                    // NORMAL+: Go to Chapter Select (Desert/Deep Forest)
-                    setGameState(GameState.CHAPTER_SELECT);
-                }
-            } else if (store.chapterNum === '2A') {
-                // Chapter 2A Clear: Go to Chapter 3A Cave
-                store.setNextChapterId('3A');
-                setGameState(GameState.CHAPTER_NEXT);
-            } else if (store.chapterNum === '2B') {
-                // Chapter 2B Clear: Go to Chapter 3B Swamp
-                store.setNextChapterId('3B');
-                setGameState(GameState.CHAPTER_NEXT);
+            if (store.chapterNum === '1' && store.difficulty === Difficulty.EASY) {
+                store.unlockDifficulty(Difficulty.NORMAL);
+                store.setClearPopupDifficulty(Difficulty.EASY);
             } else if (store.chapterNum === '3A' || store.chapterNum === '3B') {
-                // Final Chapter 3 Clear: Unlock next Difficulty & Show Congratulations Popup
-                // (EASY never reaches Chapter 3 ??it ends at Chapter 1)
                 if (store.difficulty === Difficulty.NORMAL) {
                     store.unlockDifficulty(Difficulty.HARD);
                     store.setClearPopupDifficulty(Difficulty.NORMAL);
                 } else if (store.difficulty === Difficulty.HARD) {
                     store.unlockDifficulty(Difficulty.HELL);
                     store.setClearPopupDifficulty(Difficulty.HARD);
-                } else {
-                    // HELL Clear or fallback
+                } else if (store.difficulty === Difficulty.HELL) {
                     store.setClearPopupDifficulty(Difficulty.HELL);
                 }
             }
-        } else {
-            triggerTransition(() => {
-                setMessage(""); // CLEAR MESSAGE FIRST to avoid overlap!
-                initGame(store.chapterNum, targetStage);
-                setGameState(GameState.BATTLE);
-                startInitialDraw();
-            });
         }
-    };
+
+        // Return to stage map (fade transition)
+        triggerTransition(() => {
+            setMessage("");
+            store.returnToStageMap();
+        });
+        };
 
     const startInitialDraw = async () => {
         const store = useGameStore.getState();

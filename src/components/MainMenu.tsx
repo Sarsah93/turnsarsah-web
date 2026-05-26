@@ -9,7 +9,7 @@ import { TRANSLATIONS } from '../constants/translations';
 import { AltarSystem } from './AltarSystem';
 
 export const MainMenu: React.FC = () => {
-    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize, setForceOnePairDance, setForceTwoPairTaeguek } = useGameStore();
+    const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize, setForceOnePairDance, setForceTwoPairTaeguek, setDifficulty, enterStageMap } = useGameStore();
     const t = TRANSLATIONS[language];
     const isEnglish = language === 'EN';
     const isLargeFont = fontSize === 'LARGE';
@@ -24,7 +24,9 @@ export const MainMenu: React.FC = () => {
         setActiveMenu('NONE');
         setForceOnePairDance(false);
         setForceTwoPairTaeguek(false);
-        triggerTransition(() => initGameWithDifficulty('1', 1, difficulty)); // Chapter 1, Stage 1
+        // v3.0: Enter Stage Map instead of direct battle
+        setDifficulty(difficulty);
+        triggerTransition(() => enterStageMap('1'));
     };
 
     const handleLoadAction = (slot: number) => {

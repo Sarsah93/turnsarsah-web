@@ -4,12 +4,12 @@ import { BlockButton } from './BlockButton';
 import { TRANSLATIONS } from '../constants/translations';
 
 export const ChapterSelect: React.FC = () => {
-    const { initGame, triggerTransition, setChapterNum, language } = useGameStore();
+    const { enterStageMap, triggerTransition, language } = useGameStore();
     const t = TRANSLATIONS[language] as any;
 
     const handleSelectChapter = (chapterId: string) => {
         triggerTransition(() => {
-            initGame(chapterId, 1);
+            enterStageMap(chapterId);
         });
     };
 

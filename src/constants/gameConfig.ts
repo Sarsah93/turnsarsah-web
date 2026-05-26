@@ -7,6 +7,7 @@ export const FPS = 60;
 export enum GameState {
   MENU = 'MENU',
   BATTLE = 'BATTLE',
+  STAGE_MAP = 'STAGE_MAP',
   PAUSE = 'PAUSE',
   VICTORY = 'VICTORY',
   GAMEOVER = 'GAMEOVER',

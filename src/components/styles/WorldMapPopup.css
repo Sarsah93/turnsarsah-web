@@ -63,7 +63,6 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
 }
 
 /* ── SVG path 기본 스타일 */
@@ -71,6 +70,7 @@
   fill: transparent;
   stroke: none;
   transition: fill 0.3s ease, stroke 0.3s ease;
+  pointer-events: none;
 }
 
 /* 현재 진행 챕터 하이라이트 */
@@ -80,6 +80,8 @@
   stroke-width: 3;
   filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.55));
   animation: svg-pulse 2.2s ease-in-out infinite;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 @keyframes svg-pulse {
@@ -130,6 +132,8 @@
   text-shadow:
     2px 2px 4px #000,
     0 0 16px rgba(241, 196, 15, 0.65);
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 /* 현재 위치 핀 */
