@@ -308,7 +308,7 @@ const CAVE_ROUTE: ChapterRoute = {
       x: 46, y: 20, nextNodes: ['s-5-1'] },
     { id: 's-5-1', type: 'stage', label: '스테이지 5-1', labelEN: 'Stage 5-1', stageKey: 5,
       x: 55, y: 19, nextNodes: ['s-6-1'] },
-    { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 6,
+    { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 7,
       x: 66, y: 19, nextNodes: ['rest-1'] },
     { id: 'rest-1', type: 'rest', label: '휴식처 1', labelEN: 'Rest Area 1',
       x: 78, y: 17, nextNodes: ['s-7'], restHealPercent: 0.3 },

@@ -6,12 +6,13 @@ import { Difficulty, DIFFICULTY_CONFIGS } from '../../constants/gameConfig';
 import { TRANSLATIONS } from '../../constants/translations';
 import { CHAPTERS } from '../../constants/stages';
 import { getBossImage, getBossAttackSpriteInfo, BossAttackSpriteInfo } from '../../utils/bossImageMapper';
+import { getNode } from '../../constants/chapterRoutes';
 import '../styles/BossWeakening.css';
 
 
 
 export const BossDisplay: React.FC = () => {
-    const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep, language } = useGameStore();
+    const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep, language, stageMapProgress } = useGameStore();
     const t = TRANSLATIONS[language];
 
     const getChapterDisplayName = () => {
@@ -37,9 +38,19 @@ export const BossDisplay: React.FC = () => {
         }
     };
 
+    const currentNode = stageMapProgress?.currentNodeId
+        ? getNode(chapterNum, stageMapProgress.currentNodeId)
+        : undefined;
+
+    const currentStageName = currentNode
+        ? (language === 'KR' ? currentNode.label : currentNode.labelEN)
+        : (stageNum > 10
+            ? (language === 'KR' ? '스페셜 스테이지' : 'Special Stage')
+            : (language === 'KR' ? `스테이지 ${stageNum}` : `Stage ${stageNum}`));
+
     const stageInfoText = isTutorial
         ? `TUTORIAL ${t.UI.STAGE_NUM}`
-        : getChapterDisplayName();
+        : `${getChapterDisplayName()} - ${currentStageName}`;
 
     // Map difficulty to display text
     const getDifficultyText = (diff: Difficulty) => {

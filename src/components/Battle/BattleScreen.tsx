@@ -18,6 +18,7 @@ import { AltarSkillSlots } from './AltarSkillSlots';
 import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 import { WorldMapPopup } from '../WorldMapPopup';
 import { StageMapScreen } from '../StageMapScreen';
+import { getNode } from '../../constants/chapterRoutes';
 
 import { BattleMenuOverlay, ActiveMenuType } from './BattleMenuOverlay';
 import { BattleField } from './BattleField';
@@ -33,9 +34,19 @@ export const BattleScreen: React.FC = () => {
     const store = useGameStore();
     const {
         player, bot, playerHand, gamePhase, isTutorial, tutorialStep,
-        setTutorialStep, stageNum, chapterNum, language
+        setTutorialStep, stageNum, chapterNum, language, stageMapProgress
     } = store;
     const t = (TRANSLATIONS as any)[language];
+
+    const currentNode = stageMapProgress?.currentNodeId
+        ? getNode(chapterNum, stageMapProgress.currentNodeId)
+        : undefined;
+
+    const currentStageName = currentNode
+        ? (language === 'KR' ? currentNode.label : currentNode.labelEN)
+        : (stageNum > 10
+            ? (language === 'KR' ? '스페셜 스테이지' : 'Special Stage')
+            : (language === 'KR' ? `스테이지 ${stageNum}` : `Stage ${stageNum}`));
 
     const [selectedCards, setSelectedCards] = useState<number[]>([]);
     const [isMapOpen, setIsMapOpen] = useState(false);
@@ -351,10 +362,7 @@ export const BattleScreen: React.FC = () => {
                         color: '#ecf0f1', fontSize: '3.5rem', fontFamily: 'BebasNeue',
                         textShadow: '0 0 10px rgba(0,0,0,0.8)'
                     }}>
-                        {stageNum > 10 
-                            ? (language === 'KR' ? '스페셜 스테이지 클리어!' : 'Special Stage Cleared!') 
-                            : (language === 'KR' ? `스테이지 ${stageNum} 클리어!` : `Stage ${stageNum} Cleared!`)
-                        }
+                        {language === 'KR' ? `${currentStageName} 클리어!` : `${currentStageName} Cleared!`}
                     </div>
                 </div>
             )}

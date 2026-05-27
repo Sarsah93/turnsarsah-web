@@ -5,6 +5,7 @@ import { Card } from '../types/Card';
 import { Difficulty, GameState } from '../constants/gameConfig';
 import { storageKey } from './buildTarget';
 import { StageMapProgress } from '../constants/chapterRoutes';
+import { clearAllSeenGuides } from '../constants/guideData';
 
 export const SAVE_VERSION = 'v3.0.0';
 const VERSION_KEY = storageKey('save_version');
@@ -69,6 +70,7 @@ export class SaveManager {
       this.deleteAllSaves();
       localStorage.removeItem(ALTAR_STORAGE_KEY);
       localStorage.removeItem(UNLOCKED_DIFFICULTIES_KEY); // v2.4.1: Wipe difficulty unlock data
+      clearAllSeenGuides();
       localStorage.setItem(VERSION_KEY, SAVE_VERSION);
       console.log(`[SaveManager] Version mismatch (${storedVersion} → ${SAVE_VERSION}). All data cleared.`);
       return true;
@@ -187,6 +189,7 @@ export class SaveManager {
         const key = `${SAVE_KEY_PREFIX}${i}`;
         localStorage.removeItem(key);
       }
+      clearAllSeenGuides();
       console.log('모든 저장 데이터가 삭제되었습니다.');
     } catch (error) {
       console.error('전체 삭제 실패:', error);

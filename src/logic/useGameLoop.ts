@@ -2071,23 +2071,7 @@ export const useGameLoop = () => {
                     staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
                 }
 
-                // Bypassed/missing mid-boss trophies are automatically awarded when clearing the chapter boss
-                const isChapterFinalBossClear = store.stageNum === 10 || store.stageNum === 11;
-                if (isChapterFinalBossClear) {
-                    const extraTrophiesMap: Record<string, string[]> = {
-                        '1': ['TR_1_4', 'TR_1_5'],
-                        '2A': ['TR_2A_5'],
-                        '2B': ['TR_2B_5'],
-                        '3A': ['TR_3A_07'],
-                        '3B': ['TR_3B_06']
-                    };
-                    const extras = extraTrophiesMap[store.chapterNum] || [];
-                    extras.forEach(extraId => {
-                        if (!AltarManager.hasTrophy(extraId, store.difficulty)) {
-                            AltarManager.stageTrophy(extraId, store.difficulty);
-                        }
-                    });
-                }
+
 
                 AltarManager.commitPendingTrophies(); // Commit immediately for better persistence
                 

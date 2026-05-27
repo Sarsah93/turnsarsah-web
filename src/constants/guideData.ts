@@ -20,6 +20,20 @@ export function markGuideSeen(key: string): void {
   localStorage.setItem(GUIDE_PREFIX + key, '1');
 }
 
+export function clearAllSeenGuides(): void {
+  const prefix = storageKey('guide_seen_');
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  console.log('[guideData] All seen guides cleared.');
+}
+
+
 // ─── 1. Chapter Intro Popups ──────────────────────────────────────────
 export const CHAPTER_INTROS: Record<string, GuidePopupData> = {
   '1': {

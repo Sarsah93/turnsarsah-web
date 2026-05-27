@@ -12,7 +12,7 @@ import { applyStageRulesImplementation } from '../logic/stageRules';
 import { storageKey } from '../utils/buildTarget';
 import { SaveManager } from '../utils/SaveManager';
 import { Language, TRANSLATIONS } from '../constants/translations';
-import { GuidePopupData } from '../constants/guideData';
+import { GuidePopupData, clearAllSeenGuides } from '../constants/guideData';
 import { StageMapProgress, CHAPTER_ROUTES } from '../constants/chapterRoutes';
 
 const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
@@ -1527,6 +1527,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     // v3.0.2: Reset/initialize player state and hidden variables when starting a new session (entering Chapter 1)
     if (chapterId === '1') {
+      clearAllSeenGuides();
       const diff = get().difficulty;
       const config = DIFFICULTY_CONFIGS[diff];
       const altarData = AltarManager.getAltarData();
