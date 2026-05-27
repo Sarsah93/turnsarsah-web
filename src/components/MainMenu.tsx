@@ -7,8 +7,13 @@ import { DifficultyPopup } from './DifficultyPopup';
 import { Difficulty } from '../constants/gameConfig';
 import { TRANSLATIONS } from '../constants/translations';
 import { AltarSystem } from './AltarSystem';
+import Modal from './Common/Modal';
 
-export const MainMenu: React.FC = () => {
+interface MainMenuProps {
+    onOpenDebugStageMap?: (chapterId: string) => void;
+}
+
+export const MainMenu: React.FC<MainMenuProps> = ({ onOpenDebugStageMap }) => {
     const { initGameWithDifficulty, initTutorial, loadGame, triggerTransition, language, fontSize, setForceOnePairDance, setForceTwoPairTaeguek, setDifficulty, enterStageMap } = useGameStore();
     const t = TRANSLATIONS[language];
     const isEnglish = language === 'EN';
@@ -46,7 +51,7 @@ export const MainMenu: React.FC = () => {
         triggerTransition(() => initGameWithDifficulty('1', 1, Difficulty.NORMAL));
     };
 
-    const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT' | 'DIFFICULTY' | 'ALTAR'>('NONE');
+    const [activeMenu, setActiveMenu] = useState<'NONE' | 'SETTINGS' | 'LOAD' | 'CONFIRM_QUIT' | 'DIFFICULTY' | 'ALTAR' | 'STAGE_MAP_DEBUG'>('NONE');
 
     return (
         <div className="menu-screen" style={{
@@ -75,9 +80,10 @@ export const MainMenu: React.FC = () => {
 
                 {/* 디버그 버튼 — DEV 환경에서만 노출, 가로 정렬 */}
                 {import.meta.env.DEV && (
-                    <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <BlockButton text="DEBUG: ONE PAIR DANCE"   onClick={handleDebugOnePairDance}   width="auto" style={{ ...menuButtonStyle, fontSize: '0.85em', padding: '6px 14px', opacity: 0.75 }} />
                         <BlockButton text="DEBUG: TWO PAIR TAEGUEK" onClick={handleDebugTwoPairTaeguek} width="auto" style={{ ...menuButtonStyle, fontSize: '0.85em', padding: '6px 14px', opacity: 0.75 }} />
+                        <BlockButton text="🗺️ DEBUG: STAGE MAPS" onClick={() => setActiveMenu('STAGE_MAP_DEBUG')} width="auto" style={{ ...menuButtonStyle, fontSize: '0.85em', padding: '6px 14px', opacity: 0.85, color: '#f1c40f', borderColor: '#f1c40f' }} />
                     </div>
                 )}
             </div>
@@ -127,6 +133,30 @@ export const MainMenu: React.FC = () => {
                     onYes={() => window.close()}
                     onNo={() => setActiveMenu('NONE')}
                 />
+            )}
+
+            {/* Stage Map Coords Debug Modal */}
+            {activeMenu === 'STAGE_MAP_DEBUG' && (
+                <Modal
+                    title="STAGE MAP COORDS DEBUG"
+                    onClose={() => setActiveMenu('NONE')}
+                    isOpen={true}
+                    width={550}
+                    height={500}
+                    showCloseButton={false}
+                    showBackButton={true}
+                >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px 24px', alignItems: 'center' }}>
+                        <div style={{ color: '#aaa', fontSize: '1.2rem', marginBottom: '8px', textAlign: 'center', fontFamily: 'monospace', lineHeight: 1.4 }}>
+                            Select a Stage Map to inspect and measure coordinate points:
+                        </div>
+                        <BlockButton text="Chapter 1: Meadow Field (들판 지대)" onClick={() => { onOpenDebugStageMap?.('1'); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
+                        <BlockButton text="Chapter 2A: Desert (사막 지대)" onClick={() => { onOpenDebugStageMap?.('2A'); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
+                        <BlockButton text="Chapter 2B: Deep Forest (깊은 숲)" onClick={() => { onOpenDebugStageMap?.('2B'); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
+                        <BlockButton text="Chapter 3A: Cave (동굴 지대)" onClick={() => { onOpenDebugStageMap?.('3A'); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
+                        <BlockButton text="Chapter 3B: Swamp (늪지대)" onClick={() => { onOpenDebugStageMap?.('3B'); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
+                    </div>
+                </Modal>
             )}
         </div>
     );

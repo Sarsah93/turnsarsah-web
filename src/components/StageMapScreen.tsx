@@ -1,5 +1,4 @@
-// components/StageMapScreen.tsx
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { GameState } from '../constants/gameConfig';
 import {
@@ -21,9 +20,11 @@ type MapMenuState = 'NONE' | 'PAUSE' | 'SAVE' | 'LOAD' | 'QUIT_CONFIRM' | 'SETTI
 interface StageMapScreenProps {
   readOnly?: boolean;
   onClose?: () => void;
+  debugChapterId?: string; // If provided, opens in debug mode for this chapter
 }
 
-export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false, onClose }) => {
+export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false, onClose, debugChapterId }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [confirmNode, setConfirmNode] = useState<MapNode | null>(null);
   const [infoPopup, setInfoPopup] = useState<{ msg: string; icon: string } | null>(null);
   const [menuState, setMenuState] = useState<MapMenuState>('NONE');
@@ -37,24 +38,33 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
 
   const t = TRANSLATIONS[language];
 
-  if (!stageMapProgress) return null;
+  // If in debugChapterId mode, create mock progress to view the map without a loaded game
+  const activeProgress = stageMapProgress || (debugChapterId ? {
+    chapterId: debugChapterId,
+    completedNodes: [],
+    currentNodeId: CHAPTER_ROUTES[debugChapterId]?.startNodeId || '',
+    chosenForks: {}
+  } : null);
 
-  const route = CHAPTER_ROUTES[stageMapProgress.chapterId];
+  if (!activeProgress) return null;
+
+  const route = CHAPTER_ROUTES[activeProgress.chapterId];
   if (!route) return null;
 
-  const availableNodeIds = getAvailableNodes(stageMapProgress);
+  const availableNodeIds = getAvailableNodes(activeProgress);
 
   // ── Node Status Helper ──
   const getNodeStatus = (node: MapNode): 'completed' | 'available' | 'dimmed' | 'locked' => {
-    if (stageMapProgress.completedNodes.includes(node.id)) return 'completed';
-    if (isDimmedNode(stageMapProgress, node.id)) return 'dimmed';
+    if (debugChapterId) return 'available'; // In debug mode, keep all nodes visible and clickable
+    if (activeProgress.completedNodes.includes(node.id)) return 'completed';
+    if (isDimmedNode(activeProgress, node.id)) return 'dimmed';
     if (availableNodeIds.includes(node.id)) return 'available';
     return 'locked';
   };
 
   // ── Click Handlers ──
   const handleNodeClick = useCallback((node: MapNode) => {
-    if (readOnly) return;
+    if (readOnly || debugChapterId) return;
     const status = getNodeStatus(node);
     if (status !== 'available') return;
 
@@ -67,7 +77,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
     } else if (node.type === 'exit') {
       handleExitNode(node);
     }
-  }, [readOnly, stageMapProgress, availableNodeIds]);
+  }, [readOnly, debugChapterId, activeProgress, availableNodeIds]);
 
   const handleRestNode = (node: MapNode) => {
     const store = useGameStore.getState();
@@ -147,14 +157,14 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
 
     // v3.0: 스페셜 스테이지 조건부 로직 적용
     let targetStageKey = confirmNode.stageKey;
-    if (stageMapProgress!.chapterId === '2A' && targetStageKey === 10 && store.specialQualify) {
+    if (activeProgress!.chapterId === '2A' && targetStageKey === 10 && store.specialQualify) {
       targetStageKey = 11; // SAND DRAGON
-    } else if (stageMapProgress!.chapterId === '2B' && targetStageKey === 10 && store.ch2SpecialQualify) {
+    } else if (activeProgress!.chapterId === '2B' && targetStageKey === 10 && store.ch2SpecialQualify) {
       targetStageKey = 11; // HIGH ORC SHAMAN
     }
 
     store.triggerTransition(() => {
-      store.initGameWithDifficulty(stageMapProgress!.chapterId, targetStageKey, store.difficulty);
+      store.initGameWithDifficulty(activeProgress!.chapterId, targetStageKey, store.difficulty);
     });
   };
 
@@ -245,20 +255,22 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
       </div>
 
       {/* HP HUD */}
-      <div className="stage-map-hud">
-        <div className="stage-map-hp-label">
-          {language === 'KR' ? 'CORE STABILITY' : 'CORE STABILITY'}
+      {!debugChapterId && (
+        <div className="stage-map-hud">
+          <div className="stage-map-hp-label">
+            {language === 'KR' ? 'CORE STABILITY' : 'CORE STABILITY'}
+          </div>
+          <div className="stage-map-hp-text">
+            {player.hp} / {player.maxHp}
+          </div>
+          <div className="stage-map-hp-bar">
+            <div
+              className="stage-map-hp-fill"
+              style={{ width: `${hpPercent}%` }}
+            />
+          </div>
         </div>
-        <div className="stage-map-hp-text">
-          {player.hp} / {player.maxHp}
-        </div>
-        <div className="stage-map-hp-bar">
-          <div
-            className="stage-map-hp-fill"
-            style={{ width: `${hpPercent}%` }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Chapter Label */}
       <div className="stage-map-chapter-label">
@@ -356,6 +368,188 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
           onNo={() => setMenuState('PAUSE')}
         />
       )}
+
+      {/* ── Stage Map Coordinate Debug Overlay ── */}
+      {debugChapterId && (
+        <StageMapDebugOverlay containerRef={containerRef} />
+      )}
     </div>
   );
 };
+
+// ─── Stage Map SVG/Percentage Coordinate Debug Overlay ───
+interface DebugPoint { svgX: number; svgY: number; pctX: number; pctY: number; }
+
+const StageMapDebugOverlay: React.FC<{ containerRef: React.RefObject<HTMLDivElement | null> }> = ({ containerRef }) => {
+  const [mouse, setMouse] = useState<DebugPoint>({ svgX: 0, svgY: 0, pctX: 0, pctY: 0 });
+  const [points, setPoints] = useState<DebugPoint[]>([]);
+  const [closed, setClosed] = useState(false);
+  const [copiedSvg, setCopiedSvg] = useState(false);
+  const [copiedPct, setCopiedPct] = useState(false);
+
+  const toCoords = useCallback((clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return { svgX: 0, svgY: 0, pctX: 0, pctY: 0 };
+    
+    const relX = (clientX - rect.left) / rect.width;
+    const relY = (clientY - rect.top) / rect.height;
+    
+    return {
+      svgX: Math.round(relX * 1024),
+      svgY: Math.round(relY * 682),
+      pctX: Math.round(relX * 100),
+      pctY: Math.round(relY * 100)
+    };
+  }, [containerRef]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    setMouse(toCoords(e.clientX, e.clientY));
+  }, [toCoords]);
+
+  const handleClick = useCallback((e: MouseEvent) => {
+    if (e.button !== 0) return;
+    setPoints(prev => [...prev, toCoords(e.clientX, e.clientY)]);
+    setClosed(false);
+  }, [toCoords]);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.key === 'z' || e.key === 'Z') && !e.ctrlKey) setClosed(true);
+    if (e.key === 'Backspace') { setPoints(prev => prev.slice(0, -1)); setClosed(false); }
+    if (e.key === 'Escape')    { setPoints([]); setClosed(false); }
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('mousemove', handleMouseMove);
+    el.addEventListener('click', handleClick);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      el.removeEventListener('mousemove', handleMouseMove);
+      el.removeEventListener('click', handleClick);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleMouseMove, handleClick, handleKeyDown, containerRef]);
+
+  const svgPathStr = points.length === 0
+    ? '(클릭해서 첫 점 추가)'
+    : points.map((p, i) => (i === 0 ? `M ${p.svgX} ${p.svgY}` : `  L ${p.svgX} ${p.svgY}`)).join('\n') + (closed ? '\n  Z' : '');
+
+  const pctCoordsStr = points.length === 0
+    ? '(클릭해서 첫 점 추가)'
+    : points.map(p => `x: ${p.pctX}, y: ${p.pctY}`).join('\n');
+
+  const handleCopySvg = () => {
+    navigator.clipboard.writeText(svgPathStr).then(() => {
+      setCopiedSvg(true); setTimeout(() => setCopiedSvg(false), 2000);
+    });
+  };
+
+  const handleCopyPct = () => {
+    navigator.clipboard.writeText(pctCoordsStr).then(() => {
+      setCopiedPct(true); setTimeout(() => setCopiedPct(false), 2000);
+    });
+  };
+
+  return (
+    <>
+      <svg
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 50 }}
+        viewBox="0 0 1024 682"
+        preserveAspectRatio="none"
+      >
+        <line x1={mouse.svgX} y1={0} x2={mouse.svgX} y2={682} stroke="rgba(255,80,80,0.5)" strokeWidth="1" strokeDasharray="4 4" />
+        <line x1={0} y1={mouse.svgY} x2={1024} y2={mouse.svgY} stroke="rgba(255,80,80,0.5)" strokeWidth="1" strokeDasharray="4 4" />
+        <circle cx={mouse.svgX} cy={mouse.svgY} r={5} fill="rgba(255,80,80,0.85)" />
+        {points.length >= 2 && (
+          <polyline points={points.map(p => `${p.svgX},${p.svgY}`).join(' ')} fill="none" stroke="rgba(241,196,15,0.9)" strokeWidth="2" strokeDasharray="6 3" />
+        )}
+        {closed && points.length >= 2 && (
+          <line x1={points[points.length-1].svgX} y1={points[points.length-1].svgY} x2={points[0].svgX} y2={points[0].svgY} stroke="rgba(241,196,15,0.6)" strokeWidth="1.5" strokeDasharray="4 4" />
+        )}
+        {points.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.svgX} cy={p.svgY} r={6} fill={i === 0 ? '#2ecc71' : '#f1c40f'} opacity={0.9} />
+            <text x={p.svgX + 8} y={p.svgY - 6} fill="#fff" fontSize="14" fontFamily="monospace">{i + 1}</text>
+          </g>
+        ))}
+      </svg>
+
+      {/* 마우스 좌표 표시 */}
+      <div style={{
+        position: 'absolute',
+        left: `${mouse.pctX}%`,
+        top:  `${mouse.pctY}%`,
+        transform: mouse.pctX > 75 ? 'translate(calc(-100% - 8px), 8px)' : 'translate(12px, 8px)',
+        background: 'rgba(0,0,0,0.85)', color: '#f1c40f',
+        fontFamily: 'monospace', fontSize: '13px',
+        padding: '4px 10px', borderRadius: '4px',
+        border: '1px solid rgba(241,196,15,0.4)',
+        pointerEvents: 'none', zIndex: 60, whiteSpace: 'nowrap',
+        boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+      }}>
+        <div>Pct: x: {mouse.pctX}, y: {mouse.pctY}</div>
+        <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px' }}>SVG: {mouse.svgX}, {mouse.svgY}</div>
+      </div>
+
+      {/* 디버그 패널 */}
+      <div style={{
+        position: 'absolute', bottom: 20, left: 20, zIndex: 70,
+        background: 'rgba(15, 15, 25, 0.95)', border: '2px solid #f1c40f',
+        borderRadius: '12px', padding: '16px 20px', color: '#fff',
+        fontFamily: 'monospace', fontSize: '12px', minWidth: '380px', maxWidth: '450px',
+        backdropFilter: 'blur(6px)', boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+      }}>
+        <div style={{ color: '#f1c40f', fontWeight: 'bold', marginBottom: 8, fontSize: '14px', display: 'flex', justifyContent: 'space-between' }}>
+          <span>🗺️ 스테이지 지도 좌표 디버그</span>
+          <span style={{ fontSize: '11px', color: '#aaa' }}>(DEV ONLY)</span>
+        </div>
+        <div style={{ color: '#ccc', marginBottom: 12, lineHeight: '1.6', fontSize: '11px' }}>
+          <span style={{ color: '#7fdbff' }}>클릭</span> 점 추가 &nbsp;│&nbsp;
+          <span style={{ color: '#7fdbff' }}>Z키</span> 닫기 &nbsp;│&nbsp;
+          <span style={{ color: '#7fdbff' }}>Backspace</span> 취소 &nbsp;│&nbsp;
+          <span style={{ color: '#7fdbff' }}>Esc</span> 초기화
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div>
+            <div style={{ color: '#ffd700', marginBottom: '4px', fontWeight: 'bold' }}>📍 퍼센트 좌표 (Pct)</div>
+            <pre style={{
+              background: 'rgba(255,255,255,0.06)', padding: '8px', borderRadius: 6,
+              overflowX: 'auto', height: '120px', overflowY: 'auto',
+              fontSize: '11px', color: '#e0e0e0', margin: 0,
+              whiteSpace: 'pre-wrap', wordBreak: 'break-all', border: '1px solid rgba(255,255,255,0.1)'
+            }}>{pctCoordsStr}</pre>
+          </div>
+          <div>
+            <div style={{ color: '#2ecc71', marginBottom: '4px', fontWeight: 'bold' }}>📐 SVG Path (1024x682)</div>
+            <pre style={{
+              background: 'rgba(255,255,255,0.06)', padding: '8px', borderRadius: 6,
+              overflowX: 'auto', height: '120px', overflowY: 'auto',
+              fontSize: '11px', color: '#e0e0e0', margin: 0,
+              whiteSpace: 'pre-wrap', wordBreak: 'break-all', border: '1px solid rgba(255,255,255,0.1)'
+            }}>{svgPathStr}</pre>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleCopyPct} style={dbBtn(copiedPct ? '#2ecc71' : '#f1c40f')}>
+            {copiedPct ? '✓ 복사됨' : '📋 Pct 복사'}
+          </button>
+          <button onClick={handleCopySvg} style={dbBtn(copiedSvg ? '#2ecc71' : '#2ecc71')}>
+            {copiedSvg ? '✓ 복사됨' : '📋 SVG 복사'}
+          </button>
+          <button onClick={() => { setPoints([]); setClosed(false); }} style={dbBtn('#e74c3c')}>🗑️ 초기화</button>
+          <button onClick={() => setClosed(true)} disabled={points.length < 2} style={dbBtn('#9b59b6')}>⬡ 닫기(Z)</button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const dbBtn = (color: string): React.CSSProperties => ({
+  background: 'transparent', border: `1px solid ${color}`, color,
+  borderRadius: '6px', padding: '6px 12px', cursor: 'pointer',
+  fontSize: '11px', fontFamily: 'monospace', fontWeight: 'bold',
+  transition: 'all 0.2s',
+});

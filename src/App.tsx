@@ -35,6 +35,9 @@ function App() {
   // Version migration popup state
   const [showVersionNotice, setShowVersionNotice] = useState(false);
 
+  // Stage Map Coordinate Debug Mode state
+  const [debugChapterId, setDebugChapterId] = useState<string | null>(null);
+
   // Phase 1: 앱 마운트 시 메인 메뉴 최소 자산 프리로드
   useEffect(() => {
     const store = useGameStore.getState();
@@ -196,12 +199,23 @@ function App() {
 
         {/* UI Layer */}
         <div className="ui-layer">
-          {gameState === GameState.MENU && <MainMenu />}
+          {gameState === GameState.MENU && <MainMenu onOpenDebugStageMap={(chapterId) => setDebugChapterId(chapterId)} />}
           {gameState === GameState.CHAPTER_SELECT && <ChapterSelect />}
           {gameState === GameState.CHAPTER_NEXT && <ChapterNextPopup />}
           {gameState === GameState.STAGE_MAP && <StageMapScreen />}
           {(gameState === GameState.BATTLE || gameState === GameState.TUTORIAL || gameState === GameState.VICTORY || gameState === GameState.GAMEOVER) && <BattleScreen />}
         </div>
+
+        {/* ── Stage Map Coordinate Debug Mode Overlay ── */}
+        {debugChapterId && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 7000 }}>
+            <StageMapScreen
+              readOnly={true}
+              debugChapterId={debugChapterId}
+              onClose={() => setDebugChapterId(null)}
+            />
+          </div>
+        )}
 
         {/* Version Migration Notice Popup */}
         {showVersionNotice && (
