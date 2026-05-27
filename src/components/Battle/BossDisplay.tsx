@@ -14,17 +14,32 @@ export const BossDisplay: React.FC = () => {
     const { bot, chapterNum, stageNum, stage10RuleText, difficulty, isTutorial, tutorialStep, language } = useGameStore();
     const t = TRANSLATIONS[language];
 
-    // Get max stages for the current chapter (v2.4.3)
-    const chapterConfig = CHAPTERS[chapterNum];
-    let maxStages = chapterConfig ? Object.keys(chapterConfig.stages).filter(s => parseInt(s) < 90 && parseInt(s) <= 10).length : 10;
-    const isSpecialStage = stageNum > 10;
+    const getChapterDisplayName = () => {
+        const isKR = language === 'KR';
+        if (isKR) {
+            const names: Record<string, string> = {
+                '1': '챕터 1 들판 지대',
+                '2A': '챕터 2 사막 지대',
+                '2B': '챕터 2 깊은 숲 지대',
+                '3A': '챕터 3 동굴 지대',
+                '3B': '챕터 3 늪 지대'
+            };
+            return names[chapterNum] || `챕터 ${chapterNum}`;
+        } else {
+            const names: Record<string, string> = {
+                '1': 'Chapter 1 Meadow Field',
+                '2A': 'Chapter 2 Desert',
+                '2B': 'Chapter 2 Deep Forest',
+                '3A': 'Chapter 3 Cave',
+                '3B': 'Chapter 3 Swamp'
+            };
+            return names[chapterNum] || `Chapter ${chapterNum}`;
+        }
+    };
 
-    const specialText = language === 'KR' ? '스페셜 스테이지' : 'SPECIAL STAGE';
     const stageInfoText = isTutorial
         ? `TUTORIAL ${t.UI.STAGE_NUM}`
-        : isSpecialStage
-            ? `${t.UI.CHAPTER_NUM} ${chapterNum} (${specialText})`
-            : `${t.UI.CHAPTER_NUM} ${chapterNum} (${stageNum}/${maxStages})`;
+        : getChapterDisplayName();
 
     // Map difficulty to display text
     const getDifficultyText = (diff: Difficulty) => {

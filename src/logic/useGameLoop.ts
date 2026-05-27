@@ -2060,15 +2060,38 @@ export const useGameLoop = () => {
                 '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' },
                 '3B': { 6: 'TR_3B_06', 10: 'TR_3B_10' }
             };
-            const potentialTrophyId = trophyIdMap[store.chapterNum]?.[stageNum];
+            const potentialTrophyId = trophyIdMap[store.chapterNum]?.[store.stageNum];
 
             if (potentialTrophyId && store.difficulty !== Difficulty.EASY) {
                 const { AltarManager } = await import('../utils/AltarManager');
-                // Only stage if not already permanently owned and not already pending
+                
+                // Stage the main trophy
+                let staged = false;
                 if (!AltarManager.hasTrophy(potentialTrophyId, store.difficulty)) {
-                    const staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
-                    AltarManager.commitPendingTrophies(); // v2.4.9: Commit immediately for better persistence
-                    if (staged) {
+                    staged = AltarManager.stageTrophy(potentialTrophyId, store.difficulty);
+                }
+
+                // Bypassed/missing mid-boss trophies are automatically awarded when clearing the chapter boss
+                const isChapterFinalBossClear = store.stageNum === 10 || store.stageNum === 11;
+                if (isChapterFinalBossClear) {
+                    const extraTrophiesMap: Record<string, string[]> = {
+                        '1': ['TR_1_4', 'TR_1_5'],
+                        '2A': ['TR_2A_5'],
+                        '2B': ['TR_2B_5'],
+                        '3A': ['TR_3A_07'],
+                        '3B': ['TR_3B_06']
+                    };
+                    const extras = extraTrophiesMap[store.chapterNum] || [];
+                    extras.forEach(extraId => {
+                        if (!AltarManager.hasTrophy(extraId, store.difficulty)) {
+                            AltarManager.stageTrophy(extraId, store.difficulty);
+                        }
+                    });
+                }
+
+                AltarManager.commitPendingTrophies(); // Commit immediately for better persistence
+                
+                if (staged) {
                         // ??? Guide Popup: Loot & Altar System (first trophy only) ??
                         if (!hasSeenGuide(SYSTEM_GUIDES.LOOT_SYSTEM.key)) {
                             await showGuidePopup(SYSTEM_GUIDES.LOOT_SYSTEM);
@@ -2082,7 +2105,6 @@ export const useGameLoop = () => {
                         }
                         await wait(500);
                     }
-                }
             }
             
             setGameState(GameState.VICTORY);

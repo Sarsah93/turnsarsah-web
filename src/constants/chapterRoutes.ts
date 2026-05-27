@@ -129,45 +129,45 @@ const MEADOW_ROUTE: ChapterRoute = {
   nodes: [
     // ── 직선 구간 (스테이지 1~3) ──
     { id: 's-1', type: 'stage', label: '스테이지 1', labelEN: 'Stage 1', stageKey: 1,
-      x: 80, y: 8, nextNodes: ['s-2'] },
+      x: 86, y: 11, nextNodes: ['s-2'] },
     { id: 's-2', type: 'stage', label: '스테이지 2', labelEN: 'Stage 2', stageKey: 2,
-      x: 58, y: 6, nextNodes: ['s-3'] },
+      x: 69, y: 11, nextNodes: ['s-3'] },
     { id: 's-3', type: 'stage', label: '스테이지 3', labelEN: 'Stage 3', stageKey: 3,
-      x: 45, y: 5, nextNodes: ['s-4-1', 's-4-2'], forkGroup: 'fork-path' },
+      x: 52, y: 12, nextNodes: ['s-4-1', 's-4-2'], forkGroup: 'fork-path' },
 
     // ── 좌측 경로 (4-1 루트) ──
     { id: 's-4-1', type: 'stage', label: '스테이지 4-1', labelEN: 'Stage 4-1', stageKey: 4,
-      x: 27, y: 15, nextNodes: ['rest-1'] },
+      x: 39, y: 25, nextNodes: ['rest-1'] },
     { id: 'rest-1', type: 'rest', label: '휴식처 1', labelEN: 'Rest Area 1',
-      x: 20, y: 30, nextNodes: ['s-5-1'], restHealPercent: 0.3 },
+      x: 28, y: 36, nextNodes: ['s-5-1'], restHealPercent: 0.3 },
     { id: 's-5-1', type: 'stage', label: '스테이지 5-1', labelEN: 'Stage 5-1', stageKey: 7,
-      x: 35, y: 36, nextNodes: ['s-6-1'] },
+      x: 38, y: 45, nextNodes: ['s-6-1'] },
     { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 5,
-      x: 38, y: 53, nextNodes: ['s-7-1'] },
+      x: 42, y: 60, nextNodes: ['s-7-1'] },
     { id: 's-7-1', type: 'stage', label: '스테이지 7-1', labelEN: 'Stage 7-1', stageKey: 10,
-      x: 38, y: 70, nextNodes: ['event-1'] },
+      x: 37, y: 73, nextNodes: ['event-1'] },
 
     // ── 우측 경로 (4-2 루트) ──
     { id: 's-4-2', type: 'stage', label: '스테이지 4-2', labelEN: 'Stage 4-2', stageKey: 6,
-      x: 72, y: 15, nextNodes: ['rest-2'] },
+      x: 70, y: 28, nextNodes: ['rest-2'] },
     { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
-      x: 80, y: 30, nextNodes: ['s-5-2'], restHealPercent: 0.3 },
+      x: 80, y: 36, nextNodes: ['s-5-2'], restHealPercent: 0.3 },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 8,
-      x: 65, y: 36, nextNodes: ['s-6-2'] },
+      x: 68, y: 45, nextNodes: ['s-6-2'] },
     { id: 's-6-2', type: 'stage', label: '스테이지 6-2', labelEN: 'Stage 6-2', stageKey: 9,
-      x: 68, y: 53, nextNodes: ['s-7-2'] },
+      x: 64, y: 60, nextNodes: ['s-7-2'] },
     { id: 's-7-2', type: 'stage', label: '스테이지 7-2', labelEN: 'Stage 7-2', stageKey: 10,
-      x: 68, y: 70, nextNodes: ['event-1'] },
+      x: 68, y: 74, nextNodes: ['event-1'] },
 
     // ── 합류 + 이벤트 ──
     { id: 'event-1', type: 'event', label: '이벤트 스테이지', labelEN: 'Event Stage',
-      x: 48, y: 83, nextNodes: ['exit-desert', 'exit-forest'], forkGroup: 'fork-exit' },
+      x: 42, y: 85, nextNodes: ['exit-desert', 'exit-forest'], forkGroup: 'fork-exit' },
 
     // ── 출구 ──
-    { id: 'exit-desert', type: 'exit', label: '사막 챕터로 연결', labelEN: 'To Desert',
-      x: 33, y: 95, nextNodes: [], exitChapterId: '2A' },
-    { id: 'exit-forest', type: 'exit', label: '깊은 숲 챕터로 연결', labelEN: 'To Deep Forest',
-      x: 85, y: 95, nextNodes: [], exitChapterId: '2B' },
+    { id: 'exit-desert', type: 'exit', label: '사막 지대', labelEN: 'To Desert',
+      x: 25, y: 87, nextNodes: [], exitChapterId: '2A' },
+    { id: 'exit-forest', type: 'exit', label: '깊은 숲 지대', labelEN: 'To Deep Forest',
+      x: 84, y: 90, nextNodes: [], exitChapterId: '2B' },
   ],
 };
 
@@ -182,47 +182,47 @@ const DESERT_ROUTE: ChapterRoute = {
   nodes: [
     // ── 입구 & 직선 ──
     { id: 's-1', type: 'stage', label: '스테이지 1', labelEN: 'Stage 1', stageKey: 1,
-      x: 90, y: 45, nextNodes: ['s-2'] },
+      x: 92, y: 39, nextNodes: ['s-2'] },
     { id: 's-2', type: 'stage', label: '스테이지 2', labelEN: 'Stage 2', stageKey: 2,
-      x: 65, y: 12, nextNodes: ['s-3', 'rest-oasis'], forkGroup: 'fork-A' },
+      x: 79, y: 24, nextNodes: ['s-3', 'rest-oasis'], forkGroup: 'fork-A' },
 
     // ── 상단 경로 (스테이지 3 루트) ──
     { id: 's-3', type: 'stage', label: '스테이지 3', labelEN: 'Stage 3', stageKey: 3,
-      x: 58, y: 10, nextNodes: ['s-4-1'] },
+      x: 62, y: 16, nextNodes: ['s-4-1'] },
     { id: 's-4-1', type: 'stage', label: '스테이지 4-1', labelEN: 'Stage 4-1', stageKey: 4,
-      x: 32, y: 8, nextNodes: ['s-5-1'] },
+      x: 40, y: 16, nextNodes: ['s-5-1'] },
     { id: 's-5-1', type: 'stage', label: '스테이지 5-1', labelEN: 'Stage 5-1', stageKey: 5,
-      x: 20, y: 25, nextNodes: ['s-6-1'] },
+      x: 24, y: 32, nextNodes: ['s-6-1'] },
 
     // ── 하단 경로 (오아시스 루트) ──
     { id: 'rest-oasis', type: 'rest', label: '오아시스 마을', labelEN: 'Oasis Village',
-      x: 62, y: 25, nextNodes: ['s-5-2', 'event-camp'], forkGroup: 'fork-B', restHealPercent: 0.3 },
+      x: 62, y: 37, nextNodes: ['s-5-2', 'event-camp'], forkGroup: 'fork-B', restHealPercent: 0.3 },
     { id: 'event-camp', type: 'event', label: '수상한 캠프', labelEN: 'Suspicious Camp',
-      x: 78, y: 45, nextNodes: ['s-4-2'] },
+      x: 79, y: 51, nextNodes: ['s-4-2'] },
     { id: 's-4-2', type: 'stage', label: '스테이지 4-2', labelEN: 'Stage 4-2', stageKey: 4,
-      x: 80, y: 58, nextNodes: ['s-5-3', 'rest-temple'], forkGroup: 'fork-C' },
+      x: 72, y: 70, nextNodes: ['s-5-3', 'rest-temple'], forkGroup: 'fork-C' },
     { id: 's-5-3', type: 'stage', label: '스테이지 5-3', labelEN: 'Stage 5-3', stageKey: 7,
-      x: 58, y: 78, nextNodes: ['event-main'] },
+      x: 58, y: 91, nextNodes: ['event-main'] },
     { id: 'rest-temple', type: 'rest', label: '제단 휴식처', labelEN: 'Temple Rest Area',
-      x: 60, y: 62, nextNodes: ['s-5-2'], restHealPercent: 0.3 },
+      x: 57, y: 74, nextNodes: ['s-5-2'], restHealPercent: 0.3 },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 6,
-      x: 52, y: 42, nextNodes: ['s-6-1'] },
+      x: 55, y: 53, nextNodes: ['s-6-1'] },
     { id: 'event-main', type: 'event', label: '이벤트 스테이지', labelEN: 'Event Stage',
-      x: 48, y: 82, nextNodes: ['s-6-2'] },
+      x: 42, y: 88, nextNodes: ['s-6-2'] },
     { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 8,
-      x: 35, y: 40, nextNodes: ['s-7'] },
+      x: 36, y: 40, nextNodes: ['s-7'] },
     { id: 's-6-2', type: 'stage', label: '스테이지 6-2', labelEN: 'Stage 6-2', stageKey: 8,
-      x: 38, y: 72, nextNodes: ['s-7'] },
+      x: 33, y: 78, nextNodes: ['s-7'] },
 
     // ── 합류 ──
     { id: 's-7', type: 'stage', label: '스테이지 7', labelEN: 'Stage 7', stageKey: 9,
-      x: 30, y: 58, nextNodes: ['s-8'] },
+      x: 28, y: 61, nextNodes: ['s-8'] },
     { id: 's-8', type: 'stage', label: '스테이지 8', labelEN: 'Stage 8', stageKey: 10,
-      x: 12, y: 68, nextNodes: ['exit-cave'] },
+      x: 12, y: 67, nextNodes: ['exit-cave'] },
 
     // ── 출구 ──
     { id: 'exit-cave', type: 'exit', label: '동굴 지대', labelEN: 'To Cave',
-      x: 8, y: 50, nextNodes: [], exitChapterId: '3A' },
+      x: 9, y: 39, nextNodes: [], exitChapterId: '3A' },
   ],
 };
 
@@ -237,48 +237,48 @@ const DEEP_FOREST_ROUTE: ChapterRoute = {
   nodes: [
     // ── 입구 & 직선 ──
     { id: 's-1', type: 'stage', label: '스테이지 1', labelEN: 'Stage 1', stageKey: 1,
-      x: 58, y: 82, nextNodes: ['s-2-1', 's-2-2'], forkGroup: 'fork-path' },
+      x: 62, y: 81, nextNodes: ['s-2-1', 's-2-2'], forkGroup: 'fork-path' },
 
     // ── 좌측 경로 ──
     { id: 's-2-1', type: 'stage', label: '스테이지 2-1', labelEN: 'Stage 2-1', stageKey: 2,
-      x: 38, y: 72, nextNodes: ['s-3-1'] },
+      x: 41, y: 80, nextNodes: ['s-3-1'] },
     { id: 's-3-1', type: 'stage', label: '스테이지 3-1', labelEN: 'Stage 3-1', stageKey: 3,
-      x: 30, y: 62, nextNodes: ['event-1'] },
+      x: 30, y: 71, nextNodes: ['event-1'] },
     { id: 'event-1', type: 'event', label: '이벤트 스테이지 1', labelEN: 'Event Stage 1',
-      x: 17, y: 58, nextNodes: ['s-4-1'] },
+      x: 19, y: 62, nextNodes: ['s-4-1'] },
     { id: 's-4-1', type: 'stage', label: '스테이지 4-1', labelEN: 'Stage 4-1', stageKey: 4,
-      x: 16, y: 42, nextNodes: ['s-5-1'] },
+      x: 13, y: 47, nextNodes: ['s-5-1'] },
     { id: 's-5-1', type: 'stage', label: '스테이지 5-1', labelEN: 'Stage 5-1', stageKey: 6,
-      x: 22, y: 28, nextNodes: ['rest-1'] },
+      x: 21, y: 32, nextNodes: ['rest-1'] },
 
     // ── 우측 경로 ──
     { id: 's-2-2', type: 'stage', label: '스테이지 2-2', labelEN: 'Stage 2-2', stageKey: 2,
-      x: 68, y: 55, nextNodes: ['s-3-2'] },
+      x: 73, y: 64, nextNodes: ['s-3-2'] },
     { id: 's-3-2', type: 'stage', label: '스테이지 3-2', labelEN: 'Stage 3-2', stageKey: 5,
-      x: 65, y: 42, nextNodes: ['s-4-2'] },
+      x: 72, y: 45, nextNodes: ['s-4-2'] },
     { id: 's-4-2', type: 'stage', label: '스테이지 4-2', labelEN: 'Stage 4-2', stageKey: 7,
-      x: 68, y: 22, nextNodes: ['s-5-2'] },
+      x: 74, y: 28, nextNodes: ['s-5-2'] },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 8,
-      x: 55, y: 18, nextNodes: ['rest-2'] },
+      x: 62, y: 24, nextNodes: ['rest-2'] },
 
     // ── 휴식처 & 합류 ──
     { id: 'rest-1', type: 'rest', label: '휴식처 1', labelEN: 'Rest Area 1',
-      x: 38, y: 12, nextNodes: ['s-6-1'], restHealPercent: 0.3 },
+      x: 45, y: 18, nextNodes: ['s-6-1'], restHealPercent: 0.3 },
     { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
-      x: 72, y: 32, nextNodes: ['event-2'], restHealPercent: 0.3 },
+      x: 82, y: 39, nextNodes: ['event-2'], restHealPercent: 0.3 },
     { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
-      x: 90, y: 35, nextNodes: ['s-6-1'] },
+      x: 93, y: 40, nextNodes: ['s-6-1'] },
 
     { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 9,
-      x: 40, y: 25, nextNodes: ['rest-mid'] },
+      x: 41, y: 34, nextNodes: ['rest-mid'] },
     { id: 'rest-mid', type: 'rest', label: '휴식처', labelEN: 'Rest Area',
-      x: 38, y: 48, nextNodes: ['s-7'], restHealPercent: 0.3 },
+      x: 32, y: 55, nextNodes: ['s-7'], restHealPercent: 0.3 },
     { id: 's-7', type: 'stage', label: '스테이지 7', labelEN: 'Stage 7', stageKey: 10,
-      x: 20, y: 12, nextNodes: ['exit-swamp'] },
+      x: 26, y: 18, nextNodes: ['exit-swamp'] },
 
     // ── 출구 ──
     { id: 'exit-swamp', type: 'exit', label: '늪 지대(다음 챕터)', labelEN: 'To Swamp',
-      x: 5, y: 4, nextNodes: [], exitChapterId: '3B' },
+      x: 11, y: 12, nextNodes: [], exitChapterId: '3B' },
   ],
 };
 
@@ -293,43 +293,45 @@ const CAVE_ROUTE: ChapterRoute = {
   nodes: [
     // ── 직선 구간 ──
     { id: 's-1', type: 'stage', label: '스테이지 1', labelEN: 'Stage 1', stageKey: 1,
-      x: 18, y: 62, nextNodes: ['s-2'] },
+      x: 16, y: 63, nextNodes: ['s-2'] },
     { id: 's-2', type: 'stage', label: '스테이지 2', labelEN: 'Stage 2', stageKey: 2,
-      x: 25, y: 55, nextNodes: ['s-3'] },
+      x: 26, y: 59, nextNodes: ['s-3'] },
     { id: 's-3', type: 'stage', label: '스테이지 3', labelEN: 'Stage 3', stageKey: 3,
-      x: 38, y: 52, nextNodes: ['s-4-1', 's-4-2'], forkGroup: 'fork-path' },
+      x: 36, y: 58, nextNodes: ['rest'] },
+    { id: 'rest', type: 'rest', label: '휴식처', labelEN: 'Rest Area',
+      x: 34, y: 41, nextNodes: ['s-4-1', 's-4-2'], forkGroup: 'fork-path', restHealPercent: 0.3 },
 
     // ── 상단 경로 ──
     { id: 's-4-1', type: 'stage', label: '스테이지 4-1', labelEN: 'Stage 4-1', stageKey: 4,
-      x: 30, y: 22, nextNodes: ['event-1'] },
+      x: 36, y: 22, nextNodes: ['event-1'] },
     { id: 'event-1', type: 'event', label: '이벤트 스테이지 1', labelEN: 'Event Stage 1',
-      x: 42, y: 18, nextNodes: ['s-5-1'] },
+      x: 46, y: 20, nextNodes: ['s-5-1'] },
     { id: 's-5-1', type: 'stage', label: '스테이지 5-1', labelEN: 'Stage 5-1', stageKey: 5,
-      x: 55, y: 18, nextNodes: ['s-6-1'] },
+      x: 55, y: 19, nextNodes: ['s-6-1'] },
     { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 6,
-      x: 68, y: 18, nextNodes: ['rest-1'] },
+      x: 66, y: 19, nextNodes: ['rest-1'] },
     { id: 'rest-1', type: 'rest', label: '휴식처 1', labelEN: 'Rest Area 1',
-      x: 78, y: 12, nextNodes: ['s-7'], restHealPercent: 0.3 },
+      x: 78, y: 17, nextNodes: ['s-7'], restHealPercent: 0.3 },
 
     // ── 하단 경로 ──
     { id: 's-4-2', type: 'stage', label: '스테이지 4-2', labelEN: 'Stage 4-2', stageKey: 4,
-      x: 45, y: 65, nextNodes: ['s-5-2'] },
+      x: 47, y: 68, nextNodes: ['s-5-2'] },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 5,
-      x: 60, y: 65, nextNodes: ['rest-2'] },
+      x: 57, y: 67, nextNodes: ['rest-2'] },
     { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
-      x: 65, y: 75, nextNodes: ['event-2'], restHealPercent: 0.3 },
+      x: 67, y: 76, nextNodes: ['event-2'], restHealPercent: 0.3 },
     { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
-      x: 85, y: 68, nextNodes: ['s-6-2'] },
+      x: 85, y: 66, nextNodes: ['s-6-2'] },
     { id: 's-6-2', type: 'stage', label: '스테이지 6-2', labelEN: 'Stage 6-2', stageKey: 9,
-      x: 78, y: 82, nextNodes: ['s-7'] },
+      x: 78, y: 81, nextNodes: ['s-7'] },
 
     // ── 합류 ──
     { id: 's-7', type: 'stage', label: '스테이지 7', labelEN: 'Stage 7', stageKey: 10,
-      x: 90, y: 25, nextNodes: ['exit-lava'] },
+      x: 90, y: 36, nextNodes: ['exit-lava'] },
 
     // ── 출구 ──
     { id: 'exit-lava', type: 'exit', label: '용암 지대(다음 챕터)', labelEN: 'To Lava Zone',
-      x: 95, y: 5, nextNodes: [], exitChapterId: 'LAVA' },
+      x: 93, y: 13, nextNodes: [], exitChapterId: 'LAVA' },
   ],
 };
 
@@ -344,45 +346,45 @@ const SWAMP_ROUTE: ChapterRoute = {
   nodes: [
     // ── 직선 구간 ──
     { id: 's-1', type: 'stage', label: '스테이지 1', labelEN: 'Stage 1', stageKey: 1,
-      x: 25, y: 14, nextNodes: ['s-2'] },
+      x: 28, y: 16, nextNodes: ['s-2'] },
     { id: 's-2', type: 'stage', label: '스테이지 2', labelEN: 'Stage 2', stageKey: 2,
-      x: 40, y: 14, nextNodes: ['s-3'] },
+      x: 44, y: 16, nextNodes: ['s-3'] },
     { id: 's-3', type: 'stage', label: '스테이지 3', labelEN: 'Stage 3', stageKey: 3,
-      x: 60, y: 14, nextNodes: ['rest-top', 's-4-2'], forkGroup: 'fork-path' },
+      x: 60, y: 17, nextNodes: ['rest-top', 's-4-2'], forkGroup: 'fork-path' },
 
     // ── 좌측 경로 ──
     { id: 'rest-top', type: 'rest', label: '휴식처', labelEN: 'Rest Area',
-      x: 28, y: 22, nextNodes: ['s-4-1'], restHealPercent: 0.3 },
+      x: 31, y: 27, nextNodes: ['s-4-1'], restHealPercent: 0.3 },
     { id: 's-4-1', type: 'stage', label: '스테이지 4-1', labelEN: 'Stage 4-1', stageKey: 4,
-      x: 32, y: 38, nextNodes: ['event-1'] },
+      x: 36, y: 40, nextNodes: ['event-1'] },
     { id: 'event-1', type: 'event', label: '이벤트 스테이지 1', labelEN: 'Event Stage 1',
-      x: 22, y: 50, nextNodes: ['s-5-1'] },
+      x: 24, y: 50, nextNodes: ['s-5-1'] },
     { id: 's-5-1', type: 'stage', label: '스테이지 5-1', labelEN: 'Stage 5-1', stageKey: 5,
-      x: 30, y: 60, nextNodes: ['s-6-1'] },
+      x: 31, y: 60, nextNodes: ['s-6-1'] },
     { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 8,
-      x: 28, y: 75, nextNodes: ['rest-1'] },
+      x: 29, y: 73, nextNodes: ['rest-1'] },
     { id: 'rest-1', type: 'rest', label: '휴식처 1', labelEN: 'Rest Area 1',
-      x: 42, y: 80, nextNodes: ['s-7'], restHealPercent: 0.3 },
+      x: 40, y: 77, nextNodes: ['s-7'], restHealPercent: 0.3 },
 
     // ── 우측 경로 ──
     { id: 's-4-2', type: 'stage', label: '스테이지 4-2', labelEN: 'Stage 4-2', stageKey: 7,
-      x: 68, y: 22, nextNodes: ['s-5-2'] },
+      x: 68, y: 30, nextNodes: ['s-5-2'] },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 6,
-      x: 62, y: 42, nextNodes: ['rest-2'] },
+      x: 68, y: 45, nextNodes: ['rest-2'] },
     { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
-      x: 62, y: 58, nextNodes: ['event-2'], restHealPercent: 0.3 },
+      x: 67, y: 58, nextNodes: ['event-2'], restHealPercent: 0.3 },
     { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
-      x: 88, y: 50, nextNodes: ['s-6-2'] },
+      x: 88, y: 46, nextNodes: ['s-6-2'] },
     { id: 's-6-2', type: 'stage', label: '스테이지 6-2', labelEN: 'Stage 6-2', stageKey: 9,
-      x: 68, y: 75, nextNodes: ['s-7'] },
+      x: 68, y: 72, nextNodes: ['s-7'] },
 
     // ── 합류 ──
     { id: 's-7', type: 'stage', label: '스테이지 7', labelEN: 'Stage 7', stageKey: 10,
-      x: 52, y: 88, nextNodes: ['exit-mine'] },
+      x: 56, y: 86, nextNodes: ['exit-mine'] },
 
     // ── 출구 ──
     { id: 'exit-mine', type: 'exit', label: '폐광(다음 챕터)', labelEN: 'To Abandoned Mine',
-      x: 88, y: 88, nextNodes: [], exitChapterId: 'MINE' },
+      x: 86, y: 87, nextNodes: [], exitChapterId: 'MINE' },
   ],
 };
 

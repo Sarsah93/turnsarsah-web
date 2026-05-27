@@ -1444,7 +1444,16 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       currentEquippedSkills = altarData.normal?.equippedSkills || [];
     }
 
-    const player = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff, false); // New game starts without bonus
+    // v3.0.2: If stageMapProgress is active, carry over player's current HP and maxHP
+    let player = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff, store.hasStage6Bonus || false);
+    if (store.stageMapProgress) {
+      player = {
+        ...player,
+        hp: Math.min(player.maxHp, store.player.hp),
+        maxHp: store.player.maxHp || player.maxHp,
+        baseMaxHp: store.player.baseMaxHp || player.baseMaxHp,
+      };
+    }
 
     // Preload Assets for Game Entry
     const assetsToLoad = getGameEntryAssets(chapterId, currentEquippedSkills);
@@ -1471,7 +1480,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       bannedHand: null,
       blindIndices: [],
       bannedIndices: [],
-      hasStage6Bonus: false,
+      hasStage6Bonus: store.hasStage6Bonus || false,
       isGameLoaded: false,
       equippedAltarSkills: currentEquippedSkills,
       player: player,
@@ -1515,6 +1524,34 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     } catch (e) {
       console.warn("Failed to preload map assets:", e);
     }
+
+    // v3.0.2: Reset/initialize player state and hidden variables when starting a new session (entering Chapter 1)
+    if (chapterId === '1') {
+      const diff = get().difficulty;
+      const config = DIFFICULTY_CONFIGS[diff];
+      const altarData = AltarManager.getAltarData();
+      let currentEquippedSkills: string[] = [];
+      if (diff === Difficulty.HARD) {
+        currentEquippedSkills = altarData.hard?.equippedSkills || [];
+      } else if (diff === Difficulty.HELL) {
+        currentEquippedSkills = altarData.hell?.equippedSkills || [];
+      } else {
+        currentEquippedSkills = altarData.normal?.equippedSkills || [];
+      }
+      const initialPlayer = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff, false);
+      set({
+        player: initialPlayer,
+        equippedAltarSkills: currentEquippedSkills,
+        hasStage6Bonus: false,
+        ch1PerfectCount: 0,
+        specialQualify: false,
+        ch2PerfectCount: 0,
+        ch2SpecialQualify: false,
+        lizardKingStraightCount: 0,
+        lizardStemCellDestroyed: false,
+      });
+    }
+
     set({
       stageMapProgress: {
         chapterId,

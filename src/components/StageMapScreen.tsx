@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useGameStore } from '../state/gameStore';
-import { GameState } from '../constants/gameConfig';
+import { GameState, Difficulty } from '../constants/gameConfig';
 import {
   CHAPTER_ROUTES,
   getNode,
@@ -38,13 +38,15 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
 
   const t = TRANSLATIONS[language];
 
-  // If in debugChapterId mode, create mock progress to view the map without a loaded game
-  const activeProgress = stageMapProgress || (debugChapterId ? {
-    chapterId: debugChapterId,
-    completedNodes: [],
-    currentNodeId: CHAPTER_ROUTES[debugChapterId]?.startNodeId || '',
-    chosenForks: {}
-  } : null);
+  // If debugChapterId is provided, ALWAYS use the debug chapter progress (takes absolute precedence)
+  const activeProgress = debugChapterId
+    ? {
+        chapterId: debugChapterId,
+        completedNodes: [],
+        currentNodeId: CHAPTER_ROUTES[debugChapterId]?.startNodeId || '',
+        chosenForks: {}
+      }
+    : stageMapProgress;
 
   if (!activeProgress) return null;
 
@@ -58,7 +60,12 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
     if (debugChapterId) return 'available'; // In debug mode, keep all nodes visible and clickable
     if (activeProgress.completedNodes.includes(node.id)) return 'completed';
     if (isDimmedNode(activeProgress, node.id)) return 'dimmed';
-    if (availableNodeIds.includes(node.id)) return 'available';
+    if (availableNodeIds.includes(node.id)) {
+      if (node.type === 'exit' && difficulty === Difficulty.EASY) {
+        return 'locked';
+      }
+      return 'available';
+    }
     return 'locked';
   };
 
@@ -223,35 +230,85 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const hpPercent = player.maxHp > 0 ? (player.hp / player.maxHp) * 100 : 0;
   const chapterDisplayName = language === 'KR' ? route.name : route.nameEN;
 
+  // ── Map Aspect Ratio Class Helper ──
+  const getRatioClass = (chapterId: string) => {
+    switch (chapterId) {
+      case '1':  // 들판 지대
+      case '2A': // 사막 지대
+        return 'ratio-16-9';
+      case '2B': // 깊은 숲 지대
+      case '3A': // 동굴 지대
+      case '3B': // 늪 지대
+        return 'ratio-4-3';
+      default:
+        return 'ratio-3-2';
+    }
+  };
+
+  const ratioClass = getRatioClass(activeProgress.chapterId);
+
   return (
     <div className="stage-map-screen">
-      {/* Background Map Image */}
-      <img
-        src={route.mapImage}
-        alt={chapterDisplayName}
-        className="stage-map-bg"
-        draggable={false}
-      />
+      {/* 챕터별 맞춤 종횡비가 고정 보존되며 화면에 contain 비율로 맞춤되는 맵 보드 */}
+      <div className={`stage-map-board ${ratioClass}`} ref={containerRef}>
+        {/* Background Map Image */}
+        <img
+          src={route.mapImage}
+          alt={chapterDisplayName}
+          className="stage-map-bg"
+          draggable={false}
+        />
 
-      {/* Node Overlays */}
-      <div className="stage-map-nodes">
-        {route.nodes.map((node) => {
-          const status = getNodeStatus(node);
-          const typeClass = `type-${node.type}`;
-          const label = language === 'KR' ? node.label : node.labelEN;
+        {/* Node Overlays */}
+        <div className="stage-map-nodes">
+          {route.nodes.map((node) => {
+            const status = getNodeStatus(node);
+            const typeClass = `type-${node.type}`;
+            const label = language === 'KR' ? node.label : node.labelEN;
 
-          return (
-            <div
-              key={node.id}
-              className={`stage-map-node ${status} ${typeClass} ${readOnly ? 'read-only' : ''}`}
-              style={{ left: `${node.x}%`, top: `${node.y}%` }}
-              onClick={() => handleNodeClick(node)}
-              title={label}
-            >
-              <span className="stage-map-node-label">{label}</span>
+            return (
+              <div
+                key={node.id}
+                className={`stage-map-node ${status} ${typeClass} ${readOnly ? 'read-only' : ''}`}
+                style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                onClick={() => handleNodeClick(node)}
+                title={label}
+              >
+                <span className="stage-map-node-label">{label}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── 범례 HUD 패널 (기존 맵의 범례를 덮어씌움) ── */}
+        <div className="stage-map-legend">
+          <div className="stage-map-legend-title">
+            {language === 'KR' ? '범례' : 'Legend'}
+          </div>
+          <div className="stage-map-legend-items">
+            <div className="stage-map-legend-item">
+              <span className="legend-circle type-entry"></span>
+              <span className="legend-label">{language === 'KR' ? '입구 / 출구' : 'Entry / Exit'}</span>
             </div>
-          );
-        })}
+            <div className="stage-map-legend-item">
+              <span className="legend-circle type-stage"></span>
+              <span className="legend-label">{language === 'KR' ? '스테이지(클로니)' : 'Stage'}</span>
+            </div>
+            <div className="stage-map-legend-item">
+              <span className="legend-circle type-event"></span>
+              <span className="legend-label">{language === 'KR' ? '이벤트 스테이지' : 'Event Stage'}</span>
+            </div>
+            <div className="stage-map-legend-item">
+              <span className="legend-circle type-rest"></span>
+              <span className="legend-label">{language === 'KR' ? '휴식처' : 'Rest Area'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Stage Map Coordinate Debug Overlay ── */}
+        {debugChapterId && (
+          <StageMapDebugOverlay containerRef={containerRef} />
+        )}
       </div>
 
       {/* HP HUD */}
@@ -368,11 +425,6 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
           onNo={() => setMenuState('PAUSE')}
         />
       )}
-
-      {/* ── Stage Map Coordinate Debug Overlay ── */}
-      {debugChapterId && (
-        <StageMapDebugOverlay containerRef={containerRef} />
-      )}
     </div>
   );
 };
@@ -386,6 +438,50 @@ const StageMapDebugOverlay: React.FC<{ containerRef: React.RefObject<HTMLDivElem
   const [closed, setClosed] = useState(false);
   const [copiedSvg, setCopiedSvg] = useState(false);
   const [copiedPct, setCopiedPct] = useState(false);
+  const [isPassThrough, setIsPassThrough] = useState(false);
+
+  // ── Drag & Drop States for Moving the Debug Panel ──
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const currentOffset = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0 || isPassThrough) return;
+    const target = e.target as HTMLElement;
+    // Don't drag if user clicked buttons or text containers inside the panel
+    if (target.closest('button') || target.closest('pre')) return;
+
+    setIsDragging(true);
+    dragStart.current = {
+      x: e.clientX - currentOffset.current.x,
+      y: e.clientY - currentOffset.current.y
+    };
+    e.preventDefault();
+  }, [isPassThrough]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newX = e.clientX - dragStart.current.x;
+      const newY = e.clientY - dragStart.current.y;
+      setDragOffset({ x: newX, y: newY });
+      currentOffset.current = { x: newX, y: newY };
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   const toCoords = useCallback((clientX: number, clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -408,14 +504,31 @@ const StageMapDebugOverlay: React.FC<{ containerRef: React.RefObject<HTMLDivElem
 
   const handleClick = useCallback((e: MouseEvent) => {
     if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (!isPassThrough && (
+      target.closest('.stage-map-menu-btn') ||
+      target.closest('.stage-map-debug-panel') ||
+      target.closest('button')
+    )) {
+      return;
+    }
     setPoints(prev => [...prev, toCoords(e.clientX, e.clientY)]);
     setClosed(false);
-  }, [toCoords]);
+  }, [toCoords, isPassThrough]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Shift') {
+      setIsPassThrough(true);
+    }
     if ((e.key === 'z' || e.key === 'Z') && !e.ctrlKey) setClosed(true);
     if (e.key === 'Backspace') { setPoints(prev => prev.slice(0, -1)); setClosed(false); }
     if (e.key === 'Escape')    { setPoints([]); setClosed(false); }
+  }, []);
+
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Shift') {
+      setIsPassThrough(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -424,12 +537,14 @@ const StageMapDebugOverlay: React.FC<{ containerRef: React.RefObject<HTMLDivElem
     el.addEventListener('mousemove', handleMouseMove);
     el.addEventListener('click', handleClick);
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
     return () => {
       el.removeEventListener('mousemove', handleMouseMove);
       el.removeEventListener('click', handleClick);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [handleMouseMove, handleClick, handleKeyDown, containerRef]);
+  }, [handleMouseMove, handleClick, handleKeyDown, handleKeyUp, containerRef]);
 
   const svgPathStr = points.length === 0
     ? '(클릭해서 첫 점 추가)'
@@ -493,22 +608,40 @@ const StageMapDebugOverlay: React.FC<{ containerRef: React.RefObject<HTMLDivElem
       </div>
 
       {/* 디버그 패널 */}
-      <div style={{
+      <div className="stage-map-debug-panel" style={{
         position: 'absolute', bottom: 20, left: 20, zIndex: 70,
         background: 'rgba(15, 15, 25, 0.95)', border: '2px solid #f1c40f',
         borderRadius: '12px', padding: '16px 20px', color: '#fff',
         fontFamily: 'monospace', fontSize: '12px', minWidth: '380px', maxWidth: '450px',
         backdropFilter: 'blur(6px)', boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+        opacity: isPassThrough ? 0.08 : undefined,
+        pointerEvents: isPassThrough ? 'none' : 'auto',
+        transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
       }}>
-        <div style={{ color: '#f1c40f', fontWeight: 'bold', marginBottom: 8, fontSize: '14px', display: 'flex', justifyContent: 'space-between' }}>
-          <span>🗺️ 스테이지 지도 좌표 디버그</span>
+        <div
+          onMouseDown={handleMouseDown}
+          style={{
+            color: '#f1c40f', fontWeight: 'bold', marginBottom: 8, fontSize: '14px',
+            display: 'flex', justifyContent: 'space-between',
+            cursor: isDragging ? 'grabbing' : 'grab',
+            userSelect: 'none'
+          }}
+        >
+          <span>🗺️ 스테이지 지도 좌표 디버그 (드래그 가능)</span>
           <span style={{ fontSize: '11px', color: '#aaa' }}>(DEV ONLY)</span>
         </div>
-        <div style={{ color: '#ccc', marginBottom: 12, lineHeight: '1.6', fontSize: '11px' }}>
+        <div style={{ color: '#ccc', marginBottom: 6, lineHeight: '1.6', fontSize: '11px' }}>
           <span style={{ color: '#7fdbff' }}>클릭</span> 점 추가 &nbsp;│&nbsp;
           <span style={{ color: '#7fdbff' }}>Z키</span> 닫기 &nbsp;│&nbsp;
           <span style={{ color: '#7fdbff' }}>Backspace</span> 취소 &nbsp;│&nbsp;
           <span style={{ color: '#7fdbff' }}>Esc</span> 초기화
+        </div>
+        <div style={{
+          color: '#f1c40f', marginBottom: 12, fontSize: '11.5px', lineHeight: '1.5',
+          background: 'rgba(241,196,15,0.12)', padding: '6px 10px', borderRadius: '6px',
+          border: '1px dashed rgba(241,196,15,0.3)', letterSpacing: '0.2px'
+        }}>
+          💡 <strong>Shift 키를 누르고 있으면</strong> 창이 투명해지며 뒤쪽 지도에 점을 바로 찍을 수 있습니다. (관통 클릭 모드)
         </div>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>

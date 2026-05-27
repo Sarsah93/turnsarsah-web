@@ -6,14 +6,57 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0a0a0f;
+  background: #000; /* 검은색 백그라운드 여백 처리 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 챕터별 고유 해상도 종횡비가 보존되는 맵 전용 보드판 */
+/* GameViewport 캔버스 = 1600×900 (16:9 고정) */
+/* - 이미지가 캔버스보다 넓으면(ratio-16-9): width:100% 기준 */
+/* - 이미지가 캔버스보다 세로로 길면(ratio-4-3, 3-2): height:100% 기준 → 짤림 방지 */
+.stage-map-board {
+  position: relative;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 안전 철더망: 어떤 캔버스에서도 부모를 넘지 않도록 */
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* 16:9 비율 보드판 (들판 1672×941, 사막 1672×941) */
+/* 1672/941 ≈ 16:9, 너비 우선: width=1600 → height=1600*(941/1672)≈900 ✓ */
+.stage-map-board.ratio-16-9 {
+  aspect-ratio: 1672 / 941;
+  width: 100%;
+  height: auto;
+}
+
+/* 4:3 비율 보드판 (깊은 숲 1448×1086, 동굴 1448×1086, 늪지대 1448×1086) */
+/* 4:3 < 16:9 → 높이 우선: height=900 → width=900*(1448/1086)=1200px (1600미만) ✓ 짤림 없음 */
+.stage-map-board.ratio-4-3 {
+  aspect-ratio: 1448 / 1086;
+  height: 100%;
+  width: auto;
+}
+
+/* 3:2 비율 보드판 (기본값) */
+/* 3:2 < 16:9 → 높이 우선: height=900 → width=900*(1024/682)≈1351px (1600미만) ✓ */
+.stage-map-board.ratio-3-2 {
+  aspect-ratio: 1024 / 682;
+  height: 100%;
+  width: auto;
 }
 
 /* Background map image */
 .stage-map-bg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: fill; /* 고정 종횡비 보드 안이므로 fill을 사용해 짤림과 찌그러짐을 동시에 방지 */
   display: block;
   user-select: none;
   -webkit-user-drag: none;
@@ -32,8 +75,8 @@
   transform: translate(-50%, -50%);
   pointer-events: auto;
   cursor: pointer;
-  width: 52px;
-  height: 52px;
+  width: 100px; /* 52px -> 100px (약 2배 확대) */
+  height: 100px;
   border-radius: 50%;
   transition: all 0.3s ease;
   display: flex;
@@ -45,17 +88,17 @@
 /* Node label */
 .stage-map-node-label {
   position: absolute;
-  bottom: -22px;
+  top: -42px; /* bottom: -38px -> top: -42px 로 변경하여 동그라미 위로 완벽 배치 */
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 0.72rem;
+  font-size: 1.4rem; /* 0.72rem -> 1.4rem (약 2배 확대) */
   font-family: 'Noto Sans KR', sans-serif;
   color: #ecf0f1;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.7);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.85);
   pointer-events: none;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 /* Node states */
@@ -461,3 +504,95 @@
   transform: translate(-50%, -50%) scale(1) !important;
   filter: none !important;
 }
+
+/* ── Stage Map Coordinate Debug Overlay ── */
+.stage-map-debug-panel {
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease, backdrop-filter 0.25s ease !important;
+}
+
+.stage-map-debug-panel:hover {
+  opacity: 0.28 !important;
+  backdrop-filter: blur(1px) !important;
+}
+
+/* ── 범례 패널 (Legend Panel) ── */
+.stage-map-legend {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 60;
+  background: rgba(10, 10, 15, 0.90);
+  border: 2px solid rgba(241, 196, 15, 0.55);
+  border-radius: 12px;
+  padding: 18px 24px;
+  color: #fff;
+  font-family: 'Noto Sans KR', sans-serif;
+  min-width: 220px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.75);
+  pointer-events: none; /* 좌표 찍기를 방해하지 않도록 마우스 이벤트 차단 */
+  user-select: none;
+}
+
+.stage-map-legend-title {
+  color: #ffd700;
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  padding-bottom: 6px;
+}
+
+.stage-map-legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.stage-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legend-circle {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.legend-circle.type-entry {
+  border: 2.5px solid rgba(241, 196, 15, 0.9);
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.65);
+  background: rgba(241, 196, 15, 0.1);
+}
+
+.legend-circle.type-stage {
+  border: 2.5px solid rgba(231, 76, 60, 0.9);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.65);
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.legend-circle.type-event {
+  border: 2.5px solid rgba(52, 152, 219, 0.9);
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.65);
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.legend-circle.type-rest {
+  border: 2.5px solid rgba(46, 204, 113, 0.9);
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.65);
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.legend-label {
+  font-size: 1.05rem;
+  color: #e8e8e8;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+
