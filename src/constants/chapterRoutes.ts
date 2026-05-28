@@ -87,9 +87,16 @@ export function isDimmedNode(progress: StageMapProgress, nodeId: string): boolea
     // 선택하지 않은 nextNode에서 시작하는 경로상의 모든 노드를 dimmed 처리
     const unchosen = parentNode.nextNodes.filter(id => id !== chosenId);
     for (const unchosenId of unchosen) {
+      // 직접 선택되지 않은 노드는 항상 dim 처리
       if (nodeId === unchosenId) return true;
-      // 해당 unchosen 노드에서 이어지는 경로도 dim (재귀적으로 따라감)
-      if (isDescendantOf(route, unchosenId, nodeId, chosenId)) return true;
+
+      // unchosen 경로의 후손인지 확인
+      if (isDescendantOf(route, unchosenId, nodeId, chosenId)) {
+        // 단, 선택한 경로(chosenId)로도 도달 가능한 합류 노드는 dim 처리 제외
+        // (예: 양 갈림길이 event-1이나 s-7 같은 합류 지점에서 만나는 경우)
+        if (isDescendantOf(route, chosenId, nodeId, unchosenId)) continue;
+        return true;
+      }
     }
   }
 
