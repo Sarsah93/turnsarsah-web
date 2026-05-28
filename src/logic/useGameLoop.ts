@@ -8,6 +8,7 @@ import { RANK_VALUES, JOKER_DRAW_PROBABILITY } from '../constants/cards';
 import { TRANSLATIONS } from '../constants/translations';
 import { playCoreDeathFX } from '../utils/fxUtils';
 import { hasSeenGuide, CHAPTER_INTROS, SYSTEM_GUIDES, CONDITION_GUIDES, getGimmickGuide, GuidePopupData } from '../constants/guideData';
+import { TROPHY_STAGE_MAP } from '../constants/chapterRoutes';
 import { CHAPTERS } from '../constants/stages';
 import { playConditionSound, getBossAttackSFX } from '../utils/audioMapper';
 import { applyChapterSpecialRules } from './specialRules';
@@ -2053,14 +2054,7 @@ export const useGameLoop = () => {
             // v3.0: Chapter transition HP heal removed (rest nodes only)
 
             // 2. Trophy Check ??stage trophy in memory (NOT saved to localStorage yet)
-            const trophyIdMap: Record<string, Record<number, string>> = {
-                '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
-                '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
-                '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' },
-                '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' },
-                '3B': { 6: 'TR_3B_06', 10: 'TR_3B_10' }
-            };
-            const potentialTrophyId = trophyIdMap[store.chapterNum]?.[store.stageNum];
+            const potentialTrophyId = TROPHY_STAGE_MAP[store.chapterNum]?.[store.stageNum];
 
             if (potentialTrophyId && store.difficulty !== Difficulty.EASY) {
                 const { AltarManager } = await import('../utils/AltarManager');

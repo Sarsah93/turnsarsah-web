@@ -595,4 +595,67 @@
   letter-spacing: 0.2px;
 }
 
+/* ── Trophy Hint Styles (Premium Micro-animations & Aesthetics) ── */
+
+/* 동그라미 버튼 좌상단 펄싱 배지 */
+.trophy-hint-badge {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f1c40f, #e67e22);
+  border: 2px solid #1a1a2e;
+  color: #1a1a2e;
+  font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
+  font-weight: 900;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(241, 196, 15, 0.85), inset 0 0 4px rgba(255, 255, 255, 0.4);
+  z-index: 10;
+  animation: trophy-badge-pulse 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* 텍스트 HUD (노드 라벨) 좌측 느낌표 */
+.trophy-hint-text {
+  color: #ffd700;
+  font-weight: 900;
+  margin-right: 6px;
+  font-size: 1.4rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.95);
+  display: inline-block;
+  animation: trophy-text-blink 1.8s ease-in-out infinite;
+}
+
+/* 배지 전용 펄싱 애니메이션 */
+@keyframes trophy-badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.18);
+    filter: brightness(1.25);
+    box-shadow: 0 0 18px rgba(241, 196, 15, 0.95), inset 0 0 4px rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* 텍스트 느낌표 부드러운 블링킹 애니메이션 */
+@keyframes trophy-text-blink {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+    color: #fffb00;
+  }
+}
+
+
 

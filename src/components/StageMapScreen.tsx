@@ -8,10 +8,12 @@ import {
   isDimmedNode,
   UNIMPLEMENTED_CHAPTERS,
   MapNode,
+  TROPHY_STAGE_MAP,
 } from '../constants/chapterRoutes';
 import { TRANSLATIONS } from '../constants/translations';
 import { AudioManager } from '../utils/AudioManager';
 import { SaveManager } from '../utils/SaveManager';
+import { AltarManager } from '../utils/AltarManager';
 import { SaveLoadMenu, PauseMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import './styles/StageMapScreen.css';
 
@@ -266,6 +268,19 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
             const typeClass = `type-${node.type}`;
             const label = language === 'KR' ? node.label : node.labelEN;
 
+            // Trophy Hint logic
+            let hasTrophyHint = false;
+            if (
+              node.type === 'stage' &&
+              node.stageKey !== undefined &&
+              difficulty !== Difficulty.EASY
+            ) {
+              const trophyId = TROPHY_STAGE_MAP[activeProgress.chapterId]?.[node.stageKey];
+              if (trophyId && !AltarManager.hasTrophy(trophyId, difficulty)) {
+                hasTrophyHint = true;
+              }
+            }
+
             return (
               <div
                 key={node.id}
@@ -274,7 +289,15 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
                 onClick={() => handleNodeClick(node)}
                 title={label}
               >
-                <span className="stage-map-node-label">{label}</span>
+                {hasTrophyHint && (
+                  <div className="trophy-hint-badge" title={language === 'KR' ? '획득 가능한 전리품 있음' : 'Trophy Available'}>
+                    !
+                  </div>
+                )}
+                <span className="stage-map-node-label">
+                  {hasTrophyHint && <span className="trophy-hint-text">!</span>}
+                  {label}
+                </span>
               </div>
             );
           })}

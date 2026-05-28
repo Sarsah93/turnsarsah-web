@@ -406,3 +406,13 @@ export const CHAPTER_ROUTES: Record<string, ChapterRoute> = {
 
 /** 구현되지 않은 챕터 ID 목록 */
 export const UNIMPLEMENTED_CHAPTERS = ['LAVA', 'MINE'];
+
+/** 각 챕터별 특정 스테이지에서 제공하는 전리품(Trophy) 매핑 */
+export const TROPHY_STAGE_MAP: Record<string, Record<number, string>> = {
+  '1': { 4: 'TR_1_4', 5: 'TR_1_5', 10: 'TR_1_10' },
+  '2A': { 5: 'TR_2A_5', 10: 'TR_2A_10', 11: 'TR_2A_SP' },
+  '2B': { 5: 'TR_2B_5', 10: 'TR_2B_10', 11: 'TR_2B_SP' },
+  '3A': { 7: 'TR_3A_07', 10: 'TR_3A_10' },
+  '3B': { 6: 'TR_3B_06', 10: 'TR_3B_10' }
+};
+
