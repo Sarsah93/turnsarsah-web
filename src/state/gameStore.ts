@@ -998,11 +998,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         // Start of Game - Reset Stats + Apply Altar Bonuses
         player = calculateInitialPlayer(config, activeSkills, chapterId, state.difficulty, state.hasStage6Bonus);
       } else if (isChapterTransition) {
-        // Start of New Chapter - Preserve previous HP (with chapter clear bonus) but update maxHp/conditions
+        // Start of New Chapter - Preserve previous HP + restore 50% of maxHp on chapter clear
         const basePlayer = calculateInitialPlayer(config, activeSkills, chapterId, state.difficulty, state.hasStage6Bonus);
+        const chapterClearRecovery = Math.floor(basePlayer.maxHp * 0.5);
         player = {
           ...basePlayer,
-          hp: Math.min(basePlayer.maxHp, state.player.hp)
+          hp: Math.min(basePlayer.maxHp, state.player.hp + chapterClearRecovery)
         };
       } else {
         // Stage transition - preserve current HP and max HP
