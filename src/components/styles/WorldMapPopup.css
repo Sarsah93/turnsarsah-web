@@ -227,11 +227,11 @@
   border-color: #7fdbff;
 }
 
-/* ── 맵 아이콘 버튼 (인게임 HUD — 제단 스킬 슬롯 우측) */
+/* ── 맵 아이콘 버튼 (인게임 HUD — 그리드 좌표 x:8, y:23 기준) */
 .map-icon-btn {
   position: absolute;
-  top: 157px;
-  left: 97px;
+  top: 180px;
+  left: 101px;
   z-index: 5000;
   width: 54px;
   height: 54px;
@@ -266,4 +266,56 @@
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+}
+
+/* ── 클리어 콤보 HUD (Clear Combo) ── */
+.clear-combo-hud {
+  position: absolute;
+  z-index: 4900;
+  pointer-events: none;
+  user-select: none;
+  background: rgba(10, 10, 20, 0.82);
+  border: 1.5px solid rgba(241, 196, 15, 0.65);
+  border-radius: 8px;
+  padding: 6px 14px 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 14px rgba(241, 196, 15, 0.18), 0 2px 8px rgba(0,0,0,0.55);
+  animation: combo-hud-glow 2s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.clear-combo-hud-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.clear-combo-hud-text {
+  font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
+  font-size: 1.15rem;
+  color: #f1c40f;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(241, 196, 15, 0.55);
+}
+
+.clear-combo-hud-multiplier {
+  font-family: 'Bebas Neue', monospace;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.8), 0 0 4px rgba(241, 196, 15, 0.9);
+  letter-spacing: 0.5px;
+}
+
+@keyframes combo-hud-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.15), 0 2px 8px rgba(0,0,0,0.5);
+    border-color: rgba(241, 196, 15, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(241, 196, 15, 0.38), 0 2px 10px rgba(0,0,0,0.6);
+    border-color: rgba(241, 196, 15, 0.88);
+  }
 }

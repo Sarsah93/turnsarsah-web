@@ -49,6 +49,12 @@ interface SaveData {
   lizardKingStraightCount?: number;
   lizardStemCellDestroyed?: boolean;
   hasStage6Bonus?: boolean;
+
+  // Clear Combo System
+  clearComboCount?: number;
+  clearComboMultiplier?: number;
+  clearComboActive?: boolean;
+
   timestamp: number;
 }
 

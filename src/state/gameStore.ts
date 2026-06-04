@@ -344,6 +344,14 @@ interface GameStoreState {
   completeMapNode: (nodeId: string) => void;
   chooseMapFork: (forkGroup: string, chosenNodeId: string) => void;
   advanceToMapNode: (nodeId: string) => void;
+
+  // Clear Combo System
+  clearComboCount: number;        // 연속 달성 횟수 (0~5)
+  clearComboMultiplier: number;   // 현재 적용 배수 (1.0~2.0)
+  clearComboActive: boolean;      // 챕터1 스테이지1 시작 후 활성 여부
+  setClearCombo: (count: number, multiplier: number) => void;
+  setClearComboActive: (active: boolean) => void;
+  resetClearCombo: () => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -1161,6 +1169,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       ch2SpecialQualify: false,
       lizardKingStraightCount: 0,
       lizardStemCellDestroyed: false,
+      // Clear Combo Reset
+      clearComboCount: 0,
+      clearComboMultiplier: 1.0,
+      clearComboActive: false,
     }),
 
   saveGame: (slot: number) => {
@@ -1286,6 +1298,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         consecutiveHandType: gameData.consecutiveHandType || null,
         consecutiveHandStacks: gameData.consecutiveHandStacks ?? 0,
         stage10RuleText: gameData.stage10RuleText || '',
+        // Clear Combo
+        clearComboCount: gameData.clearComboCount ?? 0,
+        clearComboMultiplier: gameData.clearComboMultiplier ?? 1.0,
+        clearComboActive: gameData.clearComboActive ?? false,
     });
 
     // Restore Deck State
@@ -1564,6 +1580,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       chapterNum: chapterId,
       gameState: GameState.STAGE_MAP,
       loadingPhase: 'NONE',
+      // Clear Combo: 챕터1 시작 시 활성화, 다른 챕터는 유지
+      ...(chapterId === '1' ? { clearComboActive: true, clearComboCount: 0, clearComboMultiplier: 1.0 } : {}),
     });
   },
 
@@ -1612,6 +1630,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     });
   },
 
+  // Clear Combo System
+  clearComboCount: 0,
+  clearComboMultiplier: 1.0,
+  clearComboActive: false,
+  setClearCombo: (count: number, multiplier: number) => set({ clearComboCount: count, clearComboMultiplier: multiplier }),
+  setClearComboActive: (active: boolean) => set({ clearComboActive: active }),
+  resetClearCombo: () => set({ clearComboCount: 0, clearComboMultiplier: 1.0 }),
+
 }));
 
 function buildSavePayload(state: GameStoreState) {
@@ -1657,5 +1683,9 @@ function buildSavePayload(state: GameStoreState) {
     gameState: state.gameState,
     gamePhase: finalGamePhase,
     stageMapProgress: state.stageMapProgress,
+    // Clear Combo
+    clearComboCount: state.clearComboCount,
+    clearComboMultiplier: state.clearComboMultiplier,
+    clearComboActive: state.clearComboActive,
   };
 }

@@ -34,7 +34,8 @@ export const BattleScreen: React.FC = () => {
     const store = useGameStore();
     const {
         player, bot, playerHand, gamePhase, isTutorial, tutorialStep,
-        setTutorialStep, stageNum, chapterNum, language, stageMapProgress
+        setTutorialStep, stageNum, chapterNum, language, stageMapProgress,
+        clearComboMultiplier, clearComboActive
     } = store;
     const t = (TRANSLATIONS as any)[language];
 
@@ -468,6 +469,26 @@ export const BattleScreen: React.FC = () => {
                 );
             })()}
 
+            {/* 클리어 콤보 HUD — 전투화면 (우측 하단) */}
+            {!isTutorial && clearComboActive && clearComboMultiplier > 1.0 && (
+                <div
+                    className="clear-combo-hud"
+                    style={{
+                        right: '3%',
+                        bottom: 'calc(30% + 16px)',
+                    }}
+                >
+                    <span className="clear-combo-hud-icon">⚡</span>
+                    <span className="clear-combo-hud-text">
+                        {language === 'KR' ? '클리어 콤보' : 'Clear Combo'}
+                    </span>
+                    <span className="clear-combo-hud-multiplier">
+                        {language === 'KR'
+                            ? `${clearComboMultiplier.toFixed(1)}배`
+                            : `${clearComboMultiplier.toFixed(1)}x`}
+                    </span>
+                </div>
+            )}
 
             {/* Interaction Overlays */}
             <Button

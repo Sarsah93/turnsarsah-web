@@ -585,6 +585,11 @@ export const useGameLoop = () => {
             }
         }
 
+        // --- Clear Combo Multiplier (클리어 콤보 배수 적용) ---
+        if (store.clearComboActive && store.clearComboMultiplier > 1.0 && damage > 0 && !isAdrenalineNull && !isPuzzleCorrect) {
+            damage = Math.floor(damage * store.clearComboMultiplier);
+        }
+
         // --- PHASE 1: GATHERING (leaf-flutter / one-pair dance / two-pair taeguek) ---
         const isOnePairDance = hasOnePairDance && handType === 'One Pair';
 
@@ -2089,6 +2094,25 @@ export const useGameLoop = () => {
         }
 
         // 3. Victory State & Sound
+        // Clear Combo: 5턴 이내 클리어 체크 (NORMAL 이상 + clearComboActive)
+        const isComboEligible = store.clearComboActive &&
+            store.difficulty !== 'EASY' &&
+            store.stageMapProgress !== null;
+        if (isComboEligible) {
+            // currentTurn은 0-indexed: 0~4가 1~5턴 공격에 해당
+            const withinTurnLimit = store.currentTurn <= 4;
+            if (withinTurnLimit) {
+                // 콤보 달성: 회수 +1, 배수 업그레이드
+                const newCount = Math.min(store.clearComboCount + 1, 5);
+                const newMultiplier = Math.min(1.0 + newCount * 0.2, 2.0);
+                store.setClearCombo(newCount, newMultiplier);
+            } else {
+                // 콤보 깨짐: 카운트 초기화 (multiplier는 다음 스테이지에도 현재 1.0 유지하다가 단절로 즐)
+                // → 다음 스테이지에서는 다시 1.2x부터 시작되어야 하므로 count=0, multiplier=1.0
+                store.resetClearCombo();
+            }
+        }
+
         const bonusPercent = Math.floor(config.stage6MaxHpBonus * 100);
 
         let victoryMsg = t.COMBAT.VICTORY;
@@ -2145,7 +2169,22 @@ export const useGameLoop = () => {
             }
         }
 
-        // Return to stage map (fade transition)
+        // 클리어 축하 팝업이 표시되는 경우:
+        // 팝업의 "처음으로 돌아가기" 버튼이 setGameState(MENU)를 직접 처리하므로
+        // 여기서 returnToStageMap을 호출하면 BattleScreen이 언마운트되어 팝업이 사라짐.
+        // 따라서 팝업이 닫힐 때까지 대기하고, 팝업이 내비게이션을 전담하도록 함.
+        if (useGameStore.getState().clearPopupDifficulty !== null) {
+            let waitCount = 0;
+            const maxWait = 600; // 최대 120초 대기
+            while (useGameStore.getState().clearPopupDifficulty !== null && waitCount < maxWait) {
+                await wait(200);
+                waitCount++;
+            }
+            // 팝업의 버튼이 이미 MENU로 이동시켰으므로 여기서는 아무것도 하지 않음
+            return;
+        }
+
+        // 일반 클리어: 스테이지 맵으로 복귀 (fade 전환)
         triggerTransition(() => {
             setMessage("");
             store.returnToStageMap();

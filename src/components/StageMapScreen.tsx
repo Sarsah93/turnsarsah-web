@@ -16,6 +16,7 @@ import { SaveManager } from '../utils/SaveManager';
 import { AltarManager } from '../utils/AltarManager';
 import { SaveLoadMenu, PauseMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import './styles/StageMapScreen.css';
+import './styles/WorldMapPopup.css';
 
 type MapMenuState = 'NONE' | 'PAUSE' | 'SAVE' | 'LOAD' | 'QUIT_CONFIRM' | 'SETTINGS';
 
@@ -37,6 +38,8 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const language = useGameStore((s) => s.language);
   const difficulty = useGameStore((s) => s.difficulty);
   const chapterNum = useGameStore((s) => s.chapterNum);
+  const clearComboMultiplier = useGameStore((s) => s.clearComboMultiplier);
+  const clearComboActive = useGameStore((s) => s.clearComboActive);
 
   const t = TRANSLATIONS[language];
 
@@ -338,7 +341,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
       {!debugChapterId && (
         <div className="stage-map-hud">
           <div className="stage-map-hp-label">
-            {language === 'KR' ? 'CORE STABILITY' : 'CORE STABILITY'}
+            {language === 'KR' ? '코어 안정도' : 'CORE STABILITY'}
           </div>
           <div className="stage-map-hp-text">
             {player.hp} / {player.maxHp}
@@ -349,6 +352,27 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
               style={{ width: `${hpPercent}%` }}
             />
           </div>
+        </div>
+      )}
+
+      {/* 클리어 콤보 HUD — 스테이지 선택 지도 (좌측 상단) */}
+      {!debugChapterId && clearComboActive && clearComboMultiplier > 1.0 && (
+        <div
+          className="clear-combo-hud"
+          style={{
+            left: '3%',
+            top: '16%',
+          }}
+        >
+          <span className="clear-combo-hud-icon">⚡</span>
+          <span className="clear-combo-hud-text">
+            {language === 'KR' ? '클리어 콤보' : 'Clear Combo'}
+          </span>
+          <span className="clear-combo-hud-multiplier">
+            {language === 'KR'
+              ? `${clearComboMultiplier.toFixed(1)}배`
+              : `${clearComboMultiplier.toFixed(1)}x`}
+          </span>
         </div>
       )}
 
