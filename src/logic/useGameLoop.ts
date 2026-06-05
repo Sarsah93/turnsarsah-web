@@ -2092,21 +2092,27 @@ export const useGameLoop = () => {
         }
 
         // 3. Victory State & Sound
-        // Clear Combo: 5턴 이내 클리어 체크 (NORMAL 이상 + clearComboActive)
+        // Clear Combo: 스택별 가변 턴 제한 클리어 체크 (NORMAL 이상 + clearComboActive)
+        // 1스택: 5턴 이내, 2스택: 4턴 이내, 3스택: 3턴 이내, 4스택: 2턴 이내
+        // 배율: 1스택=1.2x, 2스택=1.4x, 3스택=1.6x, 4스택=1.8x (이후 1.8x 유지)
         const isComboEligible = store.clearComboActive &&
             store.difficulty !== 'EASY' &&
             store.stageMapProgress !== null;
         if (isComboEligible) {
-            // currentTurn은 0-indexed: 0~4가 1~5턴 공격에 해당
-            const withinTurnLimit = store.currentTurn <= 4;
+            // currentTurn은 0-indexed: 0=1턴, 1=2턴, 2=3턴, 3=4턴, 4=5턴
+            const currentCount = store.clearComboCount;
+            // 스택별 턴 제한 테이블 (0-indexed turnLimit)
+            const turnLimits = [4, 3, 2, 1]; // 스택0→5턴=idx4, 1→4턴=idx3, 2→3턴=idx2, 3→2턴=idx1
+            const limitIndex = Math.min(currentCount, turnLimits.length - 1);
+            const turnLimit = turnLimits[limitIndex];
+            const withinTurnLimit = store.currentTurn <= turnLimit;
             if (withinTurnLimit) {
-                // 콤보 달성: 회수 +1, 배수 업그레이드
-                const newCount = Math.min(store.clearComboCount + 1, 5);
-                const newMultiplier = Math.min(1.0 + newCount * 0.2, 2.0);
+                // 콤보 달성: 최대 4스택, 배율 1.2x~1.8x
+                const newCount = Math.min(currentCount + 1, 4);
+                const newMultiplier = 1.0 + newCount * 0.2; // 최대 1.8x
                 store.setClearCombo(newCount, newMultiplier);
             } else {
-                // 콤보 깨짐: 카운트 초기화 (multiplier는 다음 스테이지에도 현재 1.0 유지하다가 단절로 즐)
-                // → 다음 스테이지에서는 다시 1.2x부터 시작되어야 하므로 count=0, multiplier=1.0
+                // 콤보 깨짐: 카운트 초기화 → 다음 스테이지에서 1.2x부터 재시작
                 store.resetClearCombo();
             }
         }
