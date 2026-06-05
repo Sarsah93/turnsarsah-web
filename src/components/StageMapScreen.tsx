@@ -64,13 +64,13 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const getNodeStatus = (node: MapNode): 'completed' | 'available' | 'dimmed' | 'locked' => {
     if (debugChapterId) return 'available'; // In debug mode, keep all nodes visible and clickable
     if (activeProgress.completedNodes.includes(node.id)) return 'completed';
-    if (isDimmedNode(activeProgress, node.id)) return 'dimmed';
     if (availableNodeIds.includes(node.id)) {
       if (node.type === 'exit' && difficulty === Difficulty.EASY) {
         return 'locked';
       }
       return 'available';
     }
+    if (isDimmedNode(activeProgress, node.id)) return 'dimmed';
     return 'locked';
   };
 

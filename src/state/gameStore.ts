@@ -340,6 +340,7 @@ interface GameStoreState {
   stageMapProgress: StageMapProgress | null;
   setStageMapProgress: (progress: StageMapProgress | null) => void;
   enterStageMap: (chapterId: string) => Promise<void>;
+  initDebugStageMap: (chapterId: string, difficulty: Difficulty) => Promise<void>;
   returnToStageMap: () => void;
   completeMapNode: (nodeId: string) => void;
   chooseMapFork: (forkGroup: string, chosenNodeId: string) => void;
@@ -1582,6 +1583,59 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       loadingPhase: 'NONE',
       // Clear Combo: 챕터1 시작 시 활성화, 다른 챕터는 유지
       ...(chapterId === '1' ? { clearComboActive: true, clearComboCount: 0, clearComboMultiplier: 1.0 } : {}),
+    });
+  },
+
+  initDebugStageMap: async (chapterId: string, difficulty: Difficulty) => {
+    const route = CHAPTER_ROUTES[chapterId];
+    if (!route) return;
+    set({ loadingPhase: 'CHAPTER_TRANSITION', loadingProgress: 0 });
+    const assets = [route.mapImage];
+    if (route.bgm) assets.push(route.bgm);
+    try {
+      await preloadManager.preloadBatch(assets, (progress) => {
+        set({ loadingProgress: progress });
+      });
+    } catch (e) {
+      console.warn("Failed to preload map assets:", e);
+    }
+
+    clearAllSeenGuides();
+    const config = DIFFICULTY_CONFIGS[difficulty];
+    const altarData = AltarManager.getAltarData();
+    let currentEquippedSkills: string[] = [];
+    if (difficulty === Difficulty.HARD) {
+      currentEquippedSkills = altarData.hard?.equippedSkills || [];
+    } else if (difficulty === Difficulty.HELL) {
+      currentEquippedSkills = altarData.hell?.equippedSkills || [];
+    } else {
+      currentEquippedSkills = altarData.normal?.equippedSkills || [];
+    }
+    const initialPlayer = calculateInitialPlayer(config, currentEquippedSkills, chapterId, difficulty, false);
+    
+    set({
+      player: initialPlayer,
+      equippedAltarSkills: currentEquippedSkills,
+      hasStage6Bonus: false,
+      ch1PerfectCount: 0,
+      specialQualify: false,
+      ch2PerfectCount: 0,
+      ch2SpecialQualify: false,
+      lizardKingStraightCount: 0,
+      lizardStemCellDestroyed: false,
+      difficulty,
+      stageMapProgress: {
+        chapterId,
+        completedNodes: [],
+        currentNodeId: route.startNodeId,
+        chosenForks: {},
+      },
+      chapterNum: chapterId,
+      gameState: GameState.STAGE_MAP,
+      loadingPhase: 'NONE',
+      clearComboActive: true,
+      clearComboCount: 0,
+      clearComboMultiplier: 1.0,
     });
   },
 

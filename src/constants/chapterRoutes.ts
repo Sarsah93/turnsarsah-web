@@ -87,8 +87,11 @@ export function isDimmedNode(progress: StageMapProgress, nodeId: string): boolea
     // 선택하지 않은 nextNode에서 시작하는 경로상의 모든 노드를 dimmed 처리
     const unchosen = parentNode.nextNodes.filter(id => id !== chosenId);
     for (const unchosenId of unchosen) {
-      // 직접 선택되지 않은 노드는 항상 dim 처리
-      if (nodeId === unchosenId) return true;
+      // 직접 선택되지 않은 노드라도, 선택한 경로(chosenId)로 도달할 수 있는 노드라면 dim 처리 제외
+      if (nodeId === unchosenId) {
+        if (isDescendantOf(route, chosenId, nodeId, unchosenId)) continue;
+        return true;
+      }
 
       // unchosen 경로의 후손인지 확인
       if (isDescendantOf(route, unchosenId, nodeId, chosenId)) {
@@ -211,9 +214,9 @@ const DESERT_ROUTE: ChapterRoute = {
     { id: 's-5-3', type: 'stage', label: '스테이지 5-3', labelEN: 'Stage 5-3', stageKey: 7,
       x: 58, y: 91, nextNodes: ['event-main'] },
     { id: 'rest-temple', type: 'rest', label: '제단 휴식처', labelEN: 'Temple Rest Area',
-      x: 57, y: 74, nextNodes: ['s-5-2'], restHealPercent: 0.3 },
+      x: 57, y: 74, nextNodes: ['s-5-2', 's-4-2'], forkGroup: 'fork-temple', restHealPercent: 0.3 },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 6,
-      x: 55, y: 53, nextNodes: ['s-6-1'] },
+      x: 55, y: 53, nextNodes: ['s-6-1', 'rest-temple'], forkGroup: 'fork-s52' },
     { id: 'event-main', type: 'event', label: '이벤트 스테이지', labelEN: 'Event Stage',
       x: 42, y: 88, nextNodes: ['s-6-2'] },
     { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 8,
@@ -252,34 +255,34 @@ const DEEP_FOREST_ROUTE: ChapterRoute = {
     { id: 's-3-1', type: 'stage', label: '스테이지 3-1', labelEN: 'Stage 3-1', stageKey: 3,
       x: 30, y: 71, nextNodes: ['event-1'] },
     { id: 'event-1', type: 'event', label: '이벤트 스테이지 1', labelEN: 'Event Stage 1',
-      x: 19, y: 62, nextNodes: ['s-4-1'] },
+      x: 19, y: 62, nextNodes: ['rest-mid'] },
     { id: 's-4-1', type: 'stage', label: '스테이지 4-1', labelEN: 'Stage 4-1', stageKey: 4,
       x: 13, y: 47, nextNodes: ['s-5-1'] },
     { id: 's-5-1', type: 'stage', label: '스테이지 5-1', labelEN: 'Stage 5-1', stageKey: 6,
-      x: 21, y: 32, nextNodes: ['rest-1'] },
+      x: 21, y: 32, nextNodes: ['s-6-1'] },
 
     // ── 우측 경로 ──
     { id: 's-2-2', type: 'stage', label: '스테이지 2-2', labelEN: 'Stage 2-2', stageKey: 2,
       x: 73, y: 64, nextNodes: ['s-3-2'] },
     { id: 's-3-2', type: 'stage', label: '스테이지 3-2', labelEN: 'Stage 3-2', stageKey: 5,
-      x: 72, y: 45, nextNodes: ['s-4-2'] },
+      x: 72, y: 45, nextNodes: ['event-2'] },
+    { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
+      x: 93, y: 40, nextNodes: ['rest-2'] },
+    { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
+      x: 82, y: 39, nextNodes: ['s-4-2'], restHealPercent: 0.3 },
     { id: 's-4-2', type: 'stage', label: '스테이지 4-2', labelEN: 'Stage 4-2', stageKey: 7,
       x: 74, y: 28, nextNodes: ['s-5-2'] },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 8,
-      x: 62, y: 24, nextNodes: ['rest-2'] },
+      x: 62, y: 24, nextNodes: ['s-6-1'] },
 
     // ── 휴식처 & 합류 ──
     { id: 'rest-1', type: 'rest', label: '휴식처 1', labelEN: 'Rest Area 1',
-      x: 45, y: 18, nextNodes: ['s-6-1'], restHealPercent: 0.3 },
-    { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
-      x: 82, y: 39, nextNodes: ['event-2'], restHealPercent: 0.3 },
-    { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
-      x: 93, y: 40, nextNodes: ['s-6-1'] },
+      x: 45, y: 18, nextNodes: ['s-7'], restHealPercent: 0.3 },
 
     { id: 's-6-1', type: 'stage', label: '스테이지 6-1', labelEN: 'Stage 6-1', stageKey: 9,
-      x: 41, y: 34, nextNodes: ['rest-mid'] },
+      x: 41, y: 34, nextNodes: ['rest-1'] },
     { id: 'rest-mid', type: 'rest', label: '휴식처', labelEN: 'Rest Area',
-      x: 32, y: 55, nextNodes: ['s-7'], restHealPercent: 0.3 },
+      x: 32, y: 55, nextNodes: ['s-4-1'], restHealPercent: 0.3 },
     { id: 's-7', type: 'stage', label: '스테이지 7', labelEN: 'Stage 7', stageKey: 10,
       x: 26, y: 18, nextNodes: ['exit-swamp'] },
 
@@ -326,11 +329,11 @@ const CAVE_ROUTE: ChapterRoute = {
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 5,
       x: 57, y: 67, nextNodes: ['rest-2'] },
     { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
-      x: 67, y: 76, nextNodes: ['event-2'], restHealPercent: 0.3 },
-    { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
-      x: 85, y: 66, nextNodes: ['s-6-2'] },
+      x: 67, y: 76, nextNodes: ['s-6-2'], restHealPercent: 0.3 },
     { id: 's-6-2', type: 'stage', label: '스테이지 6-2', labelEN: 'Stage 6-2', stageKey: 9,
-      x: 78, y: 81, nextNodes: ['s-7'] },
+      x: 78, y: 81, nextNodes: ['event-2'] },
+    { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
+      x: 85, y: 66, nextNodes: ['s-7'] },
 
     // ── 합류 ──
     { id: 's-7', type: 'stage', label: '스테이지 7', labelEN: 'Stage 7', stageKey: 10,
@@ -377,11 +380,11 @@ const SWAMP_ROUTE: ChapterRoute = {
     { id: 's-4-2', type: 'stage', label: '스테이지 4-2', labelEN: 'Stage 4-2', stageKey: 7,
       x: 68, y: 30, nextNodes: ['s-5-2'] },
     { id: 's-5-2', type: 'stage', label: '스테이지 5-2', labelEN: 'Stage 5-2', stageKey: 6,
-      x: 68, y: 45, nextNodes: ['rest-2'] },
-    { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
-      x: 67, y: 58, nextNodes: ['event-2'], restHealPercent: 0.3 },
+      x: 68, y: 45, nextNodes: ['event-2'] },
     { id: 'event-2', type: 'event', label: '이벤트 스테이지 2', labelEN: 'Event Stage 2',
-      x: 88, y: 46, nextNodes: ['s-6-2'] },
+      x: 88, y: 46, nextNodes: ['rest-2'] },
+    { id: 'rest-2', type: 'rest', label: '휴식처 2', labelEN: 'Rest Area 2',
+      x: 67, y: 58, nextNodes: ['s-6-2'], restHealPercent: 0.3 },
     { id: 's-6-2', type: 'stage', label: '스테이지 6-2', labelEN: 'Stage 6-2', stageKey: 9,
       x: 68, y: 72, nextNodes: ['s-7'] },
 

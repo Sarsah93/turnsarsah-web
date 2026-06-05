@@ -116,7 +116,7 @@ export const AltarSkillSlots: React.FC = () => {
                                     borderRadius: '12px',
                                     padding: '20px',
                                     color: '#fff',
-                                    zIndex: 1000,
+                                    zIndex: 6000,
                                     pointerEvents: 'none',
                                     boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
                                     animation: 'fadeIn 0.2s ease',
