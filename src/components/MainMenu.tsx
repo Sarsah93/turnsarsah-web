@@ -179,7 +179,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onOpenDebugStageMap }) => {
                         <BlockButton text="사막 챕터 (Desert)" onClick={() => { triggerTransition(() => initDebugStageMap('2A', Difficulty.NORMAL)); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
                         <BlockButton text="깊은 숲 챕터 (Deep Forest)" onClick={() => { triggerTransition(() => initDebugStageMap('2B', Difficulty.NORMAL)); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
                         <BlockButton text="동굴 챕터 (Cave)" onClick={() => { triggerTransition(() => initDebugStageMap('3A', Difficulty.NORMAL)); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
-                        <BlockButton text="폐광 챕터 (Swamp)" onClick={() => { triggerTransition(() => initDebugStageMap('3B', Difficulty.NORMAL)); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
+                        <BlockButton text="늪지대 (SWAMP)" onClick={() => { triggerTransition(() => initDebugStageMap('3B', Difficulty.NORMAL)); setActiveMenu('NONE'); }} width="400px" height="46px" fontSize="1.3rem" />
                     </div>
                 </Modal>
             )}

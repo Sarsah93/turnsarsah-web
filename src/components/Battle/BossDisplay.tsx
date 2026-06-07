@@ -101,6 +101,11 @@ export const BossDisplay: React.FC = () => {
             ? { transform: 'scale(1.2)', transformOrigin: 'center center' }
             : {};
 
+    // 보스별 컨테이너 너비 보정 (가로로 넓은 보스는 더 넓은 컨테이너 필요)
+    const isTroglodon = chapterNum === '3B' && stageNum === 8;
+    const bossContainerWidth = isTroglodon ? '650px' : '450px';
+    const bossContainerHeight = isTroglodon ? '350px' : '450px';
+
     const mask80 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNMTAsMTggaDYgdjQgaC02IFogTTg0LDY2IGg2IHY0IGgtNiBaIi8+PC9zdmc+")';
     const mask60 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTEwLDE4IGg2IHY0IGgtNiBaIE04NCw2NiBoNiB2NCBoLTYgWiIvPjwvc3ZnPg==")';
     const mask40 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTQ4LDMwIGg2IHY1IGgtNiBaIE0xMCwxOCBoNiB2NCBoLTYgWiBNODQsNjYgaDYgdjQgaC02IFoiLz48L3N2Zz4=")';
@@ -160,8 +165,8 @@ export const BossDisplay: React.FC = () => {
                     top: '60px', // Even higher to maximize combat area
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    width: '450px',
-                    height: '450px',
+                    width: bossContainerWidth,
+                    height: bossContainerHeight,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',

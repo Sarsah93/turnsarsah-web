@@ -161,6 +161,42 @@ export const getBossAttackSpriteInfo = (chapter: string, stage: number): BossAtt
         if (!entry) return null;
         return { path: `/assets/boss_orc/${entry.file}`, cols: entry.cols, rows: entry.rows };
     }
+    if (chapter === '3A') {
+        // 챕터 3A 동굴: 이미지 실측 기반 그리드
+        const mapping: Record<number, { file: string; cols: number; rows: number }> = {
+            1: { file: '01_SLIME_transparent.png', cols: 6, rows: 6 },
+            2: { file: '02_VAMPIRE BAT_transparent.png', cols: 6, rows: 6 },
+            3: { file: '03_CAVE WORM_transparent.png', cols: 6, rows: 6 },
+            4: { file: '04_POISON SPIDER_transparent.png', cols: 6, rows: 6 },
+            5: { file: '05_WRAITH_transparent.png', cols: 6, rows: 6 },
+            6: { file: '06_CAVE BEAR_transparent.png', cols: 6, rows: 6 },
+            7: { file: '07_CRYSTAL GOLEM_transparent.png', cols: 6, rows: 6 },
+            8: { file: '08_DRAKE_transparent.png', cols: 6, rows: 6 },
+            9: { file: '09_BASILISK_transparent.png', cols: 6, rows: 6 },
+            10: { file: '10_HYDRA_transparent.png', cols: 6, rows: 6 },
+        };
+        const entry = mapping[stage];
+        if (!entry) return null;
+        return { path: `/assets/boss_cave/${entry.file}`, cols: entry.cols, rows: entry.rows };
+    }
+    if (chapter === '3B') {
+        // 챕터 3B 늪지대: 이미지 실측 기반 그리드
+        const mapping: Record<number, { file: string; cols: number; rows: number }> = {
+            1: { file: '01_ALLIGATOR SNAPPING TURTLE_transparent.png', cols: 6, rows: 6 },
+            2: { file: '02_MULROC_transparent.png', cols: 6, rows: 6 },
+            3: { file: '03_CROCODILE_transparent.png', cols: 6, rows: 6 },
+            4: { file: '04_LIZARD SKINK_transparent.png', cols: 6, rows: 6 },
+            5: { file: '05_LIZARD MAN_transparent.png', cols: 6, rows: 6 },
+            6: { file: '06_LIZARD SLANN_transparent.png', cols: 6, rows: 6 },
+            7: { file: '07_LIZARD SAURUS_transparent.png', cols: 6, rows: 6 },
+            8: { file: '08_TROGLODON_transparent.png', cols: 6, rows: 6 },
+            9: { file: '09_LIZARD KROXIGOR_transparent.png', cols: 6, rows: 6 },
+            10: { file: '10_LIZARD KING_transparent.png', cols: 6, rows: 6 },
+        };
+        const entry = mapping[stage];
+        if (!entry) return null;
+        return { path: `/assets/boss_swamp/${entry.file}`, cols: entry.cols, rows: entry.rows };
+    }
     return null;
 };
 

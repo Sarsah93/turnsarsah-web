@@ -1,4 +1,5 @@
 import { UseBoundStore, StoreApi } from 'zustand';
+import { useGameStore } from '../state/gameStore';
 
 export const applyChapterSpecialRules = (
     chapterNum: string,
@@ -16,7 +17,7 @@ export const applyChapterSpecialRules = (
     let newDamage = damage;
     let newDisplayMessage = displayMessage;
 
-    // 2A: Hand Nullification Rules
+    // 2A: Hand Nullification Rules (Damage = 0)
     if (chapterNum === '2A') {
         const nullifiedHands: Record<number, string> = {
             1: 'Straight Flush', 2: 'One Pair', 3: 'Two Pair', 6: 'Three of a Kind',
@@ -24,12 +25,21 @@ export const applyChapterSpecialRules = (
         };
         const nullifiedHand = nullifiedHands[stageNum];
         if (nullifiedHand && handType === nullifiedHand) {
-            const handBonuses: Record<string, number> = {
-                'One Pair': 10, 'Two Pair': 20, 'Three of a Kind': 50,
-                'Straight': 75, 'Flush': 100, 'Full House': 125, 'Straight Flush': 150
+            newDamage = 0;
+            const lang = useGameStore.getState().language || 'KR';
+            const handNames: Record<string, { KR: string, EN: string }> = {
+                'Straight Flush': { KR: '스트레이트 플러시', EN: 'Straight Flush' },
+                'One Pair': { KR: '원페어', EN: 'One Pair' },
+                'Two Pair': { KR: '투페어', EN: 'Two Pair' },
+                'Three of a Kind': { KR: '트리플', EN: 'Three of a Kind' },
+                'Full House': { KR: '풀하우스', EN: 'Full House' },
+                'Straight': { KR: '스트레이트', EN: 'Straight' },
+                'Flush': { KR: '플러시', EN: 'Flush' }
             };
-            const bonus = handBonuses[handType] || 0;
-            newDamage = Math.max(0, Math.floor((baseDamage - bonus) * (finalDamage / rawDamage)));
+            const handName = handNames[handType]?.[lang as 'KR'|'EN'] || handType;
+            newDisplayMessage = lang === 'KR'
+                ? `${handName} 무효: 피해를 줄 수 없습니다!`
+                : `${handName} Nullified: Cannot deal damage!`;
         }
     }
 

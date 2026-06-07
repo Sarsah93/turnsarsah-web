@@ -333,15 +333,15 @@ export const TRANSLATIONS = {
 
             // Chapter 3B Rules
             HARDNESS: "규칙: 단단함 (투페어 이상 족보만 피해 적용)",
-            MUDDED_20PCT: "규칙:진흙뿌리기",
+            MUDDED_20PCT: "규칙: 진흙뿌리기 (보스 공격 시 20% 확률로 카드 1장 진흙 상태)",
             DEATHROLL: "규칙: 데스롤 (플레이어가 SWAP 시 즉시 보스 1회 공격)",
             AUTOTOMY: "규칙: 자절 (2턴마다 플레이어 공격 피해 30% 감소)",
             CAMOUFLAGE: "규칙: 위장 (3턴마다 플레이어 공격 100% 회피)",
             INITIALTORY: "규칙: 초기의식 (매 턴 핸드 초기화 + 조커 확률 -5% 영구 감소)",
             HOLD_BREATH: "규칙: 숨참기 (보스 공격 2회 성공 시, 다음 턴 공격 100% 차단 후 스킵)",
-            MUDDED_40PCT: "규칙:진흙뿌리기",
-            AWAKENING_3B: "규칙:각성 (HP 40% 이하 시 ATK +30, 매 턴 회복 +20)",
-            STEM_CELL: "규칙:줄기세포",
+            MUDDED_40PCT: "규칙: 진흙뿌리기 (보스 공격 시 40% 확률로 카드 2장 진흙 상태)",
+            AWAKENING_3B: "규칙: 각성 (HP 40% 이하 시 ATK +30, 매 턴 회복 +20)",
+            STEM_CELL: "규칙: 줄기세포 (매 턴 보스 HP+10, ATK+2, 회피+2%)",
 
             // Chapter 3B Swamping
             CHAPTER_SWAMPING: "챕터 규칙: 잠김 (5공격 전 회피 -5%, 5공격 후 -20%)",

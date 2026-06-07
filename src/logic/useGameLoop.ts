@@ -252,6 +252,20 @@ export const useGameLoop = () => {
         if (useGameStore.getState().gamePhase !== 'IDLE') return;
         store.setGamePhase('PLAYER_ATTACK');
 
+        // ── Clear Combo 턴 제한 초과 즉시 체크 ──────────────────────────────
+        // 현재 스테이지 내에서 허용 턴 초과 시, 배수를 즉시 1.0으로 무효화하고 HUD 알림
+        if (store.clearComboActive && store.clearComboMultiplier > 1.0 && store.difficulty !== 'EASY') {
+            const turnLimits = [4, 3, 2, 1]; // 스택0→5턴, 1→4턴, 2→3턴, 3→2턴 (0-indexed)
+            const limitIndex = Math.min(store.clearComboCount, turnLimits.length - 1);
+            const turnLimit = turnLimits[limitIndex];
+            if (store.currentTurn > turnLimit && !store.clearComboBreaked) {
+                // 배수 즉시 무효화
+                store.setClearComboBreaked(true);
+                store.setClearCombo(store.clearComboCount, 1.0);
+            }
+        }
+        // ──────────────────────────────────────────────────────────────────────
+
         // 1. 마비 체크 (Paralyzing)
         if (player.conditions.has('Paralyzing')) {
             setMessage(t.COMBAT.PARALYZED);
@@ -1964,7 +1978,7 @@ export const useGameLoop = () => {
 
             // 3B-3: DEATHROLL(?곗뒪濡? - ?뚮젅?댁뼱 SWAP ??利됱떆 蹂댁뒪 1??怨듦꺽
             if (store.chapterNum === '3B' && stageNum === 3) {
-                setMessage("?곗뒪濡? SWAP??諛섏쓳?섏뿬 蹂댁뒪媛 利됱떆 怨듦꺽?⑸땲??");
+                setMessage("데스롤: SWAP 시 보스가 즉시 반격합니다!");
                 triggerScreenEffect('shake');
                 await wait(1000);
                 // SWAP 단계 종료 후 보스 턴 실행

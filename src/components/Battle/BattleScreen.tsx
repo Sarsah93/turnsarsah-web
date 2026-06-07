@@ -35,7 +35,7 @@ export const BattleScreen: React.FC = () => {
     const {
         player, bot, playerHand, gamePhase, isTutorial, tutorialStep,
         setTutorialStep, stageNum, chapterNum, language, stageMapProgress,
-        clearComboMultiplier, clearComboActive
+        clearComboMultiplier, clearComboActive, clearComboBreaked
     } = store;
     const t = (TRANSLATIONS as any)[language];
 
@@ -470,7 +470,24 @@ export const BattleScreen: React.FC = () => {
             })()}
 
             {/* 클리어 콤보 HUD — 전투화면 (우측 하단) */}
-            {!isTutorial && clearComboActive && clearComboMultiplier > 1.0 && (
+            {!isTutorial && clearComboActive && clearComboBreaked && (
+                <div
+                    className="clear-combo-hud clear-combo-hud--broken"
+                    style={{
+                        right: '3%',
+                        bottom: 'calc(30% + 16px)',
+                    }}
+                >
+                    <span className="clear-combo-hud-icon">💔</span>
+                    <span className="clear-combo-hud-text" style={{ color: '#e74c3c' }}>
+                        {language === 'KR' ? '콤보 해제' : 'Combo Broken'}
+                    </span>
+                    <span className="clear-combo-hud-multiplier" style={{ color: '#e74c3c', textShadow: '0 0 8px rgba(231,76,60,0.8)' }}>
+                        1.0{language === 'KR' ? '배' : 'x'}
+                    </span>
+                </div>
+            )}
+            {!isTutorial && clearComboActive && !clearComboBreaked && clearComboMultiplier > 1.0 && (
                 <div
                     className="clear-combo-hud"
                     style={{
@@ -513,7 +530,7 @@ export const BattleScreen: React.FC = () => {
                     opacity: gamePhase === 'BOSS_DEFEATED' ? 0.5 : 1
                 }}
             >
-                三
+                ☰
             </Button>
  
             {/* v2.5.0: Speed Toggle Button - Moved to the left of Pause Button */}

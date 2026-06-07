@@ -350,8 +350,10 @@ interface GameStoreState {
   clearComboCount: number;        // 연속 달성 횟수 (0~5)
   clearComboMultiplier: number;   // 현재 적용 배수 (1.0~2.0)
   clearComboActive: boolean;      // 챕터1 스테이지1 시작 후 활성 여부
+  clearComboBreaked: boolean;     // 전투 중 콤보 해제 이벤트 플래그
   setClearCombo: (count: number, multiplier: number) => void;
   setClearComboActive: (active: boolean) => void;
+  setClearComboBreaked: (breaked: boolean) => void;
   resetClearCombo: () => void;
 }
 
@@ -1111,6 +1113,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         holdBreathCount3B: 0,
         holdBreathTurn3B: -1,
         holdBreathInvulnerable3B: false,
+        clearComboBreaked: false,  // 새 스테이지 시작 시 콤보 해제 플래그 리셋
       };
     });
     // Immediately apply rules for turn 0
@@ -1686,8 +1689,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   clearComboCount: 0,
   clearComboMultiplier: 1.0,
   clearComboActive: false,
+  clearComboBreaked: false,
   setClearCombo: (count: number, multiplier: number) => set({ clearComboCount: count, clearComboMultiplier: multiplier }),
   setClearComboActive: (active: boolean) => set({ clearComboActive: active }),
+  setClearComboBreaked: (clearComboBreaked: boolean) => set({ clearComboBreaked }),
   resetClearCombo: () => set({ clearComboCount: 0, clearComboMultiplier: 1.0 }),
 
 }));
