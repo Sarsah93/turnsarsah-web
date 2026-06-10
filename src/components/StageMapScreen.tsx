@@ -15,6 +15,7 @@ import { AudioManager } from '../utils/AudioManager';
 import { SaveManager } from '../utils/SaveManager';
 import { AltarManager } from '../utils/AltarManager';
 import { SaveLoadMenu, PauseMenu, SettingsMenu, ConfirmationPopup } from './Menu';
+import { ClearComboDetailPopup } from './ClearComboDetailPopup';
 import './styles/StageMapScreen.css';
 import './styles/WorldMapPopup.css';
 
@@ -40,6 +41,19 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const chapterNum = useGameStore((s) => s.chapterNum);
   const clearComboMultiplier = useGameStore((s) => s.clearComboMultiplier);
   const clearComboActive = useGameStore((s) => s.clearComboActive);
+
+  const [comboDetailOpen, setComboDetailOpen] = useState(false);
+  const [prevMultiplier, setPrevMultiplier] = useState(clearComboMultiplier);
+  const [animatePop, setAnimatePop] = useState(false);
+
+  useEffect(() => {
+    if (clearComboMultiplier > prevMultiplier) {
+      setAnimatePop(true);
+      const timer = setTimeout(() => setAnimatePop(false), 400);
+      return () => clearTimeout(timer);
+    }
+    setPrevMultiplier(clearComboMultiplier);
+  }, [clearComboMultiplier, prevMultiplier]);
 
   const t = TRANSLATIONS[language];
 
@@ -356,19 +370,20 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
       )}
 
       {/* 클리어 콤보 HUD — 스테이지 선택 지도 (좌측 상단) */}
-      {!debugChapterId && clearComboActive && clearComboMultiplier > 1.0 && (
+      {!debugChapterId && clearComboActive && (
         <div
-          className="clear-combo-hud"
+          className={`clear-combo-hud ${clearComboMultiplier <= 1.0 ? 'clear-combo-hud--deactivated' : ''}`}
           style={{
             left: '3%',
             top: '16%',
           }}
+          onClick={() => setComboDetailOpen(true)}
         >
           <span className="clear-combo-hud-icon">⚡</span>
           <span className="clear-combo-hud-text">
             {language === 'KR' ? '클리어 콤보' : 'Clear Combo'}
           </span>
-          <span className="clear-combo-hud-multiplier">
+          <span className={`clear-combo-hud-multiplier ${animatePop ? 'combo-pop-animation' : ''}`}>
             {language === 'KR'
               ? `${clearComboMultiplier.toFixed(1)}배`
               : `${clearComboMultiplier.toFixed(1)}x`}
@@ -472,6 +487,14 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
           onNo={() => setMenuState('PAUSE')}
         />
       )}
+
+      <ClearComboDetailPopup
+        isOpen={comboDetailOpen}
+        onClose={() => setComboDetailOpen(false)}
+        language={language}
+        multiplier={clearComboMultiplier}
+        isBroken={false}
+      />
     </div>
   );
 };

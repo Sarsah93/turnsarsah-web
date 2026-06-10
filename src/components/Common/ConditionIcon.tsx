@@ -146,7 +146,7 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
           <div style={{ lineHeight: '1.4' }}>
             {resolvedDesc}
           </div>
-          <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#aaa', textAlign: 'right' }}>
+          <div style={{ marginTop: '8px', fontSize: '1.1rem', color: '#aaa', textAlign: 'right' }}>
             {durationText}
           </div>
         </div>

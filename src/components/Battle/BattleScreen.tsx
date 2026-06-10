@@ -19,6 +19,7 @@ import { ClearCongratulationsPopup } from '../ClearCongratulationsPopup';
 import { WorldMapPopup } from '../WorldMapPopup';
 import { StageMapScreen } from '../StageMapScreen';
 import { getNode } from '../../constants/chapterRoutes';
+import { ClearComboDetailPopup } from '../ClearComboDetailPopup';
 
 import { BattleMenuOverlay, ActiveMenuType } from './BattleMenuOverlay';
 import { BattleField } from './BattleField';
@@ -56,6 +57,19 @@ export const BattleScreen: React.FC = () => {
     const [cardsPos, setCardsPos] = useState({ topCenterX: 800, topCenterY: 700 });
     const [lowHpClass, setLowHpClass] = useState(false);
     const handRef = React.useRef<HTMLDivElement | null>(null);
+
+    const [comboDetailOpen, setComboDetailOpen] = useState(false);
+    const [prevMultiplier, setPrevMultiplier] = useState(clearComboMultiplier);
+    const [animatePop, setAnimatePop] = useState(false);
+
+    useEffect(() => {
+        if (clearComboMultiplier > prevMultiplier) {
+            setAnimatePop(true);
+            const timer = setTimeout(() => setAnimatePop(false), 400);
+            return () => clearTimeout(timer);
+        }
+        setPrevMultiplier(clearComboMultiplier);
+    }, [clearComboMultiplier, prevMultiplier]);
 
     // Trigger Initial Draw
     useEffect(() => {
@@ -470,39 +484,23 @@ export const BattleScreen: React.FC = () => {
             })()}
 
             {/* 클리어 콤보 HUD — 전투화면 (우측 하단) */}
-            {!isTutorial && clearComboActive && clearComboBreaked && (
+            {!isTutorial && clearComboActive && (
                 <div
-                    className="clear-combo-hud clear-combo-hud--broken"
+                    className={`clear-combo-hud ${(clearComboMultiplier <= 1.0 || clearComboBreaked) ? 'clear-combo-hud--deactivated' : ''}`}
                     style={{
                         right: '3%',
                         bottom: 'calc(30% + 16px)',
                     }}
-                >
-                    <span className="clear-combo-hud-icon">💔</span>
-                    <span className="clear-combo-hud-text" style={{ color: '#e74c3c' }}>
-                        {language === 'KR' ? '콤보 해제' : 'Combo Broken'}
-                    </span>
-                    <span className="clear-combo-hud-multiplier" style={{ color: '#e74c3c', textShadow: '0 0 8px rgba(231,76,60,0.8)' }}>
-                        1.0{language === 'KR' ? '배' : 'x'}
-                    </span>
-                </div>
-            )}
-            {!isTutorial && clearComboActive && !clearComboBreaked && clearComboMultiplier > 1.0 && (
-                <div
-                    className="clear-combo-hud"
-                    style={{
-                        right: '3%',
-                        bottom: 'calc(30% + 16px)',
-                    }}
+                    onClick={() => setComboDetailOpen(true)}
                 >
                     <span className="clear-combo-hud-icon">⚡</span>
                     <span className="clear-combo-hud-text">
                         {language === 'KR' ? '클리어 콤보' : 'Clear Combo'}
                     </span>
-                    <span className="clear-combo-hud-multiplier">
+                    <span className={`clear-combo-hud-multiplier ${animatePop ? 'combo-pop-animation' : ''}`}>
                         {language === 'KR'
-                            ? `${clearComboMultiplier.toFixed(1)}배`
-                            : `${clearComboMultiplier.toFixed(1)}x`}
+                            ? `${(clearComboBreaked ? 1.0 : clearComboMultiplier).toFixed(1)}배`
+                            : `${(clearComboBreaked ? 1.0 : clearComboMultiplier).toFixed(1)}x`}
                     </span>
                 </div>
             )}
@@ -575,6 +573,14 @@ export const BattleScreen: React.FC = () => {
                 onLoadGame={handleLoadGame}
                 onMidGameQuit={handleMidGameQuit}
                 t={t}
+            />
+
+            <ClearComboDetailPopup
+                isOpen={comboDetailOpen}
+                onClose={() => setComboDetailOpen(false)}
+                language={language}
+                multiplier={clearComboMultiplier}
+                isBroken={clearComboBreaked}
             />
         </div>
     );
