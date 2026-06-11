@@ -16,6 +16,7 @@ import { SaveManager } from '../utils/SaveManager';
 import { AltarManager } from '../utils/AltarManager';
 import { SaveLoadMenu, PauseMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import { ClearComboDetailPopup } from './ClearComboDetailPopup';
+import { StatusPopup } from './StatusPopup';
 import './styles/StageMapScreen.css';
 import './styles/WorldMapPopup.css';
 
@@ -32,6 +33,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const [confirmNode, setConfirmNode] = useState<MapNode | null>(null);
   const [infoPopup, setInfoPopup] = useState<{ msg: string; icon: string } | null>(null);
   const [menuState, setMenuState] = useState<MapMenuState>('NONE');
+  const [statusPopupOpen, setStatusPopupOpen] = useState(false);
 
   // ── Store ──
   const stageMapProgress = useGameStore((s) => s.stageMapProgress);
@@ -43,6 +45,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const clearComboActive = useGameStore((s) => s.clearComboActive);
 
   const [comboDetailOpen, setComboDetailOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [prevMultiplier, setPrevMultiplier] = useState(clearComboMultiplier);
   const [animatePop, setAnimatePop] = useState(false);
 
@@ -353,7 +356,11 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
 
       {/* HP HUD */}
       {!debugChapterId && (
-        <div className="stage-map-hud">
+        <div 
+          className="stage-map-hud"
+          onClick={() => setStatusPopupOpen(true)}
+          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+        >
           <div className="stage-map-hp-label">
             {language === 'KR' ? '코어 안정도' : 'CORE STABILITY'}
           </div>
@@ -495,6 +502,13 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
         multiplier={clearComboMultiplier}
         isBroken={false}
       />
+
+      {statusPopupOpen && (
+        <StatusPopup 
+          isOpen={statusPopupOpen} 
+          onClose={() => setStatusPopupOpen(false)} 
+        />
+      )}
     </div>
   );
 };

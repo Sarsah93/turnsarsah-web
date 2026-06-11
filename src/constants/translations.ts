@@ -406,6 +406,39 @@ export const TRANSLATIONS = {
             CHAPTER_3A_NAME: "챕터 3A 동굴",
             CHAPTER_3B_NAME: "챕터 3B 늪지대",
             HYDRA_FLUSH_COUNT: "티폰 전승: {count}/4"
+        },
+        STATUS_POPUP: {
+            title: "상태 정보 (STATUS)",
+            difficulty: "난이도",
+            maxHp: "최대 코어 안정도",
+            swapCount: "카드 교체 횟수",
+            flatAtk: "추가 데미지 (고정)",
+            percentAtk: "추가 데미지 (%)",
+            critMult: "크리티컬 배수",
+            critChance: "카드당 크리티컬 확률",
+            evasion: "회피율",
+            active: "적용 중",
+            inactive: "미적용",
+            potential: "조건부",
+            baseVal: "기본값",
+            appliedFactors: "적용 요인 목록",
+            noFactors: "적용된 추가 요인이 없습니다.",
+            jokerCard: "A/JOKER 카드 기준",
+            factors: {
+                prepper: "생존주의자 [1A] (최대 코어 안정도 +25, 생체 리듬 가속 장착 시 +30)",
+                stage6: "6단계 클리어 보너스 (최대 코어 안정도 +20%, 생체 리듬 가속 장착 시 +24%)",
+                debilitated: "상태이상: 쇠약 (최대 코어 안정도 -20%)",
+                fragments: "파편 회수 [5B-3] (HP 25% 이하 시 카드 교체 횟수 +2)",
+                sharpen: "날카로운 카드 [1B] (고정 데미지 +25)",
+                collapse: "노드 붕괴 [5B-2] (HP 구간에 따라 고정 데미지 +10 / +20 / +30)",
+                overloaded: "과부하 [5A-2] (동일 족보 연속 사용 시 데미지 +10% ~ +30%)",
+                resonance: "불안정 동조 [5A-3] (보스 HP 비율에 따라 데미지 +5% / +10%)",
+                adaptive: "적용 연산 [6A-1] (공격 성공마다 데미지 +5% 누적, 최대 +50%)",
+                coreResonance: "코어 공명 [6B-1] (보스 HP 50% 이하 시 데미지 +15%)",
+                bottomDeal: "밑장빼기 [4A-2] (조커 등장 확률 +5%)",
+                oneness: "물아일체 [2B] (회피율 +5% 및 환경 제약 무시)",
+                envPenalty2B: "챕터 2B 환경 패널티 (회피율 비활성화)"
+            }
         }
     },
     EN: {
@@ -801,6 +834,39 @@ export const TRANSLATIONS = {
             CHAPTER_3A_NAME: "Chapter 3A: Cave",
             CHAPTER_3B_NAME: "Chapter 3B: Swamp",
             HYDRA_FLUSH_COUNT: "Typhon Myth: {count}/4"
+        },
+        STATUS_POPUP: {
+            title: "Player Status (STATUS)",
+            difficulty: "Difficulty",
+            maxHp: "Max Core Stability",
+            swapCount: "Card Swap Count",
+            flatAtk: "Extra Damage (Flat)",
+            percentAtk: "Extra Damage (%)",
+            critMult: "Critical Multiplier",
+            critChance: "Crit Chance Per Card",
+            evasion: "Evasion Rate",
+            active: "Active",
+            inactive: "Inactive",
+            potential: "Conditional",
+            baseVal: "Base Value",
+            appliedFactors: "Applied Factors List",
+            noFactors: "No additional factors applied.",
+            jokerCard: "Based on A/JOKER Cards",
+            factors: {
+                prepper: "Prepper [1A] (Max HP +25, +30 with Biorhythm Acceleration)",
+                stage6: "Stage 6 Clear Bonus (Max HP +20%, +24% with Biorhythm Acceleration)",
+                debilitated: "Condition: Debilitated (Max HP -20%)",
+                fragments: "Fragments Recovery [5B-3] (+2 swap chances when HP <= 25%)",
+                sharpen: "Sharpen Cards [1B] (+25 flat damage)",
+                collapse: "Node Collapse [5B-2] (+10 / +20 / +30 flat damage based on HP)",
+                overloaded: "Overloaded [5A-2] (+10% to +30% damage on consecutive same hand)",
+                resonance: "Instability Resonance [5A-3] (+5% / +10% damage based on Boss HP)",
+                adaptive: "Adaptive Calc [6A-1] (+5% damage per hit stack, max +50%)",
+                coreResonance: "Core Resonance [6B-1] (+15% damage when Boss HP <= 50%)",
+                bottomDeal: "Bottom Deal [4A-2] (+5% Joker appearance probability)",
+                oneness: "Oneness with Nature [2B] (+5% Evasion, ignores env restrictions)",
+                envPenalty2B: "Ch. 2B Env Penalty (Evasion disabled)"
+            }
         }
     }
 };

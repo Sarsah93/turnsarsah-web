@@ -20,6 +20,7 @@ import { WorldMapPopup } from '../WorldMapPopup';
 import { StageMapScreen } from '../StageMapScreen';
 import { getNode } from '../../constants/chapterRoutes';
 import { ClearComboDetailPopup } from '../ClearComboDetailPopup';
+import { StatusPopup } from '../StatusPopup';
 
 import { BattleMenuOverlay, ActiveMenuType } from './BattleMenuOverlay';
 import { BattleField } from './BattleField';
@@ -59,6 +60,7 @@ export const BattleScreen: React.FC = () => {
     const handRef = React.useRef<HTMLDivElement | null>(null);
 
     const [comboDetailOpen, setComboDetailOpen] = useState(false);
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [prevMultiplier, setPrevMultiplier] = useState(clearComboMultiplier);
     const [animatePop, setAnimatePop] = useState(false);
 
@@ -341,7 +343,7 @@ export const BattleScreen: React.FC = () => {
             </div>
 
             {/* HUD Layer */}
-            <PlayerDisplay />
+            <PlayerDisplay onOpenStatus={() => setIsStatusOpen(true)} />
             <BossDisplay />
             <AltarSkillSlots />
 
@@ -581,6 +583,11 @@ export const BattleScreen: React.FC = () => {
                 language={language}
                 multiplier={clearComboMultiplier}
                 isBroken={clearComboBreaked}
+            />
+
+            <StatusPopup
+                isOpen={isStatusOpen}
+                onClose={() => setIsStatusOpen(false)}
             />
         </div>
     );

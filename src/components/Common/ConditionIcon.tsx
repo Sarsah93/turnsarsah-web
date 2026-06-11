@@ -97,7 +97,10 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
     <div
       className="condition-icon-wrapper"
       style={{ position: 'relative', pointerEvents: 'auto' }}
-      onClick={() => setShowPopup(!showPopup)}
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowPopup(!showPopup);
+      }}
     >
       <div className="condition-icon" style={{
         cursor: 'pointer',
