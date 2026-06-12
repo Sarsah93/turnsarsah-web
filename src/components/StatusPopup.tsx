@@ -93,7 +93,7 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       stage6Bonus = Math.floor(stage6Bonus * 1.2);
     }
   }
-  const debilitatingReduction = player.conditions.has('Debilitating') ? ((player.baseMaxHp ?? player.maxHp) - player.maxHp) : 0;
+  const debilitatingReduction = player.conditions.has('Debilitating') ? Math.floor((player.baseMaxHp || player.maxHp || 200) * 0.20) : 0;
   
   // 이벤트 HP 보너스 계산 (baseMaxHp 기준)
   const eventHpBonus = Math.floor((player.baseMaxHp || player.maxHp || 200) * (eventBonuses.maxHpBonusPercent ?? 0));

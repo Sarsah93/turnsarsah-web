@@ -24,6 +24,18 @@ import { getGameEntryAssets } from '../constants/assetManifest';
 import { TitleManager } from '../utils/TitleManager';
 
 /**
+ * Helper to calculate player's max HP based on baseMaxHp, event max HP bonus percent, and Debilitating condition.
+ */
+export const calculatePlayerMaxHp = (
+  baseMaxHp: number,
+  maxHpBonusPercent: number,
+  hasDebilitating: boolean
+): number => {
+  const percentSum = 1.0 + maxHpBonusPercent + (hasDebilitating ? -0.20 : 0);
+  return Math.max(1, Math.floor(baseMaxHp * percentSum));
+};
+
+/**
  * v2.3.9: Shared helper to calculate player stats with Altar skill bonuses
  */
 const calculateInitialPlayer = (
@@ -476,7 +488,20 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     activeRules: [],
     isBossVisible: true,
   },
-  setPlayer: (player) => set({ player }),
+  setPlayer: (player) =>
+    set((state) => {
+      const hasDebilitated = player.conditions.has('Debilitating');
+      const baseMaxHp = player.baseMaxHp || player.maxHp || 200;
+      const finalMaxHp = calculatePlayerMaxHp(baseMaxHp, state.eventBonuses.maxHpBonusPercent ?? 0, hasDebilitated);
+      return {
+        player: {
+          ...player,
+          maxHp: finalMaxHp,
+          hp: Math.min(player.hp, finalMaxHp),
+          baseMaxHp: baseMaxHp,
+        },
+      };
+    }),
   setBot: (bot) => set({ bot }),
 
   // Restrictions
@@ -633,7 +658,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       let newMaxHp = state.player.maxHp;
       if (name === 'Debilitating') {
-        newMaxHp = Math.floor((state.player.baseMaxHp || 200) * 0.8);
+        newMaxHp = calculatePlayerMaxHp(state.player.baseMaxHp || 200, state.eventBonuses.maxHpBonusPercent ?? 0, true);
       }
 
       // v2.3.6: If applying Immune, remove all current debuffs
@@ -658,7 +683,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       let newMaxHp = state.player.maxHp;
       if (name === 'Debilitating') {
-        newMaxHp = state.player.baseMaxHp || 200;
+        newMaxHp = calculatePlayerMaxHp(state.player.baseMaxHp || 200, state.eventBonuses.maxHpBonusPercent ?? 0, false);
       }
 
       return {
@@ -673,7 +698,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         player: {
           ...state.player,
           conditions: newConditions,
-          maxHp: state.player.baseMaxHp || 200
+          maxHp: calculatePlayerMaxHp(state.player.baseMaxHp || 200, state.eventBonuses.maxHpBonusPercent ?? 0, false)
         },
       };
     }),
@@ -1083,11 +1108,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const swapAdjust = (evtBonus.swapCountBonus ?? 0) + (state.pendingBattleDebuffs.swapCountPenalty ?? 0);
       const baseSwapCount = config.swapCount + swapAdjust;
 
-      let finalMaxHp = player.baseMaxHp || player.maxHp || 200;
-      if (evtBonus.maxHpBonusPercent && evtBonus.maxHpBonusPercent !== 0) {
-        const hpDelta = Math.floor(finalMaxHp * evtBonus.maxHpBonusPercent);
-        finalMaxHp = Math.max(1, finalMaxHp + hpDelta);
-      }
+      const hasDebilitated = player.conditions.has('Debilitating');
+      const finalMaxHp = calculatePlayerMaxHp(player.baseMaxHp || player.maxHp || 200, evtBonus.maxHpBonusPercent ?? 0, hasDebilitated);
 
       let finalHp = Math.min(finalMaxHp, player.hp);
 
@@ -1298,12 +1320,29 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }
     set({ loadingPhase: 'NONE' });
 
+    // 플레이어 스탯 로드 시 재정산
+    const loadedPlayer = { ...gameData.player };
+    const hasDebilitated = loadedPlayer.conditions.has('Debilitating');
+    const evtBonus = gameData.eventBonuses ?? {
+      percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
+      evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
+    };
+    const baseMaxHp = loadedPlayer.baseMaxHp || loadedPlayer.maxHp || 200;
+    loadedPlayer.maxHp = calculatePlayerMaxHp(baseMaxHp, evtBonus.maxHpBonusPercent ?? 0, hasDebilitated);
+    loadedPlayer.hp = Math.min(loadedPlayer.hp, loadedPlayer.maxHp);
+    loadedPlayer.baseMaxHp = baseMaxHp;
+
+    const config = DIFFICULTY_CONFIGS[gameData.difficulty];
+    const swapAdjust = (evtBonus.swapCountBonus ?? 0) + (gameData.pendingBattleDebuffs?.swapCountPenalty ?? 0);
+    const maxDraws = Math.max(0, config.swapCount + swapAdjust);
+    loadedPlayer.drawsRemaining = Math.max(0, Math.min(loadedPlayer.drawsRemaining ?? maxDraws, maxDraws));
+
     set({
         chapterNum: gameData.chapterNum || '1',
         stageNum: gameData.stageNum,
         difficulty: gameData.difficulty,
         currentTurn: gameData.currentTurn,
-        player: gameData.player,
+        player: loadedPlayer,
         bot: gameData.bot,
         playerHand: gameData.playerHand as (Card | null)[],
         isGameLoaded: true,
@@ -1510,12 +1549,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const swapAdjust = (evtBonus.swapCountBonus ?? 0) + (store.pendingBattleDebuffs.swapCountPenalty ?? 0);
     player.drawsRemaining = Math.max(0, config.swapCount + swapAdjust);
 
-    let finalMaxHp = player.baseMaxHp || player.maxHp || 200;
-    if (evtBonus.maxHpBonusPercent && evtBonus.maxHpBonusPercent !== 0) {
-      const hpDelta = Math.floor(finalMaxHp * evtBonus.maxHpBonusPercent);
-      finalMaxHp = Math.max(1, finalMaxHp + hpDelta);
-    }
-    player.maxHp = finalMaxHp;
+    const hasDebilitated = player.conditions.has('Debilitating');
+    player.maxHp = calculatePlayerMaxHp(player.baseMaxHp || player.maxHp || 200, evtBonus.maxHpBonusPercent ?? 0, hasDebilitated);
 
     // ── HP 이월 (현재 HP 반영 및 최대 HP 초과 방지) ──
     if (store.stageMapProgress) {
@@ -1780,11 +1815,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       };
 
       const baseMaxHp = state.player.baseMaxHp || 200;
-      let newMaxHp = baseMaxHp;
-      if (newEventBonuses.maxHpBonusPercent !== 0) {
-        const hpDelta = Math.floor(baseMaxHp * newEventBonuses.maxHpBonusPercent);
-        newMaxHp = Math.max(1, baseMaxHp + hpDelta);
-      }
+      const hasDebilitated = state.player.conditions.has('Debilitating');
+      const newMaxHp = calculatePlayerMaxHp(baseMaxHp, newEventBonuses.maxHpBonusPercent ?? 0, hasDebilitated);
 
       // HP 증감 보정: 최대 HP가 감소하여 현재 HP가 새 최대치를 초과할 경우 보정
       let newHp = state.player.hp;
@@ -1811,6 +1843,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const baseMaxHp = state.player.baseMaxHp || 200;
       const config = DIFFICULTY_CONFIGS[state.difficulty];
       const newDraws = Math.max(0, config.swapCount + (state.pendingBattleDebuffs.swapCountPenalty ?? 0));
+      const hasDebilitated = state.player.conditions.has('Debilitating');
+      const newMaxHp = calculatePlayerMaxHp(baseMaxHp, 0, hasDebilitated);
       return {
         eventBonuses: {
           percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
@@ -1818,8 +1852,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         },
         player: {
           ...state.player,
-          maxHp: baseMaxHp,
-          hp: Math.min(state.player.hp, baseMaxHp),
+          maxHp: newMaxHp,
+          hp: Math.min(state.player.hp, newMaxHp),
           drawsRemaining: newDraws
         }
       };
