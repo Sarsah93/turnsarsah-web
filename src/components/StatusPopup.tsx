@@ -92,7 +92,7 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       stage6Bonus = Math.floor(stage6Bonus * 1.2);
     }
   }
-  const debilitatingReduction = player.conditions.has('Debilitating') ? (player.baseMaxHp - player.maxHp) : 0;
+  const debilitatingReduction = player.conditions.has('Debilitating') ? ((player.baseMaxHp ?? player.maxHp) - player.maxHp) : 0;
   const hpModifierSum = prepperBonus + stage6Bonus - debilitatingReduction;
 
   const maxHpFactors = [
