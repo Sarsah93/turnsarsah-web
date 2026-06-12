@@ -1026,13 +1026,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           hp: Math.min(basePlayer.maxHp, state.player.hp + chapterClearRecovery)
         };
       } else {
-        // Stage transition - preserve current HP and max HP
+        // Stage transition - preserve current HP and conditions, but calculate clean base stats
+        const basePlayer = calculateInitialPlayer(config, activeSkills, chapterId, state.difficulty, state.hasStage6Bonus);
         player = {
-          ...state.player,
+          ...basePlayer,
           hp: state.player.hp,
-          maxHp: state.player.maxHp,
-          baseMaxHp: state.player.baseMaxHp || config.playerHp,
-          drawsRemaining: config.swapCount,
           conditions: new Map(state.player.conditions),
         };
 
@@ -1085,17 +1083,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const swapAdjust = (evtBonus.swapCountBonus ?? 0) + (state.pendingBattleDebuffs.swapCountPenalty ?? 0);
       const baseSwapCount = config.swapCount + swapAdjust;
 
-      // maxHpBonusPercent 적용
-      const basePlayer2 = player;
-      let finalMaxHp = basePlayer2.maxHp;
-      let finalHp = basePlayer2.hp;
+      let finalMaxHp = player.baseMaxHp || player.maxHp || 200;
       if (evtBonus.maxHpBonusPercent && evtBonus.maxHpBonusPercent !== 0) {
-        const hpDelta = Math.floor(basePlayer2.maxHp * evtBonus.maxHpBonusPercent);
-        finalMaxHp = Math.max(1, basePlayer2.maxHp + hpDelta);
-        finalHp = hpDelta > 0
-          ? Math.min(finalMaxHp, basePlayer2.hp + hpDelta)
-          : Math.min(basePlayer2.hp, finalMaxHp);
+        const hpDelta = Math.floor(finalMaxHp * evtBonus.maxHpBonusPercent);
+        finalMaxHp = Math.max(1, finalMaxHp + hpDelta);
       }
+
+      let finalHp = Math.min(finalMaxHp, player.hp);
 
       return {
         chapterNum: chapterId,
@@ -1508,28 +1502,26 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       currentEquippedSkills = altarData.normal?.equippedSkills || [];
     }
 
-    // v3.0.2: If stageMapProgress is active, carry over player's current HP and maxHP
+    // v3.0.2: Calculate base player
     let player = calculateInitialPlayer(config, currentEquippedSkills, chapterId, diff, store.hasStage6Bonus || false);
-    if (store.stageMapProgress) {
-      player = {
-        ...player,
-        hp: Math.min(player.maxHp, store.player.hp),
-        maxHp: store.player.maxHp || player.maxHp,
-        baseMaxHp: store.player.baseMaxHp || player.baseMaxHp,
-      };
-    }
 
     // ── 이벤트 보너스 및 디버프 스태츠 반영 ──
     const evtBonus = store.eventBonuses;
     const swapAdjust = (evtBonus.swapCountBonus ?? 0) + (store.pendingBattleDebuffs.swapCountPenalty ?? 0);
     player.drawsRemaining = Math.max(0, config.swapCount + swapAdjust);
 
+    let finalMaxHp = player.baseMaxHp || player.maxHp || 200;
     if (evtBonus.maxHpBonusPercent && evtBonus.maxHpBonusPercent !== 0) {
-      const hpDelta = Math.floor((player.baseMaxHp || player.maxHp || 200) * evtBonus.maxHpBonusPercent);
-      player.maxHp = Math.max(1, player.maxHp + hpDelta);
-      player.hp = hpDelta > 0
-        ? Math.min(player.maxHp, player.hp + hpDelta)
-        : Math.min(player.hp, player.maxHp);
+      const hpDelta = Math.floor(finalMaxHp * evtBonus.maxHpBonusPercent);
+      finalMaxHp = Math.max(1, finalMaxHp + hpDelta);
+    }
+    player.maxHp = finalMaxHp;
+
+    // ── HP 이월 (현재 HP 반영 및 최대 HP 초과 방지) ──
+    if (store.stageMapProgress) {
+      player.hp = Math.min(player.maxHp, store.player.hp);
+    } else {
+      player.hp = player.maxHp;
     }
 
     // Preload Assets for Game Entry
@@ -1627,6 +1619,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         ch2SpecialQualify: false,
         lizardKingStraightCount: 0,
         lizardStemCellDestroyed: false,
+        eventBonuses: {
+          percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
+          evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
+        },
+        pendingBattleDebuffs: { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },
       });
     }
 
@@ -1685,6 +1682,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       lizardKingStraightCount: 0,
       lizardStemCellDestroyed: false,
       difficulty,
+      eventBonuses: {
+        percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
+        evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
+      },
+      pendingBattleDebuffs: { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },
       stageMapProgress: {
         chapterId,
         completedNodes: [],
@@ -1766,8 +1768,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     damageTakenPercent: 0,
   },
   applyEventBonuses: (delta: Partial<EventBonuses>) => {
-    set((state) => ({
-      eventBonuses: {
+    set((state) => {
+      const newEventBonuses = {
         percentAtkBonus:    (state.eventBonuses.percentAtkBonus    ?? 0) + (delta.percentAtkBonus    ?? 0),
         critMultBonus:      (state.eventBonuses.critMultBonus      ?? 0) + (delta.critMultBonus      ?? 0),
         critChanceBonus:    (state.eventBonuses.critChanceBonus    ?? 0) + (delta.critChanceBonus    ?? 0),
@@ -1775,15 +1777,54 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         maxHpBonusPercent:  (state.eventBonuses.maxHpBonusPercent  ?? 0) + (delta.maxHpBonusPercent  ?? 0),
         swapCountBonus:     (state.eventBonuses.swapCountBonus     ?? 0) + (delta.swapCountBonus     ?? 0),
         damageTakenPercent: (state.eventBonuses.damageTakenPercent ?? 0) + (delta.damageTakenPercent ?? 0),
-      },
-    }));
+      };
+
+      const baseMaxHp = state.player.baseMaxHp || 200;
+      let newMaxHp = baseMaxHp;
+      if (newEventBonuses.maxHpBonusPercent !== 0) {
+        const hpDelta = Math.floor(baseMaxHp * newEventBonuses.maxHpBonusPercent);
+        newMaxHp = Math.max(1, baseMaxHp + hpDelta);
+      }
+
+      // HP 증감 보정: 최대 HP가 감소하여 현재 HP가 새 최대치를 초과할 경우 보정
+      let newHp = state.player.hp;
+      newHp = Math.min(newHp, newMaxHp);
+
+      // 카드 교체 횟수 실시간 반영
+      const config = DIFFICULTY_CONFIGS[state.difficulty];
+      const swapAdjust = (newEventBonuses.swapCountBonus ?? 0) + (state.pendingBattleDebuffs.swapCountPenalty ?? 0);
+      const newDraws = Math.max(0, config.swapCount + swapAdjust);
+
+      return {
+        eventBonuses: newEventBonuses,
+        player: {
+          ...state.player,
+          maxHp: newMaxHp,
+          hp: newHp,
+          drawsRemaining: newDraws
+        }
+      };
+    });
   },
-  resetEventBonuses: () => set({
-    eventBonuses: {
-      percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
-      evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
-    },
-  }),
+  resetEventBonuses: () => {
+    set((state) => {
+      const baseMaxHp = state.player.baseMaxHp || 200;
+      const config = DIFFICULTY_CONFIGS[state.difficulty];
+      const newDraws = Math.max(0, config.swapCount + (state.pendingBattleDebuffs.swapCountPenalty ?? 0));
+      return {
+        eventBonuses: {
+          percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
+          evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
+        },
+        player: {
+          ...state.player,
+          maxHp: baseMaxHp,
+          hp: Math.min(state.player.hp, baseMaxHp),
+          drawsRemaining: newDraws
+        }
+      };
+    });
+  },
 
   // Pending Battle Debuffs
   pendingBattleDebuffs: { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },

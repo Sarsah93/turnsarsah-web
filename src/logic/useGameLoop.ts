@@ -1240,8 +1240,10 @@ export const useGameLoop = () => {
             return;
         }
 
+        const { evasionBonus } = store.eventBonuses;
         let finalAvoidChance = avoidCond ? ((avoidCond.data as any)?.chance ?? config.avoidChance) : config.avoidChance;
         if (has2B) finalAvoidChance += 0.05;
+        if (evasionBonus) finalAvoidChance += evasionBonus;
 
         // 3B: Swamping(습지) 회피 패널티 적용 (최소 0%)
         finalAvoidChance = Math.max(0, finalAvoidChance - swampAvoidPenalty);

@@ -93,15 +93,18 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
     }
   }
   const debilitatingReduction = player.conditions.has('Debilitating') ? ((player.baseMaxHp ?? player.maxHp) - player.maxHp) : 0;
-  const hpModifierSum = prepperBonus + stage6Bonus - debilitatingReduction;
+  
+  // 이벤트 HP 보너스 계산 (baseMaxHp 기준)
+  const eventHpBonus = Math.floor((player.baseMaxHp || player.maxHp || 200) * (eventBonuses.maxHpBonusPercent ?? 0));
+  const hpModifierSum = prepperBonus + stage6Bonus - debilitatingReduction + eventHpBonus;
 
   const maxHpFactors = [
     { name: t.factors.prepper, value: prepperBonus, active: equippedAltarSkills.includes('1A') },
     { name: t.factors.stage6, value: stage6Bonus, active: hasStage6Bonus },
     { name: t.factors.debilitated, value: -debilitatingReduction, active: player.conditions.has('Debilitating') },
     {
-      name: (t.factors.eventMaxHp ?? 'Event Bonus (Max HP)').replace('{val}', `${(eventBonuses.maxHpBonusPercent * 100).toFixed(0)}%`),
-      value: Math.round(eventBonuses.maxHpBonusPercent * 100),
+      name: (t.factors.eventMaxHp ?? 'Event Bonus (Max HP)').replace('{val}', `${(eventBonuses.maxHpBonusPercent * 100).toFixed(0)}`),
+      value: eventHpBonus,
       active: eventBonuses.maxHpBonusPercent !== 0,
     },
   ].filter(f => f.active || f.value !== 0);
@@ -109,7 +112,8 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
   // 3. Swap Count (카드 교체 횟수)
   const baseSwaps = config.swapCount;
   const isSwapBonusActive = equippedAltarSkills.includes('5B-3') && player.hp <= player.maxHp * 0.25 && !stageSkillsTriggered.includes('5B-3');
-  const swapModifierSum = isSwapBonusActive ? 2 : 0;
+  const eventSwapBonus = eventBonuses.swapCountBonus ?? 0;
+  const swapModifierSum = (isSwapBonusActive ? 2 : 0) + eventSwapBonus;
 
   const swapFactors = [
     {
@@ -120,7 +124,7 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
     },
     {
       name: (t.factors.eventSwap ?? 'Event Bonus (Swap)').replace('{val}', `${eventBonuses.swapCountBonus >= 0 ? '+' : ''}${eventBonuses.swapCountBonus}`),
-      value: eventBonuses.swapCountBonus,
+      value: eventSwapBonus,
       active: eventBonuses.swapCountBonus !== 0,
     },
   ].filter(f => f.active || f.isConditional);
@@ -210,7 +214,7 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
 
   const critMultFactors: any[] = [
     {
-      name: (t.factors.eventCritMult ?? 'Event Bonus (Crit Mult)').replace('{val}', `${Math.round((eventBonuses.critMultBonus ?? 0) * 100)}%`),
+      name: (t.factors.eventCritMult ?? 'Event Bonus (Crit Mult)').replace('{val}', `${Math.round((eventBonuses.critMultBonus ?? 0) * 100)}`),
       value: Math.round((eventBonuses.critMultBonus ?? 0) * 100),
       active: (eventBonuses.critMultBonus ?? 0) !== 0,
     },
@@ -266,11 +270,12 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
   const flatDefReduction = defReducedCond ? ((defReducedCond.data as any)?.amount || 0) : 0;
   const flatDefValue = -flatDefReduction; // 기본 0, 방어력 감소 시 음수
 
-  // 퍼센트 방어력: 3B-1 장착 시 +30%, 'Damage Taken Increased' 시 감소
+  // 퍼센트 방어력: 3B-1 장착 시 +30%, 'Damage Taken Increased' 시 감소, 이벤트 패널티 시 감소
   const has3B1 = equippedAltarSkills.includes('3B-1');
   const dmgIncCond = player.conditions.get('Damage Taken Increased');
   const dmgTakenIncreasedPercent = dmgIncCond ? ((dmgIncCond.data as any)?.percent || 0) : 0;
-  const percentDefValue = (has3B1 ? 30 : 0) - dmgTakenIncreasedPercent;
+  const eventDmgTakenPercent = Math.round((eventBonuses.damageTakenPercent ?? 0) * 100);
+  const percentDefValue = (has3B1 ? 30 : 0) - dmgTakenIncreasedPercent - eventDmgTakenPercent;
 
   // 고정 요인 목록 (먼저 표시)
   const defenseFlatFactors = [
