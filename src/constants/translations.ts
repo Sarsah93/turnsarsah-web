@@ -172,6 +172,14 @@ export const TRANSLATIONS = {
                 NAME: "경감",
                 DESC: "받는 피해량이 {percent}% 감소합니다."
             },
+            DEFENSE_REDUCED: {
+                NAME: "방어력 감소",
+                DESC: "방어력이 {amount}만큼 감소합니다."
+            },
+            DAMAGE_TAKEN_INCREASED: {
+                NAME: "받는 피해 증가",
+                DESC: "받는 피해량이 {percent}% 증가합니다."
+            },
             AVOIDING: {
                 NAME: "회피",
                 DESC: "{percent}% 확률로 적의 공격을 회피합니다."
@@ -417,6 +425,7 @@ export const TRANSLATIONS = {
             critMult: "크리티컬 배수",
             critChance: "카드당 크리티컬 확률",
             evasion: "회피율",
+            defense: "방어력",
             active: "적용 중",
             inactive: "미적용",
             potential: "조건부",
@@ -437,7 +446,10 @@ export const TRANSLATIONS = {
                 coreResonance: "코어 공명 [6B-1] (보스 HP 50% 이하 시 데미지 +15%)",
                 bottomDeal: "밑장빼기 [4A-2] (조커 등장 확률 +5%)",
                 oneness: "물아일체 [2B] (회피율 +5% 및 환경 제약 무시)",
-                envPenalty2B: "챕터 2B 환경 패널티 (회피율 비활성화)"
+                envPenalty2B: "챕터 2B 환경 패널티 (회피율 비활성화)",
+                defenseReduced: "이벤트 방어력 감소 (방어력 -{amount})",
+                equipmentGear: "장비 기어 [3B-1] (피해량 -30%)",
+                damageTakenIncreased: "받는 피해 증가 (피해량 +{percent}%)"
             }
         }
     },
@@ -608,6 +620,14 @@ export const TRANSLATIONS = {
             DAMAGE_REDUCING: {
                 NAME: "Reduction",
                 DESC: "Reduces incoming damage by {percent}%."
+            },
+            DEFENSE_REDUCED: {
+                NAME: "Reduced Defense",
+                DESC: "Reduces Defense by {amount}."
+            },
+            DAMAGE_TAKEN_INCREASED: {
+                NAME: "Damage Taken Increased",
+                DESC: "Increases incoming damage by {percent}%."
             },
             AVOIDING: {
                 NAME: "Avoiding",
@@ -845,6 +865,7 @@ export const TRANSLATIONS = {
             critMult: "Critical Multiplier",
             critChance: "Crit Chance Per Card",
             evasion: "Evasion Rate",
+            defense: "Defense",
             active: "Active",
             inactive: "Inactive",
             potential: "Conditional",
@@ -865,8 +886,94 @@ export const TRANSLATIONS = {
                 coreResonance: "Core Resonance [6B-1] (+15% damage when Boss HP <= 50%)",
                 bottomDeal: "Bottom Deal [4A-2] (+5% Joker appearance probability)",
                 oneness: "Oneness with Nature [2B] (+5% Evasion, ignores env restrictions)",
-                envPenalty2B: "Ch. 2B Env Penalty (Evasion disabled)"
+                envPenalty2B: "Ch. 2B Env Penalty (Evasion disabled)",
+                defenseReduced: "Event Defense Reduction (Defense -{amount})",
+                equipmentGear: "Equipment Gear [3B-1] (Damage Taken -30%)",
+                damageTakenIncreased: "Damage Taken Increased (Damage Taken +{percent}%)",
+                eventPctAtk: "Event Bonus (Damage +{val}%)",
+                eventCritMult: "Event Bonus (Crit Multiplier +{val})",
+                eventCritChance: "Event Bonus (Crit Chance +{val}%)",
+                eventEvasion: "Event Bonus (Evasion +{val}%)",
+                eventMaxHp: "Event Bonus (Max HP {val}%)",
+                eventSwap: "Event Bonus (Swap Count {val})",
+                eventDmgTaken: "Event Bonus (Damage Taken +{val}%)"
             }
+        },
+        EVENT: {
+            CAT_CREATURE: "불안정 생명체",
+            CAT_MERCHANT: "수상한 그림자 행상인",
+            CAT_NODE: "균열된 노드 잔해",
+            CAT_ALTAR: "이름 모를 제단",
+            YES: "예",
+            NO: "아니오",
+            CONFIRM: "확인",
+            C_SMALL_PROMPT: "작은 동물로 추정되는 개념체를 조우했습니다.\n노드화가 진행되고 있는 것으로 추정됩니다.\n코어 안정도를 추출하여 노드화 수복을 도와주시겠습니까? (성공 확률 70%)",
+            C_SMALL_HP_COST: "플레이어의 코어 안정도(HP)를 5% 소모하였습니다.",
+            C_SMALL_SUCCESS: "노드화 수복에 성공하였습니다. 추가 데미지가 +2% 상승합니다.",
+            C_SMALL_FAIL: "수복 실패. 다음 전투에서 매 턴 HP가 5씩 감소하는 디버프가 적용됩니다.",
+            C_SMALL_NO: "도움을 거절하였습니다.",
+            C_MED_PROMPT: "중형 동물로 추정되는 개념체를 조우했습니다.\n노드화가 상당히 진행되었습니다.\n코어 안정도를 추출하여 노드화 수복을 도와주시겠습니까? (성공 확률 50%)",
+            C_MED_HP_COST: "플레이어의 코어 안정도(HP)를 8% 소모하였습니다.",
+            C_MED_SUCCESS: "노드화 수복에 성공하였습니다. 추가 데미지가 +4% 상승합니다.",
+            C_MED_FAIL: "수복 실패. 즉시 HP가 10 감소합니다.",
+            C_MED_NO: "도움을 거절하였습니다.",
+            C_LRG_PROMPT: "대형 동물로 추정되는 개념체를 조우했습니다.\n노드화가 거의 완료 단계입니다.\n코어 안정도를 추출하여 노드화 수복을 도와주시겠습니까? (성공 확률 30%)",
+            C_LRG_HP_COST: "플레이어의 코어 안정도(HP)를 12% 소모하였습니다.",
+            C_LRG_SUCCESS: "노드화 수복에 성공하였습니다. 추가 데미지가 +6% 상승합니다.",
+            C_LRG_FAIL: "수복 실패. 즉시 HP가 20 감소합니다.",
+            C_LRG_NO: "도움을 거절하였습니다.",
+            M_CANDY_PROMPT: "수상한 그림자 행상인이 과자를 팔고 있습니다.\n'이거 먹으면 힘이 넘쳐흐를 거야.' (구매 비용: 코어 안정도 5%)",
+            M_CANDY_HP_COST: "코어 안정도(HP)를 5% 소모하였습니다.",
+            M_CANDY_SUCCESS: "과자가 효과를 발휘합니다! 크리티컬 배수가 +10% 상승합니다.",
+            M_CANDY_FAIL: "과자가 상했습니다! 다음 전투에서 매 턴 HP가 8씩 감소하는 디버프가 적용됩니다.",
+            M_CANDY_NO: "구매를 거절하였습니다.",
+            M_DRINK_PROMPT: "수상한 그림자 행상인이 음료를 팔고 있습니다.\n'이거 마시면 몸이 가벼워질 거야.' (구매 비용: 코어 안정도 8%)",
+            M_DRINK_HP_COST: "코어 안정도(HP)를 8% 소모하였습니다.",
+            M_DRINK_GREAT: "음료가 완벽하게 흡수됩니다! 회피율이 +6% 영구 상승합니다.",
+            M_DRINK_OK: "음료가 어느 정도 효과를 발휘합니다. 회피율이 +3% 영구 상승합니다.",
+            M_DRINK_FAIL: "음료가 상했습니다! 즉시 HP가 15 감소합니다.",
+            M_DRINK_NO: "구매를 거절하였습니다.",
+            M_CUBE_PROMPT: "수상한 그림자 행상인이 작은 큐브를 팔고 있습니다.\n'이걸 흡수하면 코어가 강화될 거야.' (구매 비용: 코어 안정도 10%)",
+            M_CUBE_HP_COST: "코어 안정도(HP)를 10% 소모하였습니다.",
+            M_CUBE_SUCCESS: "큐브가 흡수됩니다! 최대 코어 안정도(HP)가 +10% 증가합니다.",
+            M_CUBE_FAIL: "큐브가 거부반응을 일으킵니다! 최대 코어 안정도(HP)가 -8% 감소합니다.",
+            M_CUBE_NO: "구매를 거절하였습니다.",
+            N_ANAL_PROMPT: "균열된 노드 잔해가 발견되었습니다.\n데이터 패턴을 분석하여 전략적 이점을 얻겠습니까? (성공 확률 60%)",
+            N_ANAL_SUCCESS: "분석 성공! 카드 교체 횟수가 +1 영구 증가합니다.",
+            N_ANAL_FAIL: "분석 실패. 다음 전투에서 카드 교체 횟수가 1 감소합니다.",
+            N_ANAL_NO: "분석을 포기하였습니다.",
+            N_ABS_PROMPT: "균열된 노드 잔해가 발견되었습니다.\n잔해를 직접 흡수하여 코어를 강화하겠습니까? (성공 확률 50%)",
+            N_ABS_SUCCESS: "흡수 성공! 최대 코어 안정도(HP)가 +8% 증가합니다.",
+            N_ABS_FAIL: "흡수 실패. 즉시 HP가 20 감소합니다.",
+            N_ABS_NO: "흡수를 포기하였습니다.",
+            N_DEST_PROMPT: "균열된 노드 잔해가 발견되었습니다.\n잔해를 충격으로 파괴하여 에너지를 회수하겠습니까? (성공 확률 55%)",
+            N_DEST_SUCCESS: "파괴 성공! 추가 데미지가 +3% 상승합니다.",
+            N_DEST_FAIL: "파괴 실패. 역폭발로 추가 데미지가 -3% 감소합니다.",
+            N_DEST_NO: "파괴를 포기하였습니다.",
+            A_MINOR_PROMPT: "이름 모를 제단이 있습니다.\n소제물을 봉헌하면 보상을 받을 수 있습니다.\n소제물 봉헌: 랜덤 스탯 -3%를 제물로 바칩니다.",
+            A_MINOR_SACRIFICE: "제물을 바쳤습니다. {stat}이(가) -3% 감소하였습니다.",
+            A_MINOR_REWARD_CRIT: "제단이 응답합니다. 크리티컬 확률이 +3% 상승합니다.",
+            A_MINOR_REWARD_ATK: "제단이 응답합니다. 추가 데미지가 +3% 상승합니다.",
+            A_MINOR_REWARD_NONE: "제단이 침묵합니다. 아무 일도 일어나지 않았습니다.",
+            A_MINOR_NO: "봉헌을 거절하였습니다.",
+            A_MAJOR_PROMPT: "이름 모를 제단이 있습니다.\n대제물을 봉헌하면 강력한 보상을 받을 수 있습니다.\n제물로 바칠 스탯을 선택하세요. (-10% 감소)",
+            A_MAJOR_OPT_ATK: "추가 데미지 -10%를 제물로 봉헌",
+            A_MAJOR_OPT_HP: "최대 HP -10%를 제물로 봉헌",
+            A_MAJOR_OPT_SWAP: "카드 교체 횟수 -1을 제물로 봉헌",
+            A_MAJOR_SUCCESS_HP: "제단이 크게 응답합니다! 최대 코어 안정도(HP)가 +10% 증가합니다.",
+            A_MAJOR_SUCCESS_ATK: "제단이 크게 응답합니다! 추가 데미지가 +5% 상승합니다.",
+            A_MAJOR_SUCCESS_CRIT: "제단이 크게 응답합니다! 크리티컬 배수가 +15% 상승합니다.",
+            A_MAJOR_FAIL: "제단이 분노합니다! 모든 스탯이 손실됩니다.",
+            A_MAJOR_NO: "봉헌을 거절하였습니다.",
+            A_BLOOD_PROMPT: "이름 모를 제단이 피를 요구합니다.\n코어 안정도의 15%를 제물로 바치면 강력한 힘을 얻을 수 있습니다. (성공 확률 40%)",
+            A_BLOOD_HP_COST: "코어 안정도(HP)를 15% 소모하였습니다.",
+            A_BLOOD_SUCCESS: "[추가 데미지 +25%, 받는 피해 +25%] 추가 데미지 +25%, 방어력 감소 -25% 동시 상승합니다.",
+            A_BLOOD_FAIL: "제단이 반응하지 않습니다. 아무 일도 일어나지 않았습니다.",
+            A_BLOOD_NO: "봉헌을 거절하였습니다.",
+            STAT_ATK: "추가 데미지",
+            STAT_CRIT_MULT: "크리티컬 배수",
+            STAT_EVASION: "회피율",
+            STAT_MAX_HP: "최대 HP",
         }
     }
 };

@@ -21,9 +21,9 @@
   background: linear-gradient(135deg, rgba(20, 20, 30, 0.92) 0%, rgba(10, 10, 15, 0.96) 100%);
   border: 2px solid rgba(241, 196, 15, 0.6);
   border-radius: 16px;
-  width: 480px;
-  max-width: 90%;
-  max-height: 85%;
+  width: 580px;
+  max-width: 92%;
+  max-height: 88%;
   overflow-y: auto;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(241, 196, 15, 0.15);
   animation: status-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -61,15 +61,24 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 24px;
+  padding: 20px 28px;
   border-bottom: 1.5px solid rgba(241, 196, 15, 0.3);
   background: rgba(30, 30, 45, 0.4);
+}
+
+.status-popup-drag-handle {
+  cursor: grab;
+  user-select: none;
+}
+
+.status-popup-drag-handle:active {
+  cursor: grabbing;
 }
 
 .status-popup-title {
   color: #ffd700;
   font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
-  font-size: 1.6rem;
+  font-size: 3.6rem;
   margin: 0;
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
@@ -80,14 +89,15 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   color: #aaa;
-  font-size: 1.2rem;
-  width: 32px;
-  height: 32px;
+  font-size: 3.2rem;
+  width: 52px;
+  height: 52px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .status-popup-close-btn:hover {
@@ -97,7 +107,7 @@
 }
 
 .status-popup-body {
-  padding: 20px 24px;
+  padding: 22px 28px;
   font-family: 'Noto Sans KR', sans-serif;
   color: #ecf0f1;
 }
@@ -105,7 +115,7 @@
 .status-rows {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .status-row {
@@ -125,19 +135,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  padding: 16px 18px;
 }
 
 .status-label {
   font-weight: 500;
-  font-size: 1.15rem;
+  font-size: 3.15rem;
   color: #ccc;
   display: flex;
   flex-direction: column;
 }
 
 .status-sub-label {
-  font-size: 0.85rem;
+  font-size: 2.85rem;
   color: #7f8c8d;
 }
 
@@ -145,11 +155,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .status-value {
   font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
-  font-size: 1.5rem;
+  font-size: 3.5rem;
   color: #fff;
 }
 
@@ -162,19 +173,19 @@
 .stat-modifier {
   font-family: 'Noto Sans KR', sans-serif;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 3rem;
 }
 
 .stat-modifier.positive {
-  color: #ff4d4d; /* Red color for positive values */
+  color: #ff4d4d; /* 양수 = 빨간색 (방어력 감소 등) */
 }
 
 .stat-modifier.negative {
-  color: #3498db; /* Blue color for negative values */
+  color: #3498db; /* 음수 = 파란색 */
 }
 
 .stat-modifier.neutral {
-  color: #7f8c8d; /* Muted/gray color for zero or neutral */
+  color: #7f8c8d;
 }
 
 /* Accordion expander button */
@@ -186,6 +197,7 @@
   border-radius: 4px;
   display: flex;
   align-items: center;
+  gap: 4px;
   transition: background-color 0.2s ease;
 }
 
@@ -203,19 +215,19 @@
 }
 
 .status-accordion.expanded {
-  max-height: 300px;
+  max-height: 500px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Accordion Factor List styling */
 .factor-list-container {
-  padding: 12px 16px;
-  font-size: 0.9rem;
+  padding: 14px 18px;
+  font-size: 2.9rem;
 }
 
 .factor-list-title {
   color: #ffd700;
-  font-size: 0.85rem;
+  font-size: 2.85rem;
   font-weight: 700;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
@@ -225,7 +237,7 @@
 .factor-items {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .factor-item {
@@ -245,11 +257,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .factor-status {
-  font-size: 0.75rem;
-  padding: 2px 6px;
+  font-size: 2.75rem;
+  padding: 2px 8px;
   border-radius: 4px;
   font-weight: bold;
 }
@@ -271,8 +284,8 @@
 
 .factor-value {
   font-weight: bold;
-  font-size: 0.95rem;
-  min-width: 45px;
+  font-size: 2.95rem;
+  min-width: 60px;
   text-align: right;
 }
 
@@ -289,16 +302,17 @@
 }
 
 .factor-empty {
-  padding: 12px 16px;
+  padding: 14px 18px;
   color: #7f8c8d;
-  font-size: 0.9rem;
+  font-size: 2.9rem;
   font-style: italic;
 }
 
 /* Mobile responsive */
 @media (max-width: 540px) {
   .status-popup-content {
-    width: 95%;
+    width: 97%;
+    max-height: 90%;
   }
 
   .status-popup-header {
@@ -306,7 +320,13 @@
   }
 
   .status-popup-title {
-    font-size: 1.3rem;
+    font-size: 3.1rem;
+  }
+
+  .status-popup-close-btn {
+    font-size: 2.8rem;
+    width: 46px;
+    height: 46px;
   }
 
   .status-popup-body {
@@ -314,14 +334,42 @@
   }
 
   .status-row-main {
-    padding: 10px 12px;
+    padding: 12px 14px;
   }
 
   .status-label {
-    font-size: 1rem;
+    font-size: 3rem;
+  }
+
+  .status-sub-label {
+    font-size: 2.8rem;
   }
 
   .status-value {
-    font-size: 1.3rem;
+    font-size: 3.3rem;
+  }
+
+  .stat-modifier {
+    font-size: 2.8rem;
+  }
+
+  .factor-list-container {
+    font-size: 2.8rem;
+  }
+
+  .factor-list-title {
+    font-size: 2.75rem;
+  }
+
+  .factor-status {
+    font-size: 2.6rem;
+  }
+
+  .factor-value {
+    font-size: 2.8rem;
+  }
+
+  .factor-empty {
+    font-size: 2.8rem;
   }
 }

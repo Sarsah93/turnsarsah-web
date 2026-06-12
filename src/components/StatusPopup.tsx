@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { DIFFICULTY_CONFIGS, Difficulty } from '../constants/gameConfig';
 import { TRANSLATIONS } from '../constants/translations';
@@ -22,9 +22,44 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
     consecutiveHandStacks,
     hasStage6Bonus,
     stageSkillsTriggered,
+    eventBonuses,
   } = useGameStore();
 
   const [expandedStats, setExpandedStats] = useState<Record<string, boolean>>({});
+
+  // --- 드래그 상태 ---
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const isDragging = useRef(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  const onMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // 닫기 버튼 클릭은 제외
+    if ((e.target as HTMLElement).closest('.status-popup-close-btn')) return;
+    e.preventDefault();
+    isDragging.current = true;
+    const rect = popupRef.current?.getBoundingClientRect();
+    if (rect) {
+      dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+  }, []);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      setPosition({
+        x: e.clientX - dragOffset.current.x,
+        y: e.clientY - dragOffset.current.y,
+      });
+    };
+    const onMouseUp = () => { isDragging.current = false; };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -63,7 +98,12 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
   const maxHpFactors = [
     { name: t.factors.prepper, value: prepperBonus, active: equippedAltarSkills.includes('1A') },
     { name: t.factors.stage6, value: stage6Bonus, active: hasStage6Bonus },
-    { name: t.factors.debilitated, value: -debilitatingReduction, active: player.conditions.has('Debilitating') }
+    { name: t.factors.debilitated, value: -debilitatingReduction, active: player.conditions.has('Debilitating') },
+    {
+      name: (t.factors.eventMaxHp ?? 'Event Bonus (Max HP)').replace('{val}', `${(eventBonuses.maxHpBonusPercent * 100).toFixed(0)}%`),
+      value: Math.round(eventBonuses.maxHpBonusPercent * 100),
+      active: eventBonuses.maxHpBonusPercent !== 0,
+    },
   ].filter(f => f.active || f.value !== 0);
 
   // 3. Swap Count (카드 교체 횟수)
@@ -77,7 +117,12 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       value: 2,
       active: isSwapBonusActive,
       isConditional: equippedAltarSkills.includes('5B-3') && !isSwapBonusActive
-    }
+    },
+    {
+      name: (t.factors.eventSwap ?? 'Event Bonus (Swap)').replace('{val}', `${eventBonuses.swapCountBonus >= 0 ? '+' : ''}${eventBonuses.swapCountBonus}`),
+      value: eventBonuses.swapCountBonus,
+      active: eventBonuses.swapCountBonus !== 0,
+    },
   ].filter(f => f.active || f.isConditional);
 
   // 4. Flat Extra Damage (추가 데미지 고정)
@@ -124,7 +169,8 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
   const hasCoreResonance = equippedAltarSkills.includes('6B-1');
   const coreResonancePercent = (hasCoreResonance && isInBattle && bot && bot.hp <= bot.maxHp * 0.5) ? 15 : 0;
 
-  const percentAtkModifierSum = overloadedPercent + resonancePercent + adaptivePercent + coreResonancePercent;
+  const percentAtkModifierSum = overloadedPercent + resonancePercent + adaptivePercent + coreResonancePercent
+    + Math.round((eventBonuses.percentAtkBonus ?? 0) * 100);
 
   const percentAtkFactors = [
     {
@@ -150,18 +196,29 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       value: coreResonancePercent,
       active: hasCoreResonance && coreResonancePercent > 0,
       isConditional: hasCoreResonance && coreResonancePercent === 0
-    }
+    },
+    {
+      name: (t.factors.eventPctAtk ?? 'Event Bonus (Damage%)').replace('{val}', Math.round((eventBonuses.percentAtkBonus ?? 0) * 100).toString()),
+      value: Math.round((eventBonuses.percentAtkBonus ?? 0) * 100),
+      active: (eventBonuses.percentAtkBonus ?? 0) !== 0,
+    },
   ].filter(f => f.active || f.isConditional);
 
   // 6. Critical Multiplier (크리티컬 배수)
   const baseCritMult = Math.round(config.criticalMultiplier * 100);
-  const critMultModifierSum = 0;
+  const critMultModifierSum = Math.round((eventBonuses.critMultBonus ?? 0) * 100);
 
-  const critMultFactors: any[] = [];
+  const critMultFactors: any[] = [
+    {
+      name: (t.factors.eventCritMult ?? 'Event Bonus (Crit Mult)').replace('{val}', `${Math.round((eventBonuses.critMultBonus ?? 0) * 100)}%`),
+      value: Math.round((eventBonuses.critMultBonus ?? 0) * 100),
+      active: (eventBonuses.critMultBonus ?? 0) !== 0,
+    },
+  ].filter(f => f.active);
 
   // 7. Critical Chance Per Card (카드당 크리티컬 확률)
   const baseCritChance = Math.round(config.criticalChancePerCard * 100);
-  const critChanceModifierSum = 0;
+  const critChanceModifierSum = Math.round((eventBonuses.critChanceBonus ?? 0) * 100);
   const hasBottomDeal = equippedAltarSkills.includes('4A-2');
 
   const critChanceFactors = [
@@ -170,7 +227,12 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       value: 0,
       active: false,
       isConditional: hasBottomDeal
-    }
+    },
+    {
+      name: (t.factors.eventCritChance ?? 'Event Bonus (Crit Chance)').replace('{val}', Math.round((eventBonuses.critChanceBonus ?? 0) * 100).toString()),
+      value: Math.round((eventBonuses.critChanceBonus ?? 0) * 100),
+      active: (eventBonuses.critChanceBonus ?? 0) !== 0,
+    },
   ].filter(f => f.active || f.isConditional);
 
   // 8. Evasion Rate (회피율)
@@ -182,7 +244,7 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
   } else {
     currentEvasion = Math.round((config.avoidChance + (isOnenessWithNature ? 0.05 : 0)) * 100);
   }
-  const evasionModifierSum = currentEvasion - baseEvasion;
+  const evasionModifierSum = currentEvasion - baseEvasion + Math.round((eventBonuses.evasionBonus ?? 0) * 100);
 
   const evasionFactors = [
     { name: t.factors.oneness, value: 5, active: isOnenessWithNature },
@@ -190,8 +252,53 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       name: t.factors.envPenalty2B,
       value: -baseEvasion,
       active: chapterNum === '2B' && !isOnenessWithNature
-    }
+    },
+    {
+      name: (t.factors.eventEvasion ?? 'Event Bonus (Evasion)').replace('{val}', Math.round((eventBonuses.evasionBonus ?? 0) * 100).toString()),
+      value: Math.round((eventBonuses.evasionBonus ?? 0) * 100),
+      active: (eventBonuses.evasionBonus ?? 0) !== 0,
+    },
   ].filter(f => f.active || f.value !== 0);
+
+  // 9. Defense (방어력)
+  // 고정 방어력: 'Defense Reduced' 상태이상에 의해 감소
+  const defReducedCond = player.conditions.get('Defense Reduced');
+  const flatDefReduction = defReducedCond ? ((defReducedCond.data as any)?.amount || 0) : 0;
+  const flatDefValue = -flatDefReduction; // 기본 0, 방어력 감소 시 음수
+
+  // 퍼센트 방어력: 3B-1 장착 시 +30%, 'Damage Taken Increased' 시 감소
+  const has3B1 = equippedAltarSkills.includes('3B-1');
+  const dmgIncCond = player.conditions.get('Damage Taken Increased');
+  const dmgTakenIncreasedPercent = dmgIncCond ? ((dmgIncCond.data as any)?.percent || 0) : 0;
+  const percentDefValue = (has3B1 ? 30 : 0) - dmgTakenIncreasedPercent;
+
+  // 고정 요인 목록 (먼저 표시)
+  const defenseFlatFactors = [
+    {
+      name: t.factors.defenseReduced.replace('{amount}', flatDefReduction.toString()),
+      value: -flatDefReduction,
+      active: flatDefReduction > 0
+    }
+  ].filter(f => f.active);
+
+  // 퍼센트 요인 목록 (나중에 표시)
+  const defensePercentFactors = [
+    {
+      name: t.factors.equipmentGear,
+      value: 30,
+      active: has3B1
+    },
+    {
+      name: t.factors.damageTakenIncreased.replace('{percent}', dmgTakenIncreasedPercent.toString()),
+      value: -dmgTakenIncreasedPercent,
+      active: dmgTakenIncreasedPercent > 0
+    },
+    {
+      name: (t.factors.eventDmgTaken ?? 'Event Bonus (Dmg Taken)').replace('{val}', Math.round((eventBonuses.damageTakenPercent ?? 0) * 100).toString()),
+      value: -Math.round((eventBonuses.damageTakenPercent ?? 0) * 100), // 방어력 관점에서 음수
+      active: (eventBonuses.damageTakenPercent ?? 0) !== 0,
+    },
+  ].filter(f => f.active);
 
 
   // Render Helper for Modifiers: (±X) or (±X%)
@@ -254,12 +361,35 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
     );
   };
 
+  // 드래그 중 오버레이 클릭 방지를 위한 핸들러
+  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
+    if (isDragging.current) return;
+    onClose();
+  }, [onClose]);
+
+  // 팝업 위치 스타일: 드래그 후에는 고정 위치 사용
+  const popupStyle: React.CSSProperties = position
+    ? { position: 'fixed', left: position.x, top: position.y, margin: 0, transform: 'none' }
+    : {};
+
   return (
-    <div className="status-popup-overlay" onClick={onClose}>
-      <div className="status-popup-content" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="status-popup-overlay"
+      onClick={handleOverlayClick}
+      style={position ? { alignItems: 'flex-start', justifyContent: 'flex-start' } : {}}
+    >
+      <div
+        ref={popupRef}
+        className="status-popup-content"
+        style={popupStyle}
+        onClick={(e) => e.stopPropagation()}
+      >
         
-        {/* Header */}
-        <div className="status-popup-header">
+        {/* Header - 드래그 핸들 */}
+        <div
+          className="status-popup-header status-popup-drag-handle"
+          onMouseDown={onMouseDown}
+        >
           <h2 className="status-popup-title">{t.title}</h2>
           <button className="status-popup-close-btn" onClick={onClose}>✕</button>
         </div>
@@ -412,6 +542,35 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
               </div>
               <div className={`status-accordion ${expandedStats['evasion'] ? 'expanded' : ''}`}>
                 {renderFactorList(evasionFactors, true)}
+              </div>
+            </div>
+
+            {/* 9. Defense (방어력) */}
+            <div className="status-row">
+              <div className="status-row-main">
+                <span className="status-label">{t.defense}</span>
+                <div className="status-val-wrapper">
+                  <span className="status-value">0</span>
+                  <button
+                    className="modifier-toggle-btn"
+                    onClick={() => toggleExpand('defense')}
+                  >
+                    {/* 고정 수정자 */}
+                    {renderModifier(flatDefValue, false)}
+                    {/* 퍼센트 수정자 */}
+                    {renderModifier(percentDefValue, true)}
+                  </button>
+                </div>
+              </div>
+              <div className={`status-accordion ${expandedStats['defense'] ? 'expanded' : ''}`}>
+                {/* 고정 요인 목록 먼저 */}
+                {defenseFlatFactors.length > 0 && renderFactorList(defenseFlatFactors, false)}
+                {/* 퍼센트 요인 목록 */}
+                {defensePercentFactors.length > 0 && renderFactorList(defensePercentFactors, true)}
+                {/* 둘 다 없으면 기본 문구 */}
+                {defenseFlatFactors.length === 0 && defensePercentFactors.length === 0 && (
+                  <div className="factor-empty">{t.noFactors}</div>
+                )}
               </div>
             </div>
 

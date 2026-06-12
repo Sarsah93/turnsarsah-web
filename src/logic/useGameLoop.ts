@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../state/gameStore';
 import { AudioManager } from '../utils/AudioManager';
-import { calculatePlayerDamage, calculateBotDamage, applyDamage } from './damageCalculation';
+import { calculatePlayerDamage, calculateBotDamage, applyDamage, calculatePlayerFlatDefense, calculatePlayerPercentDefense } from './damageCalculation';
 import { Card, CardFactory } from '../types/Card';
 import { GameState, Difficulty, DIFFICULTY_CONFIGS } from '../constants/gameConfig';
 import { RANK_VALUES, JOKER_DRAW_PROBABILITY } from '../constants/cards';
@@ -1142,6 +1142,12 @@ export const useGameLoop = () => {
                 // 4B-2: Node Interference (Reduce 50% & Reflect)
                 dmg = applyNodeInterference(dmg);
 
+                // 방어력 적용 (고정치 차감 후 퍼센트 비율 계산)
+                const flatDef = calculatePlayerFlatDefense(currentPlayer);
+                const percentDef = calculatePlayerPercentDefense(currentPlayer, store.equippedAltarSkills);
+                dmg = Math.max(0, dmg - flatDef);
+                dmg = Math.floor(dmg * (1 - percentDef / 100));
+
                 setPlayerHp(Math.max(0, currentPlayer.hp - dmg));
                 showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
                 if (Math.random() < 0.4) {
@@ -1174,6 +1180,12 @@ export const useGameLoop = () => {
 
                     // 4B-2: Node Interference (Reduce 50% & Reflect)
                     dmg = applyNodeInterference(dmg);
+
+                    // 방어력 적용 (고정치 차감 후 퍼센트 비율 계산)
+                    const flatDef = calculatePlayerFlatDefense(currentPlayer);
+                    const percentDef = calculatePlayerPercentDefense(currentPlayer, store.equippedAltarSkills);
+                    dmg = Math.max(0, dmg - flatDef);
+                    dmg = Math.floor(dmg * (1 - percentDef / 100));
 
                     setPlayerHp(Math.max(0, currentPlayer.hp - dmg));
                     showDamageText('PLAYER', `-${dmg}`, '#e74c3c');
@@ -1327,10 +1339,13 @@ export const useGameLoop = () => {
                 ? Math.floor(damage * 1.5) // Critical Hit for 2B-8
                 : damage;
 
-            // 3B-1: Equipment Gear (Boss Attack Damage -30%)
-            if (store.equippedAltarSkills.includes('3B-1')) {
-                finalDmg = Math.floor(finalDmg * 0.7);
-            }
+            // 방어력 적용 (고정치 차감 후 퍼센트 비율 계산, 3B-1 스킬 포함)
+            const freshPlayerForDef = useGameStore.getState().player;
+            const flatDef = calculatePlayerFlatDefense(freshPlayerForDef);
+            const percentDef = calculatePlayerPercentDefense(freshPlayerForDef, store.equippedAltarSkills);
+            
+            finalDmg = Math.max(0, finalDmg - flatDef);
+            finalDmg = Math.floor(finalDmg * (1 - percentDef / 100));
 
             if (finalDmg > damage && !hasEchoAdded) {
                 setMessage(t.COMBAT.CRITICAL_HIT);
@@ -1782,6 +1797,21 @@ export const useGameLoop = () => {
         toRemovePlayer.forEach(name => playerConditions.delete(name));
         const freshPAfter = useGameStore.getState().player;
         useGameStore.getState().setPlayer({ ...freshPAfter, conditions: playerConditions });
+
+        // ── 이벤트 디버프: 매 턴 HP 감소 (pendingBattleDebuffs.hpDrainPerTurn) ──
+        const eventDebuffs = useGameStore.getState().pendingBattleDebuffs;
+        if (eventDebuffs.hpDrainPerTurn > 0) {
+            const drainAmt = eventDebuffs.hpDrainPerTurn;
+            const freshPDrain = useGameStore.getState().player;
+            const newHp = Math.max(0, freshPDrain.hp - drainAmt);
+            setPlayerHp(newHp);
+            showDamageText('PLAYER', `-${drainAmt}`, '#e74c3c');
+            const drainLabel = eventDebuffs.sourceLabel
+                ? (store.language === 'KR' ? `[${eventDebuffs.sourceLabel}] HP 감소!` : `[${eventDebuffs.sourceLabel}] HP Drain!`)
+                : (store.language === 'KR' ? '이벤트 디버프: HP 감소!' : 'Event Debuff: HP Drain!');
+            setMessage(drainLabel);
+            await wait(800);
+        }
 
         // 0.5s pause between phases
         await wait(500);

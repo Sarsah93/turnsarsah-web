@@ -45,6 +45,9 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Hematophagy') filename = '흡혈(Hematophagy).png';
   if (name === 'Swamping') filename = '잠김(Swamping).png';
   if (name === 'Stem Cell') filename = '줄기세포(Stem-cell).png';
+  // 신규: 방어력 관련 상태이상 (전용 아이콘 없으므로 기존 아이콘 대체 사용)
+  if (name === 'Defense Reduced') filename = 'Debilitating.png';
+  if (name === 'Damage Taken Increased') filename = 'Debilitating.png';
 
   const iconPath = `/assets/conditions/${filename}`;
 
@@ -82,6 +85,12 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
     resolvedDesc = resolvedDesc.replace('{percent}', percent.toString());
   } else if (name === 'Triple Attack') {
     // No dynamic data needed for now
+  } else if (name === 'Defense Reduced' && condition.data) {
+    const amount = (condition.data as any).amount || 0;
+    resolvedDesc = resolvedDesc.replace('{amount}', amount.toString());
+  } else if (name === 'Damage Taken Increased' && condition.data) {
+    const percent = (condition.data as any).percent || 0;
+    resolvedDesc = resolvedDesc.replace('{percent}', percent.toString());
   }
 
   const countConds = ['Revival', 'Invincible spirit'];

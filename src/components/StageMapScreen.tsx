@@ -17,6 +17,8 @@ import { AltarManager } from '../utils/AltarManager';
 import { SaveLoadMenu, PauseMenu, SettingsMenu, ConfirmationPopup } from './Menu';
 import { ClearComboDetailPopup } from './ClearComboDetailPopup';
 import { StatusPopup } from './StatusPopup';
+import { EventPopup } from './EventPopup';
+import { pickRandomEventId, EventId } from '../constants/eventScenarios';
 import './styles/StageMapScreen.css';
 import './styles/WorldMapPopup.css';
 
@@ -34,6 +36,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const [infoPopup, setInfoPopup] = useState<{ msg: string; icon: string } | null>(null);
   const [menuState, setMenuState] = useState<MapMenuState>('NONE');
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
+  const [eventPopupId, setEventPopupId] = useState<EventId | null>(null);
 
   // ── Store ──
   const stageMapProgress = useGameStore((s) => s.stageMapProgress);
@@ -130,16 +133,13 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const handleEventNode = (node: MapNode) => {
     const store = useGameStore.getState();
 
-    // Record fork choice if applicable
+    // 노드 완료 처리 (포크 선택 포함)
     recordForkChoice(node);
     store.completeMapNode(node.id);
 
-    const eventMsg = language === 'KR'
-      ? '아무 일도 일어나지 않았다. (미구현)'
-      : 'Nothing happened. (Not implemented)';
-    setInfoPopup({ msg: eventMsg, icon: '🔮' });
-
-    setTimeout(() => setInfoPopup(null), 3000);
+    // 세션 내 랜덤 이벤트 ID 선택 후 팝업 표시
+    const randomEventId = pickRandomEventId();
+    setEventPopupId(randomEventId);
   };
 
   const handleExitNode = (node: MapNode) => {
@@ -507,6 +507,14 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
         <StatusPopup 
           isOpen={statusPopupOpen} 
           onClose={() => setStatusPopupOpen(false)} 
+        />
+      )}
+
+      {/* 이벤트 팝업 */}
+      {eventPopupId && (
+        <EventPopup
+          eventId={eventPopupId}
+          onClose={() => setEventPopupId(null)}
         />
       )}
     </div>

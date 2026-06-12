@@ -16,13 +16,14 @@ export function getCriticalSuccess(cards: Card[], handType: string, scoringIndic
 
   const diff = difficulty ?? useGameStore.getState().difficulty;
   const config = DIFFICULTY_CONFIGS[diff];
+  const { critChanceBonus } = useGameStore.getState().eventBonuses;
 
   const scoringCards = scoringIndices.map((i) => cards[i]);
   const criticalCount = scoringCards.filter(
     (c) => c.isJoker || c.rank === 'A'
   ).length;
 
-  const probability = criticalCount * config.criticalChancePerCard;
+  const probability = criticalCount * (config.criticalChancePerCard + (critChanceBonus ?? 0));
   return Math.random() < probability;
 }
 
@@ -107,6 +108,7 @@ export function calculatePlayerDamage(
   const diff = difficulty ?? useGameStore.getState().difficulty;
   const config = DIFFICULTY_CONFIGS[diff];
   const isDys = isDyschromatopsia;
+  const { percentAtkBonus, critMultBonus } = useGameStore.getState().eventBonuses;
 
   // 1. Check Banned Hand (Stage Rule)
   const handEval = evaluateHand(cards, isDys);
@@ -116,30 +118,31 @@ export function calculatePlayerDamage(
       isCritical: false,
       finalDamage: 0,
       multiplier: 0,
-      handType: `${handEval.type}`, // BANNED 처리는 호출부에서 문구 띄움
+      handType: `${handEval.type}`,
     };
   }
 
   const baseDamage = calculateBaseDamage(handEval, cards, bannedRanks, bannedSuit);
 
-  // 2. Critical Hit Multiplier (Difficulty-based)
+  // 2. Critical Hit Multiplier (Difficulty-based + eventBonus)
   const isCritical = getCriticalSuccess(cards, handEval.type, handEval.scoringIndices, diff);
   let multiplier = 1.0;
 
   if (isCritical) {
-    multiplier *= config.criticalMultiplier;
+    multiplier *= (config.criticalMultiplier + (critMultBonus ?? 0));
   }
 
   // 3. Debilitating Penalty
   if (hasDebilitating) {
-    multiplier *= 0.8; // 0.8x Total Damage
+    multiplier *= 0.8;
   }
 
   let finalDamage = Math.floor(baseDamage * multiplier);
 
-  // v2.3.0: Berserker / Damage Recoiling fixed bonuses (if passed)
-  // These are handled in useGameLoop to keep calculation pure,
-  // but we can add them to the result for transparency.
+  // 4. Event percentAtkBonus (+X%)
+  if (percentAtkBonus && percentAtkBonus !== 0) {
+    finalDamage = Math.floor(finalDamage * (1 + percentAtkBonus));
+  }
 
   return {
     baseDamage,
@@ -211,3 +214,38 @@ export function applyDamage(currentHp: number, damage: number): number {
 export function applyHealing(currentHp: number, maxHp: number, healAmount: number): number {
   return Math.min(maxHp, currentHp + healAmount);
 }
+
+/**
+ * 플레이어 고정 방어력 계산
+ */
+export function calculatePlayerFlatDefense(player: { conditions: Map<string, any> }): number {
+  let flatDef = 0;
+  const defReducedCond = player.conditions.get('Defense Reduced');
+  if (defReducedCond) {
+    const amount = (defReducedCond.data as any)?.amount || 0;
+    flatDef -= amount;
+  }
+  return flatDef;
+}
+
+/**
+ * 플레이어 퍼센트 방어력 계산
+ */
+export function calculatePlayerPercentDefense(player: { conditions: Map<string, any> }, equippedAltarSkills: string[]): number {
+  let percentDef = 0;
+  if (equippedAltarSkills.includes('3B-1')) {
+    percentDef += 30;
+  }
+  const dmgIncCond = player.conditions.get('Damage Taken Increased');
+  if (dmgIncCond) {
+    const percent = (dmgIncCond.data as any)?.percent || 0;
+    percentDef -= percent;
+  }
+  // 이벤트 보너스: damageTakenPercent (양수=받는피해증가=방어력 감소)
+  const { damageTakenPercent } = useGameStore.getState().eventBonuses;
+  if (damageTakenPercent) {
+    percentDef -= (damageTakenPercent * 100); // 0.25 -> -25
+  }
+  return percentDef;
+}
+

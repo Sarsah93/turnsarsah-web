@@ -14,6 +14,7 @@ import { SaveManager } from '../utils/SaveManager';
 import { Language, TRANSLATIONS } from '../constants/translations';
 import { GuidePopupData, clearAllSeenGuides } from '../constants/guideData';
 import { StageMapProgress, CHAPTER_ROUTES } from '../constants/chapterRoutes';
+import { EventBonuses, PendingBattleDebuffs } from '../constants/eventScenarios';
 
 const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
 import { TROPHIES, ALTAR_SKILLS, TrophyDef } from '../constants/altarSystem';
@@ -347,14 +348,24 @@ interface GameStoreState {
   advanceToMapNode: (nodeId: string) => void;
 
   // Clear Combo System
-  clearComboCount: number;        // 연속 달성 횟수 (0~5)
-  clearComboMultiplier: number;   // 현재 적용 배수 (1.0~2.0)
-  clearComboActive: boolean;      // 챕터1 스테이지1 시작 후 활성 여부
-  clearComboBreaked: boolean;     // 전투 중 콤보 해제 이벤트 플래그
+  clearComboCount: number;
+  clearComboMultiplier: number;
+  clearComboActive: boolean;
+  clearComboBreaked: boolean;
   setClearCombo: (count: number, multiplier: number) => void;
   setClearComboActive: (active: boolean) => void;
   setClearComboBreaked: (breaked: boolean) => void;
   resetClearCombo: () => void;
+
+  // Event Stage Bonuses (세션 영구 보너스)
+  eventBonuses: EventBonuses;
+  applyEventBonuses: (delta: Partial<EventBonuses>) => void;
+  resetEventBonuses: () => void;
+
+  // Pending Battle Debuffs (다음 전투 한정 디버프)
+  pendingBattleDebuffs: PendingBattleDebuffs;
+  setPendingBattleDebuffs: (debuffs: Partial<PendingBattleDebuffs>) => void;
+  clearPendingBattleDebuffs: () => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -1067,6 +1078,23 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       // RESET STAGE-BASED SKILL USES
       const newSkillUses = { ...state.altarSkillUses };
 
+      // ── 이벤트 보너스 계산 ──
+      const evtBonus = state.eventBonuses;
+      const swapAdjust = (evtBonus.swapCountBonus ?? 0) + (state.pendingBattleDebuffs.swapCountPenalty ?? 0);
+      const baseSwapCount = config.swapCount + swapAdjust;
+
+      // maxHpBonusPercent 적용
+      const basePlayer2 = player;
+      let finalMaxHp = basePlayer2.maxHp;
+      let finalHp = basePlayer2.hp;
+      if (evtBonus.maxHpBonusPercent && evtBonus.maxHpBonusPercent !== 0) {
+        const hpDelta = Math.floor(basePlayer2.maxHp * evtBonus.maxHpBonusPercent);
+        finalMaxHp = Math.max(1, basePlayer2.maxHp + hpDelta);
+        finalHp = hpDelta > 0
+          ? Math.min(finalMaxHp, basePlayer2.hp + hpDelta)
+          : Math.min(basePlayer2.hp, finalMaxHp);
+      }
+
       return {
         chapterNum: chapterId,
         stageNum: stageId,
@@ -1081,7 +1109,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         bannedIndices: [],
         hasStage6Bonus: (chapterId === '1' && stageId === 1) ? false : state.hasStage6Bonus,
         equippedAltarSkills: activeSkills,
-        player: player,
+        player: {
+          ...player,
+          maxHp: finalMaxHp,
+          hp: finalHp,
+          drawsRemaining: Math.max(0, baseSwapCount),
+        },
         altarSkillUses: newSkillUses,
 
         stageSkillsTriggered: [],
@@ -1173,6 +1206,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       clearComboCount: 0,
       clearComboMultiplier: 1.0,
       clearComboActive: false,
+      // Event Bonus Reset
+      eventBonuses: {
+        percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
+        evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
+      },
+      pendingBattleDebuffs: { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },
     }),
 
   saveGame: (slot: number) => {
@@ -1302,6 +1341,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         clearComboCount: gameData.clearComboCount ?? 0,
         clearComboMultiplier: gameData.clearComboMultiplier ?? 1.0,
         clearComboActive: gameData.clearComboActive ?? false,
+        // Event Bonuses
+        eventBonuses: gameData.eventBonuses ?? {
+          percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
+          evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
+        },
+        pendingBattleDebuffs: gameData.pendingBattleDebuffs ?? { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },
     });
 
     // Restore Deck State
@@ -1695,6 +1740,45 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setClearComboBreaked: (clearComboBreaked: boolean) => set({ clearComboBreaked }),
   resetClearCombo: () => set({ clearComboCount: 0, clearComboMultiplier: 1.0 }),
 
+  // Event Stage Bonuses
+  eventBonuses: {
+    percentAtkBonus: 0,
+    critMultBonus: 0,
+    critChanceBonus: 0,
+    evasionBonus: 0,
+    maxHpBonusPercent: 0,
+    swapCountBonus: 0,
+    damageTakenPercent: 0,
+  },
+  applyEventBonuses: (delta: Partial<EventBonuses>) => {
+    set((state) => ({
+      eventBonuses: {
+        percentAtkBonus:    (state.eventBonuses.percentAtkBonus    ?? 0) + (delta.percentAtkBonus    ?? 0),
+        critMultBonus:      (state.eventBonuses.critMultBonus      ?? 0) + (delta.critMultBonus      ?? 0),
+        critChanceBonus:    (state.eventBonuses.critChanceBonus    ?? 0) + (delta.critChanceBonus    ?? 0),
+        evasionBonus:       (state.eventBonuses.evasionBonus       ?? 0) + (delta.evasionBonus       ?? 0),
+        maxHpBonusPercent:  (state.eventBonuses.maxHpBonusPercent  ?? 0) + (delta.maxHpBonusPercent  ?? 0),
+        swapCountBonus:     (state.eventBonuses.swapCountBonus     ?? 0) + (delta.swapCountBonus     ?? 0),
+        damageTakenPercent: (state.eventBonuses.damageTakenPercent ?? 0) + (delta.damageTakenPercent ?? 0),
+      },
+    }));
+  },
+  resetEventBonuses: () => set({
+    eventBonuses: {
+      percentAtkBonus: 0, critMultBonus: 0, critChanceBonus: 0,
+      evasionBonus: 0, maxHpBonusPercent: 0, swapCountBonus: 0, damageTakenPercent: 0,
+    },
+  }),
+
+  // Pending Battle Debuffs
+  pendingBattleDebuffs: { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },
+  setPendingBattleDebuffs: (debuffs: Partial<PendingBattleDebuffs>) => {
+    set((state) => ({ pendingBattleDebuffs: { ...state.pendingBattleDebuffs, ...debuffs } }));
+  },
+  clearPendingBattleDebuffs: () => set({
+    pendingBattleDebuffs: { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },
+  }),
+
 }));
 
 function buildSavePayload(state: GameStoreState) {
@@ -1744,5 +1828,8 @@ function buildSavePayload(state: GameStoreState) {
     clearComboCount: state.clearComboCount,
     clearComboMultiplier: state.clearComboMultiplier,
     clearComboActive: state.clearComboActive,
+    // Event Bonuses
+    eventBonuses: state.eventBonuses,
+    pendingBattleDebuffs: state.pendingBattleDebuffs,
   };
 }
