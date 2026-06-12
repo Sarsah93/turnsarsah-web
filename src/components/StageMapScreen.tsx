@@ -125,7 +125,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
     const healMsg = language === 'KR'
       ? `휴식처에 도달하여, 코어 안정도가 ${healAmount} 회복됩니다.`
       : `Arrived at rest area. Core stability restored by ${healAmount}.`;
-    setInfoPopup({ msg: healMsg, icon: '🏕️' });
+    setInfoPopup({ msg: healMsg, icon: '' });
 
     setTimeout(() => setInfoPopup(null), 3000);
   };
@@ -149,7 +149,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
       const msg = language === 'KR'
         ? '다음 챕터는 준비 중입니다.'
         : 'Next chapter is coming soon.';
-      setInfoPopup({ msg, icon: '🔒' });
+      setInfoPopup({ msg, icon: '' });
       setTimeout(() => {
         setInfoPopup(null);
         const store = useGameStore.getState();
@@ -427,7 +427,6 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
       {/* ── Info Popup (Rest / Event) ── */}
       {infoPopup && (
         <div className="stage-map-info-popup">
-          <span className="stage-map-info-icon">{infoPopup.icon}</span>
           {infoPopup.msg}
         </div>
       )}
