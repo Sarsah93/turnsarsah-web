@@ -456,7 +456,9 @@ export const TRANSLATIONS = {
                 eventEvasion: "이벤트 보너스 (회피율 +{val}%)",
                 eventMaxHp: "이벤트 보너스 (최대 HP {val}%)",
                 eventSwap: "이벤트 보너스 (교체 횟수 {val})",
-                eventDmgTaken: "이벤트 보너스 (받는 피해 +{val}%)"
+                eventDmgTaken: "이벤트 보너스 (받는 피해 +{val}%)",
+                eventSwapPenalty: "이벤트 패널티 (교체 횟수 {val}) [다음 전투 한정]",
+                eventHpDrain: "이벤트 패널티 (매 턴 HP -{val}) [다음 전투 한정]"
             }
         },
         EVENT: {
@@ -979,7 +981,9 @@ export const TRANSLATIONS = {
                 eventEvasion: "Event Bonus (Evasion +{val}%)",
                 eventMaxHp: "Event Bonus (Max HP {val}%)",
                 eventSwap: "Event Bonus (Swap Count {val})",
-                eventDmgTaken: "Event Bonus (Damage Taken +{val}%)"
+                eventDmgTaken: "Event Bonus (Damage Taken +{val}%)",
+                eventSwapPenalty: "Event Penalty (Swap Count {val}) [Next Battle Only]",
+                eventHpDrain: "Event Penalty (HP -{val} Per Turn) [Next Battle Only]"
             }
         },
         EVENT: {

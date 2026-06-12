@@ -23,6 +23,7 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
     hasStage6Bonus,
     stageSkillsTriggered,
     eventBonuses,
+    pendingBattleDebuffs,
   } = useGameStore();
 
   const [expandedStats, setExpandedStats] = useState<Record<string, boolean>>({});
@@ -107,13 +108,20 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       value: eventHpBonus,
       active: eventBonuses.maxHpBonusPercent !== 0,
     },
+    {
+      name: (t.factors.eventHpDrain ?? 'Event Penalty (HP Drain)').replace('{val}', `${pendingBattleDebuffs.hpDrainPerTurn}`),
+      value: 0,
+      active: (pendingBattleDebuffs.hpDrainPerTurn ?? 0) > 0,
+      overrideValueText: `-${pendingBattleDebuffs.hpDrainPerTurn}`,
+    },
   ].filter(f => f.active || f.value !== 0);
 
   // 3. Swap Count (카드 교체 횟수)
   const baseSwaps = config.swapCount;
   const isSwapBonusActive = equippedAltarSkills.includes('5B-3') && player.hp <= player.maxHp * 0.25 && !stageSkillsTriggered.includes('5B-3');
   const eventSwapBonus = eventBonuses.swapCountBonus ?? 0;
-  const swapModifierSum = (isSwapBonusActive ? 2 : 0) + eventSwapBonus;
+  const swapPenalty = pendingBattleDebuffs.swapCountPenalty ?? 0;
+  const swapModifierSum = (isSwapBonusActive ? 2 : 0) + eventSwapBonus + swapPenalty;
 
   const swapFactors = [
     {
@@ -126,6 +134,11 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
       name: (t.factors.eventSwap ?? 'Event Bonus (Swap)').replace('{val}', `${eventBonuses.swapCountBonus >= 0 ? '+' : ''}${eventBonuses.swapCountBonus}`),
       value: eventSwapBonus,
       active: eventBonuses.swapCountBonus !== 0,
+    },
+    {
+      name: (t.factors.eventSwapPenalty ?? 'Event Penalty (Swap)').replace('{val}', `${swapPenalty >= 0 ? '+' : ''}${swapPenalty}`),
+      value: swapPenalty,
+      active: swapPenalty !== 0,
     },
   ].filter(f => f.active || f.isConditional);
 
@@ -338,9 +351,15 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
             if (f.active) {
               statusText = t.active;
               statusClass = "active";
-              if (f.value > 0) valText = `+${f.value}${isPercent ? '%' : ''}`;
-              else if (f.value < 0) valText = `${f.value}${isPercent ? '%' : ''}`;
-              else valText = `+0`;
+              if (f.overrideValueText !== undefined) {
+                valText = f.overrideValueText;
+              } else if (f.value > 0) {
+                valText = `+${f.value}${isPercent ? '%' : ''}`;
+              } else if (f.value < 0) {
+                valText = `${f.value}${isPercent ? '%' : ''}`;
+              } else {
+                valText = `+0`;
+              }
             } else if (f.isConditional) {
               statusText = t.potential;
               statusClass = "potential";
@@ -353,7 +372,11 @@ export const StatusPopup: React.FC<StatusPopupProps> = ({ isOpen, onClose }) => 
                 <div className="factor-status-wrapper">
                   <span className={`factor-status ${statusClass}`}>{statusText}</span>
                   {valText && (
-                    <span className={`factor-value ${f.value > 0 ? 'positive' : f.value < 0 ? 'negative' : 'neutral'}`}>
+                    <span className={`factor-value ${
+                      f.overrideValueText !== undefined
+                        ? (f.overrideValueText.startsWith('-') ? 'negative' : f.overrideValueText.startsWith('+') ? 'positive' : 'neutral')
+                        : (f.value > 0 ? 'positive' : f.value < 0 ? 'negative' : 'neutral')
+                    }`}>
                       {valText}
                     </span>
                   )}
