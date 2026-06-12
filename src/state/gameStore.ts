@@ -366,6 +366,8 @@ interface GameStoreState {
   pendingBattleDebuffs: PendingBattleDebuffs;
   setPendingBattleDebuffs: (debuffs: Partial<PendingBattleDebuffs>) => void;
   clearPendingBattleDebuffs: () => void;
+  debuffRemovalNotice: string | null;
+  setDebuffRemovalNotice: (notice: string | null) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -1517,6 +1519,19 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       };
     }
 
+    // ── 이벤트 보너스 및 디버프 스태츠 반영 ──
+    const evtBonus = store.eventBonuses;
+    const swapAdjust = (evtBonus.swapCountBonus ?? 0) + (store.pendingBattleDebuffs.swapCountPenalty ?? 0);
+    player.drawsRemaining = Math.max(0, config.swapCount + swapAdjust);
+
+    if (evtBonus.maxHpBonusPercent && evtBonus.maxHpBonusPercent !== 0) {
+      const hpDelta = Math.floor((player.baseMaxHp || player.maxHp || 200) * evtBonus.maxHpBonusPercent);
+      player.maxHp = Math.max(1, player.maxHp + hpDelta);
+      player.hp = hpDelta > 0
+        ? Math.min(player.maxHp, player.hp + hpDelta)
+        : Math.min(player.hp, player.maxHp);
+    }
+
     // Preload Assets for Game Entry
     const assetsToLoad = getGameEntryAssets(chapterId, currentEquippedSkills);
     try {
@@ -1778,6 +1793,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   clearPendingBattleDebuffs: () => set({
     pendingBattleDebuffs: { hpDrainPerTurn: 0, swapCountPenalty: 0, sourceLabel: '' },
   }),
+  debuffRemovalNotice: null,
+  setDebuffRemovalNotice: (debuffRemovalNotice: string | null) => set({ debuffRemovalNotice }),
 
 }));
 

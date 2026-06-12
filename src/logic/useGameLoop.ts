@@ -1805,7 +1805,7 @@ export const useGameLoop = () => {
             const freshPDrain = useGameStore.getState().player;
             const newHp = Math.max(0, freshPDrain.hp - drainAmt);
             setPlayerHp(newHp);
-            showDamageText('PLAYER', `-${drainAmt}`, '#e74c3c');
+            showDamageText('PLAYER', `-${drainAmt}`, '#000000');
             const drainLabel = eventDebuffs.sourceLabel
                 ? (store.language === 'KR' ? `[${eventDebuffs.sourceLabel}] HP 감소!` : `[${eventDebuffs.sourceLabel}] HP Drain!`)
                 : (store.language === 'KR' ? '이벤트 디버프: HP 감소!' : 'Event Debuff: HP Drain!');
@@ -2030,6 +2030,13 @@ export const useGameLoop = () => {
 
     const handleVictory = async () => {
         const store = useGameStore.getState();
+        
+        // ── 다음 전투 디버프 해제 안내 세팅 ──
+        if (store.pendingBattleDebuffs.hpDrainPerTurn > 0 || store.pendingBattleDebuffs.swapCountPenalty !== 0) {
+            store.setDebuffRemovalNotice(store.pendingBattleDebuffs.sourceLabel);
+            store.clearPendingBattleDebuffs();
+        }
+
         const wasBattle = store.gameState === GameState.BATTLE || store.gameState === GameState.TUTORIAL;
         store.setGamePhase('BOSS_DEFEATED');
 
@@ -2309,6 +2316,13 @@ export const useGameLoop = () => {
 
     const handleDefeat = async () => {
         const store = useGameStore.getState();
+
+        // ── 다음 전투 디버프 해제 안내 세팅 ──
+        if (store.pendingBattleDebuffs.hpDrainPerTurn > 0 || store.pendingBattleDebuffs.swapCountPenalty !== 0) {
+            store.setDebuffRemovalNotice(store.pendingBattleDebuffs.sourceLabel);
+            store.clearPendingBattleDebuffs();
+        }
+
         // 3B-6: Reset Joker probability
         if (store.chapterNum === '3B' && store.stageNum === 6) {
             const d = store.deck;

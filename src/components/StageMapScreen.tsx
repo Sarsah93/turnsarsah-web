@@ -37,6 +37,17 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const [menuState, setMenuState] = useState<MapMenuState>('NONE');
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
   const [eventPopupId, setEventPopupId] = useState<EventId | null>(null);
+  const [showDebuffNotice, setShowDebuffNotice] = useState<string | null>(null);
+
+  // ── 디버프 해제 안내 팝업 감지 ──
+  useEffect(() => {
+    if (readOnly || debugChapterId) return;
+    const store = useGameStore.getState();
+    if (store.debuffRemovalNotice) {
+      setShowDebuffNotice(store.debuffRemovalNotice);
+      store.setDebuffRemovalNotice(null);
+    }
+  }, [readOnly, debugChapterId]);
 
   // ── Store ──
   const stageMapProgress = useGameStore((s) => s.stageMapProgress);
@@ -515,6 +526,28 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
           eventId={eventPopupId}
           onClose={() => setEventPopupId(null)}
         />
+      )}
+
+      {/* 디버프 해제 안내 팝업 */}
+      {showDebuffNotice && (
+        <div className="event-popup-overlay" style={{ zIndex: 9600 }}>
+          <div className="event-popup-box" style={{ maxWidth: '500px' }}>
+            <p className="event-popup-text">
+              {showDebuffNotice === '수상한 그림자 행상인' || showDebuffNotice === 'Shady Merchant'
+                ? (language === 'KR' ? '수상한 과자의 효과가 제거되었습니다.' : 'The effect of the suspicious candy has been removed.')
+                : showDebuffNotice === '불안정 생명체' || showDebuffNotice === 'Unstable Creature'
+                ? (language === 'KR' ? '소동물 노드화 수복 실패 효과가 제거되었습니다.' : 'The small animal node restoration failure effect has been removed.')
+                : (language === 'KR' ? '노드 회로 과부하 효과가 제거되었습니다.' : 'The node circuit overload effect has been removed.')
+              }
+            </p>
+            <div className="event-popup-divider" />
+            <div className="event-popup-buttons">
+              <button className="event-popup-btn confirm" onClick={() => setShowDebuffNotice(null)}>
+                {language === 'KR' ? '확인' : 'CONFIRM'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

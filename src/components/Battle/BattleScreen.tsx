@@ -343,7 +343,7 @@ export const BattleScreen: React.FC = () => {
             </div>
 
             {/* HUD Layer */}
-            <PlayerDisplay onOpenStatus={() => setIsStatusOpen(true)} />
+            <PlayerDisplay />
             <BossDisplay />
             <AltarSkillSlots />
 

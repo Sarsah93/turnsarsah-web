@@ -55,6 +55,10 @@ interface SaveData {
   clearComboMultiplier?: number;
   clearComboActive?: boolean;
 
+  // Event System
+  eventBonuses?: any;
+  pendingBattleDebuffs?: any;
+
   timestamp: number;
 }
 
