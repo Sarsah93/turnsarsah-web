@@ -1605,6 +1605,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       puzzleTarget: 0,
       message: '',
       clearPopupDifficulty: null,
+      // Clear Combo: 전투 시작 시 스테이지 맵의 콤보 상태를 그대로 이월 (multiplier 보존)
+      clearComboBreaked: false,
     });
     // Immediately apply rules for turn 0
     get().applyStageRules(chapterId, stageId, 0);
