@@ -38,6 +38,17 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
   const [eventPopupId, setEventPopupId] = useState<EventId | null>(null);
   const [showDebuffNotice, setShowDebuffNotice] = useState<string | null>(null);
+  const [showChapterHealNotice, setShowChapterHealNotice] = useState<number | null>(null);
+
+  // ── Store ──
+  const stageMapProgress = useGameStore((s) => s.stageMapProgress);
+  const player = useGameStore((s) => s.player);
+  const language = useGameStore((s) => s.language);
+  const difficulty = useGameStore((s) => s.difficulty);
+  const chapterNum = useGameStore((s) => s.chapterNum);
+  const clearComboMultiplier = useGameStore((s) => s.clearComboMultiplier);
+  const clearComboActive = useGameStore((s) => s.clearComboActive);
+  const chapterClearHealNotice = useGameStore((s) => s.chapterClearHealNotice);
 
   // ── 디버프 해제 안내 팝업 감지 ──
   useEffect(() => {
@@ -49,14 +60,14 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
     }
   }, [readOnly, debugChapterId]);
 
-  // ── Store ──
-  const stageMapProgress = useGameStore((s) => s.stageMapProgress);
-  const player = useGameStore((s) => s.player);
-  const language = useGameStore((s) => s.language);
-  const difficulty = useGameStore((s) => s.difficulty);
-  const chapterNum = useGameStore((s) => s.chapterNum);
-  const clearComboMultiplier = useGameStore((s) => s.clearComboMultiplier);
-  const clearComboActive = useGameStore((s) => s.clearComboActive);
+  // ── 챕터 이동 코어 안정도 회복 안내 팝업 감지 ──
+  useEffect(() => {
+    if (readOnly || debugChapterId) return;
+    if (chapterClearHealNotice !== null) {
+      setShowChapterHealNotice(chapterClearHealNotice);
+      useGameStore.getState().setChapterClearHealNotice(null);
+    }
+  }, [chapterClearHealNotice, readOnly, debugChapterId]);
 
   const [comboDetailOpen, setComboDetailOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -543,6 +554,41 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
             <div className="event-popup-divider" />
             <div className="event-popup-buttons">
               <button className="event-popup-btn confirm" onClick={() => setShowDebuffNotice(null)}>
+                {language === 'KR' ? '확인' : 'CONFIRM'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 챕터 이동 시 코어 안정도 회복 안내 팝업 */}
+      {showChapterHealNotice !== null && (
+        <div className="event-popup-overlay" style={{ zIndex: 9600 }}>
+          <div className="event-popup-box" style={{ maxWidth: '500px' }}>
+            <p className="event-popup-text" style={{ fontSize: '1.2rem', textAlign: 'center', lineHeight: 1.6 }}>
+              {language === 'KR' ? (
+                <>
+                  🎉 <strong>챕터 클리어 보상</strong> 🎉<br />
+                  {showChapterHealNotice > 0 ? (
+                    <>코어 안정도가 <strong>{showChapterHealNotice}</strong>만큼 회복되었습니다!</>
+                  ) : (
+                    <>코어 안정도가 이미 최대치입니다.</>
+                  )}
+                </>
+              ) : (
+                <>
+                  🎉 <strong>Chapter Clear Reward</strong> 🎉<br />
+                  {showChapterHealNotice > 0 ? (
+                    <>Core Stability has been restored by <strong>{showChapterHealNotice}</strong>!</>
+                  ) : (
+                    <>Core Stability is already at maximum.</>
+                  )}
+                </>
+              )}
+            </p>
+            <div className="event-popup-divider" />
+            <div className="event-popup-buttons">
+              <button className="event-popup-btn confirm" onClick={() => setShowChapterHealNotice(null)}>
                 {language === 'KR' ? '확인' : 'CONFIRM'}
               </button>
             </div>

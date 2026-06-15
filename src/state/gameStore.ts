@@ -380,6 +380,8 @@ interface GameStoreState {
   clearPendingBattleDebuffs: () => void;
   debuffRemovalNotice: string | null;
   setDebuffRemovalNotice: (notice: string | null) => void;
+  chapterClearHealNotice: number | null;
+  setChapterClearHealNotice: (notice: number | null) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -1631,6 +1633,25 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       console.warn("Failed to preload map assets:", e);
     }
 
+    // 챕터 간 이동 시(해당 챕터를 클리어 후, 다음 챕터로 넘어갈 때), 코어 안정도(HP)를 50% 회복시켜준다.
+    const currentProgress = get().stageMapProgress;
+    if (chapterId !== '1' && currentProgress && currentProgress.chapterId !== chapterId) {
+      const currentPlayer = get().player;
+      if (currentPlayer) {
+        const nominalHeal = Math.round(currentPlayer.maxHp * 0.5);
+        const actualHeal = Math.max(0, Math.min(currentPlayer.maxHp, currentPlayer.hp + nominalHeal) - currentPlayer.hp);
+        set((state) => ({
+          player: {
+            ...state.player,
+            hp: Math.min(state.player.maxHp, state.player.hp + nominalHeal),
+          },
+          chapterClearHealNotice: actualHeal,
+        }));
+      }
+    } else {
+      set({ chapterClearHealNotice: null });
+    }
+
     // v3.0.2: Reset/initialize player state and hidden variables when starting a new session (entering Chapter 1)
     if (chapterId === '1') {
       clearAllSeenGuides();
@@ -1872,6 +1893,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   }),
   debuffRemovalNotice: null,
   setDebuffRemovalNotice: (debuffRemovalNotice: string | null) => set({ debuffRemovalNotice }),
+  chapterClearHealNotice: null,
+  setChapterClearHealNotice: (chapterClearHealNotice: number | null) => set({ chapterClearHealNotice }),
 
 }));
 
