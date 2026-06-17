@@ -565,7 +565,7 @@ export const StageMapScreen: React.FC<StageMapScreenProps> = ({ readOnly = false
       {showChapterHealNotice !== null && (
         <div className="event-popup-overlay" style={{ zIndex: 9600 }}>
           <div className="event-popup-box" style={{ maxWidth: '500px' }}>
-            <p className="event-popup-text" style={{ fontSize: '1.2rem', textAlign: 'center', lineHeight: 1.6 }}>
+            <p className="event-popup-text">
               {language === 'KR' ? (
                 <>
                   🎉 <strong>챕터 클리어 보상</strong> 🎉<br />

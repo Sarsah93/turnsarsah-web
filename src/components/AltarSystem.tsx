@@ -501,7 +501,7 @@ export const AltarSystem: React.FC<AltarSystemProps> = ({ onClose }) => {
                                     </div>
                                 )}
                             </div>
-                            <div style={{ textAlign: 'center', color: '#7f8c8d', fontSize: '0.8rem', marginTop: '5px' }}>{language === 'KR' ? '바깥을 클릭하여 닫기' : 'Click outside to close'}</div>
+                            <div style={{ textAlign: 'center', color: '#bdc3c7', fontSize: '1.6rem', marginTop: '10px' }}>{language === 'KR' ? '바깥을 클릭하여 닫기' : 'Click outside to close'}</div>
                         </div>
                     </div>
                 );

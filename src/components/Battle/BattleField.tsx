@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { HPBar, ConditionIcon, DamagePopup } from '../Common';
 import { Character } from '../../types/Character';
+import { useGameStore } from '../../state/gameStore';
 import '../styles/BattleField.css';
 
 interface BattleFieldProps {
@@ -26,6 +27,11 @@ interface DamagePopupState {
 }
 
 export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum = 1, popups = [], onRemovePopup, onMeasure, onMeasureBoss }) => {
+  const chapterNum = useGameStore((s) => s.chapterNum);
+  const isWideBoss = (chapterNum === '3B' && stageNum === 8) || (chapterNum === '3A' && stageNum === 3);
+  const bossWidth = isWideBoss ? '650px' : '450px';
+  const bossHeight = isWideBoss ? '350px' : '450px';
+
   // Refs to measure element positions for popup placement
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const bossRef = React.useRef<HTMLDivElement | null>(null);
@@ -142,13 +148,17 @@ export const BattleField: React.FC<BattleFieldProps> = ({ player, bot, stageNum 
       {/* Actual Boss Visual Target Ref */}
       <div
         ref={bossAvatarRef}
+        className={`boss-avatar-wrapper ${isWideBoss ? 'wide-boss' : ''}`}
         style={{
           position: 'absolute',
           top: '60px',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '450px',
-          height: '450px',
+          width: bossWidth,
+          height: 'auto',
+          aspectRatio: isWideBoss ? '650 / 350' : '1 / 1',
+          maxHeight: bossHeight,
+          maxWidth: '100%',
           pointerEvents: 'none'
         }}
       />

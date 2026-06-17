@@ -228,7 +228,7 @@
   border-radius: 14px;
   padding: 32px 48px;
   color: #ecf0f1;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   font-family: 'Noto Sans KR', sans-serif;
   text-align: center;
   z-index: 500;
@@ -654,6 +654,15 @@
     opacity: 1;
     transform: scale(1.15);
     color: #fffb00;
+  }
+}
+
+/* Mobile responsive for stage map info popup */
+@media (max-width: 768px) {
+  .stage-map-info-popup {
+    font-size: 1.5rem;
+    padding: 20px 30px;
+    max-width: 90%;
   }
 }
 

@@ -102,14 +102,14 @@ export const BossDisplay: React.FC = () => {
             : {};
 
     // 보스별 컨테이너 너비 보정 (가로로 넓은 보스는 더 넓은 컨테이너 필요)
-    const isTroglodon = chapterNum === '3B' && stageNum === 8;
-    const bossContainerWidth = isTroglodon ? '650px' : '450px';
-    const bossContainerHeight = isTroglodon ? '350px' : '450px';
+    const isWideBoss = (chapterNum === '3B' && stageNum === 8) || (chapterNum === '3A' && stageNum === 3);
+    const bossContainerWidth = isWideBoss ? '650px' : '450px';
+    const bossContainerHeight = isWideBoss ? '350px' : '450px';
 
-    const mask80 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNMTAsMTggaDYgdjQgaC02IFogTTg0LDY2IGg2IHY0IGgtNiBaIi8+PC9zdmc+")';
-    const mask60 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTEwLDE4IGg2IHY0IGgtNiBaIE04NCw2NiBoNiB2NCBoLTYgWiIvPjwvc3ZnPg==")';
-    const mask40 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTQ4LDMwIGg2IHY1IGgtNiBaIE0xMCwxOCBoNiB2NCBoLTYgWiBNODQsNjYgaDYgdjQgaC02IFoiLz48L3N2Zz4=")';
-    const mask20 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTQ4LDMwIGg2IHY1IGgtNiBaIE0xMCwxOCBoNiB2NCBoLTYgWiBNODQsNjYgaDYgdjQgaC02IFogTTIyLDc4IGg3IHY1IGgtNyBaIE03OCwyMCBoNSB2NCBoLTUgWiIvPjwvc3ZnPg==")';
+    const mask80 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNMTAsMTggaDYgdjQgaC02IFogTTg0LDY2IGg2IHY0IGgtNiBaIi8+PC9zdmc+")';
+    const mask60 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTEwLDE4IGg2IHY0IGgtNiBaIE0xNCw2NiBoNiB2NCBoLTYgWiIvPjwvc3ZnPg==")';
+    const mask40 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTQ4LDMwIGg2IHY1IGgtNiBaIE0xMCwxOCBoNiB2NCBoLTYgWiBNODQsNjYgaDYgdjQgaC02IFoiLz48L3N2Zz4=")';
+    const mask20 = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGZpbGw9ImJsYWNrIiBkPSJNMCwwIGgxMDAgdjEwMCBoLTEwMCBaIE00Niw0NSBoNiB2NSBoLTYgWiBNNTQsNTggaDYgdjUgaC02IFogTTQ4LDMwIGg2IHY1IGgtNiBaIE0xMCwxOCBoNiB2NCBoLTYgWiBNODQsNjYgaDYgdjQgaC02IFogTTIyLDc4IGg3IHY1IGgtNyBaIE03OCwyMCBoNSB2NCBoLTUgWiIvPjwvc3ZnPg==")';
 
     const holeMask =
         bot.hp <= 0 ? 'none' :
@@ -159,14 +159,17 @@ export const BossDisplay: React.FC = () => {
             </div>
 
             {/* Boss Image (Center Top) */}
-            <div className={`boss-avatar-wrapper ${bot.animState === 'HIT' ? 'animate-hit-shake' : ''} ${bossWeakClass}`}
+            <div className={`boss-avatar-wrapper ${isWideBoss ? 'wide-boss' : ''} ${bot.animState === 'HIT' ? 'animate-hit-shake' : ''} ${bossWeakClass}`}
                 style={{
                     position: 'absolute',
                     top: '60px', // Even higher to maximize combat area
                     left: '50%',
                     transform: 'translateX(-50%)',
                     width: bossContainerWidth,
-                    height: bossContainerHeight,
+                    height: 'auto',
+                    aspectRatio: isWideBoss ? '650 / 350' : '1 / 1',
+                    maxHeight: bossContainerHeight,
+                    maxWidth: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',

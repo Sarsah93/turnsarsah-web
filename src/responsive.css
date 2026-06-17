@@ -30,6 +30,11 @@
         /* Move up a bit to clear cards */
     }
 
+    .boss-avatar-wrapper.wide-boss {
+        width: 55vw !important;
+        max-width: 250px !important;
+    }
+
     .boss-hp-wrapper {
         width: 35vw !important;
         min-width: 140px;
@@ -344,6 +349,11 @@
     .boss-avatar-wrapper {
         width: 50vw !important;
         max-width: 200px !important;
+    }
+
+    .boss-avatar-wrapper.wide-boss {
+        width: 65vw !important;
+        max-width: 240px !important;
     }
 
     .card-slot {

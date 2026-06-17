@@ -51,7 +51,7 @@
 }
 
 .event-popup-text {
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: #c9b8f0;
   line-height: 1.65;
   white-space: pre-line;
@@ -60,7 +60,7 @@
 }
 
 .event-popup-result {
-  font-size: 2.1rem;
+  font-size: 2.3rem;
   padding: 16px 24px;
   border-radius: 10px;
   margin-bottom: 28px;
@@ -94,8 +94,8 @@
 .event-popup-btn {
   padding: 14px 36px;
   border-radius: 10px;
-  font-size: 2rem;
-  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  font-family: 'Bebas Neue', 'Noto Sans KR', sans-serif;
   letter-spacing: 1.5px;
   cursor: pointer;
   border: 2px solid transparent;
@@ -146,7 +146,7 @@
   min-width: unset;
   width: 100%;
   text-align: left;
-  font-size: 1.7rem;
+  font-size: 1.9rem;
   font-family: 'Noto Sans KR', sans-serif;
 }
 .event-popup-btn.option:hover {
@@ -218,5 +218,50 @@
 
 .event-defeat-btn:active {
   transform: translateY(0);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .event-popup-box {
+    padding: 24px 20px;
+    width: 95%;
+  }
+
+  .event-popup-category {
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+  }
+
+  .event-popup-title {
+    font-size: 2.2rem;
+    margin-bottom: 16px;
+  }
+
+  .event-popup-text {
+    font-size: 1.8rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .event-popup-result {
+    font-size: 1.9rem;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+  }
+
+  .event-popup-btn {
+    padding: 10px 24px;
+    font-size: 1.8rem;
+    min-width: 100px;
+  }
+
+  .event-popup-btn.option {
+    font-size: 1.6rem;
+    padding: 12px 16px;
+  }
+
+  .event-popup-divider {
+    margin: 14px 0;
+  }
 }
 
