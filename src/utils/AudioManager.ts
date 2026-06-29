@@ -13,6 +13,19 @@ export class AudioManager {
     })();
     private static bgmAudio: HTMLAudioElement | null = null;
 
+    // 탭 복귀 시 BGM 자동 재개 (Page Visibility API)
+    private static _visibilityHandlerRegistered = false;
+    public static registerVisibilityHandler(): void {
+        if (this._visibilityHandlerRegistered) return;
+        this._visibilityHandlerRegistered = true;
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && this.bgmAudio && this.bgmAudio.paused) {
+                this.bgmAudio.play().catch(e => console.warn('BGM Visibility Resume failed:', e));
+            }
+        });
+    }
+
+
     public static setBGMVolume(volume: number) {
         this.bgmVolume = Math.max(0, Math.min(1, volume));
         localStorage.setItem(storageKey('bgmVolume'), this.bgmVolume.toString());

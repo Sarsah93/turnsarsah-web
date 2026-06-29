@@ -65,6 +65,32 @@ export const VideoBackground: React.FC<VideoBackgroundProps> = ({ source }) => {
         setVideoStalled(false);
     }, []);
 
+    const handlePlaying = useCallback(() => {
+        if (stalledTimerRef.current) clearTimeout(stalledTimerRef.current);
+        setVideoStalled(false);
+        setVideoFailed(false);
+    }, []);
+
+    // 탭 방치 후 복귀 시 비디오 재개 (Page Visibility API)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && videoRef.current && !videoFailed) {
+                if (videoRef.current.paused) {
+                    videoRef.current.play().catch(() => {
+                        // 자동재생 정책 차단 시 조용히 무시 (muted이므로 거의 발생 안 함)
+                    });
+                }
+                // stalled 상태였다면 리셋 후 재시도
+                setVideoStalled(false);
+                if (stalledTimerRef.current) clearTimeout(stalledTimerRef.current);
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [videoFailed]);
+
     useEffect(() => {
         return () => {
             if (stalledTimerRef.current) clearTimeout(stalledTimerRef.current);
@@ -103,6 +129,7 @@ export const VideoBackground: React.FC<VideoBackgroundProps> = ({ source }) => {
                 onStalled={handleStalled}
                 onWaiting={handleStalled}
                 onCanPlay={handleCanPlay}
+                onPlaying={handlePlaying}
                 style={{
                     position: 'absolute',
                     top: '50%',

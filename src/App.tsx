@@ -40,6 +40,9 @@ function App() {
 
   // Phase 1: 앱 마운트 시 메인 메뉴 최소 자산 프리로드
   useEffect(() => {
+    // 탭 복귀 시 BGM 자동 재개 등록 (1회)
+    AudioManager.registerVisibilityHandler();
+
     const store = useGameStore.getState();
     store.setLoadingPhase('INITIAL');
     store.setLoadingProgress(0);
