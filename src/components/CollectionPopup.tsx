@@ -304,22 +304,39 @@ const CollectionCard: React.FC<{
             </div>
 
             {/* 본문 */}
-            {itemState.unlocked ? (
-                <div>
-                    {/* 미리보기 + 적용 버튼 */}
-                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                        {/* 미리보기 영상 */}
-                        {item.videoSrc && (
-                            <div style={{ flex: '0 0 300px' }}>
-                                <div style={{ color: '#888', fontSize: '1.1rem', marginBottom: '6px' }}>{t.COLLECTION_PREVIEW}</div>
-                                <PreviewVideo src={item.videoSrc} />
-                            </div>
-                        )}
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                {/* 미리보기 영상 (비디오 소스가 있다면 항상 표시) */}
+                {item.videoSrc ? (
+                    <div style={{ flex: '0 0 300px' }}>
+                        <div style={{ color: '#888', fontSize: '1.1rem', marginBottom: '6px' }}>{t.COLLECTION_PREVIEW}</div>
+                        <PreviewVideo src={item.videoSrc} />
+                    </div>
+                ) : (
+                    // 비디오 소스가 없는 경우 (Coming Soon 등) 플레이스홀더 표시
+                    <div style={{
+                        flex: '0 0 300px',
+                        aspectRatio: '16/9',
+                        backgroundColor: '#0a0a14',
+                        border: '1px dashed #3a3a55',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#555',
+                        fontSize: '1.1rem'
+                    }}>
+                        <div style={{ width: '100%', textAlign: 'center' }}>
+                            {isKR ? '미리보기 준비 중' : 'Preview Unavailable'}
+                        </div>
+                    </div>
+                )}
 
-                        {/* 적용 버튼 영역 */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-start', gap: '10px', minHeight: '100px' }}>
-                            <div style={{ color: '#666', fontSize: '1.05rem' }}>
-                                {isKR ? '미리보기를 클릭해 연출을 확인하고 적용 여부를 선택하세요.' : 'Click preview to check the animation, then choose to apply or remove.'}
+                {/* 제어 / 상태 안내 영역 */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-start', gap: '10px', minHeight: '100px' }}>
+                    {itemState.unlocked ? (
+                        <>
+                            <div style={{ color: '#aaa', fontSize: '1.1rem' }}>
+                                {isKR ? '미리보기를 확인하고 적용 여부를 선택할 수 있습니다.' : 'Watch the preview and choose to apply/remove.'}
                             </div>
                             <button
                                 onClick={handleToggle}
@@ -340,43 +357,59 @@ const CollectionCard: React.FC<{
                             >
                                 {itemState.active ? t.COLLECTION_REMOVE : t.COLLECTION_APPLY}
                             </button>
-                        </div>
-                    </div>
-
-                    {/* 달성 카운트 — 언락 후에도 항상 표시 */}
-                    {item.targetCount > 0 && (
-                        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #2a2a40' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', alignItems: 'center' }}>
-                                <span style={{ color: '#666', fontSize: '1.1rem' }}>{t.COLLECTION_PROGRESS}</span>
-                                <span style={{ color: '#f1c40f', fontSize: '1.15rem', fontFamily: 'monospace', letterSpacing: '1px' }}>
-                                    {Math.min(itemState.count, item.targetCount).toLocaleString()} / {item.targetCount.toLocaleString()} ✓
-                                </span>
+                        </>
+                    ) : (
+                        <>
+                            <div style={{ color: '#666', fontSize: '1.1rem' }}>
+                                {isKR ? '아직 이 애니메이션 보상이 잠겨 있습니다.' : 'This animation reward is currently locked.'}
                             </div>
-                            <div style={{ width: '100%', height: '6px', backgroundColor: '#1a1a30', borderRadius: '4px', overflow: 'hidden' }}>
-                                <div style={{ width: '100%', height: '100%', backgroundColor: '#f1c40f', borderRadius: '4px' }} />
-                            </div>
-                        </div>
+                            <button
+                                disabled
+                                style={{
+                                    padding: '10px 28px',
+                                    borderRadius: '8px',
+                                    border: '2px solid #333',
+                                    backgroundColor: '#1a1a24',
+                                    color: '#555',
+                                    fontFamily: "'Bebas Neue', 'Noto Sans KR', sans-serif",
+                                    fontSize: '1.4rem',
+                                    letterSpacing: '1px',
+                                    cursor: 'not-allowed',
+                                }}
+                            >
+                                {isKR ? '잠김' : 'LOCKED'}
+                            </button>
+                        </>
                     )}
                 </div>
-            ) : (
-                /* 잠금 상태 — 진행도 바 */
-                <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            </div>
+
+            {/* 하단 진행도 영역 (언락/잠금 공통 표시) */}
+            {item.targetCount > 0 && (
+                <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid #2a2a40' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'center' }}>
                         <span style={{ color: '#555', fontSize: '1.15rem' }}>{t.COLLECTION_PROGRESS}</span>
-                        <span style={{ color: '#666', fontSize: '1.15rem', fontFamily: 'monospace' }}>
-                            {itemState.count.toLocaleString()} / {item.targetCount.toLocaleString()}
+                        <span style={{
+                            color: itemState.unlocked ? '#f1c40f' : '#666',
+                            fontSize: '1.15rem',
+                            fontFamily: 'monospace',
+                            letterSpacing: '1px'
+                        }}>
+                            {Math.min(itemState.count, item.targetCount).toLocaleString()} / {item.targetCount.toLocaleString()}
+                            {itemState.unlocked && ' ✓'}
                         </span>
                     </div>
+                    {/* 진행도 그래프 바 */}
                     <div style={{ width: '100%', height: '8px', backgroundColor: '#1a1a30', borderRadius: '4px', overflow: 'hidden' }}>
                         <div style={{
                             width: `${progressPct}%`,
                             height: '100%',
-                            backgroundColor: progressPct >= 75 ? '#f1c40f' : progressPct >= 40 ? '#e67e22' : '#4a4a70',
+                            backgroundColor: itemState.unlocked ? '#f1c40f' : (progressPct >= 75 ? '#e67e22' : '#4a4a70'),
                             borderRadius: '4px',
                             transition: 'width 0.5s ease',
                         }} />
                     </div>
-                    <div style={{ color: '#444', fontSize: '1.05rem', marginTop: '6px', textAlign: 'right' }}>
+                    <div style={{ color: '#444', fontSize: '1.05rem', marginTop: '4px', textAlign: 'right' }}>
                         {progressPct}%
                     </div>
                 </div>
