@@ -10,15 +10,18 @@
   },
   "app": {
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; img-src 'self' data: blob: asset: https:; media-src 'self' blob: asset:; script-src 'self'"
     },
     "windows": [
       {
         "title": "Turn Sarsah",
         "width": 1600,
         "height": 900,
+        "minWidth": 960,
+        "minHeight": 540,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "center": true
       }
     ]
   },

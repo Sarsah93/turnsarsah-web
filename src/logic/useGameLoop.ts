@@ -345,13 +345,22 @@ export const useGameLoop = () => {
             store.equippedAltarSkills.includes('4A-1') && store.isDyschromatopsiaActive && store.dyschromatopsiaUses < 1
         );
 
-        // Title Progress: One Pair Dance (local only for now)
-        let hasOnePairDance = store.hasOnePairDanceTitle || store.forceOnePairDance;
+        // Title Progress: One Pair Dance
+        // 컴테이너: 언락 여부 + 콜렉션에서 ''적용'' 상태여야 활성화
+        let hasOnePairDance = (store.hasOnePairDanceTitle && store.collectionOnePairDanceActive)
+            || (import.meta.env.DEV && store.forceOnePairDance);
         if (handType === 'One Pair' && baseDamage > 0) {
             const res = TitleManager.incrementOnePairCount();
-            if (res.unlocked && !hasOnePairDance) {
+            if (res.unlocked && !store.hasOnePairDanceTitle) {
                 store.setHasOnePairDanceTitle(true);
-                hasOnePairDance = true;
+            }
+        }
+
+        // Title Progress: Two Pair Taeguek 카운트 누적
+        if (handType === 'Two Pair' && baseDamage > 0) {
+            const res = TitleManager.incrementTwoPairCount();
+            if (res.unlocked && !store.hasTwoPairTaeguekTitle) {
+                store.setHasTwoPairTaeguekTitle(true);
             }
         }
 
@@ -607,8 +616,10 @@ export const useGameLoop = () => {
         // --- PHASE 1: GATHERING (leaf-flutter / one-pair dance / two-pair taeguek) ---
         const isOnePairDance = hasOnePairDance && handType === 'One Pair';
 
-        // Two Pair Taeguek: classify pair groups
-        const isTwoPairTaeguek = (store.forceTwoPairTaeguek || false) && handType === 'Two Pair';
+        // Two Pair Taeguek: 콜렉션 적용 상태 + 언락 여부 기반
+        const isTwoPairTaeguek = ((store.hasTwoPairTaeguekTitle && store.collectionTwoPairTaeguekActive)
+            || (import.meta.env.DEV && store.forceTwoPairTaeguek))
+            && handType === 'Two Pair';
         let twoPairGroups = { pair1: [] as number[], pair2: [] as number[], solo: [] as number[] };
         if (isTwoPairTaeguek) {
             // Find pairs by rank

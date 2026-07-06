@@ -15,7 +15,8 @@ class AssetPreloadManager {
       const img = new Image();
       img.onload = () => { this.cache.set(url, img); this.loading.delete(url); resolve(img); };
       img.onerror = () => { this.loading.delete(url); reject(new Error(`Failed: ${url}`)); };
-      img.src = url;
+      // encodeURI: 한글/공백/괄호 포함 경로를 Tauri WebView2에서 올바르게 처리
+      img.src = encodeURI(url);
     });
     this.loading.set(url, promise);
     return promise;

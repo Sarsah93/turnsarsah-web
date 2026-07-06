@@ -283,6 +283,14 @@ interface GameStoreState {
   setAttackOrderIndices: (indices: number[]) => void;
   hasOnePairDanceTitle: boolean;
   setHasOnePairDanceTitle: (val: boolean) => void;
+  hasTwoPairTaeguekTitle: boolean;
+  setHasTwoPairTaeguekTitle: (val: boolean) => void;
+  // 컬렉션 적용 상태 (언락 + 사용자가 '적용' 버튼을 눌러야 활성화됨)
+  collectionOnePairDanceActive: boolean;
+  setCollectionOnePairDanceActive: (val: boolean) => void;
+  collectionTwoPairTaeguekActive: boolean;
+  setCollectionTwoPairTaeguekActive: (val: boolean) => void;
+  // DEV 전용 force 플래그 (import.meta.env.DEV 블록에서만 사용)
   forceOnePairDance: boolean;
   setForceOnePairDance: (val: boolean) => void;
   forceTwoPairTaeguek: boolean;
@@ -448,6 +456,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setAttackOrderIndices: (attackOrderIndices) => set({ attackOrderIndices }),
   hasOnePairDanceTitle: TitleManager.ensureOnePairDanceUnlocked(),
   setHasOnePairDanceTitle: (hasOnePairDanceTitle) => set({ hasOnePairDanceTitle }),
+  hasTwoPairTaeguekTitle: TitleManager.ensureTwoPairTaeguekUnlocked(),
+  setHasTwoPairTaeguekTitle: (hasTwoPairTaeguekTitle) => set({ hasTwoPairTaeguekTitle }),
+  // 컬렉션 적용 상태 — localStorage에서 복원
+  collectionOnePairDanceActive: TitleManager.isOnePairDanceActive(),
+  setCollectionOnePairDanceActive: (collectionOnePairDanceActive) => set({ collectionOnePairDanceActive }),
+  collectionTwoPairTaeguekActive: TitleManager.isTwoPairTaeguekActive(),
+  setCollectionTwoPairTaeguekActive: (collectionTwoPairTaeguekActive) => set({ collectionTwoPairTaeguekActive }),
+  // DEV 전용
   forceOnePairDance: false,
   setForceOnePairDance: (forceOnePairDance) => set({ forceOnePairDance }),
   forceTwoPairTaeguek: false,

@@ -48,6 +48,8 @@ export class AudioManager {
     }
 
     public static playBGM(src: string) {
+        // encodeURI: 한글/공백/괄호 포함 경로를 Tauri WebView2에서 올바르게 처리
+        const encodedSrc = encodeURI(src);
         if (this.bgmAudio) {
             // v2.3.8: Decode URI to prevent restarts on paths with spaces (e.g., "/audio sounds/")
             const currentSrc = decodeURI(this.bgmAudio.src);
@@ -62,14 +64,15 @@ export class AudioManager {
             this.bgmAudio.pause();
         }
 
-        this.bgmAudio = new Audio(src);
+        this.bgmAudio = new Audio(encodedSrc);
         this.bgmAudio.loop = true;
         this.bgmAudio.volume = this.bgmVolume;
         this.bgmAudio.play().catch(e => console.warn("BGM Playback (New) failed:", e));
     }
 
     public static playSFX(src: string) {
-        const audio = new Audio(src);
+        // encodeURI: 한글/공백/괄호 포함 경로를 Tauri WebView2에서 올바르게 처리
+        const audio = new Audio(encodeURI(src));
         audio.volume = this.sfxVolume;
         // v2.5.0: Apply game speed to SFX playback rate
         const speed = useGameStore.getState().gameSpeed;

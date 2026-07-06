@@ -56,7 +56,7 @@ export const GameViewport: React.FC<GameViewportProps> = ({ children }) => {
             setIsFullscreen(!!document.fullscreenElement);
         };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
     const toggleFullscreen = () => {

@@ -49,7 +49,7 @@ export const ConditionIcon: React.FC<ConditionIconProps> = ({ name, condition, p
   if (name === 'Defense Reduced') filename = 'Debilitating.png';
   if (name === 'Damage Taken Increased') filename = 'Debilitating.png';
 
-  const iconPath = `/assets/conditions/${filename}`;
+  const iconPath = encodeURI(`/assets/conditions/${filename}`);
 
   const popupStyle: React.CSSProperties = popupDirection === 'bottom-left'
     ? { right: '0px', top: '100%', marginTop: '5px' }

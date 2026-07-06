@@ -118,8 +118,8 @@ export const VideoBackground: React.FC<VideoBackgroundProps> = ({ source }) => {
             {/* 비디오: 준비 완료(videoReady) 전에는 투명, 완료 후 페이드인 */}
             <video
                 ref={videoRef}
-                src={source}
-                poster={posterImage}   /* 로드 전 즉시 첫 프레임 정지 이미지 표시 */
+                src={encodeURI(source)}
+                poster={posterImage ? encodeURI(posterImage) : undefined}   /* 로드 전 즉시 첫 프레임 정지 이미지 표시 */
                 autoPlay
                 loop
                 muted
