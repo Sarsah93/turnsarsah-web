@@ -5,11 +5,19 @@ import { storageKey } from './buildTarget';
 export class AudioManager {
     private static bgmVolume: number = (() => {
         const saved = localStorage.getItem(storageKey('bgmVolume'));
-        return saved !== null ? Number(saved) : 0.5;
+        if (saved !== null) {
+            const parsed = Number(saved);
+            return isNaN(parsed) ? 0.5 : parsed;
+        }
+        return 0.5;
     })();
     private static sfxVolume: number = (() => {
         const saved = localStorage.getItem(storageKey('sfxVolume'));
-        return saved !== null ? Number(saved) : 0.5;
+        if (saved !== null) {
+            const parsed = Number(saved);
+            return isNaN(parsed) ? 0.5 : parsed;
+        }
+        return 0.5;
     })();
     private static bgmAudio: HTMLAudioElement | null = null;
 
@@ -25,6 +33,39 @@ export class AudioManager {
         });
     }
 
+    // 브라우저 자동 재생(Autoplay) 차단 해제 핸들러
+    private static _interactionHandlerRegistered = false;
+    private static registerInteractionHandler(): void {
+        if (this._interactionHandlerRegistered) return;
+        this._interactionHandlerRegistered = true;
+
+        const startAudio = () => {
+            if (this.bgmAudio && this.bgmAudio.paused) {
+                this.bgmAudio.play()
+                    .then(() => {
+                        cleanup();
+                    })
+                    .catch(e => {
+                        console.warn('BGM Interaction Play failed:', e);
+                    });
+            } else if (this.bgmAudio && !this.bgmAudio.paused) {
+                cleanup();
+            }
+        };
+
+        const cleanup = () => {
+            document.removeEventListener('click', startAudio);
+            document.removeEventListener('keydown', startAudio);
+            document.removeEventListener('mousedown', startAudio);
+            document.removeEventListener('touchstart', startAudio);
+            this._interactionHandlerRegistered = false;
+        };
+
+        document.addEventListener('click', startAudio);
+        document.addEventListener('keydown', startAudio);
+        document.addEventListener('mousedown', startAudio);
+        document.addEventListener('touchstart', startAudio);
+    }
 
     public static setBGMVolume(volume: number) {
         this.bgmVolume = Math.max(0, Math.min(1, volume));
@@ -57,7 +98,10 @@ export class AudioManager {
 
             if (currentSrc.includes(targetSrc)) {
                 if (this.bgmAudio.paused) {
-                    this.bgmAudio.play().catch(e => console.warn("BGM Playback (Resume) failed:", e));
+                    this.bgmAudio.play().catch(e => {
+                        console.warn("BGM Playback (Resume) failed:", e);
+                        this.registerInteractionHandler();
+                    });
                 }
                 return;
             }
@@ -67,7 +111,10 @@ export class AudioManager {
         this.bgmAudio = new Audio(encodedSrc);
         this.bgmAudio.loop = true;
         this.bgmAudio.volume = this.bgmVolume;
-        this.bgmAudio.play().catch(e => console.warn("BGM Playback (New) failed:", e));
+        this.bgmAudio.play().catch(e => {
+            console.warn("BGM Playback (New) failed:", e);
+            this.registerInteractionHandler();
+        });
     }
 
     public static playSFX(src: string) {
