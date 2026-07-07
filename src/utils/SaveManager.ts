@@ -7,7 +7,7 @@ import { storageKey } from './buildTarget';
 import { StageMapProgress } from '../constants/chapterRoutes';
 import { clearAllSeenGuides } from '../constants/guideData';
 
-export const SAVE_VERSION = 'v3.0.0';
+export const SAVE_VERSION = 'v1.0.0';
 const VERSION_KEY = storageKey('save_version');
 const UNLOCKED_DIFFICULTIES_KEY = storageKey('unlocked_difficulties');
 
@@ -75,6 +75,13 @@ export class SaveManager {
     try {
       const storedVersion = localStorage.getItem(VERSION_KEY);
       if (storedVersion === SAVE_VERSION) return false;
+
+      // 만약 첫 실행(이전 버전 정보 없음)이라면 팝업 없이 버전만 기록
+      if (storedVersion === null) {
+        localStorage.setItem(VERSION_KEY, SAVE_VERSION);
+        console.log(`[SaveManager] First execution. Version registered: ${SAVE_VERSION}`);
+        return false;
+      }
 
       // Version mismatch — wipe all save data and altar data
       this.deleteAllSaves();

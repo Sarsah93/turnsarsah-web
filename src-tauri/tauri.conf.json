@@ -1,6 +1,6 @@
 {
   "productName": "Turn Sarsah",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "identifier": "com.turnsarsah.game",
   "build": {
     "beforeDevCommand": "npm run dev:steam",

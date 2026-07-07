@@ -11,6 +11,8 @@ import { AltarSystem } from './AltarSystem';
 import { CollectionPopup } from './CollectionPopup';
 import './styles/Modal.css';
 
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
+
 export const MainMenu: React.FC = () => {
     const {
         initTutorial, loadGame, triggerTransition, language, fontSize,
@@ -67,7 +69,7 @@ export const MainMenu: React.FC = () => {
                 <BlockButton text={t.UI.ALTAR_SYSTEM} onClick={() => setActiveMenu('ALTAR')}        width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.UI.COLLECTION}   onClick={() => setActiveMenu('COLLECTION')}   width={menuButtonWidth} style={menuButtonStyle} />
                 <BlockButton text={t.SETTINGS.TITLE}  onClick={() => setActiveMenu('SETTINGS')}     width={menuButtonWidth} style={menuButtonStyle} />
-                <BlockButton text={t.UI.QUIT}         onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" width={menuButtonWidth} style={menuButtonStyle} />
+                {isTauri && <BlockButton text={t.UI.QUIT}         onClick={() => setActiveMenu('CONFIRM_QUIT')} variant="danger" width={menuButtonWidth} style={menuButtonStyle} />}
             </div>
 
             {/* ── Popups ── */}
@@ -108,7 +110,14 @@ export const MainMenu: React.FC = () => {
             {activeMenu === 'CONFIRM_QUIT' && (
                 <ConfirmationPopup
                     message={t.UI.QUIT_ASK}
-                    onYes={() => getCurrentWindow().close()}
+                    onYes={() => {
+                        try {
+                            getCurrentWindow().close();
+                        } catch (err) {
+                            console.error("Failed to close window:", err);
+                            setActiveMenu('NONE');
+                        }
+                    }}
                     onNo={() => setActiveMenu('NONE')}
                 />
             )}
